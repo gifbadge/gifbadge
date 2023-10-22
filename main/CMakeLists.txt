@@ -1,2 +1,5 @@
-idf_component_register(SRCS "main.c"
-                    INCLUDE_DIRS ".")
+idf_component_register(SRCS "main.cpp" "menu.cpp" "input.cpp" "usb.cpp" "display.cpp" "config.cpp" INCLUDE_DIRS "include")
+#target_compile_options(${COMPONENT_LIB} PRIVATE -DGC9A01=1 -DLV_USE_PERF_MONITOR=1)
+target_compile_options(${COMPONENT_LIB} PRIVATE -DST7706=1 -DLV_USE_PERF_MONITOR=1)
+target_compile_options(${COMPONENT_LIB} PRIVATE -D__LINUX__)
+fatfs_create_spiflash_image(data fatfs FLASH_IN_PROJECT)

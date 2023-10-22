@@ -1,0 +1,9 @@
+[submodule "components/image/AnimatedGIF"]
+	path = components/image/AnimatedGIF
+	url = https://github.com/bitbank2/AnimatedGIF.git
+[submodule "components/image/PNGdec"]
+	path = components/image/PNGdec
+	url = https://github.com/bitbank2/PNGdec.git
+[submodule "components/image/JPEGDEC"]
+	path = components/image/JPEGDEC
+	url = https://github.com/bitbank2/JPEGDEC.git
