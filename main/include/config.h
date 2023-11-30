@@ -21,6 +21,11 @@ public:
     std::string getFile();
     void setLocked(bool);
     bool getLocked();
+    bool getSlideShow();
+    void setSlideShow(bool);
+    int getSlideShowTime();
+    void setSlideShowTime(int);
+
 
 private:
     std::unique_ptr<nvs::NVSHandle> handle;
@@ -31,4 +36,16 @@ private:
     std::string directory;
     std::string image_file;
     bool locked;
+    bool slideshow;
+    int slideshow_time;
+};
+
+class BatteryConfig {
+public:
+    void setVoltage(double v);
+    double getVoltage();
+
+private:
+    std::mutex mutex;
+    double voltage;
 };

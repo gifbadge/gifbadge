@@ -15,7 +15,7 @@ struct button_state {
 enum EVENT_CODE {
     KEY_UP,
     KEY_DOWN,
-    KEY_ENTER
+    KEY_ENTER,
 };
 
 enum EVENT_STATE {
@@ -28,6 +28,13 @@ struct input_event {
     int64_t timestamp;
     EVENT_CODE code;
     EVENT_STATE value;
+};
+
+struct touch_event {
+    int64_t timestamp;
+    uint8_t point;
+    uint16_t x;
+    uint16_t  y;
 };
 
 void input_task(void *arg);

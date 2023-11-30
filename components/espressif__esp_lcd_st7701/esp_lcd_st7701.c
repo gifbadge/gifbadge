@@ -155,6 +155,7 @@ esp_err_t esp_lcd_new_panel_st7701(const esp_lcd_panel_io_handle_t io, const esp
     st7701->base.disp_on_off = panel_st7701_disp_on_off;
     st7701->base.draw_bitmap = panel_st7701_draw_bitmap;
     st7701->base.invert_color = st7701->panel->invert_color;
+    st7701->base.swap_xy = panel_st7701_swap_xy;
 //    (*ret_panel)->user_data = st7701;
     *ret_panel = &(st7701->base);
     ESP_LOGD(TAG, "new st7701 panel @%p", st7701);
@@ -375,11 +376,20 @@ static esp_err_t panel_st7701_disp_on_off(esp_lcd_panel_t *panel, bool on_off)
 esp_err_t panel_st7701_draw_bitmap(esp_lcd_panel_t *panel, int x_start, int y_start, int x_end, int y_end, const void *color_data){
     st7701_panel_t *st7701 = __containerof(panel, st7701_panel_t, base);
 
+
     return st7701->panel->draw_bitmap(st7701->panel, x_start, y_start, x_end, y_end, color_data);
+
+
 
 }
 
 esp_err_t panel_st7701_get_frame_buffer(esp_lcd_panel_t *panel, uint32_t fb_num, void **fb0, ...){
     st7701_panel_t *st7701 = __containerof(panel, st7701_panel_t, base);
     return esp_lcd_rgb_panel_get_frame_buffer(st7701->panel, fb_num, fb0);
+}
+
+esp_err_t panel_st7701_swap_xy(esp_lcd_panel_t *panel, bool swap)
+{
+    st7701_panel_t *st7701 = __containerof(panel, st7701_panel_t, base);
+    return st7701->panel->swap_xy(st7701->panel, swap);
 }

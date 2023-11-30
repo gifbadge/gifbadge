@@ -6,29 +6,33 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include "driver/gpio.h"
+#include <algorithm>
 #include "grad.h"
 
 #include "display.h"
 #include "image.h"
-#include "usb_image.h"
+#include "images/usb_image.h"
+#include "images/image_too_big.h"
+#include "images/no_image.h"
+#include "images/low_batt.h"
 
-#ifdef CONFIG_GC9A01
+#include <nvs_handle.hpp>
+#include <esp_timer.h>
+
+
 #include "esp_lcd_gc9a01.h"
 #include "driver/spi_master.h"
-
-#endif
-
-#ifdef CONFIG_ST7706
 
 #include "esp_lcd_st7701.h"
 #include "esp_lcd_panel_io_additions.h"
 
-#endif
-
 
 static const char *TAG = "DISPLAY";
 
-#ifdef CONFIG_GC9A01
+int H_RES;
+int V_RES;
+
+
 void lcd_gc9a01(esp_lcd_panel_handle_t *panel_handle, esp_lcd_panel_io_handle_t *io_handle, void *user_ctx,
                 esp_lcd_panel_io_color_trans_done_cb_t callback) {
     ESP_LOGI(TAG, "Turn off LCD backlight");
@@ -97,9 +101,8 @@ void lcd_gc9a01(esp_lcd_panel_handle_t *panel_handle, esp_lcd_panel_io_handle_t 
     ESP_ERROR_CHECK(esp_lcd_panel_invert_color(*panel_handle, true));
     ESP_ERROR_CHECK(esp_lcd_panel_mirror(*panel_handle, true, false));
 }
-#endif
 
-#ifdef CONFIG_ST7706
+
 static const st7701_lcd_init_cmd_t buyadisplaycom[] = {
         {0xFF, (uint8_t[]) {0x77, 0x01, 0x00, 0x00, 0x10,},                                                 5,  0},
         {0xC0, (uint8_t[]) {0x3b, 0x00,},                                                                   2,  0},
@@ -165,6 +168,8 @@ static const st7701_lcd_init_cmd_t buyadisplaycom[] = {
 #define R5 13
 
 
+
+
 void lcd_st7706(esp_lcd_panel_handle_t *panel_handle, esp_lcd_panel_io_handle_t *io_handle, void *user_ctx,
                 esp_lcd_panel_io_color_trans_done_cb_t callback) {
     ESP_LOGI(TAG, "Turn off LCD backlight");
@@ -195,10 +200,10 @@ void lcd_st7706(esp_lcd_panel_handle_t *panel_handle, esp_lcd_panel_io_handle_t 
 
     ESP_LOGI(TAG, "Install ST7701S panel driver");
     esp_lcd_rgb_panel_config_t rgb_config = {
-//            .clk_src = LCD_CLK_SRC_XTAL,
-            .clk_src = LCD_CLK_SRC_DEFAULT,
+            .clk_src = LCD_CLK_SRC_XTAL,
+//            .clk_src = LCD_CLK_SRC_DEFAULT,
             .timings = {
-                    .pclk_hz = 10 * 1000 * 1000,
+                    .pclk_hz = 6 * 1000 * 1000,
                     .h_res = 480,
                     .v_res = 480,
                     .hsync_pulse_width = 6,
@@ -218,52 +223,69 @@ void lcd_st7706(esp_lcd_panel_handle_t *panel_handle, esp_lcd_panel_io_handle_t 
             .data_width = 16,
             .bits_per_pixel = 16,
             .num_fbs = 1,
-            .bounce_buffer_size_px = 10*H_RES,
+            .bounce_buffer_size_px = 0, //10*H_RES,
             .psram_trans_align = 64,
             .hsync_gpio_num = 48,
             .vsync_gpio_num = 47,
             .de_gpio_num = 33,
             .pclk_gpio_num = 37,
             .disp_gpio_num = -1,
-            .data_gpio_nums = { B1, B2, B3, B4, B5, G0, G1, G2, G3, G4, G5, R1, R2, R3, R4, R5},
+//            .data_gpio_nums = { B1, B2, B3, B4, B5, G0, G1, G2, G3, G4, G5, R1, R2, R3, R4, R5}, //Working BE
+            .data_gpio_nums = { G3, G4, G5, R1, R2, R3, R4, R5, B1, B2, B3, B4, B5, G0, G1, G2}, //Working LE
+
+
+
             .flags = {
                     .fb_in_psram = 1,
                     }
     };
     st7701_vendor_config_t vendor_config = {
             .rgb_config = &rgb_config,
-            .init_cmds = buyadisplaycom,      // Uncomment these line if use custom initialization commands
+            .init_cmds = buyadisplaycom,
             .init_cmds_size = sizeof(buyadisplaycom) / sizeof(st7701_lcd_init_cmd_t),
             .flags = {
                     .auto_del_panel_io = 0,
             },
     };
     const esp_lcd_panel_dev_config_t panel_config = {
-            .reset_gpio_num = 46,           // Set to -1 if not use
-            .rgb_endian = LCD_RGB_ENDIAN_BGR,     // Implemented by LCD command `36h`
-            .bits_per_pixel = 18,    // Implemented by LCD command `3Ah` (16/18/24)
+            .reset_gpio_num = 46,
+            .rgb_endian = LCD_RGB_ENDIAN_BGR,
+            .bits_per_pixel = 18,
             .vendor_config = &vendor_config,
     };
-    ESP_ERROR_CHECK(esp_lcd_new_panel_st7701(*io_handle, &panel_config, panel_handle));    /**
-                                                                                             * Only create RGB when `auto_del_panel_io` is set to 0,
-                                                                                             * or initialize st7701 meanwhile
-                                                                                             */
+    ESP_ERROR_CHECK(esp_lcd_new_panel_st7701(*io_handle, &panel_config, panel_handle));
     ESP_ERROR_CHECK(esp_lcd_panel_reset(*panel_handle));
     ESP_ERROR_CHECK(esp_lcd_panel_init(*panel_handle));
+    ESP_ERROR_CHECK(esp_lcd_panel_swap_xy(*panel_handle, true));
+    ESP_ERROR_CHECK(esp_lcd_panel_mirror(*panel_handle, true, false));
     esp_lcd_rgb_panel_set_yuv_conversion(*panel_handle, nullptr);
 }
 
-#endif
-
-
 void lcd_init(esp_lcd_panel_handle_t *panel_handle, esp_lcd_panel_io_handle_t *io_handle, void *user_ctx,
               esp_lcd_panel_io_color_trans_done_cb_t callback) {
-#ifdef CONFIG_LCD_1_28_GC9A01
-    lcd_gc9a01(panel_handle, io_handle, user_ctx, callback);
-#endif
-#ifdef CONFIG_LCD_2_1_ST7706
-    lcd_st7706(panel_handle, io_handle, user_ctx, callback);
-#endif
+    esp_err_t err;
+    std::unique_ptr<nvs::NVSHandle> handle = nvs::open_nvs_handle("display", NVS_READWRITE, &err);
+    DISPLAY_TYPES display_type = DISPLAY_TYPE_NONE;
+    err = handle->get_item("type", display_type);
+    switch (2) {
+        case DISPLAY_TYPE_NONE:
+            break;
+        case DISPLAY_TYPE_GC9A01_1_28:
+            H_RES = 240;
+            V_RES = 240;
+            lcd_gc9a01(panel_handle, io_handle, user_ctx, callback);
+            break;
+        case DISPLAY_TYPE_ST7706_2_1:
+            H_RES = 480;
+            V_RES = 480;
+            lcd_st7706(panel_handle, io_handle, user_ctx, callback);
+            break;
+    }
+}
+
+static void clear_screen(esp_lcd_panel_handle_t panel_handle, uint8_t *pGIFBuf) {
+    memset(pGIFBuf, 255, H_RES * V_RES * 2);
+    esp_lcd_panel_draw_bitmap(panel_handle, 0, 0, H_RES, V_RES, pGIFBuf);
 }
 
 std::vector<std::string> list_directory(const std::string &path) {
@@ -287,11 +309,64 @@ std::vector<std::string> list_directory(const std::string &path) {
     return files;
 }
 
+static void display_usb_logo(esp_lcd_panel_handle_t panel_handle, uint8_t *pGIFBuf) {
+    ESP_LOGI(TAG, "Displaying USB LOGO");
+    clear_screen(panel_handle, pGIFBuf);
+//    uint8_t *temp = (uint8_t *)malloc(480*480*2);
+//    lcd_rotate((uint8_t *) USB_icon, temp);
+    esp_lcd_panel_draw_bitmap(panel_handle,
+                              (H_RES / 2) - (USB_ICON_WIDTH / 2),
+                              (V_RES / 2) - (USB_ICON_HEIGHT / 2),
+                              (H_RES / 2) + (USB_ICON_WIDTH / 2),
+                              (V_RES / 2) + (USB_ICON_HEIGHT / 2),
+                              USB_icon);
+}
+
+static void display_no_image(esp_lcd_panel_handle_t panel_handle, uint8_t *pGIFBuf) {
+    ESP_LOGI(TAG, "Displaying No Image");
+    clear_screen(panel_handle, pGIFBuf);
+    esp_lcd_panel_draw_bitmap(panel_handle,
+                              (H_RES / 2) - (NO_IMAGE_WIDTH / 2),
+                              (V_RES / 2) - (NO_IMAGE_HEIGHT / 2),
+                              (H_RES / 2) + ((NO_IMAGE_WIDTH + 1) / 2), //Always round up
+                              (V_RES / 2) + ((NO_IMAGE_HEIGHT + 1) / 2),
+                              no_image);
+}
+
+static void display_image_too_large(esp_lcd_panel_handle_t panel_handle, uint8_t *pGIFBuf) {
+    ESP_LOGI(TAG, "Displaying Image To Large");
+    clear_screen(panel_handle, pGIFBuf);
+    esp_lcd_panel_draw_bitmap(panel_handle,
+                              (H_RES / 2) - (IMAGE_TOO_BIG_WIDTH / 2),
+                              (V_RES / 2) - (IMAGE_TOO_BIG_HEIGHT / 2),
+                              (H_RES / 2) + ((IMAGE_TOO_BIG_WIDTH + 1) / 2),
+                              (V_RES / 2) + ((IMAGE_TOO_BIG_HEIGHT + 1) / 2),
+                              image_too_big);
+}
+
+static void display_image_batt(esp_lcd_panel_handle_t panel_handle, uint8_t *pGIFBuf) {
+    ESP_LOGI(TAG, "Displaying Image To Large");
+    clear_screen(panel_handle, pGIFBuf);
+    esp_lcd_panel_draw_bitmap(panel_handle,
+                              (H_RES / 2) - (LOW_BATT_WIDTH / 2),
+                              (V_RES / 2) - (LOW_BATT_HEIGHT / 2),
+                              (H_RES / 2) + ((LOW_BATT_WIDTH + 1) / 2),
+                              (V_RES / 2) + ((LOW_BATT_HEIGHT + 1) / 2),
+                              low_batt);
+}
+
 Image *display_file(ImageFactory factory, const char *path, uint8_t *pGIFBuf, esp_lcd_panel_handle_t panel_handle) {
     Image *in = factory.create(path);
+    clear_screen(panel_handle, pGIFBuf);
     if (in) {
         in->open(path);
         printf("%s x: %i y: %i\n", path, in->size().first, in->size().second);
+        auto size = in->size();
+        if (size.first > H_RES || size.second > V_RES) {
+            delete in;
+            display_image_too_large(panel_handle, pGIFBuf);
+            return nullptr;
+        }
         int delay = in->loop(pGIFBuf);
         esp_lcd_panel_draw_bitmap(panel_handle,
                                   (H_RES / 2) - (in->size().first / 2),
@@ -321,18 +396,6 @@ static void image_loop(std::shared_ptr<Image> &in, uint8_t *pGIFBuf, esp_lcd_pan
     }
 }
 
-static void display_usb_logo(esp_lcd_panel_handle_t panel_handle, uint8_t *pGIFBuf) {
-    ESP_LOGI(TAG, "Displaying USB LOGO");
-    memcpy(pGIFBuf, USB_icon,
-           USB_ICON_HEIGHT * USB_ICON_WIDTH * 2); //Why I need to copy this into memory, I am not sure
-    esp_lcd_panel_draw_bitmap(panel_handle,
-                              (H_RES / 2) - (USB_ICON_WIDTH / 2),
-                              (V_RES / 2) - (USB_ICON_HEIGHT / 2),
-                              (H_RES / 2) + (USB_ICON_WIDTH / 2),
-                              (V_RES / 2) + (USB_ICON_HEIGHT / 2),
-                              pGIFBuf);
-}
-
 static std::string get_file(const std::string &directory, const std::string &f) {
     std::string path = directory + "/" + f;
     FILE *fp = fopen(path.c_str(), "r");
@@ -343,12 +406,49 @@ static std::string get_file(const std::string &directory, const std::string &f) 
     return list_directory(directory).at(0);
 }
 
-static void clear_screen(esp_lcd_panel_handle_t panel_handle, uint8_t *pGIFBuf) {
-    memset(pGIFBuf, 255, 240 * 240 * 2);
-    esp_lcd_panel_draw_bitmap(panel_handle, 0, 0, 240, 240, pGIFBuf);
+static int files_get_position(const std::vector<std::string> &files, const std::string &name) {
+//    auto files = list_directory(path);
+    auto result = std::find(files.begin(), files.end(), name.c_str());
+    if (result == files.end()) {
+        return -1;
+    } else {
+        return std::distance(files.begin(), result);
+    }
+}
+
+static std::string files_get_next(const std::string &path, const std::string &name) {
+    ESP_LOGI(TAG, "%s %s", path.c_str(), name.c_str());
+    auto files = list_directory(path);
+    for (auto &f: files){
+        ESP_LOGI(TAG, "%s", f.c_str());
+    }
+    int pos = files_get_position(files, name);
+    ESP_LOGI(TAG, "%i", pos);
+    if (pos >= 0) { //TODO handle error cases
+        if (pos == files.size()-1) {
+            return files.at(0);
+        } else {
+            return files.at(pos + 1);
+        }
+    }
+    return "";
+}
+
+static std::string files_get_previous(const std::string &path, const std::string &name) {
+    auto files = list_directory(path);
+    int pos = files_get_position(files, name);
+    if (pos >= 0) { //TODO handle error cases
+        if (pos == 0) {
+            return files.at(files.size()-1);
+        } else {
+            return files.at(pos - 1);
+        }
+    }
+    return "";
 }
 
 void display_task(void *params) {
+    // TODO: Check image size before trying to display it
     auto *args = (display_task_args *) params;
 
     auto panel_handle = (esp_lcd_panel_handle_t) args->panel_handle;
@@ -357,16 +457,15 @@ void display_task(void *params) {
 
     bool menu_state = false;
 
-
     // user can flush pre-defined pattern to the screen before we turn on the screen or backlight
     uint8_t *pGIFBuf;
-    pGIFBuf = (uint8_t *) heap_caps_malloc(H_RES * V_RES * 2, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);//MALLOC_CAP_DMA);
-//    panel_st7701_get_frame_buffer(panel_handle, 1, (void **) &pGIFBuf);
+    pGIFBuf = (uint8_t *) heap_caps_malloc(H_RES * V_RES * 2, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+
     memset(pGIFBuf, 255, H_RES * V_RES * 2);
-//    memcpy(pGIFBuf, _grad,
-//           480 * 480 * 2);
     esp_lcd_panel_draw_bitmap(panel_handle, 0, 0, H_RES, V_RES, pGIFBuf);
-//    ESP_ERROR_CHECK(esp_lcd_panel_disp_on_off(panel_handle, true));
+#ifdef CONFIG_GC9A01
+    ESP_ERROR_CHECK(esp_lcd_panel_disp_on_off(panel_handle, true));
+#endif
 
     ESP_LOGI(TAG, "Turn on LCD backlight");
     gpio_set_level((gpio_num_t) PIN_NUM_BK_LIGHT, LCD_BK_LIGHT_ON_LEVEL);
@@ -375,40 +474,96 @@ void display_task(void *params) {
     std::shared_ptr<Image> in;
     std::vector<std::string> files = list_directory("/data");
 
+    std::string current_file;
+
+    DISPLAY_OPTIONS last_mode = DISPLAY_NONE;
+
+    int64_t last_change = esp_timer_get_time();
+
     while (true) {
         uint32_t option;
         xTaskNotifyWaitIndexed(0, 0, 0xffffffff, &option, 0);
-        switch (option) {
-            case DISPLAY_USB:
-                ESP_LOGI(TAG, "DISPLAY_USB");
-                menu_state = false;
-                in.reset();
-                display_usb_logo(panel_handle, pGIFBuf);
-                break;
-            case DISPLAY_MENU:
-                ESP_LOGI(TAG, "DISPLAY_MENU");
-                menu_state = true;
-                break;
-            case DISPLAY_PATH:
-                ESP_LOGI(TAG, "DISPLAY_PATH");
-                clear_screen(panel_handle, pGIFBuf);
-                files = list_directory(config->getDirectory());
-                in.reset(display_file(factory, files.at(0).c_str(), pGIFBuf, panel_handle));
-                break;
-            case DISPLAY_FILE:
-                ESP_LOGI(TAG, "DISPLAY_FILE");
-                clear_screen(panel_handle, pGIFBuf);
-                menu_state = false;
-                in.reset(display_file(factory, get_file(config->getDirectory(), config->getFile()).c_str(), pGIFBuf,
-                                      panel_handle));
-                break;
-            default:
-            case DISPLAY_NONE:
-                if (!menu_state) {
-                    image_loop(in, pGIFBuf, panel_handle);
+        if(option != DISPLAY_NONE) {
+            last_change = esp_timer_get_time();
+            switch (option) {
+                case DISPLAY_USB:
+                    ESP_LOGI(TAG, "DISPLAY_USB");
+                    menu_state = false;
+                    in.reset();
+                    display_usb_logo(panel_handle, pGIFBuf);
+                    last_mode = static_cast<DISPLAY_OPTIONS>(option);
+                    break;
+                case DISPLAY_MENU:
+                    ESP_LOGI(TAG, "DISPLAY_MENU");
+                    menu_state = true;
+                    last_mode = static_cast<DISPLAY_OPTIONS>(option);
+                    break;
+                case DISPLAY_PATH:
+                    ESP_LOGI(TAG, "DISPLAY_PATH");
+                    files = list_directory(config->getDirectory()); //TODO: Handle the directory not existing
+                    try {
+                        current_file = files.at(0);
+                        in.reset(display_file(factory, current_file.c_str(), pGIFBuf, panel_handle));
+                    }
+                    catch (std::out_of_range &err) {
+                        display_no_image(panel_handle, pGIFBuf);
+                    }
+                    last_mode = static_cast<DISPLAY_OPTIONS>(option);
+                    break;
+                case DISPLAY_FILE:
+                    ESP_LOGI(TAG, "DISPLAY_FILE");
+                    menu_state = false;
+                    try {
+                        current_file = get_file(config->getDirectory(), config->getFile());
+                        in.reset(display_file(factory, current_file.c_str(), pGIFBuf,
+                                              panel_handle));
+                    }
+                    catch (std::out_of_range &err) {
+                        display_no_image(panel_handle, pGIFBuf);
+                    }
+                    last_mode = static_cast<DISPLAY_OPTIONS>(option);
+                    break;
+                case DISPLAY_NEXT:
+                    if (config->getLocked()) {
+                        break;
+                    }
+                    current_file = files_get_next(config->getDirectory(), current_file);
+                    in.reset(display_file(factory, current_file.c_str(), pGIFBuf,
+                                          panel_handle));
+                    break;
+                case DISPLAY_PREVIOUS:
+                    if (config->getLocked()) {
+                        break;
+                    }
+                    try {
+                        current_file = files_get_previous(config->getDirectory(), current_file);
+                        in.reset(display_file(factory, current_file.c_str(), pGIFBuf,
+                                              panel_handle));
+                    }
+                    catch (std::out_of_range &err) {
+                        display_no_image(panel_handle, pGIFBuf);
+                    }
+                    break;
+                case DISPLAY_BATT:
+                    if (last_mode != DISPLAY_BATT) {
+                        in.reset();
+                        display_image_batt(panel_handle, pGIFBuf);
+                    }
+                    last_mode = static_cast<DISPLAY_OPTIONS>(option);
+                    break;
+                default:
+                    break;
+            }
+        } else {
+            if (!menu_state) {
+                if((last_mode == DISPLAY_PATH ||last_mode == DISPLAY_FILE) && config->getSlideShow() && ((esp_timer_get_time()/1000000)-(last_change/1000000)) > config->getSlideShowTime()){
+                    xTaskNotifyIndexed(xTaskGetCurrentTaskHandle(), 0, DISPLAY_NEXT, eSetValueWithOverwrite );
                 } else {
-                    vTaskDelay(200 / portTICK_PERIOD_MS);
+                    image_loop(in, pGIFBuf, panel_handle);
                 }
+            } else {
+                vTaskDelay(200 / portTICK_PERIOD_MS);
+            }
         }
     }
 }

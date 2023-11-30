@@ -11,12 +11,16 @@ ImageConfig::ImageConfig() {
     directory = get_string_or_default("directory", (const char *)"/data");
     image_file = get_string_or_default("image_file", (const char *)"");
     locked = get_item_or_default("locked", false);
+    slideshow = get_item_or_default("slideshow", false);
+    slideshow_time = get_item_or_default("slideshow_time", 15);
 }
 
 ImageConfig::~ImageConfig(){
     handle->set_string("directory", directory.c_str());
     handle->set_string("image_file", image_file.c_str());
     handle->set_item("locked", locked);
+    handle->set_item("slideshow", slideshow);
+    handle->set_item("slideshow_time", slideshow_time);
     handle->commit();
 }
 
@@ -24,6 +28,8 @@ void ImageConfig::save() {
     handle->set_string("directory", directory.c_str());
     handle->set_string("image_file", image_file.c_str());
     handle->set_item("locked", locked);
+    handle->set_item("slideshow", slideshow);
+    handle->set_item("slideshow_time", slideshow_time);
     handle->commit();
 }
 
@@ -90,4 +96,35 @@ void ImageConfig::setLocked(bool state) {
 bool ImageConfig::getLocked() {
     const std::lock_guard<std::mutex> lock(mutex);
     return locked;
+}
+
+void ImageConfig::setSlideShow(bool state) {
+    const std::lock_guard<std::mutex> lock(mutex);
+    slideshow = state;
+}
+
+bool ImageConfig::getSlideShow() {
+    const std::lock_guard<std::mutex> lock(mutex);
+    return slideshow;
+}
+
+void ImageConfig::setSlideShowTime(int t) {
+    const std::lock_guard<std::mutex> lock(mutex);
+    slideshow_time = t;
+}
+
+int ImageConfig::getSlideShowTime() {
+    const std::lock_guard<std::mutex> lock(mutex);
+    return slideshow_time;
+}
+
+
+void BatteryConfig::setVoltage(double v) {
+    const std::lock_guard<std::mutex> lock(mutex);
+    voltage = v;
+}
+
+double BatteryConfig::getVoltage() {
+    const std::lock_guard<std::mutex> lock(mutex);
+    return voltage;
 }

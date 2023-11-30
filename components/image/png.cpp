@@ -36,10 +36,5 @@ void PNGImage::PNGDraw(PNGDRAW *pDraw) {
     auto *config = (pnguser *) pDraw->pUser;
     auto *buffer = (uint16_t *) config->buffer;
     uint16_t *line = &buffer[pDraw->y * pDraw->iWidth];
-#ifdef CONFIG_IMAGE_BIG_ENDIAN
     config->png->getLineAsRGB565(pDraw, line, PNG_RGB565_BIG_ENDIAN, 0xffffffff);
-#else
-    config->png->getLineAsRGB565(pDraw, line, PNG_RGB565_LITTLE_ENDIAN, 0xffffffff);
-#endif
-
 }

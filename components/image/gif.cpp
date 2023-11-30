@@ -50,11 +50,7 @@ typedef int32_t (*readfile)(GIFFILE *pFile, uint8_t *pBuf, int32_t iLen);
 typedef int32_t (*seekfile)(GIFFILE *pFile, int32_t iPosition);
 
 int GIF::open(const char *path) {
-#ifdef CONFIG_IMAGE_BIG_ENDIAN
     gif.begin(BIG_ENDIAN_PIXELS);
-#else
-    gif.begin(LITTLE_ENDIAN_PIXELS);
-#endif
     if (gif.open(path, bb2OpenFile, bb2CloseFile, (readfile) bb2ReadFile, (seekfile) bb2SeekFile, GIFDraw)) {
         gif.allocFrameBuf(GIFAlloc);
         gif.setDrawType(GIF_DRAW_COOKED);

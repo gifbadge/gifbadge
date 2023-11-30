@@ -2,4 +2,5 @@ idf_component_register(SRCS "main.cpp" "menu.cpp" "input.cpp" "usb.cpp" "display
 #target_compile_options(${COMPONENT_LIB} PRIVATE -DGC9A01=1 -DLV_USE_PERF_MONITOR=1)
 target_compile_options(${COMPONENT_LIB} PRIVATE -DST7706=1 -DLV_USE_PERF_MONITOR=1)
 target_compile_options(${COMPONENT_LIB} PRIVATE -D__LINUX__)
-fatfs_create_spiflash_image(data fatfs FLASH_IN_PROJECT)
+#fatfs_create_spiflash_image(data fatfs FLASH_IN_PROJECT)
+#nvs_create_partition_image(nvs nvs_default.csv FLASH_IN_PROJECT)

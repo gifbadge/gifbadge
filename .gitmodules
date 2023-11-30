@@ -7,3 +7,6 @@
 [submodule "components/image/JPEGDEC"]
 	path = components/image/JPEGDEC
 	url = https://github.com/bitbank2/JPEGDEC.git
+[submodule "components/libschrift"]
+	path = components/libschrift
+	url = https://github.com/tomolt/libschrift.git

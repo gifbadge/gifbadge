@@ -29,7 +29,8 @@ void get_event(input_event i) {
 
 void input_task(void *arg) {
     auto queue = (QueueHandle_t) arg;
-    std::map<EVENT_CODE, button_state> states = {{KEY_UP,    {(gpio_num_t) 43,  "up",    false, 0}}, //1
+    std::map<EVENT_CODE, button_state> states = {
+            {KEY_UP,    {(gpio_num_t) 43,  "up",    false, 0}}, //1
                                                  {KEY_DOWN,  {(gpio_num_t) 44, "down",  false, 0}}, //14
                                                  {KEY_ENTER, {(gpio_num_t) 0,  "enter", false, 0}},};
 

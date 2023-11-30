@@ -17,13 +17,13 @@
 #define LCD_BK_LIGHT_ON_LEVEL 1
 #define PIN_NUM_BK_LIGHT 45
 
-#ifdef CONFIG_LCD_1_28_GC9A01
-#define H_RES 240
-#define V_RES 240
-#elif CONFIG_LCD_2_1_ST7706
-#define H_RES 480
-#define V_RES 480
-#endif
+//#ifdef CONFIG_LCD_1_28_GC9A01
+//#define H_RES 240
+//#define V_RES 240
+//#elif CONFIG_LCD_2_1_ST7706
+//#define H_RES 480
+//#define V_RES 480
+//#endif
 
 
 enum DISPLAY_OPTIONS {
@@ -31,7 +31,16 @@ enum DISPLAY_OPTIONS {
     DISPLAY_FILE,
     DISPLAY_PATH,
     DISPLAY_USB,
-    DISPLAY_MENU
+    DISPLAY_MENU,
+    DISPLAY_NEXT,
+    DISPLAY_PREVIOUS,
+    DISPLAY_BATT,
+};
+
+enum DISPLAY_TYPES {
+    DISPLAY_TYPE_NONE,
+    DISPLAY_TYPE_GC9A01_1_28,
+    DISPLAY_TYPE_ST7706_2_1
 };
 
 struct display_task_args {

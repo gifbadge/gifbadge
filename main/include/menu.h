@@ -18,11 +18,11 @@
 
 class Menu {
 public:
-    explicit Menu(esp_lcd_panel_handle_t panel_handle, std::shared_ptr<ImageConfig>);
+    explicit Menu(esp_lcd_panel_handle_t panel_handle, std::shared_ptr<ImageConfig>, std::shared_ptr<BatteryConfig> _battery_config, int display_type);
 
     ~Menu();
 
-    void open(esp_lcd_panel_io_handle_t io_handle, QueueHandle_t input_queue);
+    void open(esp_lcd_panel_io_handle_t io_handle, QueueHandle_t input_queue, QueueHandle_t touch_queue);
 
     void close();
 
@@ -42,6 +42,9 @@ public:
 
     static void keyboard_read(lv_indev_drv_t *drv, lv_indev_data_t *data);
 
+    static void touch_read(lv_indev_drv_t *drv, lv_indev_data_t *data);
+
+
     bool is_open();
 
 
@@ -56,7 +59,10 @@ private:
     lv_disp_draw_buf_t disp_buf; // contains internal graphic buffer(s) called draw buffer(s)
     lv_disp_drv_t disp_drv;      // contains callback functions
     lv_indev_t *keyboard_dev;
-    lv_indev_drv_t indev_drv;
+    lv_indev_t *touch_dev;
+    lv_indev_drv_t keyboard_drv;
+    lv_indev_drv_t touch_drv;
+
     bool state = false;
 
 };
