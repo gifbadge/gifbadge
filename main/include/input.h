@@ -1,9 +1,10 @@
 #pragma once
 #include <cstdint>
 #include <string>
+#include <map>
 #include <hal/gpio_types.h>
 
-#define KEY_POLL_INTERVAL 100
+#define KEY_POLL_INTERVAL 10
 
 struct button_state {
     gpio_num_t pin;
@@ -37,6 +38,10 @@ struct touch_event {
     uint16_t  y;
 };
 
+void input_init();
+
 void input_task(void *arg);
 
 void get_event(input_event i);
+
+std::map<EVENT_CODE, EVENT_STATE> input_read();

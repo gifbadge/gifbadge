@@ -9,6 +9,7 @@
 #include <memory>
 #include <nvs_handle.hpp>
 #include <utility>
+#include <map>
 #include "esp_lcd_panel_io.h"
 #include "lvgl.h"
 
@@ -569,6 +570,8 @@ void Menu::open(esp_lcd_panel_io_handle_t io_handle, QueueHandle_t input_queue, 
     keyboard_drv.user_data = input_queue;
     keyboard_drv.long_press_time = 400;
     keyboard_dev = lv_indev_drv_register(&keyboard_drv);
+    lv_timer_set_period(keyboard_drv.read_timer, 200); //Slow down key reads
+
 
     lv_indev_drv_init(&touch_drv);
     keyboard_drv.type = LV_INDEV_TYPE_POINTER;
@@ -613,26 +616,23 @@ void Menu::close() {
 
 void Menu::keyboard_read(lv_indev_drv_t *drv, lv_indev_data_t *data) {
 //    ESP_LOGI(TAG, "keyboard_read");
-    auto queue = (QueueHandle_t) drv->user_data;
-    input_event i = {};
-    if (xQueueReceive(queue, (void *) &i, 0)) {
-        get_event(i);
-        switch (i.code) {
-            case KEY_UP:
-                if (i.value == STATE_PRESSED) {
-                    data->enc_diff = -1;
-                }
-                break;
-            case KEY_DOWN:
-                if (i.value == STATE_PRESSED) {
-                    data->enc_diff = 1;
-                }
-                break;
-            case KEY_ENTER:
-                data->state = i.value ? LV_INDEV_STATE_PRESSED : LV_INDEV_STATE_RELEASED;
-                data->key = LV_KEY_ENTER;
-                break;
-        }
+    std::map<EVENT_CODE, EVENT_STATE> keys = input_read();
+    if(keys[KEY_UP]){
+        data->enc_diff += -1;
+//        data->key = LV_KEY_LEFT;
+//        data->state = LV_INDEV_STATE_PRESSED;
+    }
+    else if(keys[KEY_DOWN]){
+        data->enc_diff += 1;
+//        data->key = LV_KEY_RIGHT;
+//        data->state = LV_INDEV_STATE_PRESSED;
+    }
+    else if(keys[KEY_ENTER]){
+        data->state = LV_INDEV_STATE_PRESSED;
+//        data->key = LV_KEY_ENTER;
+    }
+    else {
+        data->state = LV_INDEV_STATE_RELEASED;
     }
 }
 

@@ -234,6 +234,8 @@ extern "C" void app_main(void) {
 
 
     vTaskDelay(100 / portTICK_PERIOD_MS);
+
+    input_init();
     QueueHandle_t input_queue = xQueueCreate(10, sizeof(input_event));
     xTaskCreate(input_task, "input_task", 10000, input_queue, 2, nullptr);
 
@@ -309,6 +311,11 @@ extern "C" void app_main(void) {
                 if ((esp_timer_get_time() - i.timestamp) / 1000 > 200) {
                     xQueueReceive(input_queue, (void *) &i, 0);
                 }
+            }
+            if(menu->is_open()){
+                //Eat input events when we can't use them
+                xQueueReset(touch_queue);
+                xQueueReset(input_queue);
             }
             touch_event e = {};
             if(xQueueReceive(touch_queue, (void *) &e, 0) && !menu->is_open()){
