@@ -221,6 +221,7 @@ static void folder_update(lv_event_t *e) {
 }
 
 static void FileSelect() {
+    //TODO: Disable Slideshow button when locked. Disable slideshow time when slideshow off
     auto *fields = new FileSelect_Objects;
     if (Menu::lock(-1)) {
         lv_obj_t *scr = lv_obj_create(lv_scr_act());
@@ -232,7 +233,7 @@ static void FileSelect() {
         lv_group_t *g = lv_group_create();
         lv_group_set_default(g);
         lv_indev_set_group(lv_indev_get_act(), g);
-        lv_obj_set_size(cont_flex, LV_PCT(80), LV_PCT(80));
+        lv_obj_set_size(cont_flex, LV_PCT(85), LV_PCT(85));
         lv_obj_align(cont_flex, LV_ALIGN_CENTER, 0, 0);
         lv_obj_set_flex_flow(cont_flex, LV_FLEX_FLOW_COLUMN);
         lv_obj_set_style_flex_cross_place(cont_flex, LV_FLEX_ALIGN_CENTER, 0);
@@ -270,66 +271,34 @@ static void FileSelect() {
         fields->locked = lock_button;
         lv_obj_t *lock_button_label = lv_label_create(lock_button);
         if (image_config->getLocked()) {
-            lv_label_set_text(lock_button_label, "Locked");
-        } else {
-            lv_label_set_text(lock_button_label, "Unlocked");
+            lv_obj_add_state(lock_button, LV_STATE_CHECKED);
         }
-        lv_obj_add_event_cb(lock_button, [](lv_event_t *e) {
-            lv_obj_t *btn = lv_event_get_target(e);
-            lv_obj_t *btn_label = lv_obj_get_child(btn, 0);
-            if (strcmp(lv_label_get_text(btn_label), "Locked") == 0) {
-                lv_label_set_text(btn_label, "Unlocked");
-            } else {
-                lv_label_set_text(btn_label, "Locked");
-            }
-        }, LV_EVENT_CLICKED, nullptr);
+        lv_label_set_text(lock_button_label, "Lock");
         lv_obj_set_size(lock_button, LV_PCT(100), 40);
         lv_obj_set_align(lock_button_label, LV_ALIGN_CENTER);
+        lv_obj_add_flag(lock_button, LV_OBJ_FLAG_CHECKABLE);
+
 
         lv_obj_t *slideshow_button = lv_btn_create(cont_flex);
         fields->slideshow = slideshow_button;
         lv_obj_t *slideshow_button_label = lv_label_create(slideshow_button);
+        lv_obj_add_flag(slideshow_button, LV_OBJ_FLAG_CHECKABLE);
+        lv_label_set_text(slideshow_button_label, "Slideshow");
         if (image_config->getSlideShow()) {
-            lv_label_set_text(slideshow_button_label, "Slideshow On");
-        } else {
-            lv_label_set_text(slideshow_button_label, "Slideshow Off");
+            lv_obj_add_state(slideshow_button, LV_STATE_CHECKED);
         }
-        lv_obj_add_event_cb(slideshow_button, [](lv_event_t *e) {
-            lv_obj_t *btn = lv_event_get_target(e);
-            lv_obj_t *btn_label = lv_obj_get_child(btn, 0);
-            if (strcmp(lv_label_get_text(btn_label), "Slideshow On") == 0) {
-                lv_label_set_text(btn_label, "Slideshow Off");
-            } else {
-                lv_label_set_text(btn_label, "Slideshow On");
-            }
-        }, LV_EVENT_CLICKED, nullptr);
         lv_obj_set_size(slideshow_button, LV_PCT(100), 40);
         lv_obj_set_align(slideshow_button_label, LV_ALIGN_CENTER);
 
-        lv_obj_t *slideshow_dropdown = lv_dropdown_create(cont_flex);
-        fields->slideshow_time = slideshow_dropdown;
-        lv_dropdown_clear_options(slideshow_dropdown);
-        lv_dropdown_add_option(slideshow_dropdown, "15", 0);
-        lv_dropdown_add_option(slideshow_dropdown, "30", 1);
-        lv_dropdown_add_option(slideshow_dropdown, "45", 2);
-        lv_dropdown_add_option(slideshow_dropdown, "60", 3);
-        lv_dropdown_add_option(slideshow_dropdown, "120", 4);
 
-        switch(image_config->getSlideShowTime()){
-            case 15:
-                lv_dropdown_set_selected(slideshow_dropdown, 0);
-            case 30:
-                lv_dropdown_set_selected(slideshow_dropdown, 1);
-            case 45:
-                lv_dropdown_set_selected(slideshow_dropdown, 2);
-            case 60:
-                lv_dropdown_set_selected(slideshow_dropdown, 3);
-            case 120:
-                lv_dropdown_set_selected(slideshow_dropdown, 4);
-        }
+        lv_obj_t *slideshow_time_label = lv_label_create(cont_flex);
+        lv_label_set_text(slideshow_time_label, "Slideshow time");
 
-
-
+        lv_obj_t *slideshow_time = lv_spinbox_create(cont_flex);
+        lv_spinbox_set_range(slideshow_time, 15, 1000);
+        lv_spinbox_set_step(slideshow_time, 15);
+        fields->slideshow_time = slideshow_time;
+        lv_spinbox_set_value(slideshow_time, image_config->getSlideShowTime());
 
         lv_obj_t *button_row = lv_obj_create(cont_flex);
         lv_obj_set_style_pad_all(button_row, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -355,30 +324,14 @@ static void FileSelect() {
             }
             ESP_LOGI(TAG, "%s", tmp);
             image_config->setFile(tmp);
-            lv_obj_t *locked_label = lv_obj_get_child(fields->locked, 0);
-            if (strcmp(lv_label_get_text(locked_label), "Locked") == 0) {
-                ESP_LOGI(TAG, "Locked");
-                image_config->setLocked(true);
-            } else {
-                ESP_LOGI(TAG, "Unlocked");
-                image_config->setLocked(false);
-            }
-
-            lv_obj_t *slideshow_label = lv_obj_get_child(fields->slideshow, 0);
-            if (strcmp(lv_label_get_text(slideshow_label), "Slideshow On") == 0) {
-                image_config->setSlideShow(true);
-            } else {
-                image_config->setSlideShow(false);
-            }
-
-            lv_dropdown_get_selected_str(fields->slideshow_time, tmp, sizeof(tmp));
-            ESP_LOGI(TAG, "%s %d", tmp, atoi(tmp));
-            image_config->setSlideShowTime(atoi(tmp));
+            image_config->setLocked(lv_obj_get_state(fields->locked)&LV_STATE_CHECKED);
+            image_config->setSlideShow(lv_obj_get_state(fields->slideshow)&LV_STATE_CHECKED);
+            image_config->setSlideShowTime(lv_spinbox_get_value(fields->slideshow_time));
 
             image_config->save();
             lv_obj_del(fields->win);
             free(fields);
-        }, LV_EVENT_CLICKED, fields);
+        }, LV_EVENT_PRESSED, fields);
 
         lv_obj_t *exit_button = lv_btn_create(button_row);
         lv_obj_t *exit_button_label = lv_label_create(exit_button);
@@ -390,7 +343,7 @@ static void FileSelect() {
             auto *fields = (FileSelect_Objects *) e->user_data;
             lv_obj_del(fields->win);
             free(fields);
-        }, LV_EVENT_CLICKED, fields);
+        }, LV_EVENT_PRESSED, fields);
 
         Menu::unlock();
     }
@@ -491,7 +444,7 @@ static void MainMenu() {
         lv_label_set_text(file_button_label, "File Select");
         lv_obj_add_event_cb(file_button, [](lv_event_t *e) {
             FileSelect();
-        }, LV_EVENT_CLICKED, nullptr);
+        }, LV_EVENT_PRESSED, nullptr);
         lv_obj_set_size(file_button, LV_PCT(100), 40);
         lv_obj_set_align(file_button_label, LV_ALIGN_CENTER);
 
@@ -521,7 +474,7 @@ static void MainMenu() {
                 handle->set_item("usb_on", true);
                 handle->commit();
             }
-        }, LV_EVENT_CLICKED, nullptr);
+        }, LV_EVENT_PRESSED, nullptr);
         lv_obj_set_size(usb_button, LV_PCT(100), 40);
         lv_obj_set_align(usb_button_label, LV_ALIGN_CENTER);
 
@@ -535,7 +488,7 @@ static void MainMenu() {
             xTaskNotifyIndexed(handle, 0, LVGL_STOP, eSetValueWithOverwrite);
             handle = xTaskGetHandle("display_task");
             xTaskNotifyIndexed(handle, 0, DISPLAY_FILE, eSetValueWithOverwrite);
-        }, LV_EVENT_CLICKED, nullptr);
+        }, LV_EVENT_PRESSED, nullptr);
 
 
         Menu::unlock();
