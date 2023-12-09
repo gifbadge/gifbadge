@@ -437,32 +437,23 @@ static void MainMenu() {
         lv_obj_set_align(file_button_label, LV_ALIGN_CENTER);
 
         lv_obj_t *usb_button = lv_btn_create(cont_flex);
+        lv_obj_add_flag(usb_button, LV_OBJ_FLAG_CHECKABLE);
         lv_obj_t *usb_button_label = lv_label_create(usb_button);
+        lv_label_set_text(usb_button_label, "Disable USB Storage");
         esp_err_t err;
         std::unique_ptr<nvs::NVSHandle> handle = nvs::open_nvs_handle("usb", NVS_READWRITE, &err);
         bool usb_state;
         handle->get_item("usb_on", usb_state);
         if (usb_state) {
-            lv_label_set_text(usb_button_label, "USB Storage On");
-        } else {
-            lv_label_set_text(usb_button_label, "USB Storage Off");
+            lv_obj_add_state(usb_button, LV_STATE_CHECKED);
         }
         lv_obj_add_event_cb(usb_button, [](lv_event_t *e) {
             esp_err_t err;
             std::unique_ptr<nvs::NVSHandle> handle = nvs::open_nvs_handle("usb", NVS_READWRITE, &err);
             lv_obj_t *btn = lv_event_get_target(e);
-            lv_obj_t *btn_label = lv_obj_get_child(btn, 0);
-            if (strcmp(lv_label_get_text(btn_label), "USB Storage On") == 0) {
-                lv_label_set_text(btn_label, "USB Storage Off");
-                handle->set_item("usb_on", false);
-                handle->commit();
-
-            } else {
-                lv_label_set_text(btn_label, "USB Storage On");
-                handle->set_item("usb_on", true);
-                handle->commit();
-            }
-        }, LV_EVENT_PRESSED, nullptr);
+            handle->set_item("usb_on", lv_obj_get_state(btn)&LV_STATE_CHECKED);
+            handle->commit();
+        }, LV_EVENT_VALUE_CHANGED, nullptr);
         lv_obj_set_size(usb_button, LV_PCT(100), 40);
         lv_obj_set_align(usb_button_label, LV_ALIGN_CENTER);
 
