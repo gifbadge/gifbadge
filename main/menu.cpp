@@ -220,8 +220,31 @@ static void folder_update(lv_event_t *e) {
     lv_obj_add_event_cb(fields->folder, folder_update, LV_EVENT_VALUE_CHANGED, fields);
 }
 
+static void disable_slideshow_time(FileSelect_Objects *fields){
+    ESP_LOGI(TAG, "Disable Slideshow Called %i", lv_obj_get_state(fields->slideshow)&LV_STATE_CHECKED);
+    bool slideshow_state = lv_obj_get_state(fields->slideshow)&LV_STATE_CHECKED;
+
+    if(slideshow_state) {
+        lv_obj_clear_state(fields->slideshow_time, LV_STATE_DISABLED);
+    }
+    else {
+        lv_obj_add_state(fields->slideshow_time, LV_STATE_DISABLED);
+    }
+}
+
+static void disable_slideshow(FileSelect_Objects *fields){
+    bool locked_state = lv_obj_get_state(fields->locked)&LV_STATE_CHECKED;
+    if(locked_state){
+        lv_obj_add_state(fields->slideshow, LV_STATE_DISABLED);
+        lv_obj_add_state(fields->slideshow_time, LV_STATE_DISABLED);
+    }
+    else {
+        lv_obj_clear_state(fields->slideshow, LV_STATE_DISABLED);
+        disable_slideshow_time(fields);
+    }
+}
+
 static void FileSelect() {
-    //TODO: Disable Slideshow button when locked. Disable slideshow time when slideshow off
     auto *fields = new FileSelect_Objects;
     if (Menu::lock(-1)) {
         lv_obj_t *scr = lv_obj_create(lv_scr_act());
@@ -238,6 +261,7 @@ static void FileSelect() {
         lv_obj_set_flex_flow(cont_flex, LV_FLEX_FLOW_COLUMN);
         lv_obj_set_style_flex_cross_place(cont_flex, LV_FLEX_ALIGN_CENTER, 0);
 
+        lv_obj_set_scroll_snap_y(cont_flex, LV_SCROLL_SNAP_START);
 
         lv_obj_t *folder_dropdown = lv_dropdown_create(cont_flex);
         fields->folder = folder_dropdown;
@@ -277,7 +301,9 @@ static void FileSelect() {
         lv_obj_set_size(lock_button, LV_PCT(100), 40);
         lv_obj_set_align(lock_button_label, LV_ALIGN_CENTER);
         lv_obj_add_flag(lock_button, LV_OBJ_FLAG_CHECKABLE);
-
+        lv_obj_add_event_cb(lock_button, [](lv_event_t *e){
+            disable_slideshow((FileSelect_Objects *)e->user_data);
+            }, LV_EVENT_VALUE_CHANGED, fields);
 
         lv_obj_t *slideshow_button = lv_btn_create(cont_flex);
         fields->slideshow = slideshow_button;
@@ -289,16 +315,36 @@ static void FileSelect() {
         }
         lv_obj_set_size(slideshow_button, LV_PCT(100), 40);
         lv_obj_set_align(slideshow_button_label, LV_ALIGN_CENTER);
-
+        lv_obj_add_event_cb(slideshow_button, [](lv_event_t *e){
+            disable_slideshow_time((FileSelect_Objects *)e->user_data);
+        }, LV_EVENT_VALUE_CHANGED, fields);
 
         lv_obj_t *slideshow_time_label = lv_label_create(cont_flex);
         lv_label_set_text(slideshow_time_label, "Slideshow time");
+        lv_obj_t * slideshow_time = lv_roller_create(cont_flex);
+        //Time must be in 15 second increments, otherwise the logic to convert to seconds needs to be updated
+        lv_roller_set_options(slideshow_time,
+                              "0:15\n"
+                              "0:30\n"
+                              "0:45\n"
+                              "1:00\n"
+                              "1:15\n"
+                              "1:30\n"
+                              "1:45\n"
+                              "2:00\n"
+                              "2:15\n"
+                              "2:30\n"
+                              "2:45\n"
+                              "3:00",
+                              LV_ROLLER_MODE_INFINITE);
 
-        lv_obj_t *slideshow_time = lv_spinbox_create(cont_flex);
-        lv_spinbox_set_range(slideshow_time, 15, 1000);
-        lv_spinbox_set_step(slideshow_time, 15);
+        lv_roller_set_visible_row_count(slideshow_time, 3);
+        lv_roller_set_selected(slideshow_time, (image_config->getSlideShowTime()/15)-1, LV_ANIM_OFF);
+
         fields->slideshow_time = slideshow_time;
-        lv_spinbox_set_value(slideshow_time, image_config->getSlideShowTime());
+
+        disable_slideshow(fields);
+        disable_slideshow_time(fields);
 
         lv_obj_t *button_row = lv_obj_create(cont_flex);
         lv_obj_set_style_pad_all(button_row, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -313,6 +359,7 @@ static void FileSelect() {
         lv_obj_set_size(save_button, LV_PCT(50), 40);
         lv_obj_add_event_cb(save_button, [](lv_event_t *e) {
             ESP_LOGI(TAG, "Save clicked");
+            Menu::lock(-1);
             auto *fields = (FileSelect_Objects *) e->user_data;
             char tmp[128];
             lv_dropdown_get_selected_str(fields->folder, tmp, sizeof(tmp));
@@ -326,11 +373,12 @@ static void FileSelect() {
             image_config->setFile(tmp);
             image_config->setLocked(lv_obj_get_state(fields->locked)&LV_STATE_CHECKED);
             image_config->setSlideShow(lv_obj_get_state(fields->slideshow)&LV_STATE_CHECKED);
-            image_config->setSlideShowTime(lv_spinbox_get_value(fields->slideshow_time));
+            image_config->setSlideShowTime((lv_roller_get_selected(fields->slideshow_time)+1)*15);
 
             image_config->save();
             lv_obj_del(fields->win);
             free(fields);
+            Menu::unlock();
         }, LV_EVENT_PRESSED, fields);
 
         lv_obj_t *exit_button = lv_btn_create(button_row);
@@ -340,9 +388,11 @@ static void FileSelect() {
         lv_obj_set_size(exit_button, LV_PCT(45), 40);
         lv_obj_add_event_cb(exit_button, [](lv_event_t *e) {
             ESP_LOGI(TAG, "Exit clicked");
+            Menu::lock(-1);
             auto *fields = (FileSelect_Objects *) e->user_data;
             lv_obj_del(fields->win);
             free(fields);
+            Menu::unlock();
         }, LV_EVENT_PRESSED, fields);
 
         Menu::unlock();
