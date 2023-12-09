@@ -139,9 +139,9 @@ static std::vector<std::string> list_files(const std::string &path) {
             if (!de) {
                 break;
             }
-            struct stat statbuf{};
-            if (stat((path + "/" + de->d_name).c_str(), &statbuf) == 0) {
-                if (!S_ISDIR(statbuf.st_mode)) {
+            struct stat file_stat{};
+            if (stat((path + "/" + de->d_name).c_str(), &file_stat) == 0) {
+                if (!S_ISDIR(file_stat.st_mode)) {
                     files.emplace_back(de->d_name);
                 }
             }
@@ -160,9 +160,9 @@ static std::vector<std::string> list_folders(const std::string &path) {
             if (!de) {
                 break;
             }
-            struct stat statbuf{};
-            if (stat((path + "/" + de->d_name).c_str(), &statbuf) == 0) {
-                if (S_ISDIR(statbuf.st_mode)) {
+            struct stat file_stat{};
+            if (stat((path + "/" + de->d_name).c_str(), &file_stat) == 0) {
+                if (S_ISDIR(file_stat.st_mode)) {
                     folders.emplace_back(path + "/" + de->d_name);
                 }
             }
@@ -403,14 +403,6 @@ static void MainMenu() {
         lv_obj_set_flex_flow(cont_flex, LV_FLEX_FLOW_COLUMN);
         lv_obj_set_style_flex_cross_place(cont_flex, LV_FLEX_ALIGN_CENTER, 0);
 
-//        lv_obj_t *battery_bar_label = lv_label_create(lv_scr_act());
-//        lv_obj_t *battery_bar = lv_bar_create(cont_flex);
-//        lv_obj_set_size(battery_bar, LV_PCT(100), 20);
-//        lv_obj_center(battery_bar);
-//        lv_bar_set_value(battery_bar, 50, LV_ANIM_OFF);
-//        lv_label_set_text(battery_bar_label, LV_SYMBOL_BATTERY_FULL);
-//        lv_obj_align_to(battery_bar_label, battery_bar, LV_ALIGN_CENTER, 0, 0);
-
         lv_style_init(&battery_style);
         lv_style_set_text_color(&battery_style, lv_color_black());
         lv_style_set_text_font(&battery_style, &lv_font_montserrat_28);
@@ -425,18 +417,14 @@ static void MainMenu() {
         battery_update(battery);
 
         lv_timer_t * timer = lv_timer_create([](lv_timer_t * timer){
-            lv_obj_t *obj = (lv_obj_t *) timer->user_data;
+            auto *obj = (lv_obj_t *) timer->user_data;
             lv_event_send(obj, LV_EVENT_REFRESH, nullptr);
 
             }, 1000,  battery);
         lv_obj_add_event_cb(battery, [](lv_event_t *e){
-            lv_timer_t * timer = (lv_timer_t *)e->user_data;
+            auto * timer = (lv_timer_t *)e->user_data;
             lv_timer_del(timer);
         }, LV_EVENT_DELETE, timer);
-
-
-
-
 
 
         lv_obj_t *file_button = lv_btn_create(cont_flex);
@@ -516,7 +504,6 @@ void Menu::open(esp_lcd_panel_io_handle_t io_handle, QueueHandle_t input_queue, 
 
     vTaskResume(lvgl_task);
 
-
     lv_indev_drv_init(&keyboard_drv);
     keyboard_drv.type = LV_INDEV_TYPE_ENCODER;
     keyboard_drv.read_cb = keyboard_read;
@@ -559,7 +546,6 @@ void Menu::close() {
         unlock();
     }
 
-
     vTaskDelay(100 / portTICK_PERIOD_MS); //Wait some time so the task can finish
 
     ESP_ERROR_CHECK(esp_timer_stop(lvgl_tick_timer));
@@ -572,21 +558,17 @@ void Menu::keyboard_read(lv_indev_drv_t *drv, lv_indev_data_t *data) {
     std::map<EVENT_CODE, EVENT_STATE> keys = input_read();
     if(keys[KEY_UP]){
         data->enc_diff += -1;
-//        data->key = LV_KEY_LEFT;
-//        data->state = LV_INDEV_STATE_PRESSED;
     }
     else if(keys[KEY_DOWN]){
         data->enc_diff += 1;
-//        data->key = LV_KEY_RIGHT;
-//        data->state = LV_INDEV_STATE_PRESSED;
     }
     else if(keys[KEY_ENTER]){
         data->state = LV_INDEV_STATE_PRESSED;
-//        data->key = LV_KEY_ENTER;
     }
     else {
         data->state = LV_INDEV_STATE_RELEASED;
     }
+
 }
 
 bool Menu::is_open() {
