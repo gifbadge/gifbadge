@@ -7,13 +7,10 @@
 #include <sys/stat.h>
 #include "driver/gpio.h"
 #include <algorithm>
-#include "grad.h"
 
 #include "display.h"
 #include "image.h"
 #include "images/usb_image.h"
-#include "images/image_too_big.h"
-#include "images/no_image.h"
 #include "images/low_batt.h"
 
 #include <nvs_handle.hpp>
@@ -25,6 +22,8 @@
 
 #include "esp_lcd_st7701.h"
 #include "esp_lcd_panel_io_additions.h"
+
+#include "font_render.h"
 
 
 static const char *TAG = "DISPLAY";
@@ -267,7 +266,7 @@ void lcd_init(esp_lcd_panel_handle_t *panel_handle, esp_lcd_panel_io_handle_t *i
     std::unique_ptr<nvs::NVSHandle> handle = nvs::open_nvs_handle("display", NVS_READWRITE, &err);
     DISPLAY_TYPES display_type = DISPLAY_TYPE_NONE;
     err = handle->get_item("type", display_type);
-    switch (2) {
+    switch (1) {
         case DISPLAY_TYPE_NONE:
             break;
         case DISPLAY_TYPE_GC9A01_1_28:
@@ -312,8 +311,6 @@ std::vector<std::string> list_directory(const std::string &path) {
 static void display_usb_logo(esp_lcd_panel_handle_t panel_handle, uint8_t *pGIFBuf) {
     ESP_LOGI(TAG, "Displaying USB LOGO");
     clear_screen(panel_handle, pGIFBuf);
-//    uint8_t *temp = (uint8_t *)malloc(480*480*2);
-//    lcd_rotate((uint8_t *) USB_icon, temp);
     esp_lcd_panel_draw_bitmap(panel_handle,
                               (H_RES / 2) - (USB_ICON_WIDTH / 2),
                               (V_RES / 2) - (USB_ICON_HEIGHT / 2),
@@ -325,23 +322,27 @@ static void display_usb_logo(esp_lcd_panel_handle_t panel_handle, uint8_t *pGIFB
 static void display_no_image(esp_lcd_panel_handle_t panel_handle, uint8_t *pGIFBuf) {
     ESP_LOGI(TAG, "Displaying No Image");
     clear_screen(panel_handle, pGIFBuf);
+    render_text_centered(H_RES, V_RES, 10, "No Image", pGIFBuf);
     esp_lcd_panel_draw_bitmap(panel_handle,
-                              (H_RES / 2) - (NO_IMAGE_WIDTH / 2),
-                              (V_RES / 2) - (NO_IMAGE_HEIGHT / 2),
-                              (H_RES / 2) + ((NO_IMAGE_WIDTH + 1) / 2), //Always round up
-                              (V_RES / 2) + ((NO_IMAGE_HEIGHT + 1) / 2),
-                              no_image);
+                              0,
+                              0,
+                              H_RES,
+                              V_RES,
+                              pGIFBuf);
 }
 
-static void display_image_too_large(esp_lcd_panel_handle_t panel_handle, uint8_t *pGIFBuf) {
+static void display_image_too_large(esp_lcd_panel_handle_t panel_handle, uint8_t *pGIFBuf, const char *path) {
     ESP_LOGI(TAG, "Displaying Image To Large");
     clear_screen(panel_handle, pGIFBuf);
+    char tmp[255];
+    sprintf(tmp, "Image too Large\n%s", path);
+    render_text_centered(H_RES, V_RES, 10, tmp, pGIFBuf);
     esp_lcd_panel_draw_bitmap(panel_handle,
-                              (H_RES / 2) - (IMAGE_TOO_BIG_WIDTH / 2),
-                              (V_RES / 2) - (IMAGE_TOO_BIG_HEIGHT / 2),
-                              (H_RES / 2) + ((IMAGE_TOO_BIG_WIDTH + 1) / 2),
-                              (V_RES / 2) + ((IMAGE_TOO_BIG_HEIGHT + 1) / 2),
-                              image_too_big);
+                              0,
+                              0,
+                              H_RES,
+                              V_RES,
+                              pGIFBuf);
 }
 
 static void display_image_batt(esp_lcd_panel_handle_t panel_handle, uint8_t *pGIFBuf) {
@@ -364,7 +365,7 @@ Image *display_file(ImageFactory factory, const char *path, uint8_t *pGIFBuf, es
         auto size = in->size();
         if (size.first > H_RES || size.second > V_RES) {
             delete in;
-            display_image_too_large(panel_handle, pGIFBuf);
+            display_image_too_large(panel_handle, pGIFBuf, path);
             return nullptr;
         }
         int delay = in->loop(pGIFBuf);
