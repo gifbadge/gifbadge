@@ -15,6 +15,7 @@
 
 #include <nvs_handle.hpp>
 #include <esp_timer.h>
+#include <ff.h>
 
 
 #include "esp_lcd_gc9a01.h"
@@ -296,11 +297,23 @@ std::vector<std::string> list_directory(const std::string &path) {
             if (!de) {
                 break;
             }
-            struct stat statbuf{};
-            if (stat((path + "/" + de->d_name).c_str(), &statbuf) == 0) {
-                if (!S_ISDIR(statbuf.st_mode)) {
-                    files.emplace_back(path + "/" + de->d_name);
+            std::string current_path = (path + "/" + de->d_name);
+            if (current_path.starts_with("/data")) {
+                ESP_LOGI(TAG, "%s", current_path.c_str());
+                std::string fat_path = current_path.substr(5, current_path.length());
+                ESP_LOGI(TAG, "%s %s", current_path.c_str(), fat_path.c_str());
+                //Check if file is hidden, a directory, or has any ignored characters.
+                //This will only work on the first FatFS filesystem right now, I think?
+                FILINFO info;
+                if (f_stat(fat_path.c_str(), &info) == 0) {
+                    ESP_LOGI(TAG, "%s %i %i", current_path.c_str(), info.fattrib & AM_DIR, info.fattrib & AM_HID);
+                    if (!((info.fattrib & AM_DIR) || (info.fattrib & AM_HID))) {
+                        if (de->d_name[0] != '.' && de->d_name[0] != '~') {
+                            files.emplace_back(current_path);
+                        }
+                    }
                 }
+
             }
         }
         closedir(dir);
