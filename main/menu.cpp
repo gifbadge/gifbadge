@@ -4,7 +4,6 @@
 #include <freertos/semphr.h>
 #include <esp_log.h>
 #include <esp_lcd_panel_ops.h>
-#include <sys/dirent.h>
 #include <sys/stat.h>
 #include <memory>
 #include <nvs_handle.hpp>
@@ -17,6 +16,8 @@
 #include "input.h"
 #include "display.h"
 #include "config.h"
+#include "file_util.h"
+
 
 static const char *TAG = "MENU";
 
@@ -130,63 +131,6 @@ Menu::~Menu() {
     free(buf2);
 }
 
-std::vector<std::string> list_files(const std::string &path) {
-    std::vector<std::string> files;
-    DIR *dir = opendir(path.c_str());
-    if (dir != nullptr) {
-        while (true) {
-            struct dirent *de = readdir(dir);
-            if (!de) {
-                break;
-            }
-            std::string current_path = (path + "/" + de->d_name);
-            if (current_path.starts_with("/data")) {
-                ESP_LOGI(TAG, "%s", current_path.c_str());
-                std::string fat_path = current_path.substr(5, current_path.length());
-                ESP_LOGI(TAG, "%s %s", current_path.c_str(), fat_path.c_str());
-                //Check if file is hidden, a directory, or has any ignored characters.
-                //This will only work on the first FatFS filesystem right now, I think?
-                FILINFO info;
-                if (f_stat(fat_path.c_str(), &info) == 0) {
-                    ESP_LOGI(TAG, "%s %i %i", current_path.c_str(), info.fattrib & AM_DIR, info.fattrib & AM_HID);
-                    if (!((info.fattrib & AM_DIR) || (info.fattrib & AM_HID))) {
-                        if (de->d_name[0] != '.' && de->d_name[0] != '~') {
-                            files.emplace_back(current_path);
-                        }
-                    }
-                }
-
-            }
-        }
-        closedir(dir);
-    }
-    return files;
-}
-
-static std::vector<std::string> list_folders(const std::string &path) {
-    std::vector<std::string> folders;
-    DIR *dir = opendir(path.c_str());
-    if (dir != nullptr) {
-        while (true) {
-            struct dirent *de = readdir(dir);
-            if (!de) {
-                break;
-            }
-            struct stat file_stat{};
-            if (stat((path + "/" + de->d_name).c_str(), &file_stat) == 0) {
-                if (S_ISDIR(file_stat.st_mode)) {
-                    folders.emplace_back(path + "/" + de->d_name);
-                    if(de->d_name[0] != '.' && de->d_name[0] != '~') {
-                        folders.emplace_back(path + "/" + de->d_name);
-                    }
-                }
-            }
-        }
-        closedir(dir);
-    }
-    return folders;
-}
-
 static void on_window_delete(lv_event_t *e){
         ESP_LOGI(TAG, "DELETE CALLED ON WINDOW");
         lv_group_set_default((lv_group_t *) e->user_data);
@@ -229,7 +173,7 @@ static void folder_update(lv_event_t *e) {
     lv_dropdown_clear_options(fields->file);
     lv_dropdown_add_option(fields->file, "Entire Folder", LV_DROPDOWN_POS_LAST);
     lv_dropdown_set_selected(fields->file, 0);
-    for (auto &f: list_files(selected_folder)) {
+    for (auto &f: list_directory(selected_folder)) {
         lv_dropdown_add_option(fields->file, f.c_str(), LV_DROPDOWN_POS_LAST);
     }
     lv_obj_add_event_cb(fields->folder, folder_update, LV_EVENT_VALUE_CHANGED, fields);
@@ -295,7 +239,7 @@ static void FileSelect() {
             ESP_LOGI(TAG, "%s", folder.c_str());
         }
 
-        for (auto &f: list_files(path)) {
+        for (auto &f: list_directory(path)) {
             lv_dropdown_add_option(file_dropdown, f.c_str(), LV_DROPDOWN_POS_LAST);
         }
         int32_t selected_file = lv_dropdown_get_option_index(file_dropdown, image_config->getFile().c_str());
