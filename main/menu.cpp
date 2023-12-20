@@ -362,41 +362,29 @@ static lv_style_t battery_style;
 
 void battery_update(lv_obj_t *widget){
     ESP_LOGI(TAG, "Battery Update");
-    char icon[4];
-    char voltage[10];
-    sprintf(voltage, " %1.3f", battery_config->getVoltage());
     if(battery_config->getVoltage() > 4){
         lv_style_set_text_color(&battery_style, lv_color_black());
-        strcpy(icon, LV_SYMBOL_BATTERY_FULL);
+        lv_label_set_text(widget, LV_SYMBOL_BATTERY_FULL);
     }
     else if(battery_config->getVoltage() > 3.7){
         lv_style_set_text_color(&battery_style, lv_color_black());
-//        lv_label_set_text(widget, LV_SYMBOL_BATTERY_3);
-        strcpy(icon, LV_SYMBOL_BATTERY_3);
-
+        lv_label_set_text(widget, LV_SYMBOL_BATTERY_3);
     }
     else if(battery_config->getVoltage() > 3.6){
         lv_style_set_text_color(&battery_style, lv_color_black());
-//        lv_label_set_text(widget, LV_SYMBOL_BATTERY_2);
-        strcpy(icon, LV_SYMBOL_BATTERY_2);
+        lv_label_set_text(widget, LV_SYMBOL_BATTERY_2);
 
     }
     else if(battery_config->getVoltage() > 3.5){
         lv_style_set_text_color(&battery_style, lv_color_black());
-//        lv_label_set_text(widget, LV_SYMBOL_BATTERY_1);
-        strcpy(icon, LV_SYMBOL_BATTERY_1);
+        lv_label_set_text(widget, LV_SYMBOL_BATTERY_1);
 
     }
     else{
         lv_style_set_text_color(&battery_style, lv_color_hex(0xFF0000));
-//        lv_label_set_text(widget, LV_SYMBOL_BATTERY_EMPTY);
-        strcpy(icon, LV_SYMBOL_BATTERY_EMPTY);
+        lv_label_set_text(widget, LV_SYMBOL_BATTERY_EMPTY);
 
     }
-    char out[20] = "";
-    strcat(out, icon);
-    strcat(out, voltage);
-    lv_label_set_text(widget, out);
 }
 
 static void MainMenu() {
