@@ -1,4 +1,4 @@
-idf_component_register(SRCS "main.cpp" "menu.cpp" "input.cpp" "usb.cpp" "display.cpp" "config.cpp" "file_util.cpp" INCLUDE_DIRS "include")
+idf_component_register(SRCS "main.cpp" "menu.cpp" "input.cpp" "usb.cpp" "display.cpp" "config.cpp" "file_util.cpp" "ota.cpp" INCLUDE_DIRS "include")
 #target_compile_options(${COMPONENT_LIB} PRIVATE -DGC9A01=1 -DLV_USE_PERF_MONITOR=1)
 target_compile_options(${COMPONENT_LIB} PRIVATE -DST7706=1 -DLV_USE_PERF_MONITOR=1)
 target_compile_options(${COMPONENT_LIB} PRIVATE -D__LINUX__)

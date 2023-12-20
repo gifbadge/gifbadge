@@ -325,6 +325,21 @@ static void display_image_too_large(esp_lcd_panel_handle_t panel_handle, uint8_t
                               pGIFBuf);
 }
 
+static void display_ota(esp_lcd_panel_handle_t panel_handle, uint8_t *pGIFBuf, uint32_t percent) {
+    ESP_LOGI(TAG, "Displaying OTA Status");
+    clear_screen(panel_handle, pGIFBuf);
+    char tmp[255];
+    sprintf(tmp, "Update In Progress\n%lu%%", percent);
+    render_text_centered(H_RES, V_RES, 10, tmp, pGIFBuf);
+    esp_lcd_panel_draw_bitmap(panel_handle,
+                              0,
+                              0,
+                              H_RES,
+                              V_RES,
+                              pGIFBuf);
+}
+
+
 static void display_image_batt(esp_lcd_panel_handle_t panel_handle, uint8_t *pGIFBuf) {
     ESP_LOGI(TAG, "Displaying Image To Large");
     clear_screen(panel_handle, pGIFBuf);
@@ -532,6 +547,10 @@ void display_task(void *params) {
                     }
                     last_mode = static_cast<DISPLAY_OPTIONS>(option);
                     break;
+                case DISPLAY_OTA:
+                    in.reset();
+                    display_ota(panel_handle, pGIFBuf, 0);
+                    last_mode = static_cast<DISPLAY_OPTIONS>(option);
                 default:
                     break;
             }
@@ -539,6 +558,13 @@ void display_task(void *params) {
             if (!menu_state) {
                 if((last_mode == DISPLAY_PATH ||last_mode == DISPLAY_FILE) && config->getSlideShow() && ((esp_timer_get_time()/1000000)-(last_change/1000000)) > config->getSlideShowTime()){
                     xTaskNotifyIndexed(xTaskGetCurrentTaskHandle(), 0, DISPLAY_NEXT, eSetValueWithOverwrite );
+                } else if(last_mode == DISPLAY_OTA){
+                    uint32_t percent;
+                    xTaskNotifyWaitIndexed(1, 0, 0xffffffff, &percent, 0);
+                    if(percent != 0){
+                        display_ota(panel_handle, pGIFBuf, percent);
+                    }
+                    vTaskDelay(200 / portTICK_PERIOD_MS);
                 } else {
                     image_loop(in, pGIFBuf, panel_handle);
                 }

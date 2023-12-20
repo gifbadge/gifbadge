@@ -27,6 +27,8 @@
 #include "config.h"
 #include "ft5x06.h"
 
+#include "ota.h"
+
 static const char *TAG = "MAIN";
 
 struct BatteryArgs {
@@ -185,7 +187,8 @@ enum MAIN_STATES {
     MAIN_NONE,
     MAIN_NORMAL,
     MAIN_USB,
-    MAIN_LOW_BATT
+    MAIN_LOW_BATT,
+    MAIN_OTA,
 };
 
 MAIN_STATES currentState = MAIN_NORMAL;
@@ -266,6 +269,9 @@ extern "C" void app_main(void) {
     i2c_args i2CArgs = {touch_queue};
     xTaskCreate(i2c, "i2c_task", 10000, &i2CArgs, 2, nullptr);
 
+    vTaskDelay(2000/portTICK_PERIOD_MS);
+    ota_boot_info();
+    ota_init();
 
     Menu *menu = new Menu(args.panel_handle, imageconfig, batteryconfig, display_type);
 
@@ -279,14 +285,25 @@ extern "C" void app_main(void) {
                 case MAIN_NONE:
                     break;
                 case MAIN_NORMAL:
+                    if(oldState == MAIN_USB){
+                        //Check for OTA File
+                        if(ota_check()){
+                            currentState = MAIN_OTA;
+                            xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_OTA, eSetValueWithOverwrite );
+                        }
+                    }
+                    else {
 //                    vTaskDelay(500 / portTICK_PERIOD_MS);
-                    xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_FILE, eSetValueWithOverwrite );
+                        xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_FILE, eSetValueWithOverwrite);
+                    }
                     break;
                 case MAIN_USB:
                     xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_USB, eSetValueWithOverwrite );
                     break;
                 case MAIN_LOW_BATT:
                     xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_BATT, eSetValueWithOverwrite );
+                    break;
+                case MAIN_OTA:
                     break;
             }
             oldState = currentState;
@@ -361,6 +378,9 @@ extern "C" void app_main(void) {
             } else if (batteryconfig->getVoltage() > 3.4 && currentState == MAIN_LOW_BATT) {
                 currentState = MAIN_NORMAL;
             }
+        }
+        if(currentState == MAIN_OTA){
+            ota_install();
         }
 
 
