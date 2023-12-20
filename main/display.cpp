@@ -427,6 +427,9 @@ static std::string files_get_next(const std::string &path, const std::string &na
             return files.at(pos + 1);
         }
     }
+    else {
+        return files.at(0);
+    }
     return "";
 }
 
@@ -439,6 +442,9 @@ static std::string files_get_previous(const std::string &path, const std::string
         } else {
             return files.at(pos - 1);
         }
+    }
+    else {
+        return files.at(0);
     }
     return "";
 }
