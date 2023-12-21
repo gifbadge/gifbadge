@@ -2,7 +2,7 @@
 /* TJpgDec System Configurations R0.03          */
 /*----------------------------------------------*/
 
-#include "sdkconfig.h"
+//#include "sdkconfig.h"
 
 #define JD_SZBUF        512
 /* Specifies size of stream input buffer */

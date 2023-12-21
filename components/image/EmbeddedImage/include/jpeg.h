@@ -38,7 +38,7 @@ private:
     JPGuser jpguser{};
     JDEC _dec{};
 
-    static unsigned int jpeg_decode_in_cb(JDEC *dec, uint8_t *buff, unsigned int nbyte);
+    static size_t jpeg_decode_in_cb(JDEC *dec, uint8_t *buff, size_t nbyte);
 
     static jpeg_decode_out_t jpeg_decode_out_cb(JDEC *dec, void *bitmap, JRECT *rect);
 

@@ -1,8 +1,10 @@
 #include "jpeg.h"
-
+#include <cassert>
 #include <string>
 #include "tjpgd.h"
+#ifdef __XTENSA__
 #include "esp_heap_caps.h"
+#endif
 
 JPEG::~JPEG() {
     printf("JPEG DELETED\n");
@@ -22,7 +24,7 @@ std::pair<int, int> JPEG::size() {
     return {_dec.width, _dec.height};
 }
 
-unsigned int JPEG::jpeg_decode_in_cb(JDEC *dec, uint8_t *buff, unsigned int nbyte) {
+size_t JPEG::jpeg_decode_in_cb(JDEC *dec, uint8_t *buff, size_t nbyte) {
     size_t to_read = nbyte;
     auto *in = (JPGuser *) dec->device;
 
@@ -76,8 +78,13 @@ int JPEG::open(const char *path) {
     fseek(jpguser.infile, 0, SEEK_END);
     jpguser.size = ftell(jpguser.infile);
     rewind(jpguser.infile);
-    printf("JPEG Size %i\n", jpguser.size);
+    printf("JPEG Size %zu\n", jpguser.size);
+#ifdef __XTENSA__
     workbuf = (uint8_t *) heap_caps_malloc(JPEG_WORK_BUF_SIZE, MALLOC_CAP_DEFAULT);
+#else
+    workbuf = (uint8_t *) malloc(JPEG_WORK_BUF_SIZE);
+#endif
+
     if (workbuf == nullptr) {
         printf("Failed to allocate memory\n");
     }
