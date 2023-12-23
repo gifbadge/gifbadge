@@ -15,6 +15,7 @@
 #include "menu.h"
 #include "input.h"
 #include "keys.h"
+#include "touch.h"
 #include "display.h"
 #include "config.h"
 #include "file_util.h"
