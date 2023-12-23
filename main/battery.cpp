@@ -11,13 +11,10 @@ void battery_analog_handler(void *params) {
     int reading;
     int voltage;
     auto *args = (AnalogBatteryArgs *) params;
-    while (true) {
-        adc_oneshot_read(args->adc_handle, ADC_CHANNEL_9, &reading);
-        ESP_ERROR_CHECK(adc_cali_raw_to_voltage(args->calibration_scheme, reading, &voltage));
-        args->m_present_value = (voltage / 1000.00) * (args->m_alpha) + args->m_present_value * (1.0f - args->m_alpha);
-        args->battery_config->setVoltage( (args->m_present_value * 2));
-        vTaskDelay(250 / portTICK_PERIOD_MS);
-    }
+    adc_oneshot_read(args->adc_handle, ADC_CHANNEL_9, &reading);
+    ESP_ERROR_CHECK(adc_cali_raw_to_voltage(args->calibration_scheme, reading, &voltage));
+    args->m_present_value = (voltage / 1000.00) * (args->m_alpha) + args->m_present_value * (1.0f - args->m_alpha);
+    args->battery_config->setVoltage((args->m_present_value * 2));
 }
 
 void battery_analog_init(const std::shared_ptr<BatteryConfig>& battery_config){
