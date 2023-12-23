@@ -28,51 +28,11 @@
 #include "ft5x06.h"
 
 #include "ota.h"
+#include "battery.h"
 
 static const char *TAG = "MAIN";
 
-struct BatteryArgs {
-    std::shared_ptr<BatteryConfig> battery_config;
-};
 
-
-void battery_task(void *params) {
-    auto *args = (BatteryArgs *) params;
-
-    adc_oneshot_unit_handle_t adc1_handle;
-    adc_oneshot_unit_init_cfg_t init_config1 = {
-            .unit_id = ADC_UNIT_1,
-            .ulp_mode = ADC_ULP_MODE_DISABLE,
-    };
-    ESP_ERROR_CHECK(adc_oneshot_new_unit(&init_config1, &adc1_handle));
-    adc_oneshot_chan_cfg_t config = {
-            .atten = ADC_ATTEN_DB_11,
-            .bitwidth = ADC_BITWIDTH_DEFAULT,
-    };
-    ESP_ERROR_CHECK(adc_oneshot_config_channel(adc1_handle, ADC_CHANNEL_9, &config));
-    ESP_LOGI(TAG, "calibration scheme version is %s", "Curve Fitting");
-    adc_cali_handle_t calibration_scheme;
-    adc_cali_curve_fitting_config_t cali_config = {
-            .unit_id = ADC_UNIT_1,
-            .atten = ADC_ATTEN_DB_11,
-            .bitwidth = ADC_BITWIDTH_DEFAULT,
-    };
-    ESP_ERROR_CHECK(adc_cali_create_scheme_curve_fitting(&cali_config, &calibration_scheme));
-    int reading;
-    int voltage;
-    adc_oneshot_read(adc1_handle, ADC_CHANNEL_9, &reading);
-    ESP_ERROR_CHECK(adc_cali_raw_to_voltage(calibration_scheme, reading, &voltage));
-    double m_present_value = voltage / 1000.00;
-    double m_alpha = 0.05;
-    while (true) {
-        adc_oneshot_read(adc1_handle, ADC_CHANNEL_9, &reading);
-        ESP_ERROR_CHECK(adc_cali_raw_to_voltage(calibration_scheme, reading, &voltage));
-        m_present_value = (voltage / 1000.00) * (m_alpha) + m_present_value * (1.0f - m_alpha);
-//        ESP_LOGI(TAG, "Voltage %f %f", (voltage * 2) / 1000.00, (m_present_value * 2));
-        args->battery_config->setVoltage( (m_present_value * 2));
-        vTaskDelay(250 / portTICK_PERIOD_MS);
-    }
-}
 
 static void touchpad_init(){
     // Valid touching detect threshold
@@ -254,8 +214,7 @@ extern "C" void app_main(void) {
     xTaskCreate(display_task, "display_task", 20000, &args, 2, &display_task_handle);
 
     auto batteryconfig = std::make_shared<BatteryConfig>();
-    BatteryArgs batteryargs = {batteryconfig};
-    xTaskCreate(battery_task, "battery_task", 20000, &batteryargs, 2, nullptr);
+    battery_analog_init(batteryconfig);
 
     sharedState configState {
         imageconfig,
