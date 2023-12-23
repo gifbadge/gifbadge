@@ -29,98 +29,25 @@
 
 #include "ota.h"
 #include "battery.h"
+#include "i2c.h"
 
 static const char *TAG = "MAIN";
 
 
-
-static void touchpad_init(){
-    // Valid touching detect threshold
-    i2c_master_write_to_device(I2C_NUM_0, 0x38, (const uint8_t []){FT5x06_ID_G_THGROUP, 70}, 2, 100 / portTICK_PERIOD_MS);
-
-
-    // valid touching peak detect threshold
-    i2c_master_write_to_device(I2C_NUM_0, 0x38, (const uint8_t []){FT5x06_ID_G_THPEAK, 60}, 2, 100 / portTICK_PERIOD_MS);
-
-    // Touch focus threshold
-    i2c_master_write_to_device(I2C_NUM_0, 0x38, (const uint8_t []){FT5x06_ID_G_THCAL, 16}, 2, 100 / portTICK_PERIOD_MS);
-
-    // threshold when there is surface water
-    i2c_master_write_to_device(I2C_NUM_0, 0x38, (const uint8_t []){FT5x06_ID_G_THWATER, 60}, 2, 100 / portTICK_PERIOD_MS);
-
-    // threshold of temperature compensation
-    i2c_master_write_to_device(I2C_NUM_0, 0x38, (const uint8_t []){FT5x06_ID_G_THTEMP, 10}, 2, 100 / portTICK_PERIOD_MS);
-
-    // Touch difference threshold
-    i2c_master_write_to_device(I2C_NUM_0, 0x38, (const uint8_t []){FT5x06_ID_G_THDIFF, 20}, 2, 100 / portTICK_PERIOD_MS);
-
-    // Delay to enter 'Monitor' status (s)
-    i2c_master_write_to_device(I2C_NUM_0, 0x38, (const uint8_t []){FT5x06_ID_G_TIME_ENTER_MONITOR, 2}, 2, 100 / portTICK_PERIOD_MS);
-
-    // Period of 'Active' status (ms)
-    i2c_master_write_to_device(I2C_NUM_0, 0x38, (const uint8_t []){FT5x06_ID_G_PERIODACTIVE, 12}, 2, 100 / portTICK_PERIOD_MS);
-
-    // Timer to enter 'idle' when in 'Monitor' (ms)
-    i2c_master_write_to_device(I2C_NUM_0, 0x38, (const uint8_t []){FT5x06_ID_G_PERIODMONITOR, 40}, 2, 100 / portTICK_PERIOD_MS);
-}
-
 struct i2c_args {
+    std::shared_ptr<I2C> bus;
     QueueHandle_t touch_queue;
     QueueHandle_t accel_queue;
 };
 
-void i2c(void *arg){
+void i2c(void *arg) {
     auto args = (i2c_args *) arg;
-    QueueHandle_t touch_queue = args->touch_queue;
 
-    i2c_config_t conf = {
-            .mode = I2C_MODE_MASTER,
-            .sda_io_num = 21,
-            .scl_io_num = 18,
-            .sda_pullup_en = GPIO_PULLUP_DISABLE,
-            .scl_pullup_en = GPIO_PULLUP_DISABLE,
-            .master = {.clk_speed = 400*1000},
-            .clk_flags = 0,
-    };
-    i2c_param_config(I2C_NUM_0, &conf);
-    i2c_driver_install(I2C_NUM_0, I2C_MODE_MASTER, 0, 0, 0);
-
-    touchpad_init();
-
-
-
-
-    while(true) {
-//        ESP_LOGI(TAG, "I2C READ");
-        uint8_t reg_addr = 0x0E;
+    while (true) {
         uint8_t data;
-//        i2c_master_write_read_device(I2C_NUM_0, 0x15, &reg_addr, 1, &data, 1, 100 / portTICK_PERIOD_MS);
-//        ESP_LOGI(TAG, "Got 0x%x", data);
-//        reg_addr = 0x01;
-//        data = 0x00;
-//        i2c_master_write_read_device(I2C_NUM_0, 0x38, &reg_addr, 1, &data, 1, 100 / portTICK_PERIOD_MS);
-//        ESP_LOGI(TAG, "Got 0x%x", data);
-
-
-        //Touch Read
-        i2c_master_write_read_device(I2C_NUM_0, 0x38, (const uint8_t []){FT5x06_TOUCH_POINTS}, 1, &data, sizeof(data), 100 / portTICK_PERIOD_MS);
-        if((data & 0x0f)> 0 && (data & 0x0f) < 5) {
-            uint8_t tmp[4] = {0};
-            i2c_master_write_read_device(I2C_NUM_0, 0x38, (const uint8_t[]) {FT5x06_TOUCH1_XH}, 1, tmp, sizeof(tmp),
-                                         100 / portTICK_PERIOD_MS);
-//            uint16_t x = ((tmp[0] & 0x0f) << 8) + tmp[1]; //not rotated
-//            uint16_t y = ((tmp[2] & 0x0f) << 8) + tmp[3];
-            uint16_t y = ((tmp[0] & 0x0f) << 8) + tmp[1]; // rotated
-            uint16_t x = ((tmp[2] & 0x0f) << 8) + tmp[3];
-            y = 480-y;
-            if(x > 0 || y > 0) {
-                touch_event event = {esp_timer_get_time(), 0, x, y};
-                xQueueSendToBack(touch_queue, &event, 100);
-
-            }
-        }
-
-        vTaskDelay(50/portTICK_PERIOD_MS);
+        args->bus->read_reg(0x15, 0x0E, &data, 1);
+        ESP_LOGI(TAG, "Got 0x%x", data);
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 
 }
@@ -222,9 +149,9 @@ extern "C" void app_main(void) {
 
     xTaskCreate(dump_state, "dump_state", 10000, &configState, 2, nullptr);
 
-
+    auto i2c_bus = std::make_shared<I2C>(I2C_NUM_0, 21, 18);
     QueueHandle_t touch_queue = xQueueCreate(20, sizeof(touch_event));
-    i2c_args i2CArgs = {touch_queue};
+    i2c_args i2CArgs = {i2c_bus, touch_queue};
     xTaskCreate(i2c, "i2c_task", 10000, &i2CArgs, 2, nullptr);
 
     vTaskDelay(2000/portTICK_PERIOD_MS);
