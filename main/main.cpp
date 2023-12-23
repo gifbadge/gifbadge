@@ -198,9 +198,8 @@ extern "C" void app_main(void) {
 
     vTaskDelay(100 / portTICK_PERIOD_MS);
 
-    input_init();
     QueueHandle_t input_queue = xQueueCreate(10, sizeof(input_event));
-    xTaskCreate(input_task, "input_task", 10000, input_queue, 2, nullptr);
+    input_init(input_queue);
 
     TaskHandle_t display_task_handle = nullptr;
 
