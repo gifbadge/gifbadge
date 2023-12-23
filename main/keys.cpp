@@ -6,7 +6,7 @@
 #include <esp_timer.h>
 #include <esp_log.h>
 #include <mutex>
-#include "input.h"
+#include "keys.h"
 
 static const char *TAG = "INPUT";
 

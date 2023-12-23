@@ -31,13 +31,6 @@ struct input_event {
     EVENT_STATE value;
 };
 
-struct touch_event {
-    int64_t timestamp;
-    uint8_t point;
-    uint16_t x;
-    uint16_t  y;
-};
-
 void input_init(QueueHandle_t);
 
 //void input_task(void *arg);

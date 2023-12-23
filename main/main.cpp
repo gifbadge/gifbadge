@@ -22,6 +22,7 @@
 
 #include "menu.h"
 #include "input.h"
+#include "keys.h"
 #include "usb.h"
 #include "display.h"
 #include "config.h"
