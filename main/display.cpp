@@ -99,6 +99,7 @@ void lcd_gc9a01(esp_lcd_panel_handle_t *panel_handle, esp_lcd_panel_io_handle_t 
     ESP_ERROR_CHECK(esp_lcd_panel_init(*panel_handle));
     ESP_ERROR_CHECK(esp_lcd_panel_invert_color(*panel_handle, true));
     ESP_ERROR_CHECK(esp_lcd_panel_mirror(*panel_handle, true, false));
+    gpio_hold_en((gpio_num_t) 46); //Don't toggle the reset signal on light sleep
 }
 
 
