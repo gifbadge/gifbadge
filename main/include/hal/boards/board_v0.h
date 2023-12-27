@@ -18,6 +18,7 @@ public:
     std::shared_ptr<I2C> getI2c() override;
     std::shared_ptr<Keys> getKeys() override;
     std::shared_ptr<Display> getDisplay() override;
+    std::shared_ptr<Backlight> getBacklight() override;
 
 
 private:
@@ -25,4 +26,5 @@ private:
     std::shared_ptr<I2C> _i2c;
     std::shared_ptr<keys_gpio> _keys;
     std::shared_ptr<display_gc9a01> _display;
+    std::shared_ptr<Backlight> _backlight;
 };

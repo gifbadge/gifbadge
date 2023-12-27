@@ -14,9 +14,6 @@
 
 #include "config.h"
 
-#define LCD_BK_LIGHT_ON_LEVEL 1
-#define PIN_NUM_BK_LIGHT 45
-
 //#ifdef CONFIG_LCD_1_28_GC9A01
 //#define H_RES 240
 //#define V_RES 240
@@ -24,6 +21,8 @@
 //#define H_RES 480
 //#define V_RES 480
 //#endif
+#include "hal/backlight.h"
+#include "hal/display.h"
 
 
 enum DISPLAY_OPTIONS {
@@ -45,15 +44,12 @@ enum DISPLAY_TYPES {
 };
 
 struct display_task_args {
-    esp_lcd_panel_handle_t panel_handle = nullptr;
-    esp_lcd_panel_io_handle_t io_handle = nullptr;
+    std::shared_ptr<Display> display;
     std::shared_ptr<ImageConfig> image_config;
+    std::shared_ptr<Backlight> backlight;
 };
 
 
 void display_task(void *params);
-
-void lcd_init(esp_lcd_panel_handle_t *panel_handle, esp_lcd_panel_io_handle_t *io_handle, void *user_ctx = nullptr,
-              esp_lcd_panel_io_color_trans_done_cb_t callback = nullptr);
 
 std::vector<std::string> list_directory(const std::string &path);

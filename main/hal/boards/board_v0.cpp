@@ -5,6 +5,7 @@
 #include "hal/board.h"
 
 #include "hal/boards/board_v0.h"
+#include "hal/drivers/backlight_ledc.h"
 
 static const char *TAG = "board_v0";
 
@@ -14,6 +15,7 @@ board_v0::board_v0() {
     _battery = std::make_shared<battery_analog>(ADC_CHANNEL_9);
     _keys = std::make_shared<keys_gpio>(GPIO_NUM_43, GPIO_NUM_44, GPIO_NUM_0);
     _display = std::make_shared<display_gc9a01>(35,36,34,37,46);
+    _backlight = std::make_shared<backlight_ledc>(GPIO_NUM_45, 0);
 
     esp_pm_config_t pm_config = {.max_freq_mhz = 240, .min_freq_mhz = 40, .light_sleep_enable = false};
     esp_pm_configure(&pm_config);
@@ -44,4 +46,8 @@ std::shared_ptr<Keys> board_v0::getKeys() {
 
 std::shared_ptr<Display> board_v0::getDisplay() {
     return _display;
+}
+
+std::shared_ptr<Backlight> board_v0::getBacklight() {
+    return _backlight;
 }

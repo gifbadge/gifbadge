@@ -237,9 +237,9 @@ extern "C" void app_main(void) {
     TaskHandle_t display_task_handle = nullptr;
 
     display_task_args args = {
-            board->getDisplay()->getPanelHandle(),
-            board->getDisplay()->getIoHandle(),
+            board->getDisplay(),
             imageconfig,
+            board->getBacklight(),
     };
 
     xTaskCreate(display_task, "display_task", 20000, &args, 2, &display_task_handle);
@@ -258,7 +258,7 @@ extern "C" void app_main(void) {
     ota_boot_info();
     ota_init();
 
-    Menu *menu = new Menu(args.panel_handle, imageconfig, batteryconfig, display_type);
+    Menu *menu = new Menu(board->getDisplay()->getPanelHandle(), imageconfig, batteryconfig, display_type);
 
     input_event i;
     MAIN_STATES oldState = MAIN_NONE;
@@ -298,7 +298,7 @@ extern "C" void app_main(void) {
                     xQueueReceive(input_queue, (void *) &i, 0);
                     xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_MENU, eSetValueWithOverwrite);
                     vTaskDelay(100 / portTICK_PERIOD_MS);
-                    menu->open(args.io_handle, input_queue, touch_queue);
+                    menu->open(board->getDisplay()->getIoHandle(), input_queue, touch_queue);
                 }
                 if (i.code == KEY_UP && i.value == STATE_PRESSED) {
                     xQueueReceive(input_queue, (void *) &i, 0);
@@ -325,7 +325,7 @@ extern "C" void app_main(void) {
                         xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_MENU, eSetValueWithOverwrite);
                         vTaskDelay(100 / portTICK_PERIOD_MS);
                         xQueueReset(touch_queue);
-                        menu->open(args.io_handle, input_queue, touch_queue);
+                        menu->open(board->getDisplay()->getIoHandle(), input_queue, touch_queue);
                     }
                     if (e.x < 50) {
                         xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_PREVIOUS, eSetValueWithOverwrite);

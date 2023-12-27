@@ -6,6 +6,7 @@
 #include "i2c.h"
 #include "keys.h"
 #include "display.h"
+#include "hal/backlight.h"
 
 class Board {
 public:
@@ -17,4 +18,5 @@ public:
     virtual std::shared_ptr<I2C> getI2c() = 0;
     virtual std::shared_ptr<Keys> getKeys() = 0;
     virtual std::shared_ptr<Display> getDisplay() = 0;
+    virtual std::shared_ptr<Backlight> getBacklight() = 0;
 };

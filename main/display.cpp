@@ -3,7 +3,6 @@
 #include <esp_log.h>
 #include <cstring>
 #include <vector>
-#include "driver/gpio.h"
 #include <algorithm>
 
 #include "display.h"
@@ -13,7 +12,6 @@
 
 #include <nvs_handle.hpp>
 #include <esp_timer.h>
-#include <driver/ledc.h>
 
 #include "font_render.h"
 #include "file_util.h"
@@ -196,7 +194,7 @@ void display_task(void *params) {
     // TODO: Check image size before trying to display it
     auto *args = (display_task_args *) params;
 
-    auto panel_handle = (esp_lcd_panel_handle_t) args->panel_handle;
+    auto panel_handle = args->display->getPanelHandle();
     auto config = args->image_config;
 
 
@@ -216,31 +214,7 @@ void display_task(void *params) {
 //    gpio_set_level((gpio_num_t) PIN_NUM_BK_LIGHT, LCD_BK_LIGHT_ON_LEVEL);
 ////    gpio_hold_en((gpio_num_t) PIN_NUM_BK_LIGHT);
 
-    // Prepare and then apply the LEDC PWM timer configuration
-    ledc_timer_config_t ledc_timer = {
-            .speed_mode       = LEDC_LOW_SPEED_MODE,
-            .duty_resolution  = LEDC_TIMER_8_BIT,
-            .timer_num        = LEDC_TIMER_0,
-            .freq_hz          = 4000,  // Set output frequency at 4 kHz
-            .clk_cfg          = LEDC_USE_RC_FAST_CLK
-    };
-    ESP_ERROR_CHECK(ledc_timer_config(&ledc_timer));
-
-    // Prepare and then apply the LEDC PWM channel configuration
-    ledc_channel_config_t ledc_channel = {
-            .gpio_num       = (gpio_num_t) PIN_NUM_BK_LIGHT,
-            .speed_mode     = LEDC_LOW_SPEED_MODE,
-            .channel        = LEDC_CHANNEL_0,
-            .intr_type      = LEDC_INTR_DISABLE,
-            .timer_sel      = LEDC_TIMER_0,
-            .duty           = 0, // Set duty to 0%
-            .hpoint         = 0
-    };
-    ESP_ERROR_CHECK(ledc_channel_config(&ledc_channel));
-    ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, 8191);
-    ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0);
-    ESP_ERROR_CHECK(gpio_sleep_sel_dis((gpio_num_t) PIN_NUM_BK_LIGHT));
-
+    args->backlight->setLevel(100);
 
     ImageFactory factory;
     std::shared_ptr<Image> in;
