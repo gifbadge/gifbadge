@@ -1,4 +1,9 @@
 #pragma once
+#include <memory>
+
+#include "hal/touch.h"
+#include "hal/i2c.h"
+
 #define FT5x06_DEVICE_MODE      (0x00)
 #define FT5x06_GESTURE_ID       (0x01)
 #define FT5x06_TOUCH_POINTS     (0x02)
@@ -53,3 +58,14 @@
 #define FT5x06_ID_G_STATE               (0xA7)
 #define FT5x06_ID_G_FT5201ID            (0xA8)
 #define FT5x06_ID_G_ERR                 (0xA9)
+
+
+class touch_ft5x06: public Touch{
+public:
+    touch_ft5x06(std::shared_ptr<I2C> bus);
+    ~touch_ft5x06();
+
+    std::pair<uint16_t, uint16_t> read();
+private:
+    std::shared_ptr<I2C> _bus;
+};

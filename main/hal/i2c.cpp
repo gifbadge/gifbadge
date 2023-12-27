@@ -1,7 +1,7 @@
 #include <hal/i2c_types.h>
 #include <driver/i2c.h>
 #include <cstring>
-#include "i2c.h"
+#include "hal/i2c.h"
 
 I2C::I2C(i2c_port_t port, int sda, int scl): _port(port){
     const std::lock_guard<std::mutex> lock(i2c_lock);

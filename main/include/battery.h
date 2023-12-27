@@ -1,14 +1,10 @@
 #pragma once
-#include <esp_adc/adc_oneshot.h>
-#include "esp_adc/adc_cali_scheme.h"
 #include "config.h"
+#include "hal/battery.h"
 
-struct AnalogBatteryArgs {
+struct BatteryArgs {
     std::shared_ptr<BatteryConfig> battery_config;
-    adc_oneshot_unit_handle_t adc_handle;
-    adc_cali_handle_t calibration_scheme;
-    double m_present_value = 0;
-    double m_alpha = 0.05;
+    std::shared_ptr<Battery> battery;
 };
 
-void battery_analog_init(const std::shared_ptr<BatteryConfig>& battery_config);
+void battery_init(const std::shared_ptr<Battery>&, const std::shared_ptr<BatteryConfig>& battery_config);

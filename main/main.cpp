@@ -9,68 +9,31 @@
 #include "esp_log.h"
 
 #include <cstring>
-#include <esp_adc/adc_oneshot.h>
 #include <nvs_flash.h>
 #include <nvs_handle.hpp>
-#include <esp_vfs_fat.h>
-#include <hal/i2c_types.h>
-#include <driver/i2c.h>
 #include <driver/rtc_io.h>
 #include <esp_sleep.h>
-#include "esp_adc/adc_cali_scheme.h"
 
 
 #include "menu.h"
-#include "input.h"
 #include "keys.h"
 #include "touch.h"
 #include "usb.h"
 #include "display.h"
 #include "config.h"
-#include "ft5x06.h"
 
 #include "ota.h"
 #include "battery.h"
-#include "i2c.h"
+#include "hal/i2c.h"
+
+#include "hw_init.h"
 
 static const char *TAG = "MAIN";
-
-
-struct i2c_args {
-    std::shared_ptr<I2C> bus;
-    QueueHandle_t touch_queue;
-    QueueHandle_t accel_queue;
-};
-
-void i2c(void *arg) {
-    auto args = (i2c_args *) arg;
-
-    while (true) {
-        uint8_t data;
-        args->bus->read_reg(0x15, 0x0E, &data, 1);
-        ESP_LOGI(TAG, "Got 0x%x", data);
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-    }
-
-}
 
 struct sharedState {
     std::shared_ptr<ImageConfig> image_config;
     std::shared_ptr<BatteryConfig> battery_config;
 };
-
-void dump_state(void *arg){
-    auto *args = (sharedState *) arg;
-
-    while(true){
-        if(false){
-            esp_pm_dump_locks(stdout);
-        }
-        ESP_LOGI(TAG, "Voltage: %f", args->battery_config->getVoltage());
-        vTaskDelay(1000/portTICK_PERIOD_MS);
-    }
-}
-bool inputAllowed = true;
 
 enum MAIN_STATES {
     MAIN_NONE,
@@ -80,9 +43,151 @@ enum MAIN_STATES {
     MAIN_OTA,
 };
 
+//#define ARRAY_SIZE_OFFSET   5   //Increase this if print_real_time_stats returns ESP_ERR_INVALID_SIZE
+
+///**
+// * @brief   Function to print the CPU usage of tasks over a given duration.
+// *
+// * This function will measure and print the CPU usage of tasks over a specified
+// * number of ticks (i.e. real time stats). This is implemented by simply calling
+// * uxTaskGetSystemState() twice separated by a delay, then calculating the
+// * differences of task run times before and after the delay.
+// *
+// * @note    If any tasks are added or removed during the delay, the stats of
+// *          those tasks will not be printed.
+// * @note    This function should be called from a high priority task to minimize
+// *          inaccuracies with delays.
+// * @note    When running in dual core mode, each core will correspond to 50% of
+// *          the run time.
+// *
+// * @param   xTicksToWait    Period of stats measurement
+// *
+// * @return
+// *  - ESP_OK                Success
+// *  - ESP_ERR_NO_MEM        Insufficient memory to allocated internal arrays
+// *  - ESP_ERR_INVALID_SIZE  Insufficient array size for uxTaskGetSystemState. Trying increasing ARRAY_SIZE_OFFSET
+// *  - ESP_ERR_INVALID_STATE Delay duration too short
+// */
+//static esp_err_t print_real_time_stats(TickType_t xTicksToWait)
+//{
+//    TaskStatus_t *start_array = nullptr, *end_array = nullptr;
+//    UBaseType_t start_array_size, end_array_size;
+//    uint32_t start_run_time, end_run_time;
+//    esp_err_t ret;
+//
+//    //Allocate array to store current task states
+//    start_array_size = uxTaskGetNumberOfTasks() + ARRAY_SIZE_OFFSET;
+//    start_array = static_cast<TaskStatus_t *>(malloc(sizeof(TaskStatus_t) * start_array_size));
+//    if (start_array == nullptr) {
+//        ret = ESP_ERR_NO_MEM;
+//        free(start_array);
+//        free(end_array);
+//        return ret;
+//    }
+//    //Get current task states
+//    start_array_size = uxTaskGetSystemState(start_array, start_array_size, &start_run_time);
+//    if (start_array_size == 0) {
+//        ret = ESP_ERR_INVALID_SIZE;
+//        free(start_array);
+//        free(end_array);
+//        return ret;
+//    }
+//
+//    vTaskDelay(xTicksToWait);
+//
+//    //Allocate array to store tasks states post delay
+//    end_array_size = uxTaskGetNumberOfTasks() + ARRAY_SIZE_OFFSET;
+//    end_array = static_cast<TaskStatus_t *>(malloc(sizeof(TaskStatus_t) * end_array_size));
+//    if (end_array == nullptr) {
+//        ret = ESP_ERR_NO_MEM;
+//        free(start_array);
+//        free(end_array);
+//        return ret;
+//    }
+//    //Get post delay task states
+//    end_array_size = uxTaskGetSystemState(end_array, end_array_size, &end_run_time);
+//    if (end_array_size == 0) {
+//        ret = ESP_ERR_INVALID_SIZE;
+//        free(start_array);
+//        free(end_array);
+//        return ret;
+//    }
+//
+//    //Calculate total_elapsed_time in units of run time stats clock period.
+//    uint32_t total_elapsed_time = (end_run_time - start_run_time);
+//    if (total_elapsed_time == 0) {
+//        ret = ESP_ERR_INVALID_STATE;
+//        free(start_array);
+//        free(end_array);
+//        return ret;
+//    }
+//
+//    printf("| Task | Run Time | Percentage\n");
+//    //Match each task in start_array to those in the end_array
+//    for (int i = 0; i < start_array_size; i++) {
+//        int k = -1;
+//        for (int j = 0; j < end_array_size; j++) {
+//            if (start_array[i].xHandle == end_array[j].xHandle) {
+//                k = j;
+//                //Mark that task have been matched by overwriting their handles
+//                start_array[i].xHandle = nullptr;
+//                end_array[j].xHandle = nullptr;
+//                break;
+//            }
+//        }
+//        //Check if matching task found
+//        if (k >= 0) {
+//            uint32_t task_elapsed_time = end_array[k].ulRunTimeCounter - start_array[i].ulRunTimeCounter;
+//            uint32_t percentage_time = (task_elapsed_time * 100UL) / (total_elapsed_time * portNUM_PROCESSORS);
+//            printf("| %s | %" PRIu32" | %" PRIu32"%%\n", start_array[i].pcTaskName, task_elapsed_time, percentage_time);
+//        }
+//    }
+//
+//    //Print unmatched tasks
+//    for (int i = 0; i < start_array_size; i++) {
+//        if (start_array[i].xHandle != nullptr) {
+//            printf("| %s | Deleted\n", start_array[i].pcTaskName);
+//        }
+//    }
+//    for (int i = 0; i < end_array_size; i++) {
+//        if (end_array[i].xHandle != nullptr) {
+//            printf("| %s | Created\n", end_array[i].pcTaskName);
+//        }
+//    }
+//    ret = ESP_OK;
+//    free(start_array);
+//    free(end_array);
+//    return ret;
+//}
+
+void dump_state(void *arg) {
+    auto *args = (sharedState *) arg;
+    esp_pm_lock_handle_t pm_lock;
+    esp_pm_lock_create(ESP_PM_NO_LIGHT_SLEEP, 0, "output_lock", &pm_lock);
+
+    while (true) {
+        esp_pm_lock_acquire(pm_lock);
+        vTaskDelay(1000/portTICK_PERIOD_MS);
+        if (true) {
+            esp_pm_dump_locks(stdout);
+        }
+        ESP_LOGI(TAG, "Voltage: %f", args->battery_config->getVoltage());
+//        printf("\n\nGetting real time stats over %" PRIu32" ticks\n", pdMS_TO_TICKS(1000));
+//        if (print_real_time_stats(pdMS_TO_TICKS(1000)) == ESP_OK) {
+//            printf("Real time stats obtained\n");
+//        } else {
+//            printf("Error getting real time stats\n");
+//        }
+        esp_pm_lock_release(pm_lock);
+        vTaskDelay(10000 / portTICK_PERIOD_MS);
+    }
+}
+
 MAIN_STATES currentState = MAIN_NORMAL;
 
 extern "C" void app_main(void) {
+    vTaskDelay(2000 / portTICK_PERIOD_MS);
+
     esp_err_t err;
 
 
@@ -94,6 +199,12 @@ extern "C" void app_main(void) {
         err = nvs_flash_init();
     }
     ESP_ERROR_CHECK(err);
+
+    std::shared_ptr<Board> board = hw_init();
+
+    auto batteryconfig = std::make_shared<BatteryConfig>();
+    battery_init(board->getBattery(), batteryconfig);
+
 
     //    bool usb_on = true;
 //    std::unique_ptr<nvs::NVSHandle> handle = nvs::open_nvs_handle("usb", NVS_READWRITE, &err);
@@ -115,48 +226,35 @@ extern "C" void app_main(void) {
     DISPLAY_TYPES display_type = DISPLAY_TYPE_NONE;
     err = handle->get_item("type", display_type);
 
-    esp_pm_config_t pm_config = {.max_freq_mhz = 240, .min_freq_mhz = 40, .light_sleep_enable = true};
-    if(display_type == 2) {
-        //RGB LCD doesn't like some power savings
-        pm_config = {.max_freq_mhz = 240, .min_freq_mhz = 80, .light_sleep_enable = false};
-    }
-    esp_pm_configure(&pm_config);
-
     auto imageconfig = std::make_shared<ImageConfig>();
 
 
     vTaskDelay(100 / portTICK_PERIOD_MS);
 
     QueueHandle_t input_queue = xQueueCreate(10, sizeof(input_event));
-    input_init(input_queue);
+    input_init(board->getKeys(), input_queue);
 
     TaskHandle_t display_task_handle = nullptr;
 
     display_task_args args = {
-            nullptr,
-            nullptr,
+            board->getDisplay()->getPanelHandle(),
+            board->getDisplay()->getIoHandle(),
             imageconfig,
     };
-    lcd_init(&args.panel_handle, &args.io_handle);
 
     xTaskCreate(display_task, "display_task", 20000, &args, 2, &display_task_handle);
 
-    auto batteryconfig = std::make_shared<BatteryConfig>();
-    battery_analog_init(batteryconfig);
-
-    sharedState configState {
-        imageconfig,
-        batteryconfig
+    sharedState configState{
+            imageconfig,
+            batteryconfig
     };
 
-    xTaskCreate(dump_state, "dump_state", 10000, &configState, 2, nullptr);
+    xTaskCreate(dump_state, "dump_state", 20000, &configState, 2, nullptr);
 
-    auto i2c_bus = std::make_shared<I2C>(I2C_NUM_0, 21, 18);
     QueueHandle_t touch_queue = xQueueCreate(20, sizeof(touch_event));
-    i2c_args i2CArgs = {i2c_bus, touch_queue};
-    xTaskCreate(i2c, "i2c_task", 10000, &i2CArgs, 2, nullptr);
 
-    vTaskDelay(2000/portTICK_PERIOD_MS);
+    vTaskDelay(2000 / portTICK_PERIOD_MS);
+
     ota_boot_info();
     ota_init();
 
@@ -172,36 +270,34 @@ extern "C" void app_main(void) {
                 case MAIN_NONE:
                     break;
                 case MAIN_NORMAL:
-                    if(oldState == MAIN_USB){
+                    if (oldState == MAIN_USB) {
                         //Check for OTA File
-                        if(ota_check()){
+                        if (ota_check()) {
                             currentState = MAIN_OTA;
-                            xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_OTA, eSetValueWithOverwrite );
+                            xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_OTA, eSetValueWithOverwrite);
                         }
-                    }
-                    else {
+                    } else {
 //                    vTaskDelay(500 / portTICK_PERIOD_MS);
                         xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_FILE, eSetValueWithOverwrite);
                     }
                     break;
                 case MAIN_USB:
-                    xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_USB, eSetValueWithOverwrite );
+                    xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_USB, eSetValueWithOverwrite);
                     break;
                 case MAIN_LOW_BATT:
-                    xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_BATT, eSetValueWithOverwrite );
+                    xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_BATT, eSetValueWithOverwrite);
                     break;
                 case MAIN_OTA:
                     break;
             }
             oldState = currentState;
-        }
-        else if (currentState == MAIN_NORMAL) {
+        } else if (currentState == MAIN_NORMAL) {
             if (xQueuePeek(input_queue, (void *) &i, 50 / portTICK_PERIOD_MS) && !menu->is_open()) {
                 get_event(i);
                 if (i.code == KEY_ENTER && i.value == STATE_PRESSED) {
                     xQueueReceive(input_queue, (void *) &i, 0);
                     xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_MENU, eSetValueWithOverwrite);
-                    vTaskDelay(100/portTICK_PERIOD_MS);
+                    vTaskDelay(100 / portTICK_PERIOD_MS);
                     menu->open(args.io_handle, input_queue, touch_queue);
                 }
                 if (i.code == KEY_UP && i.value == STATE_PRESSED) {
@@ -216,14 +312,14 @@ extern "C" void app_main(void) {
                     xQueueReceive(input_queue, (void *) &i, 0);
                 }
             }
-            if(menu->is_open()){
+            if (menu->is_open()) {
                 //Eat input events when we can't use them
                 xQueueReset(touch_queue);
                 xQueueReset(input_queue);
             }
             touch_event e = {};
-            if(xQueueReceive(touch_queue, (void *) &e, 0) && !menu->is_open()){
-                if(((esp_timer_get_time()/1000) - (last_change/1000)) > 1000) {
+            if (xQueueReceive(touch_queue, (void *) &e, 0) && !menu->is_open()) {
+                if (((esp_timer_get_time() / 1000) - (last_change / 1000)) > 1000) {
                     last_change = esp_timer_get_time();
                     if (e.y < 50) {
                         xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_MENU, eSetValueWithOverwrite);
@@ -242,13 +338,12 @@ extern "C" void app_main(void) {
                 }
                 ESP_LOGI(TAG, "x: %d y: %d", e.x, e.y);
             }
-        }
-        else {
+        } else {
             //Eat input events when we can't use them
             xQueueReset(touch_queue);
             xQueueReset(input_queue);
         }
-        if(currentState != MAIN_USB) {
+        if (currentState != MAIN_USB) {
             if (batteryconfig->getVoltage() < 3.2) {
                 if (batteryconfig->getVoltage() < 3.1) {
                     esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_ON);
@@ -257,7 +352,6 @@ extern "C" void app_main(void) {
                     esp_sleep_enable_ext0_wakeup(static_cast<gpio_num_t>(0), 0);
                     esp_deep_sleep_start();
                 } else {
-                    inputAllowed = false;
                     TaskHandle_t lvglHandle = xTaskGetHandle("LVGL");
                     xTaskNotifyIndexed(lvglHandle, 0, LVGL_STOP, eSetValueWithOverwrite);
                     currentState = MAIN_LOW_BATT;
@@ -266,7 +360,7 @@ extern "C" void app_main(void) {
                 currentState = MAIN_NORMAL;
             }
         }
-        if(currentState == MAIN_OTA){
+        if (currentState == MAIN_OTA) {
             ota_install();
         }
 

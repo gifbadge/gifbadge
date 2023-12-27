@@ -2,7 +2,6 @@
 #include <freertos/queue.h>
 #include <map>
 #include <hal/gpio_types.h>
-#include <driver/gpio.h>
 #include <esp_timer.h>
 #include <esp_log.h>
 #include <mutex>
@@ -29,11 +28,6 @@ void get_event(input_event i) {
     }
 }
 
-std::map<EVENT_CODE, button_state> states = {
-        {KEY_UP,    {(gpio_num_t) 43, "up",    false, 0}}, //1
-        {KEY_DOWN,  {(gpio_num_t) 44, "down",  false, 0}}, //14
-        {KEY_ENTER, {(gpio_num_t) 0,  "enter", false, 0}},};
-
 std::map<EVENT_CODE, EVENT_STATE> current_state =
         {{KEY_UP,    STATE_RELEASED},
          {KEY_DOWN,  STATE_RELEASED},
@@ -41,65 +35,37 @@ std::map<EVENT_CODE, EVENT_STATE> current_state =
         };
 
 static void input_timer_handler(void *arg) {
-    auto queue = (QueueHandle_t) arg;
+    auto *args = (keyArgs *) arg;
+
     const std::lock_guard<std::mutex> lock(input_lock);
 
-    for (auto &button: states) {
-        bool state = !gpio_get_level(button.second.pin);
-        current_state[button.first] = state ? STATE_PRESSED : STATE_RELEASED;
-        if (state != button.second.state) {
-            button.second.state = state;
+    for (auto &button: args->keys->read()) {
+        if (current_state[button.first] != button.second) {
+            current_state[button.first] = button.second;
             input_event event = {
                     esp_timer_get_time(),
                     button.first,
-                    state ? STATE_PRESSED : STATE_RELEASED
+                    button.second
             };
-            xQueueSendToBackFromISR(queue, &event, 0);
+            xQueueSendToBackFromISR(args->queue, &event, 0);
         }
     }
 }
 
-void input_init(QueueHandle_t key_queue) {
+void input_init(const std::shared_ptr<Keys> &keys, QueueHandle_t key_queue) {
+    ESP_LOGI(TAG, "input_init");
     const std::lock_guard<std::mutex> lock(input_lock);
-    for (auto &button: states) {
-        gpio_num_t gpio = button.second.pin;
-        ESP_LOGI(TAG, "Setting up GPIO %u\n", gpio);
-        ESP_ERROR_CHECK(gpio_reset_pin(gpio));
-        ESP_ERROR_CHECK(gpio_set_direction(gpio, GPIO_MODE_INPUT));
-        ESP_ERROR_CHECK(gpio_set_pull_mode(gpio, GPIO_PULLUP_ONLY));
-        ESP_ERROR_CHECK(gpio_pullup_en(gpio));
-    }
-    const esp_timer_create_args_t input_timer_args = {.callback = &input_timer_handler, .arg = key_queue, .name = "key_handler"};
+    auto *_keyArgs = static_cast<keyArgs *>(malloc(sizeof(keyArgs)));
+    _keyArgs->keys = keys;
+    _keyArgs->queue = key_queue;
+
+    const esp_timer_create_args_t input_timer_args = {.callback = &input_timer_handler, .arg = _keyArgs, .name = "key_handler"};
     esp_timer_handle_t key_handler_handle = nullptr;
     ESP_ERROR_CHECK(esp_timer_create(&input_timer_args, &key_handler_handle));
-    esp_timer_start_periodic(key_handler_handle, KEY_POLL_INTERVAL*1000);
+    esp_timer_start_periodic(key_handler_handle, keys->pollInterval() * 1000);
 }
 
 std::map<EVENT_CODE, EVENT_STATE> input_read() {
     const std::lock_guard<std::mutex> lock(input_lock);
     return current_state;
 }
-
-
-//void input_task(void *arg) {
-//    auto queue = (QueueHandle_t) arg;
-//    std::unique_lock lock{input_lock, std::defer_lock};
-//    while (true) {
-//        lock.lock();
-//        for (auto &button: states) {
-//            bool state = !gpio_get_level(button.second.pin);
-//            current_state[button.first] = state ? STATE_PRESSED : STATE_RELEASED;
-//            if (state != button.second.state) {
-//                button.second.state = state;
-//                input_event event = {
-//                        esp_timer_get_time(),
-//                        button.first,
-//                        state ? STATE_PRESSED : STATE_RELEASED
-//                };
-//                xQueueSendToBack(queue, &event, 100);
-//            }
-//        }
-//        lock.unlock();
-//        vTaskDelay(KEY_POLL_INTERVAL / portTICK_PERIOD_MS);
-//    }
-//}

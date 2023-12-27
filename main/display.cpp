@@ -28,80 +28,8 @@
 
 static const char *TAG = "DISPLAY";
 
-int H_RES;
-int V_RES;
-
-
-void lcd_gc9a01(esp_lcd_panel_handle_t *panel_handle, esp_lcd_panel_io_handle_t *io_handle, void *user_ctx,
-                esp_lcd_panel_io_color_trans_done_cb_t callback) {
-    ESP_LOGI(TAG, "Turn off LCD backlight");
-    gpio_config_t bk_gpio_config = {
-            .pin_bit_mask = 1ULL << (gpio_num_t) PIN_NUM_BK_LIGHT,
-            .mode = GPIO_MODE_OUTPUT,
-            .pull_up_en = GPIO_PULLUP_DISABLE,
-            .pull_down_en = GPIO_PULLDOWN_DISABLE,
-            .intr_type = GPIO_INTR_DISABLE
-    };
-    ESP_ERROR_CHECK(gpio_config(&bk_gpio_config));
-    ESP_LOGI(TAG, "Initialize SPI bus");
-    spi_bus_config_t buscfg = {
-            .mosi_io_num = 35,//21,
-            .miso_io_num = -1,
-            .sclk_io_num = 36,//40,
-            .quadwp_io_num = -1,
-            .quadhd_io_num = -1,
-            .data4_io_num = -1,
-            .data5_io_num = -1,
-            .data6_io_num = -1,
-            .data7_io_num = -1,
-            .max_transfer_sz = 32768, //H_RES * V_RES * sizeof(uint16_t),
-            .flags = 0,
-            .isr_cpu_id = INTR_CPU_ID_AUTO,
-            .intr_flags = 0,
-    };
-    ESP_ERROR_CHECK(spi_bus_initialize(SPI2_HOST, &buscfg, SPI_DMA_CH_AUTO));
-
-    ESP_LOGI(TAG, "Install panel IO");
-    esp_lcd_panel_io_spi_config_t io_config = {
-            .cs_gpio_num = 34, //47,
-            .dc_gpio_num = 37,//45,
-            .spi_mode = 0,
-            .pclk_hz = (80 * 1000 * 1000),
-            .trans_queue_depth = 10,
-            .on_color_trans_done = callback,
-            .user_ctx = user_ctx,
-            .lcd_cmd_bits = 8,
-            .lcd_param_bits = 8,
-            .flags = {
-                    .dc_low_on_data = 0,
-                    .octal_mode = 0,
-                    .sio_mode = 0,
-                    .lsb_first = 0,
-                    .cs_high_active = 0,
-            }
-    };
-    // Attach the LCD to the SPI bus
-    ESP_ERROR_CHECK(esp_lcd_new_panel_io_spi((esp_lcd_spi_bus_handle_t) SPI2_HOST, &io_config, io_handle));
-
-    esp_lcd_panel_dev_config_t panel_config = {
-            .reset_gpio_num = 46,
-            .rgb_endian = LCD_RGB_ENDIAN_BGR,
-            .bits_per_pixel = 16,
-            .flags = {
-                    .reset_active_high = 0,
-            },
-            .vendor_config = nullptr,
-    };
-
-    ESP_LOGI(TAG, "Install GC9A01 panel driver");
-    ESP_ERROR_CHECK(esp_lcd_new_panel_gc9a01(*io_handle, &panel_config, panel_handle));
-    ESP_ERROR_CHECK(esp_lcd_panel_reset(*panel_handle));
-    ESP_ERROR_CHECK(esp_lcd_panel_init(*panel_handle));
-    ESP_ERROR_CHECK(esp_lcd_panel_invert_color(*panel_handle, true));
-    ESP_ERROR_CHECK(esp_lcd_panel_mirror(*panel_handle, true, false));
-    gpio_hold_en((gpio_num_t) 46); //Don't toggle the reset signal on light sleep
-}
-
+int H_RES = 240;
+int V_RES = 240;
 
 static const st7701_lcd_init_cmd_t buyadisplaycom[] = {
         {0xFF, (uint8_t[]) {0x77, 0x01, 0x00, 0x00, 0x10,},                                                 5,  0},
@@ -261,27 +189,27 @@ void lcd_st7706(esp_lcd_panel_handle_t *panel_handle, esp_lcd_panel_io_handle_t 
     esp_lcd_rgb_panel_set_yuv_conversion(*panel_handle, nullptr);
 }
 
-void lcd_init(esp_lcd_panel_handle_t *panel_handle, esp_lcd_panel_io_handle_t *io_handle, void *user_ctx,
-              esp_lcd_panel_io_color_trans_done_cb_t callback) {
-    esp_err_t err;
-    std::unique_ptr<nvs::NVSHandle> handle = nvs::open_nvs_handle("display", NVS_READWRITE, &err);
-    DISPLAY_TYPES display_type = DISPLAY_TYPE_NONE;
-    err = handle->get_item("type", display_type);
-    switch (1) {
-        case DISPLAY_TYPE_NONE:
-            break;
-        case DISPLAY_TYPE_GC9A01_1_28:
-            H_RES = 240;
-            V_RES = 240;
-            lcd_gc9a01(panel_handle, io_handle, user_ctx, callback);
-            break;
-        case DISPLAY_TYPE_ST7706_2_1:
-            H_RES = 480;
-            V_RES = 480;
-            lcd_st7706(panel_handle, io_handle, user_ctx, callback);
-            break;
-    }
-}
+//void lcd_init(esp_lcd_panel_handle_t *panel_handle, esp_lcd_panel_io_handle_t *io_handle, void *user_ctx,
+//              esp_lcd_panel_io_color_trans_done_cb_t callback) {
+//    esp_err_t err;
+//    std::unique_ptr<nvs::NVSHandle> handle = nvs::open_nvs_handle("display", NVS_READWRITE, &err);
+//    DISPLAY_TYPES display_type = DISPLAY_TYPE_NONE;
+//    err = handle->get_item("type", display_type);
+//    switch (1) {
+//        case DISPLAY_TYPE_NONE:
+//            break;
+//        case DISPLAY_TYPE_GC9A01_1_28:
+//            H_RES = 240;
+//            V_RES = 240;
+//            lcd_gc9a01(panel_handle, io_handle, user_ctx, callback);
+//            break;
+//        case DISPLAY_TYPE_ST7706_2_1:
+//            H_RES = 480;
+//            V_RES = 480;
+//            lcd_st7706(panel_handle, io_handle, user_ctx, callback);
+//            break;
+//    }
+//}
 
 static void clear_screen(esp_lcd_panel_handle_t panel_handle, uint8_t *pGIFBuf) {
     memset(pGIFBuf, 255, H_RES * V_RES * 2);

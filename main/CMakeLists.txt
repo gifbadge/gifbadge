@@ -8,8 +8,13 @@ idf_component_register(SRCS
         "file_util.cpp"
         "ota.cpp"
         "battery.cpp"
-        "i2c.cpp"
-        "touch.cpp"
+        "hal/i2c.cpp"
+        "hal/drivers/touch_ft5x06.cpp"
+        "hal/drivers/battery_analog.cpp"
+        "hw_init.cpp"
+        "hal/boards/board_v0.cpp"
+        "hal/drivers/keys_gpio.cpp"
+        "hal/drivers/display_gc9a01.cpp"
         INCLUDE_DIRS "include")
 #target_compile_options(${COMPONENT_LIB} PRIVATE -DGC9A01=1 -DLV_USE_PERF_MONITOR=1)
 target_compile_options(${COMPONENT_LIB} PRIVATE -DST7706=1 -DLV_USE_PERF_MONITOR=1)
