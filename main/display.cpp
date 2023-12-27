@@ -206,13 +206,6 @@ void display_task(void *params) {
 
     memset(pGIFBuf, 255, H_RES * V_RES * 2);
     esp_lcd_panel_draw_bitmap(panel_handle, 0, 0, H_RES, V_RES, pGIFBuf);
-#ifdef CONFIG_GC9A01
-    ESP_ERROR_CHECK(esp_lcd_panel_disp_on_off(panel_handle, true));
-#endif
-
-    ESP_LOGI(TAG, "Turn on LCD backlight");
-//    gpio_set_level((gpio_num_t) PIN_NUM_BK_LIGHT, LCD_BK_LIGHT_ON_LEVEL);
-////    gpio_hold_en((gpio_num_t) PIN_NUM_BK_LIGHT);
 
     args->backlight->setLevel(100);
 
