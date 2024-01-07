@@ -79,3 +79,9 @@ esp_lcd_panel_handle_t display_gc9a01::getPanelHandle() {
 esp_lcd_panel_io_handle_t display_gc9a01::getIoHandle() {
     return io_handle;
 }
+
+bool display_gc9a01::onColorTransDone(esp_lcd_panel_io_color_trans_done_cb_t flush_ready, void *disp_drv) {
+    esp_lcd_panel_io_callbacks_t conf = {.on_color_trans_done = flush_ready};
+    esp_lcd_panel_io_register_event_callbacks(io_handle, &conf, disp_drv);
+    return true;
+}

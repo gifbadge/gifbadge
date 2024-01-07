@@ -3,7 +3,7 @@
 struct BatteryStatus {
     double voltage;
     int soc;
-    float rate;
+    double rate;
 };
 
 class Battery{
@@ -15,4 +15,10 @@ public:
     virtual BatteryStatus read() = 0;
 
     virtual int pollInterval() = 0;
+
+    virtual double getVoltage() = 0;
+
+    virtual int getSoc() = 0;
+
+    virtual double getRate() = 0;
 };

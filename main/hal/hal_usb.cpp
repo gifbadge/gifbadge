@@ -1,3 +1,5 @@
+#include "hal/hal_usb.h"
+
 /*
  * SPDX-FileCopyrightText: 2022-2023 Espressif Systems (Shanghai) CO LTD
  *
@@ -17,6 +19,7 @@
 #include <nvs_handle.hpp>
 #include <esp_flash_spi_init.h>
 #include <sys/stat.h>
+#include <sdmmc_cmd.h>
 #include "esp_console.h"
 #include "esp_check.h"
 #include "esp_partition.h"
@@ -115,19 +118,19 @@ static esp_err_t storage_init_spiflash(wl_handle_t *wl_handle) {
     return wl_mount(data_partition, wl_handle);
 }
 
-static esp_err_t storage_init_ext_flash(wl_handle_t *wl_handle) {
+static esp_err_t storage_init_ext_flash(int mosi, int miso, int sclk, int cs, wl_handle_t *wl_handle) {
     esp_err_t err;
     const spi_bus_config_t bus_config = {
-            .mosi_io_num = 39,
-            .miso_io_num = 41,
-            .sclk_io_num = 40,
+            .mosi_io_num = mosi,
+            .miso_io_num = miso,
+            .sclk_io_num = sclk,
             .quadwp_io_num = -1,
             .quadhd_io_num = -1,
     };
 
     const esp_flash_spi_device_config_t device_config = {
             .host_id = SPI3_HOST,
-            .cs_io_num = 42,
+            .cs_io_num = cs,
             .io_mode = SPI_FLASH_DIO,
             .cs_id = 0,
             .freq_mhz = 40,
@@ -203,9 +206,104 @@ static esp_err_t storage_init_ext_flash(wl_handle_t *wl_handle) {
     return ESP_OK;
 }
 
+esp_err_t init_sdmmc_slot(gpio_num_t clk, gpio_num_t cmd, gpio_num_t d0, gpio_num_t cd, sdmmc_card_t **card)
+{
+    esp_err_t ret = ESP_OK;
+    bool host_init = false;
+    sdmmc_card_t *sd_card;
+
+    ESP_LOGI(TAG, "Initializing SDCard");
+
+    // By default, SD card frequency is initialized to SDMMC_FREQ_DEFAULT (20MHz)
+    // For setting a specific frequency, use host.max_freq_khz (range 400kHz - 40MHz for SDMMC)
+    // Example: for fixed frequency of 10MHz, use host.max_freq_khz = 10000;
+    sdmmc_host_t host = SDMMC_HOST_DEFAULT();
+
+    // This initializes the slot without card detect (CD) and write protect (WP) signals.
+    // Modify slot_config.gpio_cd and slot_config.gpio_wp if your board has these signals.
+    sdmmc_slot_config_t slot_config = SDMMC_SLOT_CONFIG_DEFAULT();
+
+    slot_config.width = 1;
+
+    slot_config.clk = clk;
+    slot_config.cmd = cmd;
+    slot_config.d0 = d0;
+    slot_config.cd = cd;
+
+
+//    // Enable internal pullups on enabled pins. The internal pullups
+//    // are insufficient however, please make sure 10k external pullups are
+//    // connected on the bus. This is for debug / example purpose only.
+//    slot_config.flags |= SDMMC_SLOT_FLAG_INTERNAL_PULLUP;
+
+    // not using ff_memalloc here, as allocation in internal RAM is preferred
+    sd_card = (sdmmc_card_t *)malloc(sizeof(sdmmc_card_t));
+    ESP_GOTO_ON_FALSE(sd_card, ESP_ERR_NO_MEM, clean, TAG, "could not allocate new sdmmc_card_t");
+
+    ESP_GOTO_ON_ERROR((*host.init)(), clean, TAG, "Host Config Init fail");
+    host_init = true;
+
+    ESP_GOTO_ON_ERROR(sdmmc_host_init_slot(host.slot, (const sdmmc_slot_config_t *) &slot_config),
+                      clean, TAG, "Host init slot fail");
+
+    while (sdmmc_card_init(&host, sd_card)) {
+        ESP_LOGE(TAG, "The detection pin of the slot is disconnected(Insert uSD card). Retrying...");
+        vTaskDelay(pdMS_TO_TICKS(3000));
+    }
+
+    // Card has been initialized, print its properties
+    sdmmc_card_print_info(stdout, sd_card);
+    *card = sd_card;
+
+    return ESP_OK;
+
+    clean:
+    if (host_init) {
+        if (host.flags & SDMMC_HOST_FLAG_DEINIT_ARG) {
+            host.deinit_p(host.slot);
+        } else {
+            (*host.deinit)();
+        }
+    }
+    if (sd_card) {
+        free(sd_card);
+        sd_card = NULL;
+    }
+    return ret;
+}
+
 bool storage_free() {
     return tinyusb_msc_storage_in_use_by_usb_host();
 }
+
+
+
+void storage_init_mmc(int usb_sense, sdmmc_card_t **card) {
+
+    const tinyusb_msc_sdmmc_config_t config_sdmmc = {
+            .card = *card,
+            .callback_mount_changed = storage_mount_changed_cb,  /* First way to register the callback. This is while initializing the storage. */
+            .mount_config = {.max_files = 5},
+    };
+    ESP_ERROR_CHECK(tinyusb_msc_storage_init_sdmmc(&config_sdmmc));
+    ESP_ERROR_CHECK(tinyusb_msc_register_callback(TINYUSB_MSC_EVENT_MOUNT_CHANGED, storage_mount_changed_cb)); /* Other way to register the callback i.e. registering using separate API. If the callback had been already registered, it will be overwritten. */
+
+    mount();
+
+    const tinyusb_config_t tusb_cfg = {
+            .device_descriptor = nullptr,
+            .string_descriptor = nullptr,
+            .string_descriptor_count = 0,
+            .external_phy = false,
+            .configuration_descriptor = nullptr,
+            .self_powered = true,
+            .vbus_monitor_io = usb_sense,
+    };
+
+    ESP_ERROR_CHECK(tinyusb_driver_install(&tusb_cfg));
+
+}
+
 
 void storage_init() {
     esp_err_t err;
@@ -214,7 +312,7 @@ void storage_init() {
 
     static wl_handle_t wl_handle = WL_INVALID_HANDLE;
 //    ESP_ERROR_CHECK(storage_init_spiflash(&wl_handle));
-    ESP_ERROR_CHECK(storage_init_ext_flash(&wl_handle));
+    ESP_ERROR_CHECK(storage_init_ext_flash(39, 41, 40, 42, &wl_handle));
 
 
     const tinyusb_msc_spiflash_config_t config_spi = {
@@ -266,28 +364,26 @@ void storage_init() {
 
 
 
-//    ESP_LOGI(TAG, "USB initialization");
-//    const tinyusb_config_t tusb_cfg = {
-////                .device_descriptor = &descriptor_config,
-////                .string_descriptor = string_desc_arr,
-////                .string_descriptor_count = sizeof(string_desc_arr) / sizeof(string_desc_arr[0]),
-//            .device_descriptor = nullptr,
-//            .string_descriptor = nullptr,
-//            .string_descriptor_count = 0,
-//            .external_phy = false,
-//            .configuration_descriptor = nullptr,
-//    };
-//    ESP_ERROR_CHECK(tinyusb_driver_install(&tusb_cfg));
-//
-//    ESP_LOGI(TAG, "USB MSC initialization DONE");
-//    tinyusb_config_cdcacm_t acm_cfg = {
-//            .usb_dev = TINYUSB_USBDEV_0,
-//            .cdc_port = TINYUSB_CDC_ACM_0,
-//            .callback_rx = nullptr, // the first way to register a callback
-//            .callback_rx_wanted_char = nullptr,
-//            .callback_line_state_changed = nullptr,
-//            .callback_line_coding_changed = nullptr
-//    };
-//    ESP_ERROR_CHECK(tusb_cdc_acm_init(&acm_cfg));
-//    esp_tusb_init_console(TINYUSB_CDC_ACM_0);
+    ESP_LOGI(TAG, "USB initialization");
+    const tinyusb_config_t tusb_cfg = {
+            .device_descriptor = nullptr,
+            .string_descriptor = nullptr,
+            .string_descriptor_count = 0,
+            .external_phy = false,
+            .configuration_descriptor = nullptr,
+    };
+    ESP_ERROR_CHECK(tinyusb_driver_install(&tusb_cfg));
+
+    ESP_LOGI(TAG, "USB MSC initialization DONE");
+    tinyusb_config_cdcacm_t acm_cfg = {
+            .usb_dev = TINYUSB_USBDEV_0,
+            .cdc_port = TINYUSB_CDC_ACM_0,
+            .callback_rx = nullptr, // the first way to register a callback
+            .callback_rx_wanted_char = nullptr,
+            .callback_line_state_changed = nullptr,
+            .callback_line_coding_changed = nullptr
+    };
+    ESP_ERROR_CHECK(tusb_cdc_acm_init(&acm_cfg));
+    esp_tusb_init_console(TINYUSB_CDC_ACM_0);
 }
+

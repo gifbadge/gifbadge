@@ -1,5 +1,6 @@
 #pragma once
 
+#include <utility>
 #include <esp_lcd_panel_io.h>
 
 class Display {
@@ -9,4 +10,6 @@ public:
 
     virtual esp_lcd_panel_handle_t getPanelHandle() = 0;
     virtual esp_lcd_panel_io_handle_t getIoHandle() = 0;
+    virtual std::pair<int, int> getResolution() = 0;
+    virtual bool onColorTransDone(esp_lcd_panel_io_color_trans_done_cb_t, void *) = 0;
 };

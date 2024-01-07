@@ -19,8 +19,8 @@
 
 static const char *TAG = "DISPLAY";
 
-int H_RES = 240;
-int V_RES = 240;
+int H_RES;
+int V_RES;
 
 static void clear_screen(esp_lcd_panel_handle_t panel_handle, uint8_t *pGIFBuf) {
     memset(pGIFBuf, 255, H_RES * V_RES * 2);
@@ -200,6 +200,10 @@ void display_task(void *params) {
 
     bool menu_state = false;
 
+    H_RES = args->display->getResolution().first;
+    V_RES = args->display->getResolution().second;
+
+
     // user can flush pre-defined pattern to the screen before we turn on the screen or backlight
     uint8_t *pGIFBuf;
     pGIFBuf = (uint8_t *) heap_caps_malloc(H_RES * V_RES * 2, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
@@ -218,6 +222,8 @@ void display_task(void *params) {
     DISPLAY_OPTIONS last_mode = DISPLAY_NONE;
 
     int64_t last_change = esp_timer_get_time();
+
+    ESP_LOGI(TAG, "Display Resolution %ix%i", H_RES, V_RES);
 
     while (true) {
         uint32_t option;

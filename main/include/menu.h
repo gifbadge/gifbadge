@@ -9,6 +9,7 @@
 #include "esp_lcd_panel_io.h"
 #include "lvgl.h"
 #include "config.h"
+#include "hal/board.h"
 
 #define LVGL_TICK_PERIOD_MS    2
 #define LVGL_TASK_MAX_DELAY_MS 500
@@ -16,13 +17,18 @@
 #define LVGL_TASK_STACK_SIZE   (4 * 1024)
 #define LVGL_TASK_PRIORITY     2
 
+struct flushCbData {
+    esp_lcd_panel_handle_t panelHandle;
+    bool callbackEnabled;
+};
+
 class Menu {
 public:
-    explicit Menu(esp_lcd_panel_handle_t panel_handle, std::shared_ptr<ImageConfig>, std::shared_ptr<BatteryConfig> _battery_config, int display_type);
+    explicit Menu(std::shared_ptr<Board>, std::shared_ptr<ImageConfig>);
 
     ~Menu();
 
-    void open(esp_lcd_panel_io_handle_t io_handle, QueueHandle_t input_queue, QueueHandle_t touch_queue);
+    void open(QueueHandle_t touch_queue);
 
     void close();
 
@@ -45,7 +51,7 @@ public:
     static void touch_read(lv_indev_drv_t *drv, lv_indev_data_t *data);
 
 
-    bool is_open();
+    bool is_open() const;
 
 
 private:
@@ -62,8 +68,10 @@ private:
     lv_indev_t *touch_dev;
     lv_indev_drv_t keyboard_drv;
     lv_indev_drv_t touch_drv;
+    std::shared_ptr<Board> _board;
 
     bool state = false;
+    flushCbData cbData;
 
 };
 

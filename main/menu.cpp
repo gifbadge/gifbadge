@@ -13,22 +13,22 @@
 #include "lvgl.h"
 
 #include "menu.h"
-#include "input.h"
 #include "keys.h"
 #include "touch.h"
 #include "display.h"
 #include "config.h"
 #include "file_util.h"
+#include "hal/battery.h"
 
 
 static const char *TAG = "MENU";
 
+static SemaphoreHandle_t lvgl_mux = nullptr;
+
 //TODO: This is bad
 std::shared_ptr<ImageConfig> image_config;
-std::shared_ptr<BatteryConfig> battery_config;
-extern int V_RES;
-extern int H_RES;
-int DISPLAY_TYPE = 0;
+std::shared_ptr<Battery> battery_config;
+
 
 bool Menu::flush_ready([[maybe_unused]] esp_lcd_panel_io_handle_t panel_io,
                        [[maybe_unused]] esp_lcd_panel_io_event_data_t *edata, void *user_ctx) {
@@ -38,15 +38,15 @@ bool Menu::flush_ready([[maybe_unused]] esp_lcd_panel_io_handle_t panel_io,
 }
 
 void Menu::flush_cb(lv_disp_drv_t *drv, const lv_area_t *area, lv_color_t *color_map) {
-    auto panel_handle = (esp_lcd_panel_handle_t) drv->user_data;
-    esp_lcd_panel_draw_bitmap(panel_handle,
+    auto cbData = (flushCbData *) drv->user_data;
+    esp_lcd_panel_draw_bitmap(cbData->panelHandle,
                               area->x1,
                               area->y1,
                               area->x2 + 1,
                               area->y2 + 1,
                               color_map);
-    if(DISPLAY_TYPE == 2) {
-        lv_disp_flush_ready(drv);
+    if(!cbData->callbackEnabled) {
+        lv_disp_flush_ready(drv); //Need to only do this on RGB displays
     }
 }
 
@@ -54,7 +54,6 @@ void Menu::tick([[maybe_unused]] void *arg) {
     lv_tick_inc(LVGL_TICK_PERIOD_MS);
 }
 
-static SemaphoreHandle_t lvgl_mux = nullptr;
 
 bool Menu::lock(int timeout_ms) {
     // Convert timeout in milliseconds to FreeRTOS ticks
@@ -102,19 +101,18 @@ void Menu::task(void *arg) {
     }
 }
 
-Menu::Menu(esp_lcd_panel_handle_t panel_handle, std::shared_ptr<ImageConfig> _image_config, std::shared_ptr<BatteryConfig> _battery_config, int display_type) : _panel_handle{
-        panel_handle} {
+Menu::Menu(std::shared_ptr<Board> board, std::shared_ptr<ImageConfig> _image_config): _board(std::move(board)) {
     image_config = std::move(_image_config);
-    battery_config = std::move(_battery_config);
-    DISPLAY_TYPE = display_type;
+    battery_config = _board->getBattery();
 
     lv_init();
+    int h_res = _board->getDisplay()->getResolution().first;
     // it's recommended to choose the size of the draw buffer(s) to be at least 1/10 screen sized
-    buf1 = (lv_color_t *) heap_caps_malloc(H_RES * 20 * sizeof(lv_color_t), MALLOC_CAP_DMA);
+    buf1 = (lv_color_t *) heap_caps_malloc(h_res * 20 * sizeof(lv_color_t), MALLOC_CAP_DMA);
     assert(buf1);
-    buf2 = (lv_color_t *) heap_caps_malloc(H_RES * 20 * sizeof(lv_color_t), MALLOC_CAP_DMA);
+    buf2 = (lv_color_t *) heap_caps_malloc(h_res * 20 * sizeof(lv_color_t), MALLOC_CAP_DMA);
     assert(buf2);
-    lv_disp_draw_buf_init(&disp_buf, buf1, buf2, H_RES * 20);
+    lv_disp_draw_buf_init(&disp_buf, buf1, buf2, h_res * 20);
 
 
     lvgl_mux = xSemaphoreCreateRecursiveMutex();
@@ -209,7 +207,7 @@ static void FileSelect() {
     auto *fields = new FileSelect_Objects;
     if (Menu::lock(-1)) {
         lv_obj_t *scr = lv_obj_create(lv_scr_act());
-        lv_obj_set_size(scr, H_RES, V_RES);
+        lv_obj_set_size(scr,LV_PCT(100),LV_PCT(100));
         lv_obj_set_align(scr, LV_ALIGN_CENTER);
         lv_obj_add_event_cb(scr, on_window_delete, LV_EVENT_DELETE, lv_group_get_default());
         fields->win = scr;
@@ -364,20 +362,20 @@ static lv_style_t battery_style;
 
 void battery_update(lv_obj_t *widget){
     ESP_LOGI(TAG, "Battery Update");
-    if(battery_config->getVoltage() > 4){
+    if(battery_config->getSoc() > 90){
         lv_style_set_text_color(&battery_style, lv_color_black());
         lv_label_set_text(widget, LV_SYMBOL_BATTERY_FULL);
     }
-    else if(battery_config->getVoltage() > 3.7){
+    else if(battery_config->getSoc() > 70){
         lv_style_set_text_color(&battery_style, lv_color_black());
         lv_label_set_text(widget, LV_SYMBOL_BATTERY_3);
     }
-    else if(battery_config->getVoltage() > 3.6){
+    else if(battery_config->getSoc() > 45){
         lv_style_set_text_color(&battery_style, lv_color_black());
         lv_label_set_text(widget, LV_SYMBOL_BATTERY_2);
 
     }
-    else if(battery_config->getVoltage() > 3.5){
+    else if(battery_config->getSoc() > 10){
         lv_style_set_text_color(&battery_style, lv_color_black());
         lv_label_set_text(widget, LV_SYMBOL_BATTERY_1);
 
@@ -410,20 +408,22 @@ static void MainMenu() {
         lv_obj_set_size(battery, LV_PCT(20), LV_PCT(20));
         lv_obj_set_size(battery, LV_PCT(100), LV_PCT(20));
         lv_obj_add_style(battery, &battery_style, 0);
-        lv_obj_add_event_cb(battery, [](lv_event_t *e){
-            battery_update(lv_event_get_target(e));
-        }, LV_EVENT_REFRESH, nullptr);
-        battery_update(battery);
 
-        lv_timer_t * timer = lv_timer_create([](lv_timer_t * timer){
-            auto *obj = (lv_obj_t *) timer->user_data;
-            lv_event_send(obj, LV_EVENT_REFRESH, nullptr);
-
-            }, 1000,  battery);
-        lv_obj_add_event_cb(battery, [](lv_event_t *e){
-            auto * timer = (lv_timer_t *)e->user_data;
-            lv_timer_del(timer);
-        }, LV_EVENT_DELETE, timer);
+        //TODO: See why this causes a freeze in LVGL
+//        lv_obj_add_event_cb(battery, [](lv_event_t *e){
+//            battery_update(lv_event_get_target(e));
+//        }, LV_EVENT_REFRESH, nullptr);
+//        battery_update(battery);
+//
+//        lv_timer_t * timer = lv_timer_create([](lv_timer_t * timer){
+//            auto *obj = (lv_obj_t *) timer->user_data;
+//            lv_event_send(obj, LV_EVENT_REFRESH, nullptr);
+//
+//            }, 1000,  battery);
+//        lv_obj_add_event_cb(battery, [](lv_event_t *e){
+//            auto * timer = (lv_timer_t *)e->user_data;
+//            lv_timer_del(timer);
+//        }, LV_EVENT_DELETE, timer);
 
 
         lv_obj_t *file_button = lv_btn_create(cont_flex);
@@ -473,23 +473,21 @@ static void MainMenu() {
     }
 }
 
-void Menu::open(esp_lcd_panel_io_handle_t io_handle, QueueHandle_t input_queue, QueueHandle_t touch_queue) {
-    _io_handle = io_handle;
+void Menu::open(QueueHandle_t touch_queue) {
     ESP_LOGI(TAG, "Open");
     state = true;
 
-#ifdef CONFIG_GC9A01
-    esp_lcd_panel_io_callbacks_t conf = {.on_color_trans_done = flush_ready};
-    esp_lcd_panel_io_register_event_callbacks(io_handle, &conf, &disp_drv);
-#endif
+    cbData.panelHandle = _board->getDisplay()->getPanelHandle();
+
+    cbData.callbackEnabled = _board->getDisplay()->onColorTransDone(flush_ready, &disp_drv);
 
     lv_disp_drv_init(&disp_drv);
-    disp_drv.hor_res = H_RES;
-    disp_drv.ver_res = V_RES;
+    disp_drv.hor_res = static_cast<lv_coord_t>(_board->getDisplay()->getResolution().first);
+    disp_drv.ver_res = static_cast<lv_coord_t>(_board->getDisplay()->getResolution().second);
     disp_drv.flush_cb = flush_cb;
     disp_drv.draw_buf = &disp_buf;
-    disp_drv.user_data = _panel_handle;
-    disp_drv.full_refresh = 1;
+    disp_drv.user_data = &cbData;
+//    disp_drv.full_refresh = 1;
     disp = lv_disp_drv_register(&disp_drv);
 
     vTaskResume(lvgl_task);
@@ -497,18 +495,18 @@ void Menu::open(esp_lcd_panel_io_handle_t io_handle, QueueHandle_t input_queue, 
     lv_indev_drv_init(&keyboard_drv);
     keyboard_drv.type = LV_INDEV_TYPE_ENCODER;
     keyboard_drv.read_cb = keyboard_read;
-    keyboard_drv.user_data = input_queue;
     keyboard_drv.long_press_time = 400;
     keyboard_dev = lv_indev_drv_register(&keyboard_drv);
     lv_timer_set_period(keyboard_drv.read_timer, 200); //Slow down key reads
 
 
-    lv_indev_drv_init(&touch_drv);
-    keyboard_drv.type = LV_INDEV_TYPE_POINTER;
-    keyboard_drv.read_cb = touch_read;
-    keyboard_drv.user_data = touch_queue;
-    keyboard_drv.long_press_time = 400;
-    touch_dev = lv_indev_drv_register(&touch_drv);
+
+//    lv_indev_drv_init(&touch_drv);
+//    keyboard_drv.type = LV_INDEV_TYPE_POINTER;
+//    keyboard_drv.read_cb = touch_read;
+//    keyboard_drv.user_data = touch_queue;
+//    keyboard_drv.long_press_time = 400;
+//    touch_dev = lv_indev_drv_register(&touch_drv);
 
     ESP_ERROR_CHECK(esp_timer_start_periodic(lvgl_tick_timer, LVGL_TICK_PERIOD_MS * 1000));
     if (Menu::lock(-1)) {
@@ -526,12 +524,11 @@ void Menu::open(esp_lcd_panel_io_handle_t io_handle, QueueHandle_t input_queue, 
 
 void Menu::close() {
     ESP_LOGI(TAG, "Close");
-    esp_lcd_panel_io_callbacks_t conf = {.on_color_trans_done = nullptr};
-    esp_lcd_panel_io_register_event_callbacks(_io_handle, &conf, nullptr);
+    _board->getDisplay()->onColorTransDone(nullptr, nullptr);
 
     if (lock(-1)) {
         lv_indev_delete(keyboard_dev);
-        lv_indev_delete(touch_dev);
+//        lv_indev_delete(touch_dev);
         lv_disp_remove(disp);
         unlock();
     }
@@ -561,7 +558,7 @@ void Menu::keyboard_read(lv_indev_drv_t *drv, lv_indev_data_t *data) {
 
 }
 
-bool Menu::is_open() {
+bool Menu::is_open() const {
     return state;
 }
 
@@ -576,4 +573,5 @@ void Menu::touch_read(lv_indev_drv_t *drv, lv_indev_data_t *data) {
     else {
         data->state = LV_INDEV_STATE_RELEASED;
     }
+    data->continue_reading = uxQueueMessagesWaiting(queue) > 0;
 }

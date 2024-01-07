@@ -11,14 +11,12 @@
 #include <cstring>
 #include <nvs_flash.h>
 #include <nvs_handle.hpp>
-#include <driver/rtc_io.h>
-#include <esp_sleep.h>
 
 
 #include "menu.h"
 #include "keys.h"
 #include "touch.h"
-#include "usb.h"
+#include "hal/hal_usb.h"
 #include "display.h"
 #include "config.h"
 
@@ -167,11 +165,11 @@ void dump_state(void *arg) {
 
     while (true) {
         esp_pm_lock_acquire(pm_lock);
-        vTaskDelay(1000/portTICK_PERIOD_MS);
-        if (true) {
-            esp_pm_dump_locks(stdout);
-        }
-        ESP_LOGI(TAG, "Voltage: %f", args->battery_config->getVoltage());
+//        vTaskDelay(1000/portTICK_PERIOD_MS);
+//        if (true) {
+//            esp_pm_dump_locks(stdout);
+//        }
+//        ESP_LOGI(TAG, "Voltage: %f", args->battery_config->getVoltage());
 //        printf("\n\nGetting real time stats over %" PRIu32" ticks\n", pdMS_TO_TICKS(1000));
 //        if (print_real_time_stats(pdMS_TO_TICKS(1000)) == ESP_OK) {
 //            printf("Real time stats obtained\n");
@@ -200,16 +198,6 @@ extern "C" void app_main(void) {
     }
     ESP_ERROR_CHECK(err);
 
-    std::shared_ptr<Board> board = hw_init();
-
-    auto batteryconfig = std::make_shared<BatteryConfig>();
-    battery_init(board->getBattery(), batteryconfig);
-
-
-    //    bool usb_on = true;
-//    std::unique_ptr<nvs::NVSHandle> handle = nvs::open_nvs_handle("usb", NVS_READWRITE, &err);
-//    handle->get_item("usb_on", usb_on);
-//    if(usb_on) {
     storage_callback([](bool state) {
         ESP_LOGI(TAG, "state %u", state);
         if (state) {
@@ -218,13 +206,17 @@ extern "C" void app_main(void) {
             currentState = MAIN_USB;
         }
     });
-//    }
 
-    storage_init();
 
-    std::unique_ptr<nvs::NVSHandle> handle = nvs::open_nvs_handle("display", NVS_READWRITE, &err);
-    DISPLAY_TYPES display_type = DISPLAY_TYPE_NONE;
-    err = handle->get_item("type", display_type);
+    std::shared_ptr<Board> board = hw_init();
+
+    auto batteryconfig = std::make_shared<BatteryConfig>();
+    battery_init(board->getBattery(), batteryconfig);
+
+
+
+
+
 
     auto imageconfig = std::make_shared<ImageConfig>();
 
@@ -233,6 +225,7 @@ extern "C" void app_main(void) {
 
     QueueHandle_t input_queue = xQueueCreate(10, sizeof(input_event));
     input_init(board->getKeys(), input_queue);
+
 
     TaskHandle_t display_task_handle = nullptr;
 
@@ -258,7 +251,7 @@ extern "C" void app_main(void) {
     ota_boot_info();
     ota_init();
 
-    Menu *menu = new Menu(board->getDisplay()->getPanelHandle(), imageconfig, batteryconfig, display_type);
+    Menu *menu = new Menu(board, imageconfig);
 
     input_event i;
     MAIN_STATES oldState = MAIN_NONE;
@@ -298,7 +291,7 @@ extern "C" void app_main(void) {
                     xQueueReceive(input_queue, (void *) &i, 0);
                     xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_MENU, eSetValueWithOverwrite);
                     vTaskDelay(100 / portTICK_PERIOD_MS);
-                    menu->open(board->getDisplay()->getIoHandle(), input_queue, touch_queue);
+                    menu->open(touch_queue);
                 }
                 if (i.code == KEY_UP && i.value == STATE_PRESSED) {
                     xQueueReceive(input_queue, (void *) &i, 0);
@@ -325,7 +318,7 @@ extern "C" void app_main(void) {
                         xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_MENU, eSetValueWithOverwrite);
                         vTaskDelay(100 / portTICK_PERIOD_MS);
                         xQueueReset(touch_queue);
-                        menu->open(board->getDisplay()->getIoHandle(), input_queue, touch_queue);
+                        menu->open(touch_queue);
                     }
                     if (e.x < 50) {
                         xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_PREVIOUS, eSetValueWithOverwrite);
@@ -343,23 +336,23 @@ extern "C" void app_main(void) {
             xQueueReset(touch_queue);
             xQueueReset(input_queue);
         }
-        if (currentState != MAIN_USB) {
-            if (batteryconfig->getVoltage() < 3.2) {
-                if (batteryconfig->getVoltage() < 3.1) {
-                    esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_ON);
-                    rtc_gpio_pullup_en(static_cast<gpio_num_t>(0));
-                    rtc_gpio_pulldown_dis(static_cast<gpio_num_t>(0));
-                    esp_sleep_enable_ext0_wakeup(static_cast<gpio_num_t>(0), 0);
-                    esp_deep_sleep_start();
-                } else {
-                    TaskHandle_t lvglHandle = xTaskGetHandle("LVGL");
-                    xTaskNotifyIndexed(lvglHandle, 0, LVGL_STOP, eSetValueWithOverwrite);
-                    currentState = MAIN_LOW_BATT;
-                }
-            } else if (batteryconfig->getVoltage() > 3.4 && currentState == MAIN_LOW_BATT) {
-                currentState = MAIN_NORMAL;
-            }
-        }
+//        if (currentState != MAIN_USB) {
+//            if (batteryconfig->getVoltage() < 3.2) {
+//                if (batteryconfig->getVoltage() < 3.1) {
+//                    esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_ON);
+//                    rtc_gpio_pullup_en(static_cast<gpio_num_t>(0));
+//                    rtc_gpio_pulldown_dis(static_cast<gpio_num_t>(0));
+//                    esp_sleep_enable_ext0_wakeup(static_cast<gpio_num_t>(0), 0);
+//                    esp_deep_sleep_start();
+//                } else {
+//                    TaskHandle_t lvglHandle = xTaskGetHandle("LVGL");
+//                    xTaskNotifyIndexed(lvglHandle, 0, LVGL_STOP, eSetValueWithOverwrite);
+//                    currentState = MAIN_LOW_BATT;
+//                }
+//            } else if (batteryconfig->getVoltage() > 3.4 && currentState == MAIN_LOW_BATT) {
+//                currentState = MAIN_NORMAL;
+//            }
+//        }
         if (currentState == MAIN_OTA) {
             ota_install();
         }
