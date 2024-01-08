@@ -8,6 +8,12 @@
 #include "display.h"
 #include "hal/backlight.h"
 
+enum BOARD_POWER {
+    BOARD_POWER_NORMAL,
+    BOARD_POWER_LOW,
+    BOARD_POWER_CRITICAL,
+};
+
 class Board {
 public:
     Board() = default;
@@ -19,4 +25,6 @@ public:
     virtual std::shared_ptr<Keys> getKeys() = 0;
     virtual std::shared_ptr<Display> getDisplay() = 0;
     virtual std::shared_ptr<Backlight> getBacklight() = 0;
+    virtual void powerOff() = 0;
+    virtual BOARD_POWER powerState() = 0;
 };

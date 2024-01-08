@@ -10,7 +10,14 @@ battery_max17048::battery_max17048(std::shared_ptr<I2C> i2c): _i2c(std::move(i2c
     uint8_t data[2];
     _i2c->read_reg(0x36, 0x08, data, 2);
     ESP_LOGI(TAG, "MAX17048 Version %u %u", data[0], data[1]);
-
+    const esp_timer_create_args_t battery_timer_args = {
+            .callback = [](void *params){auto bat = (battery_max17048 *) params; bat->read();},
+            .arg = this,
+            .name = "battery_max17048"
+    };
+    esp_timer_handle_t battery_handler_handle = nullptr;
+    ESP_ERROR_CHECK(esp_timer_create(&battery_timer_args, &battery_handler_handle));
+    esp_timer_start_periodic(battery_handler_handle, pollInterval()*1000);
 }
 
 battery_max17048::~battery_max17048() {
@@ -24,7 +31,7 @@ BatteryStatus battery_max17048::read() {
 //    ESP_LOGI(TAG, "MAX17048 Voltage %f ", voltage);
     _i2c->read_reg(0x36, 0x04, d, 2);
     _soc = static_cast<int>(__bswap16(*reinterpret_cast<uint16_t *>(d))/256.00);
-//    ESP_LOGI(TAG, "MAX17048 SOC %f ", soc);
+//    ESP_LOGI(TAG, "MAX17048 SOC %i ", _soc);
     _i2c->read_reg(0x36, 0x16, d, 2);
     _rate = __bswap16(*reinterpret_cast<int16_t *>(d))*0.208;
 //    ESP_LOGI(TAG, "MAX17048 CRATE %f ", change);

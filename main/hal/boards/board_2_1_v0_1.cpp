@@ -1,6 +1,5 @@
 #include <esp_pm.h>
 #include <esp_log.h>
-#include <driver/uart.h>
 #include "hal/boards/board_2_1_v0_1.h"
 #include "hal/hal_usb.h"
 
@@ -26,7 +25,7 @@ board_2_1_v0_1::board_2_1_v0_1() {
     _i2c->read_reg(0x0F, 0x0F, &data, 1);
     ESP_LOGI(TAG, "KXTJ3-1057 %u", data);
 
-    static sdmmc_card_t *card = NULL;
+    static sdmmc_card_t *card = nullptr;
     init_sdmmc_slot(GPIO_NUM_37, GPIO_NUM_38, GPIO_NUM_36, GPIO_NUM_40, &card);
     storage_init_mmc(21, &card);
 }
@@ -54,4 +53,16 @@ std::shared_ptr<Display> board_2_1_v0_1::getDisplay() {
 
 std::shared_ptr<Backlight> board_2_1_v0_1::getBacklight() {
     return _backlight;
+}
+
+void board_2_1_v0_1::powerOff() {
+
+}
+
+BOARD_POWER board_2_1_v0_1::powerState() {
+    //TODO Detect USB power status, implement critical level
+    if(_battery->getSoc() < 10){
+        return BOARD_POWER_LOW;
+    }
+    return BOARD_POWER_NORMAL;
 }

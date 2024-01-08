@@ -22,6 +22,9 @@ public:
     std::shared_ptr<Display> getDisplay() override;
     std::shared_ptr<Backlight> getBacklight() override;
 
+    void powerOff() override;
+    BOARD_POWER powerState() override;
+
 
 private:
     std::shared_ptr<battery_max17048> _battery;

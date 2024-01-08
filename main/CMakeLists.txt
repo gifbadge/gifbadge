@@ -6,7 +6,6 @@ idf_component_register(SRCS
         "config.cpp"
         "file_util.cpp"
         "ota.cpp"
-        "battery.cpp"
         "hal/i2c.cpp"
         "hal/hal_usb.cpp"
         "hal/drivers/touch_ft5x06.cpp"

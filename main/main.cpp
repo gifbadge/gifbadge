@@ -21,7 +21,6 @@
 #include "config.h"
 
 #include "ota.h"
-#include "battery.h"
 #include "hal/i2c.h"
 
 #include "hw_init.h"
@@ -30,7 +29,6 @@ static const char *TAG = "MAIN";
 
 struct sharedState {
     std::shared_ptr<ImageConfig> image_config;
-    std::shared_ptr<BatteryConfig> battery_config;
 };
 
 enum MAIN_STATES {
@@ -210,14 +208,6 @@ extern "C" void app_main(void) {
 
     std::shared_ptr<Board> board = hw_init();
 
-    auto batteryconfig = std::make_shared<BatteryConfig>();
-    battery_init(board->getBattery(), batteryconfig);
-
-
-
-
-
-
     auto imageconfig = std::make_shared<ImageConfig>();
 
 
@@ -239,7 +229,6 @@ extern "C" void app_main(void) {
 
     sharedState configState{
             imageconfig,
-            batteryconfig
     };
 
     xTaskCreate(dump_state, "dump_state", 20000, &configState, 2, nullptr);
@@ -253,7 +242,7 @@ extern "C" void app_main(void) {
 
     Menu *menu = new Menu(board, imageconfig);
 
-    input_event i;
+    input_event i{};
     MAIN_STATES oldState = MAIN_NONE;
     int64_t last_change = esp_timer_get_time();
     while (true) {
@@ -337,20 +326,20 @@ extern "C" void app_main(void) {
             xQueueReset(input_queue);
         }
 //        if (currentState != MAIN_USB) {
-//            if (batteryconfig->getVoltage() < 3.2) {
-//                if (batteryconfig->getVoltage() < 3.1) {
-//                    esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_ON);
-//                    rtc_gpio_pullup_en(static_cast<gpio_num_t>(0));
-//                    rtc_gpio_pulldown_dis(static_cast<gpio_num_t>(0));
-//                    esp_sleep_enable_ext0_wakeup(static_cast<gpio_num_t>(0), 0);
-//                    esp_deep_sleep_start();
-//                } else {
-//                    TaskHandle_t lvglHandle = xTaskGetHandle("LVGL");
+//            TaskHandle_t lvglHandle = xTaskGetHandle("LVGL");
+//            switch(board->powerState()){
+//                case BOARD_POWER_NORMAL:
+//                    if(currentState == MAIN_LOW_BATT){
+//                        currentState = MAIN_NORMAL;
+//                    }
+//                    break;
+//                case BOARD_POWER_LOW:
 //                    xTaskNotifyIndexed(lvglHandle, 0, LVGL_STOP, eSetValueWithOverwrite);
 //                    currentState = MAIN_LOW_BATT;
-//                }
-//            } else if (batteryconfig->getVoltage() > 3.4 && currentState == MAIN_LOW_BATT) {
-//                currentState = MAIN_NORMAL;
+//                    break;
+//                case BOARD_POWER_CRITICAL:
+//                    board->powerOff();
+//                    break;
 //            }
 //        }
         if (currentState == MAIN_OTA) {

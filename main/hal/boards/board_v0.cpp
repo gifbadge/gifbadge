@@ -1,5 +1,7 @@
 #include <esp_pm.h>
 #include <esp_log.h>
+#include <esp_sleep.h>
+#include <driver/rtc_io.h>
 
 
 #include "hal/board.h"
@@ -50,4 +52,16 @@ std::shared_ptr<Display> board_v0::getDisplay() {
 
 std::shared_ptr<Backlight> board_v0::getBacklight() {
     return _backlight;
+}
+
+void board_v0::powerOff() {
+    esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_ON);
+    rtc_gpio_pullup_en(static_cast<gpio_num_t>(0));
+    rtc_gpio_pulldown_dis(static_cast<gpio_num_t>(0));
+    esp_sleep_enable_ext0_wakeup(static_cast<gpio_num_t>(0), 0);
+    esp_deep_sleep_start();
+}
+
+BOARD_POWER board_v0::powerState() {
+    return BOARD_POWER_NORMAL;
 }

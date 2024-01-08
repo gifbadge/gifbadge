@@ -1,5 +1,6 @@
 #include <esp_adc/adc_oneshot.h>
 #include <esp_log.h>
+#include <esp_timer.h>
 #include "hal/drivers/battery_analog.h"
 
 static const char *TAG = "battery_analog.cpp";
@@ -30,11 +31,17 @@ battery_analog::battery_analog(adc_channel_t) {
     present_value = voltage / 1000.00;
     ESP_LOGI(TAG, "Initial Voltage: %f", present_value*2);
     alpha = 0.05;
+    const esp_timer_create_args_t battery_timer_args = {
+            .callback = [](void *params){auto bat = (battery_analog *) params; bat->read();},
+            .arg = this,
+            .name = "battery_analog"
+    };
+    esp_timer_handle_t battery_handler_handle = nullptr;
+    ESP_ERROR_CHECK(esp_timer_create(&battery_timer_args, &battery_handler_handle));
+    esp_timer_start_periodic(battery_handler_handle, pollInterval()*1000);
 }
 
-battery_analog::~battery_analog() {
-
-}
+battery_analog::~battery_analog() = default;
 
 BatteryStatus battery_analog::read() {
     int reading;

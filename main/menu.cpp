@@ -116,7 +116,13 @@ Menu::Menu(std::shared_ptr<Board> board, std::shared_ptr<ImageConfig> _image_con
 
 
     lvgl_mux = xSemaphoreCreateRecursiveMutex();
-    const esp_timer_create_args_t lvgl_tick_timer_args = {.callback = &tick, .name = "lvgl_tick"};
+    const esp_timer_create_args_t lvgl_tick_timer_args = {
+            .callback = &tick,
+            .arg = nullptr,
+            .dispatch_method = ESP_TIMER_TASK,
+            .name = "lvgl_tick",
+            .skip_unhandled_events = true
+    };
     lvgl_tick_timer = nullptr;
     ESP_ERROR_CHECK(esp_timer_create(&lvgl_tick_timer_args, &lvgl_tick_timer));
 
@@ -540,7 +546,7 @@ void Menu::close() {
     ESP_LOGI(TAG, "Close Done");
 }
 
-void Menu::keyboard_read(lv_indev_drv_t *drv, lv_indev_data_t *data) {
+void Menu::keyboard_read(lv_indev_drv_t *, lv_indev_data_t *data) {
 //    ESP_LOGI(TAG, "keyboard_read");
     std::map<EVENT_CODE, EVENT_STATE> keys = input_read();
     if(keys[KEY_UP]){

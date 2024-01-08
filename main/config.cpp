@@ -41,12 +41,10 @@ T ImageConfig::get_item_or_default(const char *item, T value) {
     switch (err) {
         case ESP_OK:
             return ret;
-            break;
         case ESP_ERR_NVS_NOT_FOUND:
             handle->set_item(item, value);
             handle->commit();
             return value;
-            break;
         default :
             return value;
     }
@@ -116,15 +114,4 @@ void ImageConfig::setSlideShowTime(int t) {
 int ImageConfig::getSlideShowTime() {
     const std::lock_guard<std::mutex> lock(mutex);
     return slideshow_time;
-}
-
-
-void BatteryConfig::setVoltage(double v) {
-    const std::lock_guard<std::mutex> lock(mutex);
-    voltage = v;
-}
-
-double BatteryConfig::getVoltage() {
-    const std::lock_guard<std::mutex> lock(mutex);
-    return voltage;
 }

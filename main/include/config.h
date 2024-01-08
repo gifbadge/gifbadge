@@ -39,13 +39,3 @@ private:
     bool slideshow;
     int slideshow_time;
 };
-
-class BatteryConfig {
-public:
-    void setVoltage(double v);
-    double getVoltage();
-
-private:
-    std::mutex mutex;
-    double voltage;
-};
