@@ -25,7 +25,6 @@
 #include "esp_partition.h"
 #include "tinyusb.h"
 #include "tusb_msc_storage.h"
-#include "usb.h"
 #include "tusb_cdc_acm.h"
 #include "tusb_console.h"
 
