@@ -182,8 +182,6 @@ void dump_state(void *arg) {
 MAIN_STATES currentState = MAIN_NORMAL;
 
 extern "C" void app_main(void) {
-    vTaskDelay(2000 / portTICK_PERIOD_MS);
-
     esp_err_t err;
 
 
@@ -211,8 +209,6 @@ extern "C" void app_main(void) {
     auto imageconfig = std::make_shared<ImageConfig>();
 
 
-    vTaskDelay(100 / portTICK_PERIOD_MS);
-
     QueueHandle_t input_queue = xQueueCreate(10, sizeof(input_event));
     input_init(board->getKeys(), input_queue);
 
@@ -235,12 +231,13 @@ extern "C" void app_main(void) {
 
     QueueHandle_t touch_queue = xQueueCreate(20, sizeof(touch_event));
 
-    vTaskDelay(2000 / portTICK_PERIOD_MS);
 
     ota_boot_info();
     ota_init();
 
     Menu *menu = new Menu(board, imageconfig);
+
+    vTaskDelay(1000 / portTICK_PERIOD_MS); //Let USB Settle
 
     input_event i{};
     MAIN_STATES oldState = MAIN_NONE;
