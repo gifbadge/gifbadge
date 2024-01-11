@@ -27,4 +27,5 @@ public:
     virtual std::shared_ptr<Backlight> getBacklight() = 0;
     virtual void powerOff() = 0;
     virtual BOARD_POWER powerState() = 0;
+    virtual bool storageReady() = 0;
 };

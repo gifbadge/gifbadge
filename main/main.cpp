@@ -239,6 +239,11 @@ extern "C" void app_main(void) {
 
     vTaskDelay(1000 / portTICK_PERIOD_MS); //Let USB Settle
 
+    if(!board->storageReady()){
+        xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_NO_STORAGE, eSetValueWithOverwrite);
+        return;
+    }
+
     input_event i{};
     MAIN_STATES oldState = MAIN_NONE;
     int64_t last_change = esp_timer_get_time();

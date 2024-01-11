@@ -22,6 +22,7 @@ public:
 
     void powerOff() override;
     BOARD_POWER powerState() override;
+    bool storageReady() override {return true;};
 
 
 private:

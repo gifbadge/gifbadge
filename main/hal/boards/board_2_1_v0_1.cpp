@@ -5,6 +5,10 @@
 
 static const char *TAG = "board_2_1_v0_1";
 
+static void IRAM_ATTR sdcard_removed(void *arg){
+    esp_restart();
+}
+
 board_2_1_v0_1::board_2_1_v0_1() {
     _i2c = std::make_shared<I2C>(I2C_NUM_0, 1, 2);
     _battery = std::make_shared<battery_max17048>(_i2c);
@@ -26,8 +30,13 @@ board_2_1_v0_1::board_2_1_v0_1() {
     ESP_LOGI(TAG, "KXTJ3-1057 %u", data);
 
     static sdmmc_card_t *card = nullptr;
-    init_sdmmc_slot(GPIO_NUM_37, GPIO_NUM_38, GPIO_NUM_36, GPIO_NUM_40, &card);
-    storage_init_mmc(21, &card);
+    gpio_pullup_en(GPIO_NUM_40);
+    if(init_sdmmc_slot(GPIO_NUM_37, GPIO_NUM_38, GPIO_NUM_36, GPIO_NUM_40, &card) == ESP_OK) {
+        storage_init_mmc(21, &card);
+    }
+    gpio_install_isr_service(0);
+    gpio_isr_handler_add(GPIO_NUM_40, sdcard_removed, nullptr);
+    gpio_set_intr_type(GPIO_NUM_40, GPIO_INTR_ANYEDGE);
 }
 
 
@@ -65,4 +74,11 @@ BOARD_POWER board_2_1_v0_1::powerState() {
         return BOARD_POWER_LOW;
     }
     return BOARD_POWER_NORMAL;
+}
+
+bool board_2_1_v0_1::storageReady() {
+    if(!gpio_get_level(GPIO_NUM_40)){
+        return true;
+    }
+    return false;
 }

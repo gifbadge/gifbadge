@@ -80,6 +80,18 @@ static void display_ota(esp_lcd_panel_handle_t panel_handle, uint8_t *pGIFBuf, u
                               pGIFBuf);
 }
 
+static void display_no_storage(esp_lcd_panel_handle_t panel_handle, uint8_t *pGIFBuf) {
+    ESP_LOGI(TAG, "Displaying No Storage");
+    clear_screen(panel_handle, pGIFBuf);
+    render_text_centered(H_RES, V_RES, 10, "No SDCARD", pGIFBuf);
+    esp_lcd_panel_draw_bitmap(panel_handle,
+                              0,
+                              0,
+                              H_RES,
+                              V_RES,
+                              pGIFBuf);
+}
+
 
 static void display_image_batt(esp_lcd_panel_handle_t panel_handle, uint8_t *pGIFBuf) {
     ESP_LOGI(TAG, "Displaying Image To Large");
@@ -300,6 +312,10 @@ void display_task(void *params) {
                     in.reset();
                     display_ota(panel_handle, pGIFBuf, 0);
                     last_mode = static_cast<DISPLAY_OPTIONS>(option);
+                    break;
+                case DISPLAY_NO_STORAGE:
+                    last_mode = static_cast<DISPLAY_OPTIONS>(option);
+                    display_no_storage(panel_handle, pGIFBuf);
                 default:
                     break;
             }
