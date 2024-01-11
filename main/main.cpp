@@ -257,11 +257,11 @@ extern "C" void app_main(void) {
                         if (ota_check()) {
                             currentState = MAIN_OTA;
                             xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_OTA, eSetValueWithOverwrite);
+                            break;
                         }
-                    } else {
-//                    vTaskDelay(500 / portTICK_PERIOD_MS);
-                        xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_FILE, eSetValueWithOverwrite);
                     }
+//                    vTaskDelay(500 / portTICK_PERIOD_MS);
+                    xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_FILE, eSetValueWithOverwrite);
                     break;
                 case MAIN_USB:
                     xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_USB, eSetValueWithOverwrite);
