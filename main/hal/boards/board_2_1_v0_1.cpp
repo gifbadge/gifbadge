@@ -11,7 +11,7 @@ static void IRAM_ATTR sdcard_removed(void *arg){
 
 board_2_1_v0_1::board_2_1_v0_1() {
     _i2c = std::make_shared<I2C>(I2C_NUM_0, 1, 2);
-    _battery = std::make_shared<battery_max17048>(_i2c);
+    _battery = std::make_shared<battery_max17048>(_i2c, GPIO_NUM_21);
     _keys = std::make_shared<keys_gpio>(GPIO_NUM_44, GPIO_NUM_0, GPIO_NUM_41);
     /*G3, G4, G5, R1, R2, R3, R4, R5, B1, B2, B3, B4, B5, G0, G1, G2 */
 //    std::array<int, 16> rgb = {11, 12, 13, 14, 15, 16, 17, 18, 3, 4, 5, 6, 7, 8, 9, 10};

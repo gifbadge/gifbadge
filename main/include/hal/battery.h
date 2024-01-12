@@ -21,4 +21,6 @@ public:
     virtual int getSoc() = 0;
 
     virtual double getRate() = 0;
+
+    virtual bool isCharging() = 0;
 };

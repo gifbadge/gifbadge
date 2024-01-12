@@ -29,6 +29,7 @@ static const char *TAG = "MAIN";
 
 struct sharedState {
     std::shared_ptr<ImageConfig> image_config;
+    std::shared_ptr<Board> board;
 };
 
 enum MAIN_STATES {
@@ -167,7 +168,12 @@ void dump_state(void *arg) {
 //        if (true) {
 //            esp_pm_dump_locks(stdout);
 //        }
-//        ESP_LOGI(TAG, "Voltage: %f", args->battery_config->getVoltage());
+        ESP_LOGI(TAG, "SOC: %i", args->board->getBattery()->getSoc());
+        ESP_LOGI(TAG, "Voltage: %f", args->board->getBattery()->getVoltage());
+        ESP_LOGI(TAG, "Rate: %f", args->board->getBattery()->getRate());
+        ESP_LOGI(TAG, "%s", args->board->getBattery()->isCharging()?"Charging":"Discharging");
+
+
 //        printf("\n\nGetting real time stats over %" PRIu32" ticks\n", pdMS_TO_TICKS(1000));
 //        if (print_real_time_stats(pdMS_TO_TICKS(1000)) == ESP_OK) {
 //            printf("Real time stats obtained\n");
@@ -225,6 +231,7 @@ extern "C" void app_main(void) {
 
     sharedState configState{
             imageconfig,
+            board,
     };
 
     xTaskCreate(dump_state, "dump_state", 20000, &configState, 2, nullptr);

@@ -9,7 +9,7 @@
 
 class battery_max17048 final: public Battery{
 public:
-    explicit battery_max17048(std::shared_ptr<I2C>);
+    explicit battery_max17048(std::shared_ptr<I2C>, gpio_num_t vbus_pin);
     ~battery_max17048() final;
 
     BatteryStatus read() final;
@@ -22,9 +22,13 @@ public:
 
     double getRate() override;
 
+    bool isCharging() override;
+
+
 private:
     std::shared_ptr<I2C> _i2c;
     double _voltage;
     int _soc;
     double _rate;
+    gpio_num_t _vbus_pin;
 };
