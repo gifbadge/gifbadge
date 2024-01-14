@@ -7,8 +7,9 @@
 
 #include "display.h"
 #include "image.h"
-#include "images/usb_image.h"
-#include "images/low_batt.h"
+#include "png.h"
+#include "images/usb_png.h"
+#include "images/low_batt_png.h"
 
 #include <nvs_handle.hpp>
 #include <esp_timer.h>
@@ -32,12 +33,16 @@ static void clear_screen(esp_lcd_panel_handle_t panel_handle, uint8_t *pGIFBuf) 
 static void display_usb_logo(esp_lcd_panel_handle_t panel_handle, uint8_t *pGIFBuf) {
     ESP_LOGI(TAG, "Displaying USB LOGO");
     clear_screen(panel_handle, pGIFBuf);
+    auto *png = new PNGImage();
+    png->open(usb_png, sizeof(usb_png));
+    png->loop(pGIFBuf);
     esp_lcd_panel_draw_bitmap(panel_handle,
-                              (H_RES / 2) - (USB_ICON_WIDTH / 2),
-                              (V_RES / 2) - (USB_ICON_HEIGHT / 2),
-                              (H_RES / 2) + (USB_ICON_WIDTH / 2),
-                              (V_RES / 2) + (USB_ICON_HEIGHT / 2),
-                              USB_icon);
+                              (H_RES / 2) - (png->size().first / 2),
+                              (V_RES / 2) - (png->size().second / 2),
+                              (H_RES / 2) + ((png->size().first  + 1) / 2),
+                              (V_RES / 2) + ((png->size().second + 1) / 2),
+                              pGIFBuf);
+    delete png;
 }
 
 static void display_no_image(esp_lcd_panel_handle_t panel_handle, uint8_t *pGIFBuf) {
@@ -94,14 +99,18 @@ static void display_no_storage(esp_lcd_panel_handle_t panel_handle, uint8_t *pGI
 
 
 static void display_image_batt(esp_lcd_panel_handle_t panel_handle, uint8_t *pGIFBuf) {
-    ESP_LOGI(TAG, "Displaying Image To Large");
+    ESP_LOGI(TAG, "Displaying Low Battery");
     clear_screen(panel_handle, pGIFBuf);
+    auto *png = new PNGImage();
+    png->open(low_batt_png, sizeof(low_batt_png));
+    png->loop(pGIFBuf);
     esp_lcd_panel_draw_bitmap(panel_handle,
-                              (H_RES / 2) - (LOW_BATT_WIDTH / 2),
-                              (V_RES / 2) - (LOW_BATT_HEIGHT / 2),
-                              (H_RES / 2) + ((LOW_BATT_WIDTH + 1) / 2),
-                              (V_RES / 2) + ((LOW_BATT_HEIGHT + 1) / 2),
-                              low_batt);
+                              (H_RES / 2) - (png->size().first / 2),
+                              (V_RES / 2) - (png->size().second / 2),
+                              (H_RES / 2) + ((png->size().first + 1) / 2),
+                              (V_RES / 2) + ((png->size().second + 1) / 2),
+                              pGIFBuf);
+    delete png;
 }
 
 Image *display_file(ImageFactory factory, const char *path, uint8_t *pGIFBuf, esp_lcd_panel_handle_t panel_handle) {
