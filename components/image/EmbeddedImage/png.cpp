@@ -32,6 +32,11 @@ int PNGImage::open(const char *path) {
     return -1;
 }
 
+int PNGImage::open(uint8_t *bin, int size) {
+    png.openRAM(bin, size, PNGDraw);
+    return -1;
+}
+
 void PNGImage::PNGDraw(PNGDRAW *pDraw) {
     auto *config = (pnguser *) pDraw->pUser;
     auto *buffer = (uint16_t *) config->buffer;

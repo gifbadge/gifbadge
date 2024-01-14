@@ -23,6 +23,9 @@ public:
 
     int open(const char *path) override;
 
+    int open(uint8_t *bin, int size);
+
+
 protected:
     PNG png;
 
