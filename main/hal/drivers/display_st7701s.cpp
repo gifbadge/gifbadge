@@ -118,7 +118,7 @@ display_st7701s::display_st7701s(int spi_cs, int spi_scl, int spi_sda, int hsync
             .clk_src = LCD_CLK_SRC_XTAL,
 //            .clk_src = LCD_CLK_SRC_DEFAULT,
             .timings = {
-                    .pclk_hz = 6 * 1000 * 1000,
+                    .pclk_hz = 10 * 1000 * 1000,
                     .h_res = 480,
                     .v_res = 480,
                     .hsync_pulse_width = 6,
