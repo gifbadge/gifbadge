@@ -131,7 +131,7 @@ display_st7701s::display_st7701s(int spi_cs, int spi_scl, int spi_sda, int hsync
                             .hsync_idle_low = 0,
                             .vsync_idle_low = 0,
                             .de_idle_high = 0,
-                            .pclk_active_neg = true,
+                            .pclk_active_neg = false,
                             .pclk_idle_high = false,}
             },
 
