@@ -142,13 +142,18 @@ Image *display_file(ImageFactory factory, const char *path, uint8_t *pGIFBuf, es
 static void image_loop(std::shared_ptr<Image> &in, uint8_t *pGIFBuf, esp_lcd_panel_handle_t panel_handle) {
     if (in && in->animated()) {
         int delay = in->loop(pGIFBuf);
-        esp_lcd_panel_draw_bitmap(panel_handle,
-                                  (H_RES / 2) - (in->size().first / 2),
-                                  (V_RES / 2) - (in->size().second / 2),
-                                  (H_RES / 2) + (in->size().first / 2),
-                                  (V_RES / 2) + (in->size().second / 2),
-                                  pGIFBuf);
-        vTaskDelay(delay / portTICK_PERIOD_MS);
+        if(delay >= 0) {
+            esp_lcd_panel_draw_bitmap(panel_handle,
+                                      (H_RES / 2) - (in->size().first / 2),
+                                      (V_RES / 2) - (in->size().second / 2),
+                                      (H_RES / 2) + (in->size().first / 2),
+                                      (V_RES / 2) + (in->size().second / 2),
+                                      pGIFBuf);
+            vTaskDelay(delay / portTICK_PERIOD_MS);
+        }
+        else {
+            ESP_LOGI(TAG, "Image loop error");
+        }
     } else {
         vTaskDelay(200 / portTICK_PERIOD_MS);
     }

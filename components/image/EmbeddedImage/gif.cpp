@@ -14,6 +14,7 @@ int GIF::loop(uint8_t *outBuf) {
     GIFUser gifuser = {outBuf, width};
     int frameDelay;
     if (gif.playFrame(false, &frameDelay,  (void *) &gifuser) == -1) {
+        printf("GIF Error: %i\n", gif.getLastError());
         return -1;
     }
     return frameDelay;
