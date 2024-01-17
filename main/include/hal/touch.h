@@ -7,7 +7,7 @@ class Touch {
 public:
     Touch() = default;
 
-    ~Touch() = default;
+    virtual ~Touch() = default;
 
-    virtual std::pair<uint16_t, uint16_t> read() = 0;
+    virtual std::pair<int16_t, int16_t> read() = 0;
 };

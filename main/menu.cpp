@@ -479,7 +479,7 @@ static void MainMenu() {
     }
 }
 
-void Menu::open(QueueHandle_t touch_queue) {
+void Menu::open() {
     ESP_LOGI(TAG, "Open");
     state = true;
 
@@ -506,13 +506,15 @@ void Menu::open(QueueHandle_t touch_queue) {
     lv_timer_set_period(keyboard_drv.read_timer, 200); //Slow down key reads
 
 
+    if(_board->getTouch()){
+        lv_indev_drv_init(&touch_drv);
+        touch_drv.type = LV_INDEV_TYPE_POINTER;
+        touch_drv.read_cb = touch_read;
+        touch_drv.user_data = _board->getTouch().get();
+        touch_drv.long_press_time = 400;
+        touch_dev = lv_indev_drv_register(&touch_drv);
+    }
 
-//    lv_indev_drv_init(&touch_drv);
-//    keyboard_drv.type = LV_INDEV_TYPE_POINTER;
-//    keyboard_drv.read_cb = touch_read;
-//    keyboard_drv.user_data = touch_queue;
-//    keyboard_drv.long_press_time = 400;
-//    touch_dev = lv_indev_drv_register(&touch_drv);
 
     ESP_ERROR_CHECK(esp_timer_start_periodic(lvgl_tick_timer, LVGL_TICK_PERIOD_MS * 1000));
     if (Menu::lock(-1)) {
@@ -534,7 +536,9 @@ void Menu::close() {
 
     if (lock(-1)) {
         lv_indev_delete(keyboard_dev);
-//        lv_indev_delete(touch_dev);
+        if(_board->getTouch()) {
+            lv_indev_delete(touch_dev);
+        }
         lv_disp_remove(disp);
         unlock();
     }
@@ -569,15 +573,14 @@ bool Menu::is_open() const {
 }
 
 void Menu::touch_read(lv_indev_drv_t *drv, lv_indev_data_t *data) {
-    auto queue = (QueueHandle_t) drv->user_data;
-    touch_event i = {};
-    if (xQueueReceive(queue, (void *) &i, 0)) {
-        data->point.x = (lv_coord_t)i.x;
-        data->point.y = (lv_coord_t)i.y;
+    auto touch = static_cast<Touch *>(drv->user_data);
+    auto i = touch->read();
+    if (i.first > 0 && i.second > 0) {
+        data->point.x = (lv_coord_t)i.first;
+        data->point.y = (lv_coord_t)i.second;
         data->state = LV_INDEV_STATE_PRESSED;
     }
     else {
         data->state = LV_INDEV_STATE_RELEASED;
     }
-    data->continue_reading = uxQueueMessagesWaiting(queue) > 0;
 }

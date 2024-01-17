@@ -45,22 +45,22 @@ touch_ft5x06::~touch_ft5x06() {
 
 }
 
-std::pair<uint16_t, uint16_t> touch_ft5x06::read() {
+std::pair<int16_t, int16_t> touch_ft5x06::read() {
     uint8_t data;
     _bus->read_reg(0x38, FT5x06_TOUCH_POINTS, &data, 1);
     if((data & 0x0f)> 0 && (data & 0x0f) < 5) {
         uint8_t tmp[4] = {0};
         _bus->read_reg(0x38, FT5x06_TOUCH1_XH, tmp, 4);
-//            uint16_t x = ((tmp[0] & 0x0f) << 8) + tmp[1]; //not rotated
-//            uint16_t y = ((tmp[2] & 0x0f) << 8) + tmp[3];
-        uint16_t y = ((tmp[0] & 0x0f) << 8) + tmp[1]; // rotated
-        uint16_t x = ((tmp[2] & 0x0f) << 8) + tmp[3];
-        y = 480-y;
+            int16_t x = static_cast<int16_t>((tmp[0] & 0x0f) << 8) + tmp[1]; //not rotated
+            int16_t y = static_cast<int16_t>((tmp[2] & 0x0f) << 8) + tmp[3];
+//        uint16_t y = ((tmp[0] & 0x0f) << 8) + tmp[1]; // rotated
+//        uint16_t x = ((tmp[2] & 0x0f) << 8) + tmp[3];
+//        y = 480-y;
         if(x > 0 || y > 0) {
             return {x, y};
         }
     }
-    return {0, 0};
+    return {-1, -1};
 }
 
 

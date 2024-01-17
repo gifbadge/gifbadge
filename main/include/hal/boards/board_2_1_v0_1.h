@@ -8,6 +8,7 @@
 #include "hal/drivers/display_st7701s.h"
 #include "hal/drivers/backlight_ledc.h"
 #include "hal/drivers/battery_max17048.h"
+#include "hal/drivers/touch_ft5x06.h"
 
 
 class board_2_1_v0_1: public Board{
@@ -34,4 +35,5 @@ private:
     std::shared_ptr<keys_gpio> _keys;
     std::shared_ptr<display_st7701s> _display;
     std::shared_ptr<backlight_ledc> _backlight;
+    std::shared_ptr<touch_ft5x06> _touch;
 };

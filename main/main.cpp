@@ -236,9 +236,6 @@ extern "C" void app_main(void) {
 
     xTaskCreate(dump_state, "dump_state", 20000, &configState, 2, nullptr);
 
-    QueueHandle_t touch_queue = xQueueCreate(20, sizeof(touch_event));
-
-
     ota_boot_info();
     ota_init();
 
@@ -289,7 +286,7 @@ extern "C" void app_main(void) {
                     xQueueReceive(input_queue, (void *) &i, 0);
                     xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_MENU, eSetValueWithOverwrite);
                     vTaskDelay(100 / portTICK_PERIOD_MS);
-                    menu->open(touch_queue);
+                    menu->open();
                 }
                 if (i.code == KEY_UP && i.value == STATE_PRESSED) {
                     xQueueReceive(input_queue, (void *) &i, 0);
@@ -305,33 +302,30 @@ extern "C" void app_main(void) {
             }
             if (menu->is_open()) {
                 //Eat input events when we can't use them
-                xQueueReset(touch_queue);
                 xQueueReset(input_queue);
             }
-            touch_event e = {};
-            if (xQueueReceive(touch_queue, (void *) &e, 0) && !menu->is_open()) {
-                if (((esp_timer_get_time() / 1000) - (last_change / 1000)) > 1000) {
-                    last_change = esp_timer_get_time();
-                    if (e.y < 50) {
-                        xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_MENU, eSetValueWithOverwrite);
-                        vTaskDelay(100 / portTICK_PERIOD_MS);
-                        xQueueReset(touch_queue);
-                        menu->open(touch_queue);
+            if (!menu->is_open() && board->getTouch()) {
+                auto e = board->getTouch()->read();
+                if(e.first > 0 && e.second > 0){
+                    if (((esp_timer_get_time() / 1000) - (last_change / 1000)) > 1000) {
+                        last_change = esp_timer_get_time();
+                        if (e.second < 50) {
+                            xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_MENU, eSetValueWithOverwrite);
+                            vTaskDelay(100 / portTICK_PERIOD_MS);
+                            menu->open();
+                        }
+                        if (e.first < 50) {
+                            xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_PREVIOUS, eSetValueWithOverwrite);
+                        }
+                        if (e.first > 430) {
+                            xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_NEXT, eSetValueWithOverwrite);
+                        }
                     }
-                    if (e.x < 50) {
-                        xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_PREVIOUS, eSetValueWithOverwrite);
-                        xQueueReset(touch_queue); //Clear the queue
-                    }
-                    if (e.x > 430) {
-                        xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_NEXT, eSetValueWithOverwrite);
-                        xQueueReset(touch_queue);
-                    }
+                    ESP_LOGI(TAG, "x: %d y: %d", e.first, e.second);
                 }
-                ESP_LOGI(TAG, "x: %d y: %d", e.x, e.y);
             }
         } else {
             //Eat input events when we can't use them
-            xQueueReset(touch_queue);
             xQueueReset(input_queue);
         }
 //        if (currentState != MAIN_USB) {

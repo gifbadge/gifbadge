@@ -62,10 +62,10 @@
 
 class touch_ft5x06: public Touch{
 public:
-    touch_ft5x06(std::shared_ptr<I2C> bus);
-    ~touch_ft5x06();
+    explicit touch_ft5x06(std::shared_ptr<I2C> bus);
+    ~touch_ft5x06() final;
 
-    std::pair<uint16_t, uint16_t> read();
+    std::pair<int16_t, int16_t> read() override;
 private:
     std::shared_ptr<I2C> _bus;
 };

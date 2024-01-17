@@ -28,7 +28,7 @@ public:
 
     ~Menu();
 
-    void open(QueueHandle_t touch_queue);
+    void open();
 
     void close();
 

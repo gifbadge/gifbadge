@@ -20,6 +20,7 @@ board_2_1_v0_1::board_2_1_v0_1() {
     _display = std::make_shared<display_st7701s>(35,3, 4, 48, 47, 33, 34, 39, rgb);
     _backlight = std::make_shared<backlight_ledc>(GPIO_NUM_45, 0);
     _backlight->setLevel(100);
+    _touch = std::make_shared<touch_ft5x06>(_i2c);
 
 
     esp_pm_config_t pm_config = {.max_freq_mhz = 240, .min_freq_mhz = 240, .light_sleep_enable = false};
@@ -45,7 +46,7 @@ std::shared_ptr<Battery> board_2_1_v0_1::getBattery() {
 }
 
 std::shared_ptr<Touch> board_2_1_v0_1::getTouch() {
-    return nullptr;
+    return _touch;
 }
 
 std::shared_ptr<I2C> board_2_1_v0_1::getI2c() {
