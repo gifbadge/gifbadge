@@ -328,23 +328,25 @@ extern "C" void app_main(void) {
             //Eat input events when we can't use them
             xQueueReset(input_queue);
         }
-//        if (currentState != MAIN_USB) {
-//            TaskHandle_t lvglHandle = xTaskGetHandle("LVGL");
-//            switch(board->powerState()){
-//                case BOARD_POWER_NORMAL:
-//                    if(currentState == MAIN_LOW_BATT){
-//                        currentState = MAIN_NORMAL;
-//                    }
-//                    break;
-//                case BOARD_POWER_LOW:
-//                    xTaskNotifyIndexed(lvglHandle, 0, LVGL_STOP, eSetValueWithOverwrite);
-//                    currentState = MAIN_LOW_BATT;
-//                    break;
-//                case BOARD_POWER_CRITICAL:
-//                    board->powerOff();
-//                    break;
-//            }
-//        }
+        if (currentState != MAIN_USB) {
+            TaskHandle_t lvglHandle = xTaskGetHandle("LVGL");
+            switch(board->powerState()){
+                case BOARD_POWER_NORMAL:
+                    if(currentState == MAIN_LOW_BATT){
+                        currentState = MAIN_NORMAL;
+                    }
+                    break;
+                case BOARD_POWER_LOW:
+                    xTaskNotifyIndexed(lvglHandle, 0, LVGL_STOP, eSetValueWithOverwrite);
+                    currentState = MAIN_LOW_BATT;
+                    break;
+                case BOARD_POWER_CRITICAL:
+                    xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_BATT, eSetValueWithOverwrite);
+                    vTaskDelay(15000/portTICK_PERIOD_MS);
+                    board->powerOff();
+                    break;
+            }
+        }
         if (currentState == MAIN_OTA) {
             ota_install();
         }
