@@ -101,6 +101,13 @@ void Menu::task(void *arg) {
     }
 }
 
+static lv_style_t battery_style;
+static lv_style_t container_style;
+static lv_style_t icon_style;
+
+LV_FONT_DECLARE(material_icons);
+LV_FONT_DECLARE(material_icons_56)
+
 Menu::Menu(std::shared_ptr<Board> board, std::shared_ptr<ImageConfig> _image_config): _board(std::move(board)) {
     image_config = std::move(_image_config);
     battery_config = _board->getBattery();
@@ -128,6 +135,20 @@ Menu::Menu(std::shared_ptr<Board> board, std::shared_ptr<ImageConfig> _image_con
 
     xTaskCreate(task, "LVGL", 10000, this, LVGL_TASK_PRIORITY, &lvgl_task);
 
+    lv_style_init(&battery_style);
+    lv_style_set_text_color(&battery_style, lv_color_black());
+    lv_style_set_text_font(&battery_style, &lv_font_montserrat_28);
+    lv_style_set_text_align(&battery_style, LV_TEXT_ALIGN_CENTER);
+
+    lv_style_init(&container_style);
+    lv_style_set_pad_all(&container_style, 0);
+    lv_style_set_border_side(&container_style, LV_BORDER_SIDE_NONE);
+    lv_style_set_bg_opa(&container_style, 0);
+
+    lv_style_init(&icon_style);
+    lv_style_set_text_color(&icon_style, lv_color_black());
+    lv_style_set_text_font(&icon_style, &material_icons_56);
+
 }
 
 Menu::~Menu() {
@@ -150,6 +171,7 @@ struct FileSelect_Objects {
     lv_obj_t *win;
     lv_obj_t *slideshow;
     lv_obj_t *slideshow_time;
+    lv_obj_t *slideshow_time_container;
 };
 
 static void folder_update(lv_event_t *e) {
@@ -180,7 +202,7 @@ static void folder_update(lv_event_t *e) {
     lv_dropdown_add_option(fields->file, "Entire Folder", LV_DROPDOWN_POS_LAST);
     lv_dropdown_set_selected(fields->file, 0);
     for (auto &f: list_directory(selected_folder)) {
-        lv_dropdown_add_option(fields->file, f.c_str(), LV_DROPDOWN_POS_LAST);
+        lv_dropdown_add_option(fields->file, std::filesystem::path(f).filename().c_str(), LV_DROPDOWN_POS_LAST);
     }
     lv_obj_add_event_cb(fields->folder, folder_update, LV_EVENT_VALUE_CHANGED, fields);
 }
@@ -191,9 +213,11 @@ static void disable_slideshow_time(FileSelect_Objects *fields){
 
     if(slideshow_state) {
         lv_obj_clear_state(fields->slideshow_time, LV_STATE_DISABLED);
+        lv_obj_clear_flag(fields->slideshow_time_container, LV_OBJ_FLAG_HIDDEN);
     }
     else {
         lv_obj_add_state(fields->slideshow_time, LV_STATE_DISABLED);
+        lv_obj_add_flag(fields->slideshow_time_container, LV_OBJ_FLAG_HIDDEN);
     }
 }
 
@@ -209,162 +233,6 @@ static void disable_slideshow(FileSelect_Objects *fields){
     }
 }
 
-static void FileSelect() {
-    auto *fields = new FileSelect_Objects;
-    if (Menu::lock(-1)) {
-        lv_obj_t *scr = lv_obj_create(lv_scr_act());
-        lv_obj_set_size(scr,LV_PCT(100),LV_PCT(100));
-        lv_obj_set_align(scr, LV_ALIGN_CENTER);
-        lv_obj_add_event_cb(scr, on_window_delete, LV_EVENT_DELETE, lv_group_get_default());
-        fields->win = scr;
-        lv_obj_t *cont_flex = lv_obj_create(scr);
-        lv_group_t *g = lv_group_create();
-        lv_group_set_default(g);
-        lv_indev_set_group(lv_indev_get_act(), g);
-        lv_obj_set_size(cont_flex, LV_PCT(85), LV_PCT(85));
-        lv_obj_align(cont_flex, LV_ALIGN_CENTER, 0, 0);
-        lv_obj_set_flex_flow(cont_flex, LV_FLEX_FLOW_COLUMN);
-        lv_obj_set_style_flex_cross_place(cont_flex, LV_FLEX_ALIGN_CENTER, 0);
-
-        lv_obj_set_scroll_snap_y(cont_flex, LV_SCROLL_SNAP_START);
-
-        lv_obj_t *folder_dropdown = lv_dropdown_create(cont_flex);
-        fields->folder = folder_dropdown;
-        lv_obj_t *file_dropdown = lv_dropdown_create(cont_flex);
-        fields->file = file_dropdown;
-        lv_dropdown_clear_options(file_dropdown);
-        lv_dropdown_add_option(file_dropdown, "Entire Folder", LV_DROPDOWN_POS_LAST);
-        lv_dropdown_clear_options(folder_dropdown);
-        std::string path = image_config->getDirectory();
-        lv_dropdown_add_option(folder_dropdown, "UP", LV_DROPDOWN_POS_LAST);
-        lv_dropdown_add_option(folder_dropdown, path.c_str(), LV_DROPDOWN_POS_LAST);
-        lv_dropdown_set_selected(folder_dropdown, 1);
-
-        for (auto &folder: list_folders(path)) {
-            lv_dropdown_add_option(folder_dropdown, folder.c_str(), LV_DROPDOWN_POS_LAST);
-            ESP_LOGI(TAG, "%s", folder.c_str());
-        }
-
-        for (auto &f: list_directory(path)) {
-            lv_dropdown_add_option(file_dropdown, f.c_str(), LV_DROPDOWN_POS_LAST);
-        }
-        int32_t selected_file = lv_dropdown_get_option_index(file_dropdown, image_config->getFile().c_str());
-
-        if (selected_file > 0) {
-            lv_dropdown_set_selected(file_dropdown, selected_file);
-        }
-
-        lv_obj_add_event_cb(folder_dropdown, folder_update, LV_EVENT_VALUE_CHANGED, fields);
-
-        lv_obj_t *lock_button = lv_btn_create(cont_flex);
-        fields->locked = lock_button;
-        lv_obj_t *lock_button_label = lv_label_create(lock_button);
-        if (image_config->getLocked()) {
-            lv_obj_add_state(lock_button, LV_STATE_CHECKED);
-        }
-        lv_label_set_text(lock_button_label, "Lock");
-        lv_obj_set_size(lock_button, LV_PCT(100), 40);
-        lv_obj_set_align(lock_button_label, LV_ALIGN_CENTER);
-        lv_obj_add_flag(lock_button, LV_OBJ_FLAG_CHECKABLE);
-        lv_obj_add_event_cb(lock_button, [](lv_event_t *e){
-            disable_slideshow((FileSelect_Objects *)e->user_data);
-            }, LV_EVENT_VALUE_CHANGED, fields);
-
-        lv_obj_t *slideshow_button = lv_btn_create(cont_flex);
-        fields->slideshow = slideshow_button;
-        lv_obj_t *slideshow_button_label = lv_label_create(slideshow_button);
-        lv_obj_add_flag(slideshow_button, LV_OBJ_FLAG_CHECKABLE);
-        lv_label_set_text(slideshow_button_label, "Slideshow");
-        if (image_config->getSlideShow()) {
-            lv_obj_add_state(slideshow_button, LV_STATE_CHECKED);
-        }
-        lv_obj_set_size(slideshow_button, LV_PCT(100), 40);
-        lv_obj_set_align(slideshow_button_label, LV_ALIGN_CENTER);
-        lv_obj_add_event_cb(slideshow_button, [](lv_event_t *e){
-            disable_slideshow_time((FileSelect_Objects *)e->user_data);
-        }, LV_EVENT_VALUE_CHANGED, fields);
-
-        lv_obj_t *slideshow_time_label = lv_label_create(cont_flex);
-        lv_label_set_text(slideshow_time_label, "Slideshow time");
-        lv_obj_t * slideshow_time = lv_roller_create(cont_flex);
-        //Time must be in 15 second increments, otherwise the logic to convert to seconds needs to be updated
-        lv_roller_set_options(slideshow_time,
-                              "0:15\n"
-                              "0:30\n"
-                              "0:45\n"
-                              "1:00\n"
-                              "1:15\n"
-                              "1:30\n"
-                              "1:45\n"
-                              "2:00\n"
-                              "2:15\n"
-                              "2:30\n"
-                              "2:45\n"
-                              "3:00",
-                              LV_ROLLER_MODE_INFINITE);
-
-        lv_roller_set_visible_row_count(slideshow_time, 3);
-        lv_roller_set_selected(slideshow_time, (image_config->getSlideShowTime()/15)-1, LV_ANIM_OFF);
-
-        fields->slideshow_time = slideshow_time;
-
-        disable_slideshow(fields);
-        disable_slideshow_time(fields);
-
-        lv_obj_t *button_row = lv_obj_create(cont_flex);
-        lv_obj_set_style_pad_all(button_row, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_border_side(button_row, LV_BORDER_SIDE_NONE, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_flex_flow(button_row, LV_FLEX_FLOW_ROW);
-        lv_obj_set_size(button_row, LV_PCT(100), 45);
-
-        lv_obj_t *save_button = lv_btn_create(button_row);
-        lv_obj_t *save_button_label = lv_label_create(save_button);
-        lv_label_set_text(save_button_label, "OK");
-        lv_obj_set_align(save_button_label, LV_ALIGN_CENTER);
-        lv_obj_set_size(save_button, LV_PCT(50), 40);
-        lv_obj_add_event_cb(save_button, [](lv_event_t *e) {
-            ESP_LOGI(TAG, "Save clicked");
-            Menu::lock(-1);
-            auto *fields = (FileSelect_Objects *) e->user_data;
-            char tmp[128];
-            lv_dropdown_get_selected_str(fields->folder, tmp, sizeof(tmp));
-            ESP_LOGI(TAG, "%s", tmp);
-            image_config->setDirectory(tmp);
-            lv_dropdown_get_selected_str(fields->file, tmp, sizeof(tmp));
-            if (strcmp(tmp, "Entire Folder") == 0) {
-                strcpy(tmp, "");
-            }
-            ESP_LOGI(TAG, "%s", tmp);
-            image_config->setFile(tmp);
-            image_config->setLocked(lv_obj_get_state(fields->locked)&LV_STATE_CHECKED);
-            image_config->setSlideShow(lv_obj_get_state(fields->slideshow)&LV_STATE_CHECKED);
-            image_config->setSlideShowTime((lv_roller_get_selected(fields->slideshow_time)+1)*15);
-
-            image_config->save();
-            lv_obj_del(fields->win);
-            free(fields);
-            Menu::unlock();
-        }, LV_EVENT_PRESSED, fields);
-
-        lv_obj_t *exit_button = lv_btn_create(button_row);
-        lv_obj_t *exit_button_label = lv_label_create(exit_button);
-        lv_label_set_text(exit_button_label, "Cancel");
-        lv_obj_set_align(exit_button_label, LV_ALIGN_CENTER);
-        lv_obj_set_size(exit_button, LV_PCT(45), 40);
-        lv_obj_add_event_cb(exit_button, [](lv_event_t *e) {
-            ESP_LOGI(TAG, "Exit clicked");
-            Menu::lock(-1);
-            auto *fields = (FileSelect_Objects *) e->user_data;
-            lv_obj_del(fields->win);
-            free(fields);
-            Menu::unlock();
-        }, LV_EVENT_PRESSED, fields);
-
-        Menu::unlock();
-    }
-}
-
-static lv_style_t battery_style;
 
 void battery_update(lv_obj_t *widget){
     ESP_LOGI(TAG, "Battery Update");
@@ -393,44 +261,275 @@ void battery_update(lv_obj_t *widget){
     }
 }
 
+static void battery_widget(lv_obj_t *scr){
+    lv_obj_t *battery_bar = lv_obj_create(scr);
+    lv_obj_set_size(battery_bar, lv_pct(100), LV_SIZE_CONTENT);
+    lv_obj_set_style_bg_color(battery_bar, lv_obj_get_style_bg_color(lv_scr_act(), LV_PART_MAIN), LV_PART_MAIN);
+    lv_obj_set_style_border_side(battery_bar, LV_BORDER_SIDE_NONE, LV_PART_MAIN);
+    lv_obj_set_style_pad_all(battery_bar, 0, LV_PART_MAIN);
+
+    lv_obj_t *battery = lv_label_create(battery_bar);
+    lv_obj_set_width(battery, LV_PCT(100));
+    lv_obj_add_style(battery, &battery_style, 0);
+    lv_obj_set_pos(battery,0, 10);
+    lv_label_set_text(battery, LV_SYMBOL_BATTERY_EMPTY);
+
+    //TODO: See why this causes a freeze in LVGL
+        lv_obj_add_event_cb(battery, [](lv_event_t *e){
+            battery_update(lv_event_get_target(e));
+        }, LV_EVENT_REFRESH, nullptr);
+        battery_update(battery);
+
+        lv_timer_t * timer = lv_timer_create([](lv_timer_t * timer){
+            auto *obj = (lv_obj_t *) timer->user_data;
+            lv_event_send(obj, LV_EVENT_REFRESH, nullptr);
+
+            }, 1000,  battery);
+        lv_obj_add_event_cb(battery, [](lv_event_t *e){
+            auto * timer = (lv_timer_t *)e->user_data;
+            lv_timer_del(timer);
+        }, LV_EVENT_DELETE, timer);
+
+}
+
+static lv_obj_t* lvgl_switch(lv_obj_t *parent, const char *text){
+    lv_obj_t *container = lv_obj_create(parent);
+    lv_obj_add_style(container, &container_style, LV_PART_MAIN);
+    lv_obj_set_size(container, lv_pct(95), LV_SIZE_CONTENT);
+    lv_obj_t *label = lv_label_create(container);
+    lv_obj_align(label, LV_ALIGN_LEFT_MID, 0, 0);
+    lv_obj_add_style(label, &icon_style, LV_PART_MAIN);
+    lv_label_set_text(label, text);
+    lv_obj_t *_switch = lv_switch_create(container);
+    lv_obj_align(_switch, LV_ALIGN_RIGHT_MID, 0, 0);
+    lv_obj_set_size(_switch, 102, 60);
+    return _switch;
+}
+
+static void FileSelect() {
+    auto *fields = new FileSelect_Objects;
+    if (Menu::lock(-1)) {
+        lv_obj_t *parent = lv_obj_create(lv_scr_act());
+        lv_obj_set_size(parent, LV_PCT(100), LV_PCT(100));
+        lv_obj_set_align(parent, LV_ALIGN_CENTER);
+        lv_obj_set_style_radius(parent, LV_RADIUS_CIRCLE, 0);
+        lv_obj_set_style_clip_corner(parent, true, 0);
+        lv_obj_set_style_pad_bottom(parent, 50, LV_PART_MAIN);
+        lv_obj_set_style_pad_top(parent, 50, LV_PART_MAIN);
+        lv_obj_add_event_cb(parent, on_window_delete, LV_EVENT_DELETE, lv_group_get_default());
+        fields->win = parent;
+        lv_obj_set_flex_flow(parent, LV_FLEX_FLOW_COLUMN);
+        lv_obj_set_style_flex_cross_place(parent, LV_FLEX_ALIGN_CENTER, 0);
+        lv_obj_set_style_flex_main_place(parent, LV_FLEX_ALIGN_CENTER, 0);
+
+        lv_obj_t *cont_flex = lv_obj_create(parent);
+        lv_obj_set_style_border_side(cont_flex, LV_BORDER_SIDE_NONE, LV_PART_MAIN);
+        lv_obj_set_flex_grow(cont_flex, 1);
+        lv_group_t *g = lv_group_create();
+        lv_group_set_default(g);
+        lv_indev_set_group(lv_indev_get_act(), g);
+        lv_obj_set_width(cont_flex, lv_pct(100));
+
+        lv_obj_center(cont_flex);
+        lv_obj_set_flex_flow(cont_flex, LV_FLEX_FLOW_COLUMN);
+        lv_obj_set_flex_align(cont_flex, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+
+
+        lv_obj_set_scroll_snap_y(cont_flex, LV_SCROLL_SNAP_CENTER);
+
+        lv_obj_t *folder_container = lv_obj_create(cont_flex);
+        lv_obj_add_style(folder_container, &container_style, LV_PART_MAIN);
+        lv_obj_set_size(folder_container, lv_pct(95), LV_SIZE_CONTENT);
+
+        lv_obj_t *folder_label = lv_label_create(folder_container);
+        lv_obj_align(folder_label, LV_ALIGN_LEFT_MID, 0, 0);
+        lv_obj_add_style(folder_label, &icon_style, LV_PART_MAIN);
+        lv_label_set_text(folder_label, "\ue2c8");
+
+        lv_obj_t *folder_dropdown = lv_dropdown_create(folder_container);
+        lv_obj_t *list = lv_dropdown_get_list(folder_dropdown);
+        lv_obj_set_style_text_font(folder_dropdown, &lv_font_montserrat_28, LV_PART_MAIN);
+        lv_obj_set_style_text_font(list, &lv_font_montserrat_28, LV_PART_MAIN);
+        lv_obj_set_width(folder_dropdown, LV_PCT(80));
+        lv_obj_align(folder_dropdown, LV_ALIGN_RIGHT_MID, 0, 0);
+        fields->folder = folder_dropdown;
+
+        lv_obj_t *file_container = lv_obj_create(cont_flex);
+        lv_obj_add_style(file_container, &container_style, LV_PART_MAIN);
+        lv_obj_set_size(file_container, lv_pct(95), LV_SIZE_CONTENT);
+
+        lv_obj_t *file_label = lv_label_create(file_container);
+        lv_obj_align(file_label, LV_ALIGN_LEFT_MID, 0, 0);
+        lv_obj_add_style(file_label, &icon_style, LV_PART_MAIN);
+        lv_label_set_text(file_label, "\ue3f4");
+
+        lv_obj_t *file_dropdown = lv_dropdown_create(file_container);
+        list = lv_dropdown_get_list(file_dropdown);
+        lv_obj_set_style_text_font(list, &lv_font_montserrat_28, LV_PART_MAIN);
+        lv_obj_set_style_text_font(file_dropdown, &lv_font_montserrat_28, LV_PART_MAIN);
+        lv_obj_set_width(file_dropdown, LV_PCT(80));
+        lv_obj_align(file_dropdown, LV_ALIGN_RIGHT_MID, 0, 0);
+        fields->file = file_dropdown;
+        lv_dropdown_clear_options(file_dropdown);
+        lv_dropdown_add_option(file_dropdown, "Entire Folder", LV_DROPDOWN_POS_LAST);
+        lv_dropdown_clear_options(folder_dropdown);
+        std::filesystem::path path = image_config->getDirectory();
+        lv_dropdown_add_option(folder_dropdown, "UP", LV_DROPDOWN_POS_LAST);
+        lv_dropdown_add_option(folder_dropdown, path.c_str(), LV_DROPDOWN_POS_LAST);
+        lv_dropdown_set_selected(folder_dropdown, 1);
+
+        for (auto &folder: list_folders(path)) {
+            lv_dropdown_add_option(folder_dropdown, folder.c_str(), LV_DROPDOWN_POS_LAST);
+            ESP_LOGI(TAG, "%s", folder.c_str());
+        }
+
+        for (auto &f: list_directory(path)) {
+            lv_dropdown_add_option(file_dropdown, std::filesystem::path(f).filename().c_str(), LV_DROPDOWN_POS_LAST);
+        }
+        int32_t selected_file = lv_dropdown_get_option_index(file_dropdown, image_config->getFile().filename().c_str());
+
+        if (selected_file > 0) {
+            lv_dropdown_set_selected(file_dropdown, selected_file);
+        }
+
+        lv_obj_add_event_cb(folder_dropdown, folder_update, LV_EVENT_VALUE_CHANGED, fields);
+
+        lv_obj_t *lock_button = lvgl_switch(cont_flex, "\ue897");
+        fields->locked = lock_button;
+        if (image_config->getLocked()) {
+            lv_obj_add_state(lock_button, LV_STATE_CHECKED);
+        }
+        lv_obj_add_event_cb(lock_button, [](lv_event_t *e){
+            disable_slideshow((FileSelect_Objects *)e->user_data);
+            }, LV_EVENT_VALUE_CHANGED, fields);
+
+        lv_obj_t *slideshow_button = lvgl_switch(cont_flex, "\ue41b");
+        fields->slideshow = slideshow_button;
+        if (image_config->getSlideShow()) {
+            lv_obj_add_state(slideshow_button, LV_STATE_CHECKED);
+        }
+        lv_obj_add_event_cb(slideshow_button, [](lv_event_t *e){
+            disable_slideshow_time((FileSelect_Objects *)e->user_data);
+        }, LV_EVENT_VALUE_CHANGED, fields);
+
+        lv_obj_t *time_container = lv_obj_create(cont_flex);
+        fields->slideshow_time_container = time_container;
+        lv_obj_add_style(time_container, &container_style, LV_PART_MAIN);
+        lv_obj_set_size(time_container, lv_pct(95), LV_SIZE_CONTENT);
+        lv_obj_t *slideshow_time_label = lv_label_create(time_container);
+        lv_obj_align(slideshow_time_label, LV_ALIGN_LEFT_MID, 0, 0);
+        lv_obj_add_style(slideshow_time_label, &icon_style, LV_PART_MAIN);
+        lv_label_set_text(slideshow_time_label, "\ue41b\ue425");
+        lv_obj_t * slideshow_time = lv_roller_create(time_container);
+        //Time must be in 15 second increments, otherwise the logic to convert to seconds needs to be updated
+        lv_roller_set_options(slideshow_time,
+                              "0:15\n"
+                              "0:30\n"
+                              "0:45\n"
+                              "1:00\n"
+                              "1:15\n"
+                              "1:30\n"
+                              "1:45\n"
+                              "2:00\n"
+                              "2:15\n"
+                              "2:30\n"
+                              "2:45\n"
+                              "3:00",
+                              LV_ROLLER_MODE_INFINITE);
+
+        lv_roller_set_visible_row_count(slideshow_time, 3);
+        lv_roller_set_selected(slideshow_time, (image_config->getSlideShowTime()/15)-1, LV_ANIM_OFF);
+        lv_obj_align(slideshow_time, LV_ALIGN_RIGHT_MID, 0, 0);
+
+
+        fields->slideshow_time = slideshow_time;
+
+        disable_slideshow(fields);
+        disable_slideshow_time(fields);
+
+        lv_obj_t *button_row = lv_obj_create(parent);
+        lv_obj_set_flex_grow(button_row, 0);
+        lv_obj_clear_flag(button_row, LV_OBJ_FLAG_SNAPPABLE);
+        lv_obj_add_style(button_row, &container_style, LV_PART_MAIN);
+        lv_obj_set_flex_flow(button_row, LV_FLEX_FLOW_ROW);
+        lv_obj_set_size(button_row, LV_PCT(100), 45);
+
+//        lv_obj_add_flag(button_row, LV_OBJ_FLAG_FLOATING);
+//        lv_obj_align(button_row, LV_ALIGN_BOTTOM_LEFT, 0, 0);//-lv_obj_get_style_pad_right(cont_flex, LV_PART_MAIN));
+
+        lv_obj_t *save_button = lv_btn_create(button_row);
+        lv_obj_clear_flag(save_button, LV_OBJ_FLAG_SNAPPABLE);
+        lv_obj_t *save_button_label = lv_label_create(save_button);
+        lv_obj_set_style_text_font(save_button_label, &material_icons, LV_PART_MAIN);
+        lv_label_set_text(save_button_label, "\ue161");
+        lv_obj_set_align(save_button_label, LV_ALIGN_CENTER);
+        lv_obj_set_size(save_button, LV_PCT(50), 40);
+        lv_obj_add_event_cb(save_button, [](lv_event_t *e) {
+            ESP_LOGI(TAG, "Save clicked");
+            Menu::lock(-1);
+            auto *fields = (FileSelect_Objects *) e->user_data;
+            char tmp[128];
+            lv_dropdown_get_selected_str(fields->folder, tmp, sizeof(tmp));
+            std::filesystem::path dir = tmp;
+            ESP_LOGI(TAG, "%s", dir.c_str());
+            image_config->setDirectory(dir.c_str());
+            lv_dropdown_get_selected_str(fields->file, tmp, sizeof(tmp));
+            if (strcmp(tmp, "Entire Folder") == 0) {
+                strcpy(tmp, "");
+            }
+            else{
+                ESP_LOGI(TAG, "%s", (dir/tmp).c_str());
+                image_config->setFile(dir/tmp);
+            }
+            image_config->setLocked(lv_obj_get_state(fields->locked)&LV_STATE_CHECKED);
+            image_config->setSlideShow(lv_obj_get_state(fields->slideshow)&LV_STATE_CHECKED);
+            image_config->setSlideShowTime((lv_roller_get_selected(fields->slideshow_time)+1)*15);
+
+            image_config->save();
+            lv_obj_del(fields->win);
+            free(fields);
+            Menu::unlock();
+        }, LV_EVENT_PRESSED, fields);
+
+        lv_obj_t *exit_button = lv_btn_create(button_row);
+        lv_obj_clear_flag(exit_button, LV_OBJ_FLAG_SNAPPABLE);
+        lv_obj_t *exit_button_label = lv_label_create(exit_button);
+        lv_obj_set_style_text_font(exit_button_label, &material_icons, LV_PART_MAIN);
+        lv_label_set_text(exit_button_label, "\ue5c9");
+        lv_obj_set_align(exit_button_label, LV_ALIGN_CENTER);
+        lv_obj_set_size(exit_button, LV_PCT(45), 40);
+        lv_obj_add_event_cb(exit_button, [](lv_event_t *e) {
+            ESP_LOGI(TAG, "Exit clicked");
+            Menu::lock(-1);
+            auto *fields = (FileSelect_Objects *) e->user_data;
+            lv_obj_del(fields->win);
+            free(fields);
+            Menu::unlock();
+        }, LV_EVENT_PRESSED, fields);
+
+        Menu::unlock();
+    }
+}
+
+
+
 static void MainMenu() {
     if (Menu::lock(-1)) {
         lv_obj_t *scr = lv_scr_act();
+        battery_widget(lv_layer_top());
         lv_obj_add_event_cb(scr, [](lv_event_t *e){
             auto *g = (lv_group_t *)lv_obj_get_group(e->target);
             lv_indev_set_group(lv_indev_get_act(), g);
             }, LV_EVENT_SCREEN_LOADED, nullptr);
         lv_obj_t *cont_flex = lv_obj_create(lv_scr_act());
-        lv_obj_set_size(cont_flex,  LV_PCT(80), LV_PCT(80));
+        lv_obj_set_style_radius(cont_flex, LV_RADIUS_CIRCLE, 0);
+        lv_obj_set_style_clip_corner(cont_flex, true, 0);
+        lv_obj_set_size(cont_flex,  LV_PCT(100), LV_PCT(100));
         lv_obj_align(cont_flex, LV_ALIGN_CENTER, 0, 0);
         lv_obj_set_flex_flow(cont_flex, LV_FLEX_FLOW_COLUMN);
-        lv_obj_set_style_flex_cross_place(cont_flex, LV_FLEX_ALIGN_CENTER, 0);
+        lv_obj_set_flex_align(cont_flex, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
-        lv_style_init(&battery_style);
-        lv_style_set_text_color(&battery_style, lv_color_black());
-        lv_style_set_text_font(&battery_style, &lv_font_montserrat_28);
-
-        lv_obj_t *battery = lv_label_create(cont_flex);
-        lv_obj_set_size(battery, LV_PCT(20), LV_PCT(20));
-        lv_obj_set_size(battery, LV_PCT(100), LV_PCT(20));
-        lv_obj_add_style(battery, &battery_style, 0);
-
-        //TODO: See why this causes a freeze in LVGL
-//        lv_obj_add_event_cb(battery, [](lv_event_t *e){
-//            battery_update(lv_event_get_target(e));
-//        }, LV_EVENT_REFRESH, nullptr);
-//        battery_update(battery);
-//
-//        lv_timer_t * timer = lv_timer_create([](lv_timer_t * timer){
-//            auto *obj = (lv_obj_t *) timer->user_data;
-//            lv_event_send(obj, LV_EVENT_REFRESH, nullptr);
-//
-//            }, 1000,  battery);
-//        lv_obj_add_event_cb(battery, [](lv_event_t *e){
-//            auto * timer = (lv_timer_t *)e->user_data;
-//            lv_timer_del(timer);
-//        }, LV_EVENT_DELETE, timer);
-
+//        lv_obj_set_style_flex_cross_place(cont_flex, LV_FLEX_ALIGN_CENTER, 0);
 
         lv_obj_t *file_button = lv_btn_create(cont_flex);
         lv_obj_t *file_button_label = lv_label_create(file_button);
@@ -513,6 +612,7 @@ void Menu::open() {
         touch_drv.user_data = _board->getTouch().get();
         touch_drv.long_press_time = 400;
         touch_dev = lv_indev_drv_register(&touch_drv);
+        lv_timer_set_period(touch_drv.read_timer, 50);
     }
 
 

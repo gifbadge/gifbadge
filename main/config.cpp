@@ -66,22 +66,22 @@ std::string ImageConfig::get_string_or_default(const char *item, std::string val
     }
 }
 
-void ImageConfig::setDirectory(const std::string &value) {
+void ImageConfig::setDirectory(const std::filesystem::path &value) {
     const std::lock_guard<std::mutex> lock(mutex);
     directory = value;
 }
 
-std::string ImageConfig::getDirectory() {
+std::filesystem::path ImageConfig::getDirectory() {
     const std::lock_guard<std::mutex> lock(mutex);
     return directory;
 }
 
-void ImageConfig::setFile(const std::string &value) {
+void ImageConfig::setFile(const std::filesystem::path &value) {
     const std::lock_guard<std::mutex> lock(mutex);
     image_file = value;
 }
 
-std::string ImageConfig::getFile() {
+std::filesystem::path ImageConfig::getFile() {
     const std::lock_guard<std::mutex> lock(mutex);
     return image_file;
 }

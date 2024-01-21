@@ -18,6 +18,8 @@ idf_component_register(SRCS
         "hal/drivers/display_gc9a01.cpp"
         "hal/drivers/display_st7701s.cpp"
         "hal/drivers/backlight_ledc.cpp"
+        "material_icons.c"
+        "material_icons_56.c"
         INCLUDE_DIRS "include")
 #target_compile_options(${COMPONENT_LIB} PRIVATE -DGC9A01=1 -DLV_USE_PERF_MONITOR=1)
 target_compile_options(${COMPONENT_LIB} PRIVATE -DST7706=1 -DLV_USE_PERF_MONITOR=1)
