@@ -117,7 +117,7 @@ static esp_err_t storage_init_spiflash(wl_handle_t *wl_handle) {
     return wl_mount(data_partition, wl_handle);
 }
 
-static esp_err_t storage_init_ext_flash(int mosi, int miso, int sclk, int cs, wl_handle_t *wl_handle) {
+esp_err_t storage_init_ext_flash(int mosi, int miso, int sclk, int cs, wl_handle_t *wl_handle) {
     esp_err_t err;
     const spi_bus_config_t bus_config = {
             .mosi_io_num = mosi,

@@ -2,12 +2,14 @@
 #include <esp_log.h>
 #include <esp_sleep.h>
 #include <driver/rtc_io.h>
+#include <wear_levelling.h>
 
 
 #include "hal/board.h"
 
 #include "hal/boards/board_v0.h"
 #include "hal/drivers/backlight_ledc.h"
+#include "hal/hal_usb.h"
 
 static const char *TAG = "board_v0";
 
@@ -18,6 +20,10 @@ board_v0::board_v0() {
     _keys = std::make_shared<keys_gpio>(GPIO_NUM_43, GPIO_NUM_44, GPIO_NUM_0);
     _display = std::make_shared<display_gc9a01>(35,36,34,37,46);
     _backlight = std::make_shared<backlight_ledc>(GPIO_NUM_45, 0);
+
+    static wl_handle_t wl_handle = WL_INVALID_HANDLE;
+    ESP_ERROR_CHECK(storage_init_ext_flash(39, 41, 40, 42, &wl_handle));
+
 
     esp_pm_config_t pm_config = {.max_freq_mhz = 240, .min_freq_mhz = 40, .light_sleep_enable = false};
     esp_pm_configure(&pm_config);
