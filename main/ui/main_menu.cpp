@@ -20,15 +20,17 @@ static void exit_callback(lv_event_t *e){
 }
 
 static void file_options_close(lv_event_t *e){
-    restore_group(lv_obj_get_parent(static_cast<lv_obj_t *>(lv_event_get_user_data(e))));
+    lv_obj_t *obj = lv_obj_get_parent(static_cast<lv_obj_t *>(lv_event_get_user_data(e)));
+    restore_group(obj);
+    lv_scr_load(lv_obj_get_screen(obj));
 }
 
 static void file_select_callback(lv_event_t *e){
     lv_obj_t * obj = lv_event_get_target(e);
     LV_LOG_USER("%s", lv_label_get_text(obj));
+    lv_scr_load(lv_obj_create(nullptr));
     lv_obj_t *file_options_window = FileOptions();
     lv_obj_add_event_cb(file_options_window, file_options_close, LV_EVENT_DELETE, obj);
-
 }
 
 

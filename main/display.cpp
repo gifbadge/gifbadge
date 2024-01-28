@@ -23,20 +23,20 @@ static const char *TAG = "DISPLAY";
 int H_RES;
 int V_RES;
 
-static void clear_screen(esp_lcd_panel_handle_t panel_handle, uint8_t *pGIFBuf) {
+static void clear_screen(const std::shared_ptr<Display>& display, uint8_t *pGIFBuf) {
     memset(pGIFBuf, 255, H_RES * V_RES * 2);
-    esp_lcd_panel_draw_bitmap(panel_handle, 0, 0, H_RES, V_RES, pGIFBuf);
+    display->write(0, 0, H_RES, V_RES, pGIFBuf);
 }
 
 
 
-static void display_usb_logo(esp_lcd_panel_handle_t panel_handle, uint8_t *pGIFBuf) {
+static void display_usb_logo(const std::shared_ptr<Display>& display, uint8_t *pGIFBuf) {
     ESP_LOGI(TAG, "Displaying USB LOGO");
-    clear_screen(panel_handle, pGIFBuf);
+    clear_screen(display, pGIFBuf);
     auto *png = new PNGImage();
     png->open(usb_png, sizeof(usb_png));
     png->loop(pGIFBuf);
-    esp_lcd_panel_draw_bitmap(panel_handle,
+    display->write(
                               (H_RES / 2) - (png->size().first / 2),
                               (V_RES / 2) - (png->size().second / 2),
                               (H_RES / 2) + ((png->size().first  + 1) / 2),
@@ -45,11 +45,11 @@ static void display_usb_logo(esp_lcd_panel_handle_t panel_handle, uint8_t *pGIFB
     delete png;
 }
 
-static void display_no_image(esp_lcd_panel_handle_t panel_handle, uint8_t *pGIFBuf) {
+static void display_no_image(const std::shared_ptr<Display>& display, uint8_t *pGIFBuf) {
     ESP_LOGI(TAG, "Displaying No Image");
-    clear_screen(panel_handle, pGIFBuf);
+    clear_screen(display, pGIFBuf);
     render_text_centered(H_RES, V_RES, 10, "No Image", pGIFBuf);
-    esp_lcd_panel_draw_bitmap(panel_handle,
+    display->write(
                               0,
                               0,
                               H_RES,
@@ -57,13 +57,13 @@ static void display_no_image(esp_lcd_panel_handle_t panel_handle, uint8_t *pGIFB
                               pGIFBuf);
 }
 
-static void display_image_too_large(esp_lcd_panel_handle_t panel_handle, uint8_t *pGIFBuf, const char *path) {
+static void display_image_too_large(const std::shared_ptr<Display>& display, uint8_t *pGIFBuf, const char *path) {
     ESP_LOGI(TAG, "Displaying Image To Large");
-    clear_screen(panel_handle, pGIFBuf);
+    clear_screen(display, pGIFBuf);
     char tmp[255];
     sprintf(tmp, "Image too Large\n%s", path);
     render_text_centered(H_RES, V_RES, 10, tmp, pGIFBuf);
-    esp_lcd_panel_draw_bitmap(panel_handle,
+    display->write(
                               0,
                               0,
                               H_RES,
@@ -71,13 +71,13 @@ static void display_image_too_large(esp_lcd_panel_handle_t panel_handle, uint8_t
                               pGIFBuf);
 }
 
-static void display_ota(esp_lcd_panel_handle_t panel_handle, uint8_t *pGIFBuf, uint32_t percent) {
+static void display_ota(const std::shared_ptr<Display>& display, uint8_t *pGIFBuf, uint32_t percent) {
     ESP_LOGI(TAG, "Displaying OTA Status");
-    clear_screen(panel_handle, pGIFBuf);
+    clear_screen(display, pGIFBuf);
     char tmp[255];
     sprintf(tmp, "Update In Progress\n%lu%%", percent);
     render_text_centered(H_RES, V_RES, 10, tmp, pGIFBuf);
-    esp_lcd_panel_draw_bitmap(panel_handle,
+    display->write(
                               0,
                               0,
                               H_RES,
@@ -85,11 +85,11 @@ static void display_ota(esp_lcd_panel_handle_t panel_handle, uint8_t *pGIFBuf, u
                               pGIFBuf);
 }
 
-static void display_no_storage(esp_lcd_panel_handle_t panel_handle, uint8_t *pGIFBuf) {
+static void display_no_storage(const std::shared_ptr<Display>& display, uint8_t *pGIFBuf) {
     ESP_LOGI(TAG, "Displaying No Storage");
-    clear_screen(panel_handle, pGIFBuf);
+    clear_screen(display, pGIFBuf);
     render_text_centered(H_RES, V_RES, 10, "No SDCARD", pGIFBuf);
-    esp_lcd_panel_draw_bitmap(panel_handle,
+    display->write(
                               0,
                               0,
                               H_RES,
@@ -98,13 +98,13 @@ static void display_no_storage(esp_lcd_panel_handle_t panel_handle, uint8_t *pGI
 }
 
 
-static void display_image_batt(esp_lcd_panel_handle_t panel_handle, uint8_t *pGIFBuf) {
+static void display_image_batt(const std::shared_ptr<Display>& display, uint8_t *pGIFBuf) {
     ESP_LOGI(TAG, "Displaying Low Battery");
-    clear_screen(panel_handle, pGIFBuf);
+    clear_screen(display, pGIFBuf);
     auto *png = new PNGImage();
     png->open(low_batt_png, sizeof(low_batt_png));
     png->loop(pGIFBuf);
-    esp_lcd_panel_draw_bitmap(panel_handle,
+    display->write(
                               (H_RES / 2) - (png->size().first / 2),
                               (V_RES / 2) - (png->size().second / 2),
                               (H_RES / 2) + ((png->size().first + 1) / 2),
@@ -113,20 +113,20 @@ static void display_image_batt(esp_lcd_panel_handle_t panel_handle, uint8_t *pGI
     delete png;
 }
 
-Image *display_file(ImageFactory factory, const char *path, uint8_t *pGIFBuf, esp_lcd_panel_handle_t panel_handle) {
+Image *display_file(ImageFactory factory, const char *path, uint8_t *pGIFBuf, const std::shared_ptr<Display>& display) {
     Image *in = factory.create(path);
-    clear_screen(panel_handle, pGIFBuf);
+    clear_screen(display, pGIFBuf);
     if (in) {
         in->open(path);
         printf("%s x: %i y: %i\n", path, in->size().first, in->size().second);
         auto size = in->size();
         if (size.first > H_RES || size.second > V_RES) {
             delete in;
-            display_image_too_large(panel_handle, pGIFBuf, path);
+            display_image_too_large(display, pGIFBuf, path);
             return nullptr;
         }
         int delay = in->loop(pGIFBuf);
-        esp_lcd_panel_draw_bitmap(panel_handle,
+        display->write(
                                   (H_RES / 2) - (in->size().first / 2),
                                   (V_RES / 2) - (in->size().second / 2),
                                   (H_RES / 2) + (in->size().first / 2),
@@ -139,16 +139,21 @@ Image *display_file(ImageFactory factory, const char *path, uint8_t *pGIFBuf, es
     return in;
 }
 
-static void image_loop(std::shared_ptr<Image> &in, uint8_t *pGIFBuf, esp_lcd_panel_handle_t panel_handle) {
+static void image_loop(std::shared_ptr<Image> &in, uint8_t *pGIFBuf, const std::shared_ptr<Display>& display) {
     if (in && in->animated()) {
         int delay = in->loop(pGIFBuf);
         if(delay >= 0) {
-            esp_lcd_panel_draw_bitmap(panel_handle,
-                                      (H_RES / 2) - (in->size().first / 2),
-                                      (V_RES / 2) - (in->size().second / 2),
-                                      (H_RES / 2) + (in->size().first / 2),
-                                      (V_RES / 2) + (in->size().second / 2),
-                                      pGIFBuf);
+            display->write((H_RES / 2) - (in->size().first / 2),
+                           (V_RES / 2) - (in->size().second / 2),
+                           (H_RES / 2) + (in->size().first / 2),
+                           (V_RES / 2) + (in->size().second / 2),
+                           pGIFBuf);
+//            display.write(
+//                                      (H_RES / 2) - (in->size().first / 2),
+//                                      (V_RES / 2) - (in->size().second / 2),
+//                                      (H_RES / 2) + (in->size().first / 2),
+//                                      (V_RES / 2) + (in->size().second / 2),
+//                                      pGIFBuf);
             vTaskDelay(delay / portTICK_PERIOD_MS);
         }
         else {
@@ -231,11 +236,11 @@ void display_task(void *params) {
 
 
     // user can flush pre-defined pattern to the screen before we turn on the screen or backlight
-    uint8_t *pGIFBuf;
-    pGIFBuf = (uint8_t *) heap_caps_malloc(H_RES * V_RES * 2, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+    uint8_t *pGIFBuf = static_cast<uint8_t *>(malloc(
+            args->display->getResolution().first * args->display->getResolution().second * 2));
 
     memset(pGIFBuf, 255, H_RES * V_RES * 2);
-    esp_lcd_panel_draw_bitmap(panel_handle, 0, 0, H_RES, V_RES, pGIFBuf);
+    args->display->write( 0, 0, H_RES, V_RES, pGIFBuf);
 
     args->backlight->setLevel(100);
 
@@ -261,7 +266,7 @@ void display_task(void *params) {
                     ESP_LOGI(TAG, "DISPLAY_USB");
                     menu_state = false;
                     in.reset();
-                    display_usb_logo(panel_handle, pGIFBuf);
+                    display_usb_logo(args->display, pGIFBuf);
                     last_mode = static_cast<DISPLAY_OPTIONS>(option);
                     break;
                 case DISPLAY_MENU:
@@ -274,10 +279,10 @@ void display_task(void *params) {
                     files = list_directory(config->getDirectory()); //TODO: Handle the directory not existing
                     try {
                         current_file = files.at(0);
-                        in.reset(display_file(factory, current_file.c_str(), pGIFBuf, panel_handle));
+                        in.reset(display_file(factory, current_file.c_str(), pGIFBuf, args->display));
                     }
                     catch (std::out_of_range &err) {
-                        display_no_image(panel_handle, pGIFBuf);
+                        display_no_image(args->display, pGIFBuf);
                     }
                     last_mode = static_cast<DISPLAY_OPTIONS>(option);
                     break;
@@ -287,10 +292,10 @@ void display_task(void *params) {
                     try {
                         current_file = get_file(config->getDirectory(), config->getFile());
                         in.reset(display_file(factory, current_file.c_str(), pGIFBuf,
-                                              panel_handle));
+                                              args->display));
                     }
                     catch (std::out_of_range &err) {
-                        display_no_image(panel_handle, pGIFBuf);
+                        display_no_image(args->display, pGIFBuf);
                     }
                     last_mode = static_cast<DISPLAY_OPTIONS>(option);
                     break;
@@ -300,7 +305,7 @@ void display_task(void *params) {
                     }
                     current_file = files_get_next(config->getDirectory(), current_file);
                     in.reset(display_file(factory, current_file.c_str(), pGIFBuf,
-                                          panel_handle));
+                                          args->display));
                     break;
                 case DISPLAY_PREVIOUS:
                     if (config->getLocked()) {
@@ -309,27 +314,27 @@ void display_task(void *params) {
                     try {
                         current_file = files_get_previous(config->getDirectory(), current_file);
                         in.reset(display_file(factory, current_file.c_str(), pGIFBuf,
-                                              panel_handle));
+                                              args->display));
                     }
                     catch (std::out_of_range &err) {
-                        display_no_image(panel_handle, pGIFBuf);
+                        display_no_image(args->display, pGIFBuf);
                     }
                     break;
                 case DISPLAY_BATT:
                     if (last_mode != DISPLAY_BATT) {
                         in.reset();
-                        display_image_batt(panel_handle, pGIFBuf);
+                        display_image_batt(args->display, pGIFBuf);
                     }
                     last_mode = static_cast<DISPLAY_OPTIONS>(option);
                     break;
                 case DISPLAY_OTA:
                     in.reset();
-                    display_ota(panel_handle, pGIFBuf, 0);
+                    display_ota(args->display, pGIFBuf, 0);
                     last_mode = static_cast<DISPLAY_OPTIONS>(option);
                     break;
                 case DISPLAY_NO_STORAGE:
                     last_mode = static_cast<DISPLAY_OPTIONS>(option);
-                    display_no_storage(panel_handle, pGIFBuf);
+                    display_no_storage(args->display, pGIFBuf);
                 default:
                     break;
             }
@@ -341,11 +346,11 @@ void display_task(void *params) {
                     uint32_t percent;
                     xTaskNotifyWaitIndexed(1, 0, 0xffffffff, &percent, 0);
                     if(percent != 0){
-                        display_ota(panel_handle, pGIFBuf, percent);
+                        display_ota(args->display, pGIFBuf, percent);
                     }
                     vTaskDelay(200 / portTICK_PERIOD_MS);
                 } else {
-                    image_loop(in, pGIFBuf, panel_handle);
+                    image_loop(in, pGIFBuf, args->display);
                 }
             } else {
                 vTaskDelay(200 / portTICK_PERIOD_MS);

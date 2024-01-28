@@ -76,11 +76,11 @@ void file_list(lv_obj_t *parent) {
         current = current.parent_path();
     }
 
-    if (!std::filesystem::equivalent(top, current)) {
+    if (top.compare(current.lexically_normal()) < 0) {
         LV_LOG_USER("Not in Top");
-        file_entry(parent, ICON_UP, "Up"); //Should be FOLDER_OPEN
+        file_entry(parent, ICON_UP, "Up");
     }
-    file_entry(parent, ICON_FOLDER_OPEN, "Entire Folder"); //Should be FOLDER_OPEN
+    file_entry(parent, ICON_FOLDER_OPEN, "Entire Folder");
 
     LV_LOG_USER("Path: %s", current.c_str());
 
@@ -109,6 +109,7 @@ void file_list(lv_obj_t *parent) {
 }
 
 lv_obj_t *file_select(const char *top, const char *current) {
+    lv_scr_load(lv_obj_create(nullptr));
     new_group();
     lv_obj_t *cont_flex = lv_file_list_create(lv_scr_act());
     lv_file_list_icon_style(cont_flex, &icon_style);
@@ -127,11 +128,13 @@ lv_obj_t *file_select(const char *top, const char *current) {
 
 void FileWindowClose(lv_event_t *e) {
     lv_obj_t *file_window = lv_event_get_target(e);
+    lv_obj_t *file_widget = static_cast<lv_obj_t *>(lv_event_get_user_data(e));
     auto *d = static_cast<file_data *>(lv_file_list_get_user_data(file_window));
     LV_LOG_USER("File: %s", d->current);
-    lv_label_set_text(static_cast<lv_obj_t *>(lv_event_get_user_data(e)), d->current);
+    lv_label_set_text(file_widget, d->current);
     free(lv_file_list_get_user_data(file_window));
-    restore_group(lv_obj_get_parent(static_cast<lv_obj_t *>(lv_event_get_user_data(e))));
+    restore_group(lv_obj_get_parent(file_widget));
+    lv_scr_load(lv_obj_get_screen(file_widget));
     lv_obj_scroll_to_view(static_cast<lv_obj_t *>(lv_event_get_user_data(e)), LV_ANIM_OFF);
 }
 }

@@ -2,6 +2,7 @@
 // Created by gifbadge on 26/01/24.
 //
 
+#include <math.h>
 #include "ui/widgets/file_list/file_list.h"
 
 /*********************
@@ -173,10 +174,14 @@ static void scroll_event_cb(lv_event_t *e) {
             x = r;
         } else {
             /*Use Pythagoras theorem to get x from radius and y*/
+//            uint32_t x_sqr = r * r - diff_y * diff_y;
+//            lv_sqrt_res_t res;
+//            lv_sqrt(x_sqr, &res, 0x8000);   /*Use lvgl's built in sqrt root function*/
+//            x = (lv_coord_t) (r - res.i);
             uint32_t x_sqr = r * r - diff_y * diff_y;
-            lv_sqrt_res_t res;
-            lv_sqrt(x_sqr, &res, 0x8000);   /*Use lvgl's built in sqrt root function*/
-            x = (lv_coord_t) (r - res.i);
+            int res = sqrt(x_sqr);
+//            lv_sqrt(x_sqr, &res, 0x8000);   /*Use lvgl's built in sqrt root function*/
+            x = (lv_coord_t) (r - res);
         }
 
         /*Translate the item by the calculated X coordinate*/

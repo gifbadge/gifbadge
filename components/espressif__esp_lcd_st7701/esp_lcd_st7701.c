@@ -383,9 +383,10 @@ esp_err_t panel_st7701_draw_bitmap(esp_lcd_panel_t *panel, int x_start, int y_st
 
 }
 
-esp_err_t panel_st7701_get_frame_buffer(esp_lcd_panel_t *panel, uint32_t fb_num, void **fb0, ...){
+esp_err_t panel_st7701_get_frame_buffer(esp_lcd_panel_t *panel, uint32_t fb_num, void **fb0, void **fb1){
     st7701_panel_t *st7701 = __containerof(panel, st7701_panel_t, base);
-    return esp_lcd_rgb_panel_get_frame_buffer(st7701->panel, fb_num, fb0);
+    esp_err_t ret = esp_lcd_rgb_panel_get_frame_buffer(st7701->panel, fb_num, fb0, fb1);
+    return ret;
 }
 
 esp_err_t panel_st7701_swap_xy(esp_lcd_panel_t *panel, bool swap)

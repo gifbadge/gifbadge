@@ -61,12 +61,12 @@ static bool flush_ready([[maybe_unused]] esp_lcd_panel_io_handle_t panel_io,
 }
 
 static void flush_cb(lv_disp_drv_t *drv, const lv_area_t *area, lv_color_t *color_map) {
-    esp_lcd_panel_draw_bitmap(cbData.panelHandle,
-                              area->x1,
-                              area->y1,
-                              area->x2 + 1,
-                              area->y2 + 1,
-                              color_map);
+    cbData.display->write(
+            area->x1,
+            area->y1,
+            area->x2 + 1,
+            area->y2 + 1,
+            color_map);
     if (!cbData.callbackEnabled) {
         lv_disp_flush_ready(drv); //Need to only do this on RGB displays
     }
@@ -178,13 +178,13 @@ void lvgl_init(std::shared_ptr<Board> board, std::shared_ptr<ImageConfig> _image
     menu_state = false;
 
     lv_init();
-    int h_res = _board->getDisplay()->getResolution().first;
-    // it's recommended to choose the size of the draw buffer(s) to be at least 1/10 screen sized
-    buf1 = (lv_color_t *) heap_caps_malloc(h_res * 60 * sizeof(lv_color_t), MALLOC_CAP_DMA);
-    assert(buf1);
-    buf2 = (lv_color_t *) heap_caps_malloc(h_res * 60 * sizeof(lv_color_t), MALLOC_CAP_DMA);
-    assert(buf2);
-    lv_disp_draw_buf_init(&disp_buf, buf1, buf2, h_res * 60);
+//    int h_res = _board->getDisplay()->getResolution().first;
+//    // it's recommended to choose the size of the draw buffer(s) to be at least 1/10 screen sized
+//    buf1 = (lv_color_t *) heap_caps_malloc(h_res * 60 * sizeof(lv_color_t), MALLOC_CAP_DMA);
+//    assert(buf1);
+//    buf2 = (lv_color_t *) heap_caps_malloc(h_res * 60 * sizeof(lv_color_t), MALLOC_CAP_DMA);
+//    assert(buf2);
+    lv_disp_draw_buf_init(&disp_buf, _board->getDisplay()->getBuffer(), _board->getDisplay()->getBuffer2(), _board->getDisplay()->getResolution().first * _board->getDisplay()->getResolution().second*2);
 
 
     lvgl_mux = xSemaphoreCreateRecursiveMutex();
@@ -206,7 +206,8 @@ void lvgl_init(std::shared_ptr<Board> board, std::shared_ptr<ImageConfig> _image
     disp_drv.ver_res = static_cast<lv_coord_t>(_board->getDisplay()->getResolution().second);
     disp_drv.flush_cb = flush_cb;
     disp_drv.draw_buf = &disp_buf;
-//    disp_drv.full_refresh = 1;
+    disp_drv.full_refresh = 1;
+    disp_drv.direct_mode = 1;
     lv_disp_drv_register(&disp_drv);
 
     style_init();
@@ -215,7 +216,7 @@ void lvgl_init(std::shared_ptr<Board> board, std::shared_ptr<ImageConfig> _image
     keyboard_drv.read_cb = keyboard_read;
     keyboard_drv.long_press_time = 400;
     lvgl_encoder = lv_indev_drv_register(&keyboard_drv);
-    lv_timer_set_period(keyboard_drv.read_timer, 200); //Slow down key reads
+    lv_timer_set_period(keyboard_drv.read_timer, 150); //Slow down key reads
 
 
     if (_board->getTouch()) {
@@ -295,7 +296,7 @@ void lvgl_menu_open() {
     ESP_LOGI(TAG, "Open");
     menu_state = true;
 
-    cbData.panelHandle = _board->getDisplay()->getPanelHandle();
+    cbData.display = _board->getDisplay();
 
     cbData.callbackEnabled = _board->getDisplay()->onColorTransDone(flush_ready, &disp_drv);
 

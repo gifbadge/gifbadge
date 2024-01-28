@@ -113,7 +113,7 @@ esp_err_t esp_lcd_new_panel_st7701(const esp_lcd_panel_io_handle_t io, const esp
         .vsync_front_porch = 10,                    \
         .flags.pclk_active_neg = false,             \
     }
-esp_err_t panel_st7701_get_frame_buffer(esp_lcd_panel_t *panel, uint32_t fb_num, void **fb0, ...);
+esp_err_t panel_st7701_get_frame_buffer(esp_lcd_panel_t *panel, uint32_t fb_num, void **fb0, void **fb1);
 esp_err_t panel_st7701_swap_xy(esp_lcd_panel_t *panel, bool swap);
 
 #ifdef __cplusplus

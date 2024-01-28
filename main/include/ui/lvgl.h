@@ -18,7 +18,7 @@
 #define LVGL_TASK_PRIORITY     2
 
 struct flushCbData {
-    esp_lcd_panel_handle_t panelHandle;
+    std::shared_ptr<Display> display;
     bool callbackEnabled;
 };
 

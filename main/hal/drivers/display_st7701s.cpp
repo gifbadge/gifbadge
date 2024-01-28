@@ -115,8 +115,8 @@ display_st7701s::display_st7701s(int spi_cs, int spi_scl, int spi_sda, int hsync
 
     ESP_LOGI(TAG, "Install ST7701S panel driver");
     esp_lcd_rgb_panel_config_t rgb_config = {
-            .clk_src = LCD_CLK_SRC_XTAL,
-//            .clk_src = LCD_CLK_SRC_DEFAULT,
+//            .clk_src = LCD_CLK_SRC_XTAL,
+            .clk_src = LCD_CLK_SRC_DEFAULT,
             .timings = {
                     .pclk_hz = 10 * 1000 * 1000,
                     .h_res = 480,
@@ -137,7 +137,7 @@ display_st7701s::display_st7701s(int spi_cs, int spi_scl, int spi_sda, int hsync
 
             .data_width = 16,
             .bits_per_pixel = 16,
-            .num_fbs = 1,
+            .num_fbs = fb_number,
             .bounce_buffer_size_px = 0, //10*H_RES,
             .psram_trans_align = 64,
             .hsync_gpio_num = hsync,
@@ -172,6 +172,8 @@ display_st7701s::display_st7701s(int spi_cs, int spi_scl, int spi_sda, int hsync
     ESP_ERROR_CHECK(esp_lcd_new_panel_st7701(io_handle, &panel_config, &panel_handle));
 //    ESP_ERROR_CHECK(esp_lcd_panel_reset(panel_handle));
     ESP_ERROR_CHECK(esp_lcd_panel_init(panel_handle));
+    panel_st7701_get_frame_buffer(panel_handle, fb_number, &_fb0, &_fb1);
+
 //    ESP_ERROR_CHECK(esp_lcd_panel_swap_xy(panel_handle, true));
 //    ESP_ERROR_CHECK(esp_lcd_panel_mirror(panel_handle, true, false));
 //    esp_lcd_rgb_panel_set_yuv_conversion(panel_handle, nullptr);
@@ -183,6 +185,22 @@ esp_lcd_panel_handle_t display_st7701s::getPanelHandle() {
 
 esp_lcd_panel_io_handle_t display_st7701s::getIoHandle() {
     return io_handle;
+}
+
+uint8_t *display_st7701s::getBuffer() {
+    return static_cast<uint8_t *>(_fb0);
+}
+
+uint8_t *display_st7701s::getBuffer2() {
+    return static_cast<uint8_t *>(_fb1);
+}
+
+void display_st7701s::write(int x_start, int y_start, int x_end, int y_end, const void *color_data){
+    esp_lcd_panel_draw_bitmap(panel_handle, x_start, y_start, x_end, y_end, color_data);
+}
+
+void display_st7701s::write_from_buffer() {
+
 }
 
 
