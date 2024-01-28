@@ -13,7 +13,7 @@
 #include <nvs_handle.hpp>
 
 
-#include "menu.h"
+#include "ui/lvgl.h"
 #include "keys.h"
 #include "touch.h"
 #include "hal/hal_usb.h"
@@ -239,7 +239,7 @@ extern "C" void app_main(void) {
     ota_boot_info();
     ota_init();
 
-    Menu *menu = new Menu(board, imageconfig);
+    lvgl_init(board, imageconfig);
 
     vTaskDelay(1000 / portTICK_PERIOD_MS); //Let USB Settle
 
@@ -280,13 +280,13 @@ extern "C" void app_main(void) {
             }
             oldState = currentState;
         } else if (currentState == MAIN_NORMAL) {
-            if (xQueuePeek(input_queue, (void *) &i, 50 / portTICK_PERIOD_MS) && !menu->is_open()) {
+            if (xQueuePeek(input_queue, (void *) &i, 50 / portTICK_PERIOD_MS) && !lvgl_menu_state()) {
                 get_event(i);
                 if (i.code == KEY_ENTER && i.value == STATE_PRESSED) {
                     xQueueReceive(input_queue, (void *) &i, 0);
                     xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_MENU, eSetValueWithOverwrite);
                     vTaskDelay(100 / portTICK_PERIOD_MS);
-                    menu->open();
+                    lvgl_menu_open();
                 }
                 if (i.code == KEY_UP && i.value == STATE_PRESSED) {
                     xQueueReceive(input_queue, (void *) &i, 0);
@@ -300,11 +300,11 @@ extern "C" void app_main(void) {
                     xQueueReceive(input_queue, (void *) &i, 0);
                 }
             }
-            if (menu->is_open()) {
+            if (lvgl_menu_state()) {
                 //Eat input events when we can't use them
                 xQueueReset(input_queue);
             }
-            if (!menu->is_open() && board->getTouch()) {
+            if (!lvgl_menu_state() && board->getTouch()) {
                 auto e = board->getTouch()->read();
                 if(e.first > 0 && e.second > 0){
                     if (((esp_timer_get_time() / 1000) - (last_change / 1000)) > 1000) {
@@ -312,7 +312,7 @@ extern "C" void app_main(void) {
                         if (e.second < 50) {
                             xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_MENU, eSetValueWithOverwrite);
                             vTaskDelay(100 / portTICK_PERIOD_MS);
-                            menu->open();
+                            lvgl_menu_open();
                         }
                         if (e.first < 50) {
                             xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_PREVIOUS, eSetValueWithOverwrite);

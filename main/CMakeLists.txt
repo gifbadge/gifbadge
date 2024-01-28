@@ -1,6 +1,6 @@
 idf_component_register(SRCS
         "main.cpp"
-        "menu.cpp"
+        "ui/lvgl.cpp"
         "keys.cpp"
         "display.cpp"
         "config.cpp"
@@ -20,6 +20,14 @@ idf_component_register(SRCS
         "hal/drivers/backlight_ledc.cpp"
         "material_icons.c"
         "material_icons_56.c"
+        "esp_efuse_custom_table.c"
+        "ui/lvgl.cpp"
+        "ui/device_group.c"
+        "ui/file_select.cpp"
+        "ui/main_menu.cpp"
+        "ui/file_options.cpp"
+        "ui/widgets/file_list/file_list.c"
+        "ui/style.c"
         INCLUDE_DIRS "include")
 #target_compile_options(${COMPONENT_LIB} PRIVATE -DGC9A01=1 -DLV_USE_PERF_MONITOR=1)
 target_compile_options(${COMPONENT_LIB} PRIVATE -DST7706=1 -DLV_USE_PERF_MONITOR=1)
