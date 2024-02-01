@@ -26,9 +26,28 @@ board_2_1_v0_1::board_2_1_v0_1() {
     esp_pm_config_t pm_config = {.max_freq_mhz = 240, .min_freq_mhz = 240, .light_sleep_enable = false};
     esp_pm_configure(&pm_config);
 
-    uint8_t data;
-    _i2c->read_reg(0x0F, 0x0F, &data, 1);
-    ESP_LOGI(TAG, "KXTJ3-1057 %u", data);
+    uint8_t data = 0;
+    if(_i2c->write_reg(0x0D, 0x7F, &data, 1) == ESP_OK) {
+        _i2c->read_reg(0x0D, 0x0C, &data, 1);
+        ESP_LOGI(TAG, "KXTJ3-1057 %u", data);
+    }
+    else if(_i2c->write_reg(0x0F, 0x7F, &data, 1) == ESP_OK) {
+        _i2c->read_reg(0x0F, 0x0C, &data, 1);
+        ESP_LOGI(TAG, "KXTJ3-1057 %u", data);
+    }
+    else if(_i2c->write_reg(0x0C, 0x7F, &data, 1) == ESP_OK) {
+        _i2c->read_reg(0x0C, 0x0C, &data, 1);
+        ESP_LOGI(TAG, "KXTJ3-1057 %u", data);
+    }
+    else if(_i2c->write_reg(0x0E, 0x7F, &data, 1) == ESP_OK) {
+        _i2c->read_reg(0x0E, 0x0C, &data, 1);
+        ESP_LOGI(TAG, "KXTJ3-1057 %u", data);
+    }
+    else {
+        ESP_LOGI(TAG, "KXTJ3-1057 not responding");
+    }
+
+
 
     static sdmmc_card_t *card = nullptr;
     gpio_pullup_en(GPIO_NUM_40);

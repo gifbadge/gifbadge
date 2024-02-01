@@ -113,7 +113,7 @@ static void callback_dispatcher(lv_event_t *e) {
     LV_LOG_USER("Clicked");
     //Get the first child that isn't an image, as that's what we likely want to interact with
     lv_obj_t *obj = lv_obj_get_child(lv_event_get_current_target(e), 0);
-    if (lv_obj_get_class(obj) == &lv_img_class && lv_obj_get_child_cnt(lv_event_get_current_target(e)) > 1) {
+    if (lv_obj_get_class(obj) == &lv_image_class && lv_obj_get_child_cnt(lv_event_get_current_target(e)) > 1) {
         obj = lv_obj_get_child(lv_event_get_current_target(e), 1);
     }
     if (lv_obj_get_state(obj) & LV_STATE_DISABLED) {
@@ -136,14 +136,14 @@ static void callback_dispatcher(lv_event_t *e) {
         } else {
             lv_obj_add_state(obj, LV_STATE_CHECKED);
         }
-        lv_event_send(obj, LV_EVENT_VALUE_CHANGED, NULL);
+        lv_obj_send_event(obj, LV_EVENT_VALUE_CHANGED, NULL);
     } else if (lv_obj_has_class(obj, &lv_roller_class)) {
         lv_indev_set_group(lv_indev_get_act(), lv_obj_get_group(obj));
         lv_group_focus_next(lv_obj_get_group(obj));
         lv_group_set_editing(lv_obj_get_group(obj), true);
-        lv_event_send(obj, LV_EVENT_FOCUSED, NULL);
+        lv_obj_send_event(obj, LV_EVENT_FOCUSED, NULL);
     } else {
-        lv_event_send(obj, LV_EVENT_CLICKED, NULL);
+        lv_obj_send_event(obj, LV_EVENT_CLICKED, NULL);
     }
 }
 
@@ -152,9 +152,9 @@ static void scroll_event_cb(lv_event_t *e) {
 
     lv_area_t cont_a;
     lv_obj_get_coords(cont, &cont_a);
-    lv_coord_t cont_y_center = (lv_coord_t) (cont_a.y1 + lv_area_get_height(&cont_a) / 2);
+    int32_t cont_y_center = (int32_t) (cont_a.y1 + lv_area_get_height(&cont_a) / 2);
 
-    lv_coord_t r = (lv_coord_t) (lv_obj_get_height(cont) * 7 / 10);
+    int32_t r = (int32_t) (lv_obj_get_height(cont) * 7 / 10);
     int32_t i;
     uint32_t child_cnt = lv_obj_get_child_cnt(cont);
     for (i = 0; i < child_cnt; i++) {
@@ -162,13 +162,13 @@ static void scroll_event_cb(lv_event_t *e) {
         lv_area_t child_a;
         lv_obj_get_coords(child, &child_a);
 
-        lv_coord_t child_y_center = (lv_coord_t) (child_a.y1 + lv_area_get_height(&child_a) / 2);
+        int32_t child_y_center = (int32_t) (child_a.y1 + lv_area_get_height(&child_a) / 2);
 
-        lv_coord_t diff_y = (lv_coord_t) (child_y_center - cont_y_center);
+        int32_t diff_y = (int32_t) (child_y_center - cont_y_center);
         diff_y = LV_ABS(diff_y);
 
         /*Get the x of diff_y on a circle.*/
-        lv_coord_t x;
+        int32_t x;
         /*If diff_y is out of the circle use the last point of the circle (the radius)*/
         if (diff_y >= r) {
             x = r;
@@ -177,11 +177,11 @@ static void scroll_event_cb(lv_event_t *e) {
 //            uint32_t x_sqr = r * r - diff_y * diff_y;
 //            lv_sqrt_res_t res;
 //            lv_sqrt(x_sqr, &res, 0x8000);   /*Use lvgl's built in sqrt root function*/
-//            x = (lv_coord_t) (r - res.i);
+//            x = (int32_t) (r - res.i);
             uint32_t x_sqr = r * r - diff_y * diff_y;
             int res = sqrt(x_sqr);
 //            lv_sqrt(x_sqr, &res, 0x8000);   /*Use lvgl's built in sqrt root function*/
-            x = (lv_coord_t) (r - res);
+            x = (int32_t) (r - res);
         }
 
         /*Translate the item by the calculated X coordinate*/
@@ -221,9 +221,10 @@ static void lv_file_list_constructor(const lv_obj_class_t *class_p, lv_obj_t *ob
     lv_obj_set_scroll_snap_y(explorer->cont, LV_SCROLL_SNAP_CENTER);
     lv_obj_set_scroll_dir(explorer->cont, LV_DIR_VER);
     lv_obj_add_event_cb(explorer->cont, scroll_event_cb, LV_EVENT_SCROLL, NULL);
-    lv_event_send(explorer->cont, LV_EVENT_SCROLL, NULL);
+    lv_obj_send_event(explorer->cont, LV_EVENT_SCROLL, NULL);
 
     lv_obj_set_scrollbar_mode(explorer->cont, LV_SCROLLBAR_MODE_OFF);
+    lv_obj_add_flag(explorer->cont, LV_OBJ_FLAG_SCROLL_ONE);
 
 
     /*Initialize style*/
@@ -243,7 +244,7 @@ static void init_style(lv_obj_t *obj) {
 
     /*main container style*/
     lv_obj_set_style_radius(explorer->cont, LV_RADIUS_CIRCLE, 0);
-    lv_obj_set_style_clip_corner(explorer->cont, true, 0);
+//    lv_obj_set_style_clip_corner(explorer->cont, true, 0);
     lv_obj_set_style_pad_bottom(explorer->cont, 50, LV_PART_MAIN);
     lv_obj_set_style_pad_top(explorer->cont, 50, LV_PART_MAIN);
     lv_obj_set_style_border_side(explorer->cont, LV_BORDER_SIDE_NONE, LV_PART_MAIN);

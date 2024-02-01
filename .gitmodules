@@ -10,3 +10,9 @@
 [submodule "components/font_render/mcufont"]
 	path = components/font_render/mcufont
 	url = https://github.com/mcufont/mcufont.git
+[submodule "components/lvgl"]
+	path = components/lvgl
+	url = https://github.com/lvgl/lvgl.git
+[submodule "components/lvgl"]
+	path = components/lvgl
+	url = https://github.com/lvgl/lvgl.git

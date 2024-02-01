@@ -31,7 +31,7 @@ static void file_event_handler(lv_event_t *e) {
     auto *d = static_cast<file_data *>(lv_file_list_get_user_data(container));
 
 
-    lv_obj_t *obj = lv_event_get_target(e);
+    auto *obj = static_cast<lv_obj_t *>(lv_event_get_target(e));
     char *text = lv_label_get_text(obj);
     auto path = std::filesystem::path(d->current);
     LV_LOG_USER("Clicked: %s %s", path.c_str(), text);
@@ -109,7 +109,7 @@ void file_list(lv_obj_t *parent) {
 }
 
 lv_obj_t *file_select(const char *top, const char *current) {
-    lv_scr_load(lv_obj_create(nullptr));
+    lv_screen_load(lv_obj_create(nullptr));
     new_group();
     lv_obj_t *cont_flex = lv_file_list_create(lv_scr_act());
     lv_file_list_icon_style(cont_flex, &icon_style);
@@ -127,14 +127,14 @@ lv_obj_t *file_select(const char *top, const char *current) {
 }
 
 void FileWindowClose(lv_event_t *e) {
-    lv_obj_t *file_window = lv_event_get_target(e);
-    lv_obj_t *file_widget = static_cast<lv_obj_t *>(lv_event_get_user_data(e));
+    auto *file_window = static_cast<lv_obj_t *>(lv_event_get_target(e));
+    auto *file_widget = static_cast<lv_obj_t *>(lv_event_get_user_data(e));
     auto *d = static_cast<file_data *>(lv_file_list_get_user_data(file_window));
     LV_LOG_USER("File: %s", d->current);
     lv_label_set_text(file_widget, d->current);
     free(lv_file_list_get_user_data(file_window));
     restore_group(lv_obj_get_parent(file_widget));
-    lv_scr_load(lv_obj_get_screen(file_widget));
+    lv_screen_load(lv_obj_get_screen(file_widget));
     lv_obj_scroll_to_view(static_cast<lv_obj_t *>(lv_event_get_user_data(e)), LV_ANIM_OFF);
 }
 }
