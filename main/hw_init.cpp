@@ -5,18 +5,25 @@
 
 static const char *TAG = "HW_INIT";
 
+static std::shared_ptr<Board> global_board;
 
-std::shared_ptr<Board> hw_init(){
+
+std::shared_ptr<Board> get_board(){
 //    return std::make_shared<board_v0>();
     uint8_t board;
     esp_efuse_read_field_blob(ESP_EFUSE_USER_DATA_BOARD, &board, 8);
     ESP_LOGI(TAG, "Board %u", board);
-    switch(board){
-        case 0:
-            return std::make_shared<board_v0>();
-        case 1:
-            return std::make_shared<board_2_1_v0_1>();
-        default:
-            return nullptr;
+    if(!global_board) {
+        switch (board) {
+            case 0:
+                global_board = std::make_shared<board_v0>();
+                break;
+            case 1:
+                global_board = std::make_shared<board_2_1_v0_1>();
+                break;
+            default:
+                return nullptr;
+        }
     }
+    return global_board;
 }

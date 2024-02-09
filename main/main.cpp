@@ -210,7 +210,7 @@ extern "C" void app_main(void) {
     });
 
 
-    std::shared_ptr<Board> board = hw_init();
+    std::shared_ptr<Board> board = get_board();
 
     auto imageconfig = std::make_shared<ImageConfig>();
 
