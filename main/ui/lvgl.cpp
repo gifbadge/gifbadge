@@ -23,8 +23,6 @@ static const char *TAG = "MENU";
 
 //TODO: This is bad
 std::shared_ptr<ImageConfig> image_config;
-std::shared_ptr<Battery> battery_config;
-
 
 //Static Variables
 static lv_disp_t *disp;
@@ -169,7 +167,6 @@ void lvgl_init(std::shared_ptr<Board> board, std::shared_ptr<ImageConfig> _image
     image_config = std::move(_image_config);
     _board = std::move(board);
 
-    battery_config = _board->getBattery();
     menu_state = false;
 
     lv_init();
@@ -212,17 +209,18 @@ void lvgl_init(std::shared_ptr<Board> board, std::shared_ptr<ImageConfig> _image
 }
 
 void battery_update(lv_obj_t *widget) {
-    if (battery_config->getSoc() > 90) {
+    auto battery = static_cast<Battery *>(lv_obj_get_user_data(widget));
+    if (battery->getSoc() > 90) {
         lv_obj_clear_state(widget, LV_STATE_CHECKED);
         lv_label_set_text(widget, LV_SYMBOL_BATTERY_FULL);
-    } else if (battery_config->getSoc() > 70) {
+    } else if (battery->getSoc() > 70) {
         lv_obj_clear_state(widget, LV_STATE_CHECKED);
         lv_label_set_text(widget, LV_SYMBOL_BATTERY_3);
-    } else if (battery_config->getSoc() > 45) {
+    } else if (battery->getSoc() > 45) {
         lv_obj_clear_state(widget, LV_STATE_CHECKED);
         lv_label_set_text(widget, LV_SYMBOL_BATTERY_2);
 
-    } else if (battery_config->getSoc() > 10) {
+    } else if (battery->getSoc() > 10) {
         lv_obj_clear_state(widget, LV_STATE_CHECKED);
         lv_label_set_text(widget, LV_SYMBOL_BATTERY_1);
     } else {
@@ -246,6 +244,8 @@ static void battery_widget(lv_obj_t *scr) {
     lv_obj_set_pos(battery, 0, 10);
     lv_label_set_text(battery, LV_SYMBOL_BATTERY_EMPTY);
     lv_obj_add_state(battery, LV_STATE_CHECKED);
+
+    lv_obj_set_user_data(battery, _board->getBattery().get());
 
 
     //TODO: See why this causes a freeze in LVGL
