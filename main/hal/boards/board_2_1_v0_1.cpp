@@ -1,5 +1,7 @@
 #include <esp_pm.h>
 #include <esp_log.h>
+#include <driver/sdmmc_defs.h>
+#include <esp_vfs_fat.h>
 #include "hal/boards/board_2_1_v0_1.h"
 #include "hal/hal_usb.h"
 
@@ -122,4 +124,13 @@ bool board_2_1_v0_1::storageReady() {
         return true;
     }
     return false;
+}
+
+StorageInfo board_2_1_v0_1::storageInfo() {
+    StorageType type = (card->ocr & SD_OCR_SDHC_CAP) ? StorageType_SDHC : StorageType_SD;
+    double speed = card->real_freq_khz/1000;
+    uint64_t total_bytes;
+    uint64_t free_bytes;
+    esp_vfs_fat_info("/data", &total_bytes, &free_bytes);
+    return {card->cid.name, type, speed, total_bytes, free_bytes};
 }

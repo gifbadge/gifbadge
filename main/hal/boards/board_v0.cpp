@@ -71,3 +71,7 @@ void board_v0::powerOff() {
 BOARD_POWER board_v0::powerState() {
     return BOARD_POWER_NORMAL;
 }
+
+StorageInfo board_v0::storageInfo() {
+    return StorageInfo();
+}

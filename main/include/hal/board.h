@@ -7,6 +7,7 @@
 #include "keys.h"
 #include "display.h"
 #include "hal/backlight.h"
+#include "hal/storage.h"
 
 enum BOARD_POWER {
     BOARD_POWER_NORMAL,
@@ -28,4 +29,5 @@ public:
     virtual void powerOff() = 0;
     virtual BOARD_POWER powerState() = 0;
     virtual bool storageReady() = 0;
+    virtual StorageInfo storageInfo() = 0;
 };

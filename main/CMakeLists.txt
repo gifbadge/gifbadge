@@ -28,6 +28,7 @@ idf_component_register(SRCS
         "ui/file_options.cpp"
         "ui/widgets/file_list/file_list.c"
         "ui/style.c"
+        "ui/storage.cpp"
         INCLUDE_DIRS "include")
 #target_compile_options(${COMPONENT_LIB} PRIVATE -DGC9A01=1 -DLV_USE_PERF_MONITOR=1)
 target_compile_options(${COMPONENT_LIB} PRIVATE -DST7706=1 -DLV_USE_PERF_MONITOR=1)
