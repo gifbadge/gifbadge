@@ -37,29 +37,6 @@ static const char *TAG = "USB";
 static void mount() {
     ESP_LOGI(TAG, "Mount storage...");
     ESP_ERROR_CHECK(tinyusb_msc_storage_mount(BASE_PATH));
-
-    // List all the files in this directory
-    ESP_LOGI(TAG, "\nls command output:");
-    struct dirent *d;
-    DIR *dh = opendir(BASE_PATH);
-    if (!dh) {
-        if (errno == ENOENT) {
-            //If the directory is not found
-            ESP_LOGE(TAG, "Directory doesn't exist %s", BASE_PATH);
-        } else {
-            //If the directory is not readable then throw error and exit
-            ESP_LOGE(TAG, "Unable to read directory %s", BASE_PATH);
-        }
-        return;
-    }
-    //While the next entry is not readable we will print directory files
-    while ((d = readdir(dh)) != nullptr) {
-        FILINFO info;
-        char path[300];
-        snprintf(path, sizeof(path), "/data/%s", d->d_name);
-        f_stat(path, &info);
-        printf("%s %x\n", d->d_name, info.fattrib&AM_HID);
-    }
 }
 
 mount_callback callback = nullptr;
@@ -104,7 +81,7 @@ static void storage_mount_changed_cb(tinyusb_msc_event_t *event) {
     }
 }
 
-static esp_err_t storage_init_spiflash(wl_handle_t *wl_handle) {
+esp_err_t storage_init_spiflash(wl_handle_t *wl_handle) {
     ESP_LOGI(TAG, "Initializing wear levelling");
 
     const esp_partition_t *data_partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA,
@@ -205,7 +182,8 @@ esp_err_t storage_init_ext_flash(int mosi, int miso, int sclk, int cs, wl_handle
     return ESP_OK;
 }
 
-esp_err_t init_sdmmc_slot(gpio_num_t clk, gpio_num_t cmd, gpio_num_t d0, gpio_num_t cd, sdmmc_card_t **card)
+esp_err_t init_sdmmc_slot(gpio_num_t clk, gpio_num_t cmd, gpio_num_t d0, gpio_num_t d1, gpio_num_t d2, gpio_num_t d3,
+                          gpio_num_t cd, sdmmc_card_t **card, int width)
 {
     esp_err_t ret = ESP_OK;
     bool host_init = false;
@@ -217,16 +195,20 @@ esp_err_t init_sdmmc_slot(gpio_num_t clk, gpio_num_t cmd, gpio_num_t d0, gpio_nu
     // For setting a specific frequency, use host.max_freq_khz (range 400kHz - 40MHz for SDMMC)
     // Example: for fixed frequency of 10MHz, use host.max_freq_khz = 10000;
     sdmmc_host_t host = SDMMC_HOST_DEFAULT();
+    host.max_freq_khz = SDMMC_FREQ_HIGHSPEED;
 
     // This initializes the slot without card detect (CD) and write protect (WP) signals.
     // Modify slot_config.gpio_cd and slot_config.gpio_wp if your board has these signals.
     sdmmc_slot_config_t slot_config = SDMMC_SLOT_CONFIG_DEFAULT();
 
-    slot_config.width = 1;
+    slot_config.width = width;
 
     slot_config.clk = clk;
     slot_config.cmd = cmd;
     slot_config.d0 = d0;
+    slot_config.d1 = d1;
+    slot_config.d2 = d2;
+    slot_config.d3 = d3;
     slot_config.cd = cd;
 
 
@@ -266,9 +248,47 @@ esp_err_t init_sdmmc_slot(gpio_num_t clk, gpio_num_t cmd, gpio_num_t d0, gpio_nu
     }
     if (sd_card) {
         free(sd_card);
-        sd_card = NULL;
+        sd_card = nullptr;
     }
     return ret;
+}
+
+esp_err_t
+mount_sdmmc_slot(gpio_num_t clk, gpio_num_t cmd, gpio_num_t d0, gpio_num_t d1, gpio_num_t d2, gpio_num_t d3,
+                 gpio_num_t cd, sdmmc_card_t **card, int width)
+{
+    esp_err_t ret = ESP_OK;
+
+    ESP_LOGI(TAG, "Initializing SDCard");
+
+    // By default, SD card frequency is initialized to SDMMC_FREQ_DEFAULT (20MHz)
+    // For setting a specific frequency, use host.max_freq_khz (range 400kHz - 40MHz for SDMMC)
+    // Example: for fixed frequency of 10MHz, use host.max_freq_khz = 10000;
+    sdmmc_host_t host = SDMMC_HOST_DEFAULT();
+    host.max_freq_khz = SDMMC_FREQ_HIGHSPEED;
+
+    // This initializes the slot without card detect (CD) and write protect (WP) signals.
+    // Modify slot_config.gpio_cd and slot_config.gpio_wp if your board has these signals.
+    sdmmc_slot_config_t slot_config = SDMMC_SLOT_CONFIG_DEFAULT();
+
+    slot_config.width = width;
+
+    slot_config.clk = clk;
+    slot_config.cmd = cmd;
+    slot_config.d0 = d0;
+    slot_config.d1 = d1;
+    slot_config.d2 = d2;
+    slot_config.d3 = d3;
+    slot_config.cd = cd;
+
+    esp_vfs_fat_sdmmc_mount_config_t mount_config = {
+            .max_files = 5,
+            .allocation_unit_size = 16 * 1024
+    };
+    ret = esp_vfs_fat_sdmmc_mount("/data", &host, &slot_config, &mount_config, card);
+    sdmmc_card_print_info(stdout, *card);
+    return ret;
+
 }
 
 bool storage_free() {
@@ -285,6 +305,32 @@ void storage_init_mmc(int usb_sense, sdmmc_card_t **card) {
             .mount_config = {.max_files = 5},
     };
     ESP_ERROR_CHECK(tinyusb_msc_storage_init_sdmmc(&config_sdmmc));
+    ESP_ERROR_CHECK(tinyusb_msc_register_callback(TINYUSB_MSC_EVENT_MOUNT_CHANGED, storage_mount_changed_cb)); /* Other way to register the callback i.e. registering using separate API. If the callback had been already registered, it will be overwritten. */
+
+    mount();
+
+    const tinyusb_config_t tusb_cfg = {
+            .device_descriptor = nullptr,
+            .string_descriptor = nullptr,
+            .string_descriptor_count = 0,
+            .external_phy = false,
+            .configuration_descriptor = nullptr,
+            .self_powered = true,
+            .vbus_monitor_io = usb_sense,
+    };
+
+    ESP_ERROR_CHECK(tinyusb_driver_install(&tusb_cfg));
+
+}
+
+void storage_init_wearlevel(int usb_sense, wl_handle_t *wl_handle ) {
+
+    const tinyusb_msc_spiflash_config_t config_spi = {
+            .wl_handle = *wl_handle,
+            .callback_mount_changed = storage_mount_changed_cb  /* First way to register the callback. This is while initializing the storage. */
+    };
+
+        ESP_ERROR_CHECK(tinyusb_msc_storage_init_spiflash(&config_spi));
     ESP_ERROR_CHECK(tinyusb_msc_register_callback(TINYUSB_MSC_EVENT_MOUNT_CHANGED, storage_mount_changed_cb)); /* Other way to register the callback i.e. registering using separate API. If the callback had been already registered, it will be overwritten. */
 
     mount();
@@ -340,7 +386,7 @@ void storage_init() {
     }
     if (true) {
 //        // TODO: Make this work so USB can actually be turned off
-//        ESP_ERROR_CHECK(tinyusb_msc_storage_init_spiflash(&config_spi));
+        ESP_ERROR_CHECK(tinyusb_msc_storage_init_spiflash(&config_spi));
 //        ESP_ERROR_CHECK(tinyusb_msc_register_callback(TINYUSB_MSC_EVENT_MOUNT_CHANGED,
 //                                                      storage_mount_changed_cb)); /* Other way to register the callback i.e. registering using separate API. If the callback had been already registered, it will be overwritten. */
 //        //mounted in the app by default
