@@ -70,6 +70,7 @@ display_gc9a01::display_gc9a01(int mosi, int sck, int cs, int dc, int reset) {
     ESP_ERROR_CHECK(esp_lcd_panel_mirror(panel_handle, true, false));
     gpio_hold_en((gpio_num_t) reset); //Don't toggle the reset signal on light sleep
     ESP_ERROR_CHECK(esp_lcd_panel_disp_on_off(panel_handle, true));
+    buffer = (uint8_t *) heap_caps_malloc(240 * 240 * 2, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
 }
 
 esp_lcd_panel_handle_t display_gc9a01::getPanelHandle() {
@@ -87,7 +88,7 @@ bool display_gc9a01::onColorTransDone(esp_lcd_panel_io_color_trans_done_cb_t flu
 }
 
 uint8_t *display_gc9a01::getBuffer() {
-    return (uint8_t *) heap_caps_malloc(getResolution().first * getResolution().second * 2, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+    return buffer;
 }
 
 void display_gc9a01::write(int x_start, int y_start, int x_end, int y_end,
