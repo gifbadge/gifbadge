@@ -9,6 +9,7 @@
 #include "ui/style.h"
 #include "ui/device_group.h"
 #include "ui/storage.h"
+#include "hw_init.h"
 
 
 static void exit_callback(lv_event_t *e){
@@ -42,6 +43,20 @@ static void storage_callback(lv_event_t *e){
     lv_obj_add_event_cb(window, file_options_close, LV_EVENT_DELETE, obj);
 }
 
+static void BacklightSliderExitCallback(lv_event_t *e) {
+    lv_obj_t *obj = lv_event_get_target_obj(e);
+    esp_err_t err;
+    auto handle = nvs::open_nvs_handle("settings", NVS_READWRITE, &err);
+    handle->set_item("backlight", lv_slider_get_value(obj));
+    handle->commit();
+    restore_group(static_cast<lv_obj_t *>(lv_event_get_user_data(e)));
+}
+
+static void BacklightSliderChangedCallback(lv_event_t *e){
+    lv_obj_t *obj = lv_event_get_target_obj(e);
+    int level = lv_slider_get_value(obj)*10;
+    get_board()->getBacklight()->setLevel(level);
+}
 
 void main_menu()
 {
@@ -49,6 +64,30 @@ void main_menu()
         lv_obj_t *scr = lv_scr_act();
         new_group();
         lv_obj_t *main_menu = lv_file_list_create(scr);
+        lv_file_list_icon_style(main_menu, &icon_style);
+
+
+        lv_obj_t *backlight_button = lv_file_list_add(main_menu, "\ue3ab");
+        lv_obj_t * slider = lv_slider_create(backlight_button);
+        lv_obj_set_width(slider, lv_pct(80));
+        lv_obj_set_style_bg_color(slider, lv_color_white(), LV_PART_KNOB);
+        lv_obj_set_style_bg_color(slider, lv_color_white(), LV_PART_INDICATOR);
+        lv_obj_set_style_bg_color(slider, lv_color_black(), LV_PART_MAIN);
+        lv_slider_set_range(slider,1,10);
+        lv_group_t *slider_group = lv_group_create();
+        lv_group_add_obj(slider_group, slider);
+        lv_obj_add_event_cb(slider, BacklightSliderChangedCallback, LV_EVENT_VALUE_CHANGED, backlight_button);
+        lv_obj_add_event_cb(slider, BacklightSliderExitCallback, LV_EVENT_RELEASED, backlight_button);
+        esp_err_t err;
+        int backlight_level;
+        auto handle = nvs::open_nvs_handle("settings", NVS_READWRITE, &err);
+        err = handle->get_item("backlight", backlight_level);
+        if(err == ESP_ERR_NVS_NOT_FOUND){
+            backlight_level = 10;
+        }
+        lv_slider_set_value(slider, backlight_level, LV_ANIM_OFF);
+
+
         lv_obj_t *file_btn = lv_file_list_add(main_menu, nullptr);
         lv_obj_t *file_label = lv_label_create(file_btn);
         lv_obj_add_style(file_label, &menu_font_style, LV_PART_MAIN);

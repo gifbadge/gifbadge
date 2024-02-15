@@ -242,7 +242,16 @@ void display_task(void *params) {
     memset(pGIFBuf, 255, H_RES * V_RES * 2);
     args->display->write( 0, 0, H_RES, V_RES, pGIFBuf);
 
-    args->backlight->setLevel(100);
+    esp_err_t err;
+    int backlight_level;
+    auto handle = nvs::open_nvs_handle("settings", NVS_READWRITE, &err);
+    err = handle->get_item("backlight", backlight_level);
+    if(err == ESP_ERR_NVS_NOT_FOUND){
+        backlight_level = 10;
+    }
+    handle.reset();
+
+    args->backlight->setLevel(backlight_level*10);
 
     ImageFactory factory;
     std::shared_ptr<Image> in;
