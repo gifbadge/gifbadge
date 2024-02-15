@@ -9,6 +9,7 @@
 #include "hal/drivers/backlight_ledc.h"
 #include "hal/drivers/battery_max17048.h"
 #include "hal/drivers/touch_ft5x06.h"
+#include <driver/sdmmc_host.h>
 
 
 class board_2_1_v0_1: public Board{
@@ -36,4 +37,5 @@ private:
     std::shared_ptr<display_st7701s> _display;
     std::shared_ptr<backlight_ledc> _backlight;
     std::shared_ptr<touch_ft5x06> _touch;
+    sdmmc_card_t *card = nullptr;
 };

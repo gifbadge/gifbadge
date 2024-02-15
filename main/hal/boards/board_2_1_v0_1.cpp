@@ -49,9 +49,10 @@ board_2_1_v0_1::board_2_1_v0_1() {
 
 
 
-    static sdmmc_card_t *card = nullptr;
+
     gpio_pullup_en(GPIO_NUM_40);
-    if(init_sdmmc_slot(GPIO_NUM_37, GPIO_NUM_38, GPIO_NUM_36, GPIO_NUM_40, &card) == ESP_OK) {
+    if(init_sdmmc_slot(GPIO_NUM_37, GPIO_NUM_38, GPIO_NUM_36, GPIO_NUM_NC, GPIO_NUM_NC, GPIO_NUM_NC, GPIO_NUM_40, &card,
+                     1) == ESP_OK) {
         storage_init_mmc(21, &card);
     }
     gpio_install_isr_service(0);
