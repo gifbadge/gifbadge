@@ -16,4 +16,5 @@ public:
     virtual uint8_t *getBuffer2() = 0;
     virtual void write(int x_start, int y_start, int x_end, int y_end, const void *color_data) = 0;
     virtual void write_from_buffer() = 0;
+    virtual bool directRender() = 0;
 };

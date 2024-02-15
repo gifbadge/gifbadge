@@ -189,8 +189,19 @@ void lvgl_init(std::shared_ptr<Board> board, std::shared_ptr<ImageConfig> _image
     lv_display_set_flush_cb(disp, flush_cb);
     size_t buffer_size = _board->getDisplay()->getResolution().first * _board->getDisplay()->getResolution().second * 2;
     ESP_LOGI(TAG, "Display Buffer Size %u", buffer_size);
-    lv_display_set_buffers(disp, _board->getDisplay()->getBuffer(), _board->getDisplay()->getBuffer2(), buffer_size,
-                           LV_DISPLAY_RENDER_MODE_FULL);
+    if(_board->getDisplay()->directRender()) {
+        lv_display_set_buffers(disp, _board->getDisplay()->getBuffer(), _board->getDisplay()->getBuffer2(), buffer_size,
+                               LV_DISPLAY_RENDER_MODE_DIRECT);
+    }
+    else {
+        lv_display_set_buffers(disp, _board->getDisplay()->getBuffer(), nullptr, buffer_size,
+                               LV_DISPLAY_RENDER_MODE_FULL);
+    }
+//    lv_display_set_flush_wait_cb(disp, flush_wait);
+
+//    uint8_t *buf = static_cast<uint8_t *>(malloc(480 * 100 * 2));
+//    lv_display_set_buffers(disp, buf, nullptr, 480*100*2,
+//                           LV_DISPLAY_RENDER_MODE_PARTIAL);
 
     style_init();
     lvgl_encoder = lv_indev_create();
@@ -275,6 +286,10 @@ void lvgl_menu_open() {
     cbData.callbackEnabled = _board->getDisplay()->onColorTransDone(flush_ready, &disp);
 
 
+    if(_board->getDisplay()->directRender()) {
+        _board->getDisplay()->write(0, 0, _board->getDisplay()->getResolution().first,
+                                    _board->getDisplay()->getResolution().second, _board->getDisplay()->getBuffer2());
+    }
     vTaskResume(lvgl_task);
 
 
