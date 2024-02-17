@@ -270,11 +270,11 @@ void display_task(void *params) {
         xTaskNotifyWaitIndexed(0, 0, 0xffffffff, &option, 0);
         if(option != DISPLAY_NONE) {
             last_change = esp_timer_get_time();
+            in.reset();
             switch (option) {
                 case DISPLAY_USB:
                     ESP_LOGI(TAG, "DISPLAY_USB");
                     menu_state = false;
-                    in.reset();
                     display_usb_logo(args->display, pGIFBuf);
                     last_mode = static_cast<DISPLAY_OPTIONS>(option);
                     break;
