@@ -51,8 +51,8 @@ static bool flush_ready([[maybe_unused]] esp_lcd_panel_io_handle_t panel_io,
     return false;
 }
 
-static void flush_cb(lv_disp_t *drv, const lv_area_t *area, uint8_t *color_map) {
-    lv_draw_sw_rgb565_swap(color_map, 480 * 480);
+static void flush_cb(lv_disp_t *, const lv_area_t *area, uint8_t *color_map) {
+    lv_draw_sw_rgb565_swap(color_map, cbData.display->getResolution().first * cbData.display->getResolution().second);
     cbData.display->write(
             area->x1,
             area->y1,
