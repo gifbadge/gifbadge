@@ -4,7 +4,7 @@
 #include "ui/main_menu.h"
 #include "ui/file_options.h"
 #include "ui/widgets/file_list/file_list.h"
-#include "ui/lvgl.h"
+#include "ui/menu.h"
 #include "display.h"
 #include "ui/style.h"
 #include "ui/device_group.h"

@@ -1,6 +1,6 @@
 idf_component_register(SRCS
         "main.cpp"
-        "ui/lvgl.cpp"
+        "ui/menu.cpp"
         "keys.cpp"
         "display.cpp"
         "config.cpp"
@@ -19,10 +19,10 @@ idf_component_register(SRCS
         "hal/drivers/display_gc9a01.cpp"
         "hal/drivers/display_st7701s.cpp"
         "hal/drivers/backlight_ledc.cpp"
-        "material_icons.c"
-        "material_icons_56.c"
+        ${CMAKE_CURRENT_BINARY_DIR}/material_icons.c
+        ${CMAKE_CURRENT_BINARY_DIR}/material_icons_56.c
         "esp_efuse_custom_table.c"
-        "ui/lvgl.cpp"
+        "ui/menu.cpp"
         "ui/device_group.c"
         "ui/file_select.cpp"
         "ui/main_menu.cpp"
@@ -36,3 +36,17 @@ target_compile_options(${COMPONENT_LIB} PRIVATE -DST7706=1 -DLV_USE_PERF_MONITOR
 target_compile_options(${COMPONENT_LIB} PRIVATE -D__LINUX__)
 #fatfs_create_spiflash_image(data fatfs FLASH_IN_PROJECT)
 #nvs_create_partition_image(nvs nvs_default.csv FLASH_IN_PROJECT)
+
+
+set(font_symbols "0xe3f4,0xe897,0xe41b,0xe41b,0xe425,0xe161,0xe5c9,0xe3ab,0xe2c7,0xe2c8")
+message(font_symbols="${font_symbols}")
+
+add_custom_command(
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/material_icons.c
+        COMMAND lv_font_conv --bpp 1 --size 28 --format lvgl --lv-include lvgl.h --font ${CMAKE_SOURCE_DIR}/MaterialIcons-Regular.ttf -r"${font_symbols}" --no-compress -o ${CMAKE_CURRENT_BINARY_DIR}/material_icons.c
+)
+
+add_custom_command(
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/material_icons_56.c
+        COMMAND lv_font_conv --bpp 1 --size 56 --format lvgl --lv-include lvgl.h --font ${CMAKE_SOURCE_DIR}/MaterialIcons-Regular.ttf -r"${font_symbols}" --no-compress -o ${CMAKE_CURRENT_BINARY_DIR}/material_icons_56.c
+)

@@ -4,7 +4,7 @@
 #include "ui/widgets/file_list/file_list.h"
 #include "ui/file_select.h"
 #include "ui/device_group.h"
-#include "ui/lvgl.h"
+#include "ui/menu.h"
 #include "ui/style.h"
 
 static const char *TAG = "file_options";

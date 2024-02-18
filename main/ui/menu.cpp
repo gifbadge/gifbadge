@@ -11,7 +11,7 @@
 #include "esp_lcd_panel_io.h"
 #include <lvgl.h>
 
-#include "ui/lvgl.h"
+#include "ui/menu.h"
 #include "keys.h"
 #include "config.h"
 #include "hal/battery.h"
