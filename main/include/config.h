@@ -14,6 +14,8 @@ public:
     ~ImageConfig();
     void save();
 
+    void setPath(const std::filesystem::path&);
+    std::filesystem::path getPath();
     void setDirectory(const std::filesystem::path&);
     std::filesystem::path getDirectory();
     void setFile(const std::filesystem::path& );
@@ -34,6 +36,7 @@ private:
     std::mutex mutex;
     std::filesystem::path directory;
     std::filesystem::path image_file;
+    std::filesystem::path path;
     bool locked;
     bool slideshow;
     int slideshow_time;

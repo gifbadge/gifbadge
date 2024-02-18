@@ -8,6 +8,7 @@ static const char *TAG = "CONFIG";
 ImageConfig::ImageConfig() {
     esp_err_t err;
     handle = nvs::open_nvs_handle("image", NVS_READWRITE, &err);
+    path = get_string_or_default("path", (const char *)"/data");
     directory = get_string_or_default("directory", (const char *)"/data");
     image_file = get_string_or_default("image_file", (const char *)"");
     locked = get_item_or_default("locked", false);
@@ -16,6 +17,7 @@ ImageConfig::ImageConfig() {
 }
 
 ImageConfig::~ImageConfig(){
+    handle->set_string("path", path.c_str());
     handle->set_string("directory", directory.c_str());
     handle->set_string("image_file", image_file.c_str());
     handle->set_item("locked", locked);
@@ -25,6 +27,7 @@ ImageConfig::~ImageConfig(){
 }
 
 void ImageConfig::save() {
+    handle->set_string("path", path.c_str());
     handle->set_string("directory", directory.c_str());
     handle->set_string("image_file", image_file.c_str());
     handle->set_item("locked", locked);
@@ -65,6 +68,17 @@ std::string ImageConfig::get_string_or_default(const char *item, std::string val
             return value;
     }
 }
+
+void ImageConfig::setPath(const std::filesystem::path &value) {
+    const std::lock_guard<std::mutex> lock(mutex);
+    path = value;
+}
+
+std::filesystem::path ImageConfig::getPath() {
+    const std::lock_guard<std::mutex> lock(mutex);
+    return path;
+}
+
 
 void ImageConfig::setDirectory(const std::filesystem::path &value) {
     const std::lock_guard<std::mutex> lock(mutex);

@@ -164,14 +164,13 @@ static void image_loop(std::shared_ptr<Image> &in, uint8_t *pGIFBuf, const std::
     }
 }
 
-static std::string get_file(const std::string &directory, const std::string &f) {
-    std::string path = directory + "/" + f;
+static std::string get_file(const std::filesystem::path &path) {
     FILE *fp = fopen(path.c_str(), "r");
     if (fp != nullptr) {
         fclose(fp);
         return path;
     }
-    return list_directory(directory).at(0);
+    return list_directory(path).at(0);
 }
 
 static int files_get_position(const std::vector<std::string> &files, const std::string &name) {
@@ -184,13 +183,14 @@ static int files_get_position(const std::vector<std::string> &files, const std::
     }
 }
 
-static std::string files_get_next(const std::string &path, const std::string &name) {
-    ESP_LOGI(TAG, "%s %s", path.c_str(), name.c_str());
-    auto files = list_directory(path);
+static std::filesystem::path files_get_next(const std::filesystem::path &path) {
+    ESP_LOGI(TAG, "Next");
+    ESP_LOGI(TAG, "%s", path.c_str());
+    auto files = list_directory(path.parent_path());
     for (auto &f: files){
         ESP_LOGI(TAG, "%s", f.c_str());
     }
-    int pos = files_get_position(files, name);
+    int pos = files_get_position(files, path);
     ESP_LOGI(TAG, "%i", pos);
     if (pos >= 0) { //TODO handle error cases
         if (pos == files.size()-1) {
@@ -202,12 +202,13 @@ static std::string files_get_next(const std::string &path, const std::string &na
     else {
         return files.at(0);
     }
-    return "";
 }
 
-static std::string files_get_previous(const std::string &path, const std::string &name) {
-    auto files = list_directory(path);
-    int pos = files_get_position(files, name);
+static std::filesystem::path files_get_previous(const std::filesystem::path &path) {
+    ESP_LOGI(TAG, "Previous");
+    auto files = list_directory(path.parent_path());
+    int pos = files_get_position(files, path);
+    ESP_LOGI(TAG, "%i", pos);
     if (pos >= 0) { //TODO handle error cases
         if (pos == 0) {
             return files.at(files.size()-1);
@@ -218,7 +219,6 @@ static std::string files_get_previous(const std::string &path, const std::string
     else {
         return files.at(0);
     }
-    return "";
 }
 
 void display_task(void *params) {
@@ -257,7 +257,7 @@ void display_task(void *params) {
     std::shared_ptr<Image> in;
     std::vector<std::string> files = list_directory("/data");
 
-    std::string current_file;
+    std::filesystem::path current_file;
 
     DISPLAY_OPTIONS last_mode = DISPLAY_NONE;
 
@@ -283,23 +283,11 @@ void display_task(void *params) {
                     menu_state = true;
                     last_mode = static_cast<DISPLAY_OPTIONS>(option);
                     break;
-                case DISPLAY_PATH:
-                    ESP_LOGI(TAG, "DISPLAY_PATH");
-                    files = list_directory(config->getDirectory()); //TODO: Handle the directory not existing
-                    try {
-                        current_file = files.at(0);
-                        in.reset(display_file(factory, current_file.c_str(), pGIFBuf, args->display));
-                    }
-                    catch (std::out_of_range &err) {
-                        display_no_image(args->display, pGIFBuf);
-                    }
-                    last_mode = static_cast<DISPLAY_OPTIONS>(option);
-                    break;
                 case DISPLAY_FILE:
                     ESP_LOGI(TAG, "DISPLAY_FILE");
                     menu_state = false;
                     try {
-                        current_file = get_file(config->getDirectory(), config->getFile());
+                        current_file = get_file(config->getPath());
                         in.reset(display_file(factory, current_file.c_str(), pGIFBuf,
                                               args->display));
                     }
@@ -312,7 +300,7 @@ void display_task(void *params) {
                     if (config->getLocked()) {
                         break;
                     }
-                    current_file = files_get_next(config->getDirectory(), current_file);
+                    current_file = files_get_next(current_file);
                     in.reset(display_file(factory, current_file.c_str(), pGIFBuf,
                                           args->display));
                     break;
@@ -321,7 +309,7 @@ void display_task(void *params) {
                         break;
                     }
                     try {
-                        current_file = files_get_previous(config->getDirectory(), current_file);
+                        current_file = files_get_previous(current_file);
                         in.reset(display_file(factory, current_file.c_str(), pGIFBuf,
                                               args->display));
                     }
@@ -349,7 +337,7 @@ void display_task(void *params) {
             }
         } else {
             if (!menu_state) {
-                if((last_mode == DISPLAY_PATH ||last_mode == DISPLAY_FILE) && config->getSlideShow() && ((esp_timer_get_time()/1000000)-(last_change/1000000)) > config->getSlideShowTime()){
+                if(last_mode == DISPLAY_FILE && config->getSlideShow() && ((esp_timer_get_time()/1000000)-(last_change/1000000)) > config->getSlideShowTime()){
                     xTaskNotifyIndexed(xTaskGetCurrentTaskHandle(), 0, DISPLAY_NEXT, eSetValueWithOverwrite );
                 } else if(last_mode == DISPLAY_OTA){
                     uint32_t percent;
