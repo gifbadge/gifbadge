@@ -17,8 +17,6 @@ static void exit_callback(lv_event_t *e){
     LV_LOG_USER("%s", lv_label_get_text(obj));
     TaskHandle_t handle = xTaskGetHandle("LVGL");
     xTaskNotifyIndexed(handle, 0, LVGL_STOP, eSetValueWithOverwrite);
-    handle = xTaskGetHandle("display_task");
-    xTaskNotifyIndexed(handle, 0, DISPLAY_FILE, eSetValueWithOverwrite);
 }
 
 static void file_options_close(lv_event_t *e){
@@ -50,6 +48,10 @@ static void BacklightSliderExitCallback(lv_event_t *e) {
     handle->set_item("backlight", lv_slider_get_value(obj));
     handle->commit();
     restore_group(static_cast<lv_obj_t *>(lv_event_get_user_data(e)));
+}
+
+static void ShutdownCallback(lv_event_t *e) {
+    get_board()->powerOff();
 }
 
 static void BacklightSliderChangedCallback(lv_event_t *e){
@@ -98,13 +100,21 @@ void main_menu()
         lv_obj_add_style(storage_label, &menu_font_style, LV_PART_MAIN);
         lv_label_set_text(storage_label, "Storage");
 
+        lv_obj_t *shutdown_btn = lv_file_list_add(main_menu, nullptr);
+        lv_obj_t *shutdown_label = lv_label_create(shutdown_btn);
+        lv_obj_add_style(shutdown_label, &menu_font_style, LV_PART_MAIN);
+        lv_label_set_text(shutdown_label, "Shutdown");
+
         lv_obj_t *exit_btn = lv_file_list_add(main_menu, nullptr);
         lv_obj_t *exit_label = lv_label_create(exit_btn);
         lv_obj_add_style(exit_label, &menu_font_style, LV_PART_MAIN);
         lv_label_set_text(exit_label, "Exit");
+
         lv_obj_add_event_cb(file_label, file_select_callback, LV_EVENT_CLICKED, nullptr);
         lv_obj_add_event_cb(storage_label, storage_callback, LV_EVENT_CLICKED, nullptr);
+        lv_obj_add_event_cb(shutdown_label, ShutdownCallback, LV_EVENT_CLICKED, nullptr);
         lv_obj_add_event_cb(exit_label, exit_callback, LV_EVENT_CLICKED, nullptr);
+
         lv_file_list_scroll_to_view(main_menu, 0);
         lvgl_unlock();
     }
