@@ -132,13 +132,15 @@ void task(void *) {
     }
 }
 
-void keyboard_read(lv_indev_t *, lv_indev_data_t *data) {
+void keyboard_read(lv_indev_t *indev, lv_indev_data_t *data) {
 //    ESP_LOGI(TAG, "keyboard_read");
+    auto g = lv_indev_get_group(indev);
+    bool editing = lv_group_get_editing(g);
     std::map<EVENT_CODE, EVENT_STATE> keys = input_read();
     if (keys[KEY_UP]) {
-        data->enc_diff += -1;
+        data->enc_diff += editing?+1:-1;
     } else if (keys[KEY_DOWN]) {
-        data->enc_diff += 1;
+        data->enc_diff += editing?-1:+1;
     } else if (keys[KEY_ENTER]) {
         data->state = LV_INDEV_STATE_PRESSED;
     } else {

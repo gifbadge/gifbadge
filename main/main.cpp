@@ -290,11 +290,11 @@ extern "C" void app_main(void) {
                 }
                 if (i.code == KEY_UP && i.value == STATE_PRESSED) {
                     xQueueReceive(input_queue, (void *) &i, 0);
-                    xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_PREVIOUS, eSetValueWithOverwrite);
+                    xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_NEXT, eSetValueWithOverwrite);
                 }
                 if (i.code == KEY_DOWN && i.value == STATE_PRESSED) {
                     xQueueReceive(input_queue, (void *) &i, 0);
-                    xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_NEXT, eSetValueWithOverwrite);
+                    xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_PREVIOUS, eSetValueWithOverwrite);
                 }
                 if ((esp_timer_get_time() - i.timestamp) / 1000 > 200) {
                     xQueueReceive(input_queue, (void *) &i, 0);
