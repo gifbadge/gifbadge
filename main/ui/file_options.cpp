@@ -47,6 +47,8 @@ static void FileOptionsSave(lv_event_t *e) {
     ESP_LOGI(TAG, "Slideshow Time: %ds", slideshow_time);
     config.setSlideShowTime(slideshow_time);
 
+    config.save();
+
     lv_obj_del(fields->container);
     free(fields);
 }
