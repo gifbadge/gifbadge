@@ -11,6 +11,7 @@
 #include "hal/drivers/touch_ft5x06.h"
 #include "hal/drivers/display_gc9a01.h"
 #include <driver/sdmmc_host.h>
+#include <esp_pm.h>
 
 #define GPIO_CARD_DETECT GPIO_NUM_21
 #define GPIO_VBUS_DETECT GPIO_NUM_6
@@ -29,6 +30,9 @@ public:
     std::shared_ptr<Backlight> getBacklight() override;
 
     void powerOff() override;
+    void pmLock() override;
+    void pmRelease() override;
+
     BOARD_POWER powerState() override;
     bool storageReady() override;
     StorageInfo storageInfo() override;
@@ -43,4 +47,6 @@ private:
     std::shared_ptr<backlight_ledc> _backlight;
     std::shared_ptr<touch_ft5x06> _touch;
     sdmmc_card_t *card = nullptr;
+    SemaphoreHandle_t pmLockCount;
+    esp_pm_lock_handle_t pmLockHandle;
 };

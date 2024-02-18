@@ -21,6 +21,8 @@ public:
     std::shared_ptr<Backlight> getBacklight() override;
 
     void powerOff() override;
+    void pmLock() override {};
+    void pmRelease() override {};
     BOARD_POWER powerState() override;
     bool storageReady() override {return true;};
     StorageInfo storageInfo() override;

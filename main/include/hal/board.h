@@ -28,6 +28,8 @@ public:
     virtual std::shared_ptr<Backlight> getBacklight() = 0;
     virtual void powerOff() = 0;
     virtual BOARD_POWER powerState() = 0;
+    virtual void pmLock() = 0;
+    virtual void pmRelease() = 0;
     virtual bool storageReady() = 0;
     virtual StorageInfo storageInfo() = 0;
 };

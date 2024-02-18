@@ -96,6 +96,7 @@ void lvgl_close() {
     ESP_ERROR_CHECK(esp_timer_stop(lvgl_tick_timer));
     menu_state = false;
     ESP_LOGI(TAG, "Close Done");
+    _board->pmRelease();
 }
 
 void task(void *) {
@@ -279,6 +280,7 @@ static void battery_widget(lv_obj_t *scr) {
 
 void lvgl_menu_open() {
     ESP_LOGI(TAG, "Open");
+    _board->pmLock();
     menu_state = true;
 
     cbData.display = _board->getDisplay();

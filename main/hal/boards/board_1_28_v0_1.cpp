@@ -30,8 +30,8 @@ board_1_28_v0_1::board_1_28_v0_1() {
     _backlight->setLevel(100);
 
 
-//    esp_pm_config_t pm_config = {.max_freq_mhz = 240, .min_freq_mhz = 40, .light_sleep_enable = true};
-//    esp_pm_configure(&pm_config);
+    esp_pm_config_t pm_config = {.max_freq_mhz = 240, .min_freq_mhz = 40, .light_sleep_enable = true};
+    esp_pm_configure(&pm_config);
 
     gpio_isr_handler_add(GPIO_VBUS_DETECT, usb_connected, nullptr);
     gpio_set_intr_type(GPIO_VBUS_DETECT, GPIO_INTR_HIGH_LEVEL);
@@ -62,6 +62,8 @@ board_1_28_v0_1::board_1_28_v0_1() {
     io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
     gpio_config(&io_conf);
     gpio_set_drive_capability(GPIO_SHUTDOWN, GPIO_DRIVE_CAP_MAX);
+
+    esp_pm_lock_create(ESP_PM_CPU_FREQ_MAX, 0, "Board Lock", &pmLockHandle);
 }
 
 
@@ -125,4 +127,12 @@ StorageInfo board_1_28_v0_1::storageInfo() {
     uint64_t free_bytes;
     esp_vfs_fat_info("/data", &total_bytes, &free_bytes);
     return {card->cid.name, type, speed, total_bytes, free_bytes};
+}
+
+void board_1_28_v0_1::pmLock() {
+    esp_pm_lock_acquire(pmLockHandle);
+}
+
+void board_1_28_v0_1::pmRelease() {
+    esp_pm_lock_release(pmLockHandle);
 }
