@@ -43,7 +43,7 @@ static void FileOptionsSave(lv_event_t *e) {
     ESP_LOGI(TAG, "Slideshow: %s", slideshow?"True":"False");
     config.setSlideShow(slideshow);
 
-    int slideshow_time = static_cast<int>((lv_roller_get_selected(fields->slideshow_time)+1)*SLIDESHOW_TIME_INCREMENT);
+    int slideshow_time = static_cast<int>((lv_slider_get_value(fields->slideshow_time))*SLIDESHOW_TIME_INCREMENT);
     ESP_LOGI(TAG, "Slideshow Time: %ds", slideshow_time);
     config.setSlideShowTime(slideshow_time);
 
@@ -102,6 +102,18 @@ static void FileOptionsDisableSlideshowTime(lv_event_t *e){
     }
 }
 
+static void SlideShowTimeSliderExitCallback(lv_event_t *e) {
+    restore_group(static_cast<lv_obj_t *>(lv_event_get_user_data(e)));
+}
+
+
+static void BacklightSliderChangedCallback(lv_event_t *e){
+    lv_obj_t *obj = lv_event_get_target_obj(e);
+    int level = lv_slider_get_value(obj)*SLIDESHOW_TIME_INCREMENT;
+    lv_label_set_text_fmt(static_cast<lv_obj_t *>(lv_event_get_user_data(e)), "%d:%02d", level/60, level%60);
+
+}
+
 
 lv_obj_t * FileOptions() {
     if (lvgl_lock(-1)) {
@@ -147,25 +159,21 @@ lv_obj_t * FileOptions() {
 
         //Slideshow Time
         lv_obj_t *slideshow_time_button = lv_file_list_add(cont_flex, "\ue41b\ue425");
-        lv_obj_t *slideshow_time = lv_roller_create(slideshow_time_button);
-        //Time must be in 15 second increments, otherwise the logic to convert to seconds needs to be updated
-        lv_roller_set_options(slideshow_time, "0:15\n"
-                                              "0:30\n"
-                                              "0:45\n"
-                                              "1:00\n"
-                                              "1:15\n"
-                                              "1:30\n"
-                                              "1:45\n"
-                                              "2:00\n"
-                                              "2:15\n"
-                                              "2:30\n"
-                                              "2:45\n"
-                                              "3:00", LV_ROLLER_MODE_INFINITE);
-
-        lv_roller_set_visible_row_count(slideshow_time, 2);
-        lv_group_t *roller_group = lv_group_create();
-        lv_group_add_obj(roller_group, slideshow_time);
-        lv_roller_set_selected(slideshow_time, (config.getSlideShowTime()/SLIDESHOW_TIME_INCREMENT)-1, LV_ANIM_OFF);
+        lv_obj_t * slideshow_time = lv_slider_create(slideshow_time_button);
+        lv_obj_set_flex_grow(slideshow_time, 1);
+//        lv_obj_set_style_margin_hor(slideshow_time, 10, LV_PART_MAIN);
+//        lv_obj_set_style_pad_hor(slideshow_time, 10, LV_PART_MAIN);
+        lv_obj_set_style_pad_column(slideshow_time_button, 10, LV_PART_MAIN);
+        lv_obj_set_style_bg_color(slideshow_time, lv_color_white(), LV_PART_KNOB);
+        lv_obj_set_style_bg_color(slideshow_time, lv_color_white(), LV_PART_INDICATOR);
+        lv_obj_set_style_bg_color(slideshow_time, lv_color_black(), LV_PART_MAIN);
+        lv_slider_set_range(slideshow_time,1,12);
+        lv_group_t *slider_group = lv_group_create();
+        lv_group_add_obj(slider_group, slideshow_time);
+        lv_slider_set_value(slideshow_time, config.getSlideShowTime()/15, LV_ANIM_OFF);
+        lv_obj_t *slideshow_time_label = lv_label_create(slideshow_time_button);
+        lv_obj_add_flag(slideshow_time_label, LV_OBJ_FLAG_FLEX_IN_NEW_TRACK);
+        lv_label_set_text_fmt(slideshow_time_label, "%d:%02d", config.getSlideShowTime()/60, (config.getSlideShowTime()%60));
 
         //Save
         lv_obj_t *save_button = lv_file_list_add(cont_flex, "\ue161");
@@ -190,9 +198,10 @@ lv_obj_t * FileOptions() {
         //Callbacks
         lv_obj_add_event_cb(file_label, FileOptionsFileSelect, LV_EVENT_CLICKED, nullptr);
         lv_obj_add_event_cb(lock_switch, FileOptionsMutuallyExclusive, LV_EVENT_VALUE_CHANGED, slideshow_button);
-        lv_obj_add_event_cb(slideshow_time, FileOptionsRollerDefocus, LV_EVENT_VALUE_CHANGED, slideshow_time_button);
         lv_obj_add_event_cb(slideshow_button, FileOptionsDisableSlideshowTime, EVENT_SLIDESHOW_DISABLED, slideshow_time_button);
         lv_obj_add_event_cb(slideshow_switch, FileOptionsDisableSlideshowTime, LV_EVENT_VALUE_CHANGED, slideshow_time_button);
+        lv_obj_add_event_cb(slideshow_time, BacklightSliderChangedCallback, LV_EVENT_VALUE_CHANGED, slideshow_time_label);
+        lv_obj_add_event_cb(slideshow_time, SlideShowTimeSliderExitCallback, LV_EVENT_RELEASED, slideshow_time_button);
         lv_obj_add_event_cb(save, FileOptionsSave, LV_EVENT_CLICKED, fields);
         lv_obj_add_event_cb(exit, FileOptionsExit, LV_EVENT_CLICKED, cont_flex);
 
