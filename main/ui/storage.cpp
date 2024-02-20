@@ -138,6 +138,8 @@ static void StorageFormat(lv_event_t *e){
     lv_obj_add_event_cb(container, StorageFormatClose, LV_EVENT_DELETE, lv_event_get_target(e));
     lv_obj_set_user_data(container, lv_event_get_target(e));
 
+    lv_group_focus_obj(cancel_btn);
+
 }
 
 lv_obj_t *storage_menu(){
@@ -193,7 +195,7 @@ lv_obj_t *storage_menu(){
         lv_obj_add_event_cb(cont_flex, StorageRefresh, LV_EVENT_REFRESH, fields);
         lv_obj_send_event(cont_flex, LV_EVENT_REFRESH, nullptr);
 
-
+        lv_file_list_scroll_to_view(cont_flex, 0);
 
         lvgl_unlock();
         return cont_flex;
