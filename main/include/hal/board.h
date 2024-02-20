@@ -32,4 +32,5 @@ public:
     virtual void pmRelease() = 0;
     virtual bool storageReady() = 0;
     virtual StorageInfo storageInfo() = 0;
+    virtual esp_err_t StorageFormat() = 0;
 };

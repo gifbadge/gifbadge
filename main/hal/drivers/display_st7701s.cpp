@@ -118,7 +118,7 @@ display_st7701s::display_st7701s(int spi_cs, int spi_scl, int spi_sda, int hsync
 //            .clk_src = LCD_CLK_SRC_XTAL,
             .clk_src = LCD_CLK_SRC_DEFAULT,
             .timings = {
-                    .pclk_hz = 10 * 1000 * 1000,
+                    .pclk_hz = 7 * 1000 * 1000,
                     .h_res = 480,
                     .v_res = 480,
                     .hsync_pulse_width = 6,
@@ -201,6 +201,16 @@ void display_st7701s::write(int x_start, int y_start, int x_end, int y_end, cons
 
 void display_st7701s::write_from_buffer() {
 
+}
+
+static bool cb_func(esp_lcd_panel_handle_t panel, const esp_lcd_rgb_panel_event_data_t *edata, void *user_ctx){
+return false;
+}
+
+bool display_st7701s::onColorTransDone(esp_lcd_panel_io_color_trans_done_cb_t callback, void *ctx) {
+    esp_lcd_rgb_panel_event_callbacks_t callbacks {.on_vsync = reinterpret_cast<esp_lcd_rgb_panel_vsync_cb_t>(callback)};
+    panel_st7701_register_event_callbacks(panel_handle, &callbacks, ctx);
+    return true;
 }
 
 

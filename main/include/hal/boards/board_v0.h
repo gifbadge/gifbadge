@@ -1,4 +1,6 @@
 #pragma once
+
+#include <ff.h>
 #include "hal/board.h"
 #include "hal/drivers/battery_analog.h"
 #include "esp_lcd_panel_io.h"
@@ -26,6 +28,8 @@ public:
     BOARD_POWER powerState() override;
     bool storageReady() override {return true;};
     StorageInfo storageInfo() override;
+    esp_err_t StorageFormat() override {return ESP_OK;};
+
 
 
 private:

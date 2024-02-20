@@ -2,6 +2,8 @@
 #include <esp_log.h>
 #include <driver/sdmmc_defs.h>
 #include <esp_vfs_fat.h>
+#include <vfs_fat_internal.h>
+#include <esp_task_wdt.h>
 #include "hal/boards/board_1_28_v0_1.h"
 #include "hal/hal_usb.h"
 #include "hal/drivers/display_gc9a01.h"
@@ -135,4 +137,26 @@ void board_1_28_v0_1::pmLock() {
 
 void board_1_28_v0_1::pmRelease() {
     esp_pm_lock_release(pmLockHandle);
+}
+
+esp_err_t board_1_28_v0_1::StorageFormat() {
+    ESP_LOGI(TAG, "Format Start");
+    esp_err_t ret;
+    esp_task_wdt_config_t wdtConfig = {
+            .timeout_ms = 30*1000,
+            .idle_core_mask = (1 << portNUM_PROCESSORS) - 1,    // Bitmask of all cores
+            .trigger_panic = false,
+    };
+#if CONFIG_ESP_TASK_WDT_CHECK_IDLE_TASK_CPU0
+    wdtConfig.idle_core_mask |= (1 << 0);
+#endif
+#if CONFIG_ESP_TASK_WDT_CHECK_IDLE_TASK_CPU1
+    wdtConfig.idle_core_mask |= (1 << 1);
+#endif
+    esp_task_wdt_reconfigure(&wdtConfig);
+    ret = esp_vfs_fat_sdcard_format("/data", card);
+    wdtConfig.timeout_ms = CONFIG_ESP_TASK_WDT_TIMEOUT_S*1000;
+    esp_task_wdt_reconfigure(&wdtConfig);
+    ESP_LOGI(TAG, "Format Done");
+    return ret;
 }

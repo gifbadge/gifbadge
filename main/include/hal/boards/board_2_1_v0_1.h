@@ -30,6 +30,8 @@ public:
     BOARD_POWER powerState() override;
     bool storageReady() override;
     StorageInfo storageInfo() override;
+    esp_err_t StorageFormat() override {return ESP_OK;};
+
 
 
 
