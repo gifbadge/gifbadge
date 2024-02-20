@@ -300,9 +300,14 @@ void display_task(void *params) {
                     if (config->getLocked()) {
                         break;
                     }
-                    current_file = files_get_next(current_file);
-                    in.reset(display_file(factory, current_file.c_str(), pGIFBuf,
-                                          args->display));
+                    try {
+                        current_file = files_get_next(current_file);
+                        in.reset(display_file(factory, current_file.c_str(), pGIFBuf,
+                                              args->display));
+                    }
+                    catch (std::out_of_range &err) {
+                        display_no_image(args->display, pGIFBuf);
+                    }
                     break;
                 case DISPLAY_PREVIOUS:
                     if (config->getLocked()) {
