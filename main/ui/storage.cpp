@@ -57,7 +57,10 @@ static void StorageCheckDone(lv_timer_t *timer){
             lv_obj_add_style(img, &icon_style, LV_PART_MAIN);
             lv_obj_t *label1 = lv_label_create(container);
             lv_obj_add_flag(label1, LV_OBJ_FLAG_FLEX_IN_NEW_TRACK);
-            lv_label_set_text_fmt(label1, "Format Failed: %i", ret);
+            lv_label_set_text_fmt(label1, "Format Failed due to:");
+            lv_obj_t *err = lv_label_create(container);
+            lv_obj_add_flag(err, LV_OBJ_FLAG_FLEX_IN_NEW_TRACK);
+            lv_label_set_text(err, esp_err_to_name(ret));
             lv_obj_t *label2 = lv_label_create(container);
             lv_obj_add_flag(label2, LV_OBJ_FLAG_FLEX_IN_NEW_TRACK);
             lv_label_set_text(label2, "Reset the device, and try again");
