@@ -4,9 +4,11 @@
 #include <esp_vfs_fat.h>
 #include <vfs_fat_internal.h>
 #include <esp_task_wdt.h>
+#include <esp_sleep.h>
 #include "hal/boards/board_1_28_v0_1.h"
 #include "hal/hal_usb.h"
 #include "hal/drivers/display_gc9a01.h"
+#include "driver/gpio.h"
 
 static const char *TAG = "board_1_28_v0_1";
 
@@ -17,7 +19,14 @@ static void IRAM_ATTR sdcard_removed(void *arg){
 }
 
 static void IRAM_ATTR usb_connected(void *arg){
-    esp_pm_lock_acquire(usb_pm);
+    if(gpio_get_level(GPIO_VBUS_DETECT)){
+        esp_pm_lock_acquire(usb_pm);
+        esp_rom_gpio_connect_in_signal(GPIO_MATRIX_CONST_ONE_INPUT, USB_SRP_BVALID_IN_IDX, false);
+    }
+    else {
+        esp_rom_gpio_connect_in_signal(GPIO_MATRIX_CONST_ZERO_INPUT, USB_SRP_BVALID_IN_IDX, false);
+        esp_pm_lock_release(usb_pm);
+    }
 }
 
 
@@ -35,22 +44,38 @@ board_1_28_v0_1::board_1_28_v0_1() {
     esp_pm_config_t pm_config = {.max_freq_mhz = 240, .min_freq_mhz = 40, .light_sleep_enable = true};
     esp_pm_configure(&pm_config);
 
-    gpio_isr_handler_add(GPIO_VBUS_DETECT, usb_connected, nullptr);
-    gpio_set_intr_type(GPIO_VBUS_DETECT, GPIO_INTR_HIGH_LEVEL);
+    esp_sleep_enable_gpio_wakeup();
+
+    esp_pm_lock_create(ESP_PM_CPU_FREQ_MAX, 0, "USB", &usb_pm);
+
+
+
 
     gpio_pullup_en(GPIO_CARD_DETECT);
     if(!gpio_get_level(GPIO_CARD_DETECT)) {
-//    if(init_sdmmc_slot(GPIO_NUM_40, GPIO_NUM_39, GPIO_NUM_41, GPIO_NUM_42, GPIO_NUM_33, GPIO_NUM_47, GPIO_CARD_DETECT, &card,
-//                       1) == ESP_OK) {
-//        storage_init_mmc(GPIO_VBUS_DETECT, &card);
-//    }
-        mount_sdmmc_slot(GPIO_NUM_40, GPIO_NUM_39, GPIO_NUM_41, GPIO_NUM_42, GPIO_NUM_33, GPIO_NUM_47, GPIO_CARD_DETECT,
-                         &card,
-                         1);
+        if(init_sdmmc_slot(GPIO_NUM_40, GPIO_NUM_39, GPIO_NUM_41, GPIO_NUM_42, GPIO_NUM_33, GPIO_NUM_47, GPIO_CARD_DETECT, &card,
+                           1) == ESP_OK) {
+            storage_init_mmc(GPIO_NUM_NC, &card);
+        }
+//            mount_sdmmc_slot(GPIO_NUM_40, GPIO_NUM_39, GPIO_NUM_41, GPIO_NUM_42, GPIO_NUM_33, GPIO_NUM_47, GPIO_CARD_DETECT,
+//                             &card,
+//                             1);
     }
     gpio_install_isr_service(0);
     gpio_isr_handler_add(GPIO_CARD_DETECT, sdcard_removed, nullptr);
     gpio_set_intr_type(GPIO_CARD_DETECT, GPIO_INTR_ANYEDGE);
+
+    gpio_config_t vbus_config = {};
+
+    vbus_config.intr_type = GPIO_INTR_ANYEDGE;
+    vbus_config.mode = GPIO_MODE_INPUT;
+    vbus_config.pin_bit_mask = (1ULL<<GPIO_VBUS_DETECT);
+    vbus_config.pull_down_en = GPIO_PULLDOWN_DISABLE;
+    vbus_config.pull_up_en = GPIO_PULLUP_DISABLE;
+    gpio_config(&vbus_config);
+
+    gpio_isr_handler_add(GPIO_VBUS_DETECT, usb_connected, nullptr);
+    usb_connected(nullptr); //Trigger usb detection
 
 
 
