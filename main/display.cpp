@@ -270,20 +270,22 @@ void display_task(void *params) {
         xTaskNotifyWaitIndexed(0, 0, 0xffffffff, &option, 0);
         if(option != DISPLAY_NONE) {
             last_change = esp_timer_get_time();
-            in.reset();
             switch (option) {
                 case DISPLAY_USB:
+                    in.reset();
                     ESP_LOGI(TAG, "DISPLAY_USB");
                     menu_state = false;
                     display_usb_logo(args->display, pGIFBuf);
                     last_mode = static_cast<DISPLAY_OPTIONS>(option);
                     break;
                 case DISPLAY_MENU:
+                    in.reset();
                     ESP_LOGI(TAG, "DISPLAY_MENU");
                     menu_state = true;
                     last_mode = static_cast<DISPLAY_OPTIONS>(option);
                     break;
                 case DISPLAY_FILE:
+                    in.reset();
                     ESP_LOGI(TAG, "DISPLAY_FILE");
                     menu_state = false;
                     try {
@@ -300,6 +302,10 @@ void display_task(void *params) {
                     if (config->getLocked()) {
                         break;
                     }
+                    if(list_directory(current_file.parent_path()).size() <= 1){
+                        break;
+                    }
+                    in.reset();
                     try {
                         current_file = files_get_next(current_file);
                         in.reset(display_file(factory, current_file.c_str(), pGIFBuf,
@@ -313,6 +319,10 @@ void display_task(void *params) {
                     if (config->getLocked()) {
                         break;
                     }
+                    if(list_directory(current_file.parent_path()).size() <= 1){
+                        break;
+                    }
+                    in.reset();
                     try {
                         current_file = files_get_previous(current_file);
                         in.reset(display_file(factory, current_file.c_str(), pGIFBuf,
@@ -323,6 +333,7 @@ void display_task(void *params) {
                     }
                     break;
                 case DISPLAY_BATT:
+                    in.reset();
                     if (last_mode != DISPLAY_BATT) {
                         in.reset();
                         display_image_batt(args->display, pGIFBuf);
@@ -335,6 +346,7 @@ void display_task(void *params) {
                     last_mode = static_cast<DISPLAY_OPTIONS>(option);
                     break;
                 case DISPLAY_NO_STORAGE:
+                    in.reset();
                     last_mode = static_cast<DISPLAY_OPTIONS>(option);
                     display_no_storage(args->display, pGIFBuf);
                 default:
