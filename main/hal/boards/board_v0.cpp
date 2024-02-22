@@ -22,10 +22,11 @@ board_v0::board_v0() {
     _backlight = std::make_shared<backlight_ledc>(GPIO_NUM_45, 0);
 
     static wl_handle_t wl_handle = WL_INVALID_HANDLE;
-    ESP_ERROR_CHECK(storage_init_ext_flash(39, 41, 40, 42, &wl_handle));
+    ESP_ERROR_CHECK(init_ext_flash(39, 41, 40, 42, &wl_handle));
+  usb_init_wearlevel(&wl_handle);
 
 
-    esp_pm_config_t pm_config = {.max_freq_mhz = 240, .min_freq_mhz = 40, .light_sleep_enable = false};
+    esp_pm_config_t pm_config = {.max_freq_mhz = 240, .min_freq_mhz = 240, .light_sleep_enable = false};
     esp_pm_configure(&pm_config);
 
     uint8_t data;

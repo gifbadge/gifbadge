@@ -55,7 +55,7 @@ board_1_28_v0_1::board_1_28_v0_1() {
     if(!gpio_get_level(GPIO_CARD_DETECT)) {
         if(init_sdmmc_slot(GPIO_NUM_40, GPIO_NUM_39, GPIO_NUM_41, GPIO_NUM_42, GPIO_NUM_33, GPIO_NUM_47, GPIO_CARD_DETECT, &card,
                            1) == ESP_OK) {
-            storage_init_mmc(GPIO_NUM_NC, &card);
+          usb_init_mmc(GPIO_NUM_NC, &card);
         }
 //            mount_sdmmc_slot(GPIO_NUM_40, GPIO_NUM_39, GPIO_NUM_41, GPIO_NUM_42, GPIO_NUM_33, GPIO_NUM_47, GPIO_CARD_DETECT,
 //                             &card,
