@@ -1,0 +1,6 @@
+dependencies:
+  esp_io_expander:
+    version: ^1.0.1
+  idf: '>=4.4.2'
+description: ESP IO Expander - CAT9532
+version: 1.0.0
