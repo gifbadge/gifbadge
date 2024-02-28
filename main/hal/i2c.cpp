@@ -30,6 +30,7 @@ esp_err_t I2C::write_reg(uint8_t addr, uint8_t reg, uint8_t *in, size_t bytes) {
     to_write[0] = reg;
     memcpy(&to_write[1], in, bytes);
     esp_err_t ret = i2c_master_write_to_device(_port, addr, to_write, bytes, 100 / portTICK_PERIOD_MS);
+  esp_err_t ret = i2c_master_write_to_device(_port, addr, to_write, bytes+1, 100 / portTICK_PERIOD_MS);
     free(to_write);
     return ret;
 }
