@@ -1,5 +1,8 @@
 #include <esp_lcd_panel_ops.h>
 #include <esp_log.h>
+#include <driver/spi_master.h>
+#include <esp_lcd_panel_commands.h>
+#include <task.h>
 #include "hal/drivers/display_st7701s.h"
 #include "esp_lcd_panel_io_additions.h"
 #include "esp_lcd_st7701.h"
@@ -56,48 +59,17 @@ static const st7701_lcd_init_cmd_t buyadisplaycom[] = {
 
 };
 
-//#define B1 5
-//#define B2 4
-//#define B3 3
-//#define B4 2
-//#define B5 1
-//#define G0 12
-//#define G1 11
-//#define G2 9
-//#define G3 8
-//#define G4 7
-//#define G5 6
-//#define R1 17
-//#define R2 16
-//#define R3 15
-//#define R4 14
-//#define R5 13
-
-display_st7701s::display_st7701s(int spi_cs, int spi_scl, int spi_sda, int hsync, int vsync, int de, int pclk, int reset, std::array<int,16> &rgb /*G3, G4, G5, R1, R2, R3, R4, R5, B1, B2, B3, B4, B5, G0, G1, G2 */) {
+display_st7701s::display_st7701s(spi_line_config_t line_cfg,
+                                 int hsync,
+                                 int vsync,
+                                 int de,
+                                 int pclk,
+                                 std::array<int, 16> &rgb) {
 
 
     ESP_LOGI(TAG, "Install 3-wire SPI panel IO");
-//    spi_line_config_t line_config = {
-//            .cs_io_type = IO_TYPE_GPIO,             // Set to `IO_TYPE_GPIO` if using GPIO, same to below
-//            .cs_gpio_num = spi_cs,
-//            .scl_io_type = IO_TYPE_GPIO,
-//            .scl_gpio_num = spi_scl,
-//            .sda_io_type = IO_TYPE_GPIO,
-//            .sda_gpio_num = spi_sda,
-//            .io_expander = nullptr,                        // Set to NULL if not using IO expander
-//    };
-//    esp_lcd_panel_io_3wire_spi_config_t io_config = ST7701_PANEL_IO_3WIRE_SPI_CONFIG(line_config, 0);
-
     esp_lcd_panel_io_3wire_spi_config_t io_config =    {
-        .line_config = {
-                .cs_io_type = IO_TYPE_GPIO,             // Set to `IO_TYPE_GPIO` if using GPIO, same to below
-                .cs_gpio_num = spi_cs,
-                .scl_io_type = IO_TYPE_GPIO,
-                .scl_gpio_num = spi_scl,
-                .sda_io_type = IO_TYPE_GPIO,
-                .sda_gpio_num = spi_sda,
-                .io_expander = nullptr,                        // Set to NULL if not using IO expander
-        },
+        .line_config = line_cfg,
         .expect_clk_speed = 100*1000,
         .spi_mode = 0,
         .lcd_cmd_bytes = 1,
@@ -107,11 +79,34 @@ display_st7701s::display_st7701s(int spi_cs, int spi_scl, int spi_sda, int hsync
             .dc_zero_on_data = 0,
             .lsb_first = 0,
             .cs_high_active = 0,
-            .del_keep_cs_inactive = 1,
+            .del_keep_cs_inactive = 0,
         },
     };
 
-    ESP_ERROR_CHECK(esp_lcd_new_panel_io_3wire_spi(&io_config, &io_handle));
+  esp_lcd_panel_io_handle_t io;
+
+  ESP_ERROR_CHECK(esp_lcd_new_panel_io_3wire_spi(&io_config, &io));
+
+
+  ESP_ERROR_CHECK(esp_lcd_panel_io_tx_param(io, 0xf0, (const uint8_t []){0x77, 0x01, 0x00, 0x00, 0x00}, 1));
+
+  // Set color format
+  ESP_ERROR_CHECK(esp_lcd_panel_io_tx_param(io, LCD_CMD_MADCTL, (const uint8_t []){LCD_CMD_BGR_BIT}, 1));
+
+  ESP_ERROR_CHECK(esp_lcd_panel_io_tx_param(io, LCD_CMD_COLMOD, (const uint8_t []){0x60}, 1));
+
+  // vendor specific initialization, it can be different between manufacturers
+  // should consult the LCD supplier for initialization sequence code
+  const st7701_lcd_init_cmd_t *init_cmds = buyadisplaycom;
+  uint16_t init_cmds_size = sizeof(buyadisplaycom) / sizeof(st7701_lcd_init_cmd_t);
+
+  for (int i = 0; i < init_cmds_size; i++) {
+    ESP_ERROR_CHECK(esp_lcd_panel_io_tx_param(io, init_cmds[i].cmd, init_cmds[i].data, init_cmds[i].data_bytes));
+    vTaskDelay(pdMS_TO_TICKS(init_cmds[i].delay_ms));
+  }
+  ESP_LOGD(TAG, "send init commands success");
+
+  esp_lcd_panel_io_del(io);
 
     ESP_LOGI(TAG, "Install ST7701S panel driver");
     esp_lcd_rgb_panel_config_t rgb_config = {
@@ -155,36 +150,15 @@ display_st7701s::display_st7701s(int spi_cs, int spi_scl, int spi_sda, int hsync
                     .fb_in_psram = 1,
             }
     };
-    st7701_vendor_config_t vendor_config = {
-            .rgb_config = &rgb_config,
-            .init_cmds = buyadisplaycom,
-            .init_cmds_size = sizeof(buyadisplaycom) / sizeof(st7701_lcd_init_cmd_t),
-            .flags = {
-                    .auto_del_panel_io = 1,
-            },
-    };
-    const esp_lcd_panel_dev_config_t panel_config = {
-            .reset_gpio_num = reset,
-            .rgb_endian = LCD_RGB_ENDIAN_BGR,
-            .bits_per_pixel = 18,
-            .vendor_config = &vendor_config,
-    };
-    ESP_ERROR_CHECK(esp_lcd_new_panel_st7701(io_handle, &panel_config, &panel_handle));
-//    ESP_ERROR_CHECK(esp_lcd_panel_reset(panel_handle));
-    ESP_ERROR_CHECK(esp_lcd_panel_init(panel_handle));
-    panel_st7701_get_frame_buffer(panel_handle, fb_number, &_fb0, &_fb1);
 
-//    ESP_ERROR_CHECK(esp_lcd_panel_swap_xy(panel_handle, true));
-//    ESP_ERROR_CHECK(esp_lcd_panel_mirror(panel_handle, true, false));
-//    esp_lcd_rgb_panel_set_yuv_conversion(panel_handle, nullptr);
+  ESP_ERROR_CHECK(esp_lcd_new_rgb_panel(&rgb_config, &panel_handle));
+  ESP_LOGD(TAG, "new RGB panel @%p", panel_handle);
+    ESP_ERROR_CHECK(esp_lcd_panel_init(panel_handle));
+  esp_lcd_rgb_panel_get_frame_buffer(panel_handle, fb_number, &_fb0, &_fb1);
 }
 
 esp_lcd_panel_handle_t display_st7701s::getPanelHandle() {
     return panel_handle;
-}
-
-esp_lcd_panel_io_handle_t display_st7701s::getIoHandle() {
-    return io_handle;
 }
 
 uint8_t *display_st7701s::getBuffer() {

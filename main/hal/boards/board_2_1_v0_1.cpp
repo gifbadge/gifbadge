@@ -19,7 +19,27 @@ board_2_1_v0_1::board_2_1_v0_1() {
 //    std::array<int, 16> rgb = {11, 12, 13, 14, 15, 16, 17, 18, 3, 4, 5, 6, 7, 8, 9, 10};
     std::array<int, 16> rgb = {11, 12, 13, 3, 4, 5, 6, 7, 14, 15, 16, 17, 18, 8, 9, 10};
 
-    _display = std::make_shared<display_st7701s>(35,3, 4, 48, 47, 33, 34, 39, rgb);
+    gpio_config_t display_reset_conf = {
+        .pin_bit_mask = 1ULL << 39,
+        .mode = GPIO_MODE_OUTPUT,
+    };
+  ESP_ERROR_CHECK(gpio_config(&display_reset_conf));
+
+  gpio_set_level(GPIO_NUM_39, 0);
+  vTaskDelay(pdMS_TO_TICKS(10));
+  gpio_set_level(GPIO_NUM_39, 1);
+
+      spi_line_config_t line_config = {
+            .cs_io_type = IO_TYPE_GPIO,             // Set to `IO_TYPE_GPIO` if using GPIO, same to below
+            .cs_gpio_num = 35,
+            .scl_io_type = IO_TYPE_GPIO,
+            .scl_gpio_num = 3,
+            .sda_io_type = IO_TYPE_GPIO,
+            .sda_gpio_num = 4,
+            .io_expander = nullptr,                        // Set to NULL if not using IO expander
+    };
+
+    _display = std::make_shared<display_st7701s>(line_config, 48, 47, 33, 34, 39, rgb);
     _backlight = std::make_shared<backlight_ledc>(GPIO_NUM_45, 0);
     _backlight->setLevel(100);
     _touch = std::make_shared<touch_ft5x06>(_i2c);

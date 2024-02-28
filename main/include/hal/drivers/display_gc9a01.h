@@ -9,8 +9,7 @@ public:
     ~display_gc9a01() override = default;
 
     esp_lcd_panel_handle_t getPanelHandle() override;
-    esp_lcd_panel_io_handle_t getIoHandle() override;
-    std::pair<int, int> getResolution() {return {240, 240};};
+  std::pair<int, int> getResolution() {return {240, 240};};
     bool onColorTransDone(esp_lcd_panel_io_color_trans_done_cb_t, void *) override;
     uint8_t *getBuffer() override;
     uint8_t *getBuffer2() override;
