@@ -213,12 +213,13 @@ void lvgl_init(std::shared_ptr<Board> board, std::shared_ptr<ImageConfig> _image
     lv_timer_set_period(lv_indev_get_read_timer(lvgl_encoder), 200);
 //
 //
-//    if (_board->getTouch()) {
-//        lvgl_touch = lv_indev_create();
-//        lv_indev_set_type(lvgl_touch, LV_INDEV_TYPE_POINTER);
-//        lv_indev_set_read_cb(lvgl_touch, touch_read);
-//        lv_timer_set_period(lv_indev_get_read_timer(lvgl_touch), 150);
-//    }
+    if (_board->getTouch()) {
+        lvgl_touch = lv_indev_create();
+        lv_indev_set_type(lvgl_touch, LV_INDEV_TYPE_POINTER);
+        lv_indev_set_read_cb(lvgl_touch, touch_read);
+        lv_indev_set_driver_data(lvgl_touch, _board->getTouch().get());
+        lv_timer_set_period(lv_indev_get_read_timer(lvgl_touch), 150);
+    }
 
 }
 
