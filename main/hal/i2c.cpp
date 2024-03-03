@@ -1,6 +1,7 @@
 #include <hal/i2c_types.h>
 #include <driver/i2c.h>
 #include <cstring>
+#include <esp_log.h>
 #include "hal/i2c.h"
 
 I2C::I2C(i2c_port_t port, int sda, int scl): _port(port){
@@ -29,8 +30,7 @@ esp_err_t I2C::write_reg(uint8_t addr, uint8_t reg, uint8_t *in, size_t bytes) {
     auto *to_write = static_cast<uint8_t *>(malloc(bytes+1));
     to_write[0] = reg;
     memcpy(&to_write[1], in, bytes);
-    esp_err_t ret = i2c_master_write_to_device(_port, addr, to_write, bytes, 100 / portTICK_PERIOD_MS);
-  esp_err_t ret = i2c_master_write_to_device(_port, addr, to_write, bytes+1, 100 / portTICK_PERIOD_MS);
+    esp_err_t ret = i2c_master_write_to_device(_port, addr, to_write, bytes+1, 100 / portTICK_PERIOD_MS);
     free(to_write);
     return ret;
 }
