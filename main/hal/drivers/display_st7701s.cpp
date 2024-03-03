@@ -183,7 +183,7 @@ return false;
 
 bool display_st7701s::onColorTransDone(esp_lcd_panel_io_color_trans_done_cb_t callback, void *ctx) {
     esp_lcd_rgb_panel_event_callbacks_t callbacks {.on_vsync = reinterpret_cast<esp_lcd_rgb_panel_vsync_cb_t>(callback)};
-    panel_st7701_register_event_callbacks(panel_handle, &callbacks, ctx);
+    esp_lcd_rgb_panel_register_event_callbacks(panel_handle, &callbacks, ctx);
     return true;
 }
 
