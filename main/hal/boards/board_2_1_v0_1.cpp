@@ -22,6 +22,9 @@ board_2_1_v0_1::board_2_1_v0_1() {
     gpio_config_t display_reset_conf = {
         .pin_bit_mask = 1ULL << 39,
         .mode = GPIO_MODE_OUTPUT,
+        .pull_up_en = GPIO_PULLUP_DISABLE,
+        .pull_down_en = GPIO_PULLDOWN_DISABLE,
+        .intr_type = GPIO_INTR_DISABLE,
     };
   ESP_ERROR_CHECK(gpio_config(&display_reset_conf));
 
@@ -39,7 +42,7 @@ board_2_1_v0_1::board_2_1_v0_1() {
             .io_expander = nullptr,                        // Set to NULL if not using IO expander
     };
 
-    _display = std::make_shared<display_st7701s>(line_config, 48, 47, 33, 34, 39, rgb);
+    _display = std::make_shared<display_st7701s>(line_config, 48, 47, 33, 34, rgb);
     _backlight = std::make_shared<backlight_ledc>(GPIO_NUM_45, 0);
     _backlight->setLevel(100);
     _touch = std::make_shared<touch_ft5x06>(_i2c);
