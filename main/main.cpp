@@ -239,7 +239,7 @@ extern "C" void app_main(void) {
     ota_boot_info();
     ota_init();
 
-    lvgl_init(board, imageconfig);
+    lvgl_init(board);
 
     vTaskDelay(1000 / portTICK_PERIOD_MS); //Let USB Settle
 

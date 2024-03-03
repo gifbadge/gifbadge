@@ -44,10 +44,8 @@ lv_indev_t *lvgl_touch;
 }
 
 
-static bool flush_ready([[maybe_unused]] esp_lcd_panel_io_handle_t panel_io,
-                        [[maybe_unused]] esp_lcd_panel_io_event_data_t *edata, void *user_ctx) {
-//    auto *disp_driver = (lv_disp_t *) user_ctx;
-//    lv_display_flush_ready(disp_driver);
+static bool IRAM_ATTR flush_ready(esp_lcd_panel_io_handle_t, esp_lcd_panel_io_event_data_t *, void *) {
+    lv_display_flush_ready(disp);
     return false;
 }
 
@@ -59,9 +57,6 @@ static void flush_cb(lv_disp_t *, const lv_area_t *area, uint8_t *color_map) {
             area->x2 + 1,
             area->y2 + 1,
             color_map);
-    if (!cbData.callbackEnabled) {
-        lv_disp_flush_ready(drv); //Need to only do this on RGB displays
-    }
 }
 
 static void tick([[maybe_unused]] void *arg) {
@@ -103,6 +98,7 @@ void task(void *) {
     bool running = true;
     ESP_LOGI(TAG, "Starting LVGL task");
     uint32_t task_delay_ms = 0;
+    TaskHandle_t handle = xTaskGetHandle("display_task");
     vTaskSuspend(nullptr); //Wait until we are actually needed
 
     while (running) {
@@ -111,6 +107,7 @@ void task(void *) {
         switch (option) {
             case LVGL_STOP:
                 lvgl_close();
+                xTaskNotifyIndexed(handle, 0, DISPLAY_FILE, eSetValueWithOverwrite);
                 vTaskSuspend(nullptr);
                 break;
             case LVGL_EXIT:
@@ -166,8 +163,7 @@ void touch_read(lv_indev_t *drv, lv_indev_data_t *data) {
     }
 }
 
-void lvgl_init(std::shared_ptr<Board> board, std::shared_ptr<ImageConfig> _image_config) {
-    image_config = std::move(_image_config);
+void lvgl_init(std::shared_ptr<Board> board) {
     _board = std::move(board);
 
     menu_state = false;
@@ -175,6 +171,7 @@ void lvgl_init(std::shared_ptr<Board> board, std::shared_ptr<ImageConfig> _image
     lv_init();
 
     lvgl_mux = xSemaphoreCreateRecursiveMutex();
+
     const esp_timer_create_args_t lvgl_tick_timer_args = {
             .callback = &tick,
             .arg = nullptr,
@@ -185,26 +182,21 @@ void lvgl_init(std::shared_ptr<Board> board, std::shared_ptr<ImageConfig> _image
     lvgl_tick_timer = nullptr;
     ESP_ERROR_CHECK(esp_timer_create(&lvgl_tick_timer_args, &lvgl_tick_timer));
 
-    xTaskCreate(task, "LVGL", 10000, nullptr, LVGL_TASK_PRIORITY, &lvgl_task);
+    xTaskCreate(task, "LVGL", 20000, nullptr, LVGL_TASK_PRIORITY, &lvgl_task);
 
 
     disp = lv_display_create(_board->getDisplay()->getResolution().first, _board->getDisplay()->getResolution().second);
     lv_display_set_flush_cb(disp, flush_cb);
     size_t buffer_size = _board->getDisplay()->getResolution().first * _board->getDisplay()->getResolution().second * 2;
     ESP_LOGI(TAG, "Display Buffer Size %u", buffer_size);
-    if(_board->getDisplay()->directRender()) {
-        lv_display_set_buffers(disp, _board->getDisplay()->getBuffer(), _board->getDisplay()->getBuffer2(), buffer_size,
-                               LV_DISPLAY_RENDER_MODE_DIRECT);
-    }
-    else {
+    if (_board->getDisplay()->directRender()) {
+      void *buffer = malloc(buffer_size);
+        lv_display_set_buffers(disp, buffer, nullptr, buffer_size,
+                               LV_DISPLAY_RENDER_MODE_FULL);
+    } else {
         lv_display_set_buffers(disp, _board->getDisplay()->getBuffer(), nullptr, buffer_size,
                                LV_DISPLAY_RENDER_MODE_FULL);
     }
-//    lv_display_set_flush_wait_cb(disp, flush_wait);
-
-//    uint8_t *buf = static_cast<uint8_t *>(malloc(480 * 100 * 2));
-//    lv_display_set_buffers(disp, buf, nullptr, 480*100*2,
-//                           LV_DISPLAY_RENDER_MODE_PARTIAL);
 
     style_init();
     lvgl_encoder = lv_indev_create();
@@ -290,11 +282,11 @@ void lvgl_menu_open() {
 
     cbData.callbackEnabled = _board->getDisplay()->onColorTransDone(flush_ready, &disp);
 
-
-    if(_board->getDisplay()->directRender()) {
+    if (_board->getDisplay()->directRender()) {
         _board->getDisplay()->write(0, 0, _board->getDisplay()->getResolution().first,
                                     _board->getDisplay()->getResolution().second, _board->getDisplay()->getBuffer2());
     }
+    lv_display_flush_ready(disp); //Always start ready
     vTaskResume(lvgl_task);
 
 

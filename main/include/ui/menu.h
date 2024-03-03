@@ -36,6 +36,6 @@ enum LVGL_TASK_SIGNALS{
 bool lvgl_lock(int timeout_ms);
 void lvgl_unlock();
 
-void lvgl_init(std::shared_ptr<Board>, std::shared_ptr<ImageConfig>);
+void lvgl_init(std::shared_ptr<Board>);
 void lvgl_menu_open();
 bool lvgl_menu_state();
