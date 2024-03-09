@@ -23,26 +23,30 @@ static const char *TAG = "DISPLAY";
 int H_RES;
 int V_RES;
 
-static void clear_screen(const std::shared_ptr<Display>& display, uint8_t *pGIFBuf) {
-    memset(pGIFBuf, 255, H_RES * V_RES * 2);
-    display->write(0, 0, H_RES, V_RES, pGIFBuf);
+static void clear_screen(const std::shared_ptr<Display> &display, uint8_t *pBuf) {
+    if(pBuf != nullptr) {
+        memset(pBuf, 255, H_RES * V_RES * 2);
+        display->write(0, 0, H_RES, V_RES, pBuf);
+    }
 }
 
 
 
-static void display_usb_logo(const std::shared_ptr<Display>& display, uint8_t *pGIFBuf) {
+static void display_usb_logo(const std::shared_ptr<Display> &display, uint8_t *fBuf) {
     ESP_LOGI(TAG, "Displaying USB LOGO");
-    clear_screen(display, pGIFBuf);
+    clear_screen(display, fBuf);
     auto *png = new PNGImage();
     png->open(usb_png, sizeof(usb_png));
-    png->loop(pGIFBuf);
+    uint8_t *pBuf = static_cast<uint8_t *>(malloc(png->size().first*png->size().second*2));
+    png->loop(pBuf);
     display->write(
                               (H_RES / 2) - (png->size().first / 2),
                               (V_RES / 2) - (png->size().second / 2),
                               (H_RES / 2) + ((png->size().first  + 1) / 2),
                               (V_RES / 2) + ((png->size().second + 1) / 2),
-                              pGIFBuf);
+                              pBuf);
     delete png;
+    free(pBuf);
 }
 
 static void display_no_image(const std::shared_ptr<Display>& display, uint8_t *pGIFBuf) {
@@ -110,24 +114,25 @@ static void display_no_storage(const std::shared_ptr<Display>& display, uint8_t 
 }
 
 
-static void display_image_batt(const std::shared_ptr<Display>& display, uint8_t *pGIFBuf) {
+static void display_image_batt(const std::shared_ptr<Display> &display, uint8_t *fBuf) {
     ESP_LOGI(TAG, "Displaying Low Battery");
-    clear_screen(display, pGIFBuf);
+    clear_screen(display, fBuf);
     auto *png = new PNGImage();
     png->open(low_batt_png, sizeof(low_batt_png));
-    png->loop(pGIFBuf);
+    uint8_t *pBuf = static_cast<uint8_t *>(malloc(png->size().first*png->size().second*2));
+    png->loop(pBuf);
     display->write(
                               (H_RES / 2) - (png->size().first / 2),
                               (V_RES / 2) - (png->size().second / 2),
                               (H_RES / 2) + ((png->size().first + 1) / 2),
                               (V_RES / 2) + ((png->size().second + 1) / 2),
-                              pGIFBuf);
+                              pBuf);
     delete png;
+    free(pBuf);
 }
 
 Image *display_file(ImageFactory factory, const char *path, uint8_t *pGIFBuf, const std::shared_ptr<Display>& display) {
     Image *in = factory.create(path);
-    clear_screen(display, pGIFBuf);
     if (in) {
         if(in->open(path) != 0){
             std::string err = "Error Displaying File\n";
@@ -143,13 +148,28 @@ Image *display_file(ImageFactory factory, const char *path, uint8_t *pGIFBuf, co
             display_image_too_large(display, pGIFBuf, path);
             return nullptr;
         }
-        int delay = in->loop(pGIFBuf);
-        display->write(
-                                  (H_RES / 2) - (in->size().first / 2),
-                                  (V_RES / 2) - (in->size().second / 2),
-                                  (H_RES / 2) + (in->size().first / 2),
-                                  (V_RES / 2) + (in->size().second / 2),
-                                  pGIFBuf);
+        int delay;
+        if (size.first == H_RES && size.second == V_RES) {
+            delay = in->loop(pGIFBuf);
+            display->write(
+                    (H_RES / 2) - (in->size().first / 2),
+                    (V_RES / 2) - (in->size().second / 2),
+                    (H_RES / 2) + (in->size().first / 2),
+                    (V_RES / 2) + (in->size().second / 2),
+                    pGIFBuf);
+        } else {
+            clear_screen(display, pGIFBuf); //Only need to clear the screen if the image won't fill it
+            delay = 0;
+            auto *pBuf = static_cast<uint8_t *>(malloc(size.first * size.second * 2));
+            delay = in->loop(pBuf);
+            display->write(
+                    (H_RES / 2) - (in->size().first / 2),
+                    (V_RES / 2) - (in->size().second / 2),
+                    (H_RES / 2) + (in->size().first / 2),
+                    (V_RES / 2) + (in->size().second / 2),
+                    pBuf);
+            free(pBuf);
+        }
         if (in->animated()) {
             vTaskDelay(delay / portTICK_PERIOD_MS);
         }
@@ -157,7 +177,6 @@ Image *display_file(ImageFactory factory, const char *path, uint8_t *pGIFBuf, co
     return in;
 }
 
-static void image_loop(std::shared_ptr<Image> &in, uint8_t *pGIFBuf, const std::shared_ptr<Display>& display) {
 static int image_loop(std::shared_ptr<Image> &in, uint8_t *pGIFBuf, const std::shared_ptr<Display>& display) {
     if (in && in->animated()) {
         int delay = in->loop(pGIFBuf);
@@ -258,8 +277,7 @@ void display_task(void *params) {
 
 
     // user can flush pre-defined pattern to the screen before we turn on the screen or backlight
-    uint8_t *pGIFBuf = static_cast<uint8_t *>(malloc(
-            args->display->getResolution().first * args->display->getResolution().second * 2));
+    uint8_t *pGIFBuf = args->display->getBuffer();
 
     memset(pGIFBuf, 255, H_RES * V_RES * 2);
     args->display->write( 0, 0, H_RES, V_RES, pGIFBuf);
@@ -287,8 +305,18 @@ void display_task(void *params) {
 
     ESP_LOGI(TAG, "Display Resolution %ix%i", H_RES, V_RES);
 
+    int current_buffer = 1;
     while (true) {
         uint32_t option;
+        if (args->display->directRender()) {
+            if (current_buffer != 0) {
+                pGIFBuf = args->display->getBuffer();
+                current_buffer = 0;
+            } else {
+                pGIFBuf = args->display->getBuffer2();
+                current_buffer = 1;
+            }
+        }
         xTaskNotifyWaitIndexed(0, 0, 0xffffffff, &option, 0);
         if(option != DISPLAY_NONE) {
             last_change = esp_timer_get_time();
@@ -357,7 +385,6 @@ void display_task(void *params) {
                 case DISPLAY_BATT:
                     in.reset();
                     if (last_mode != DISPLAY_BATT) {
-                        in.reset();
                         display_image_batt(args->display, pGIFBuf);
                     }
                     last_mode = static_cast<DISPLAY_OPTIONS>(option);
