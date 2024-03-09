@@ -178,21 +178,21 @@ Image *display_file(ImageFactory factory, const char *path, uint8_t *pGIFBuf, co
 }
 
 static int image_loop(std::shared_ptr<Image> &in, uint8_t *pGIFBuf, const std::shared_ptr<Display>& display) {
+    int64_t start = esp_timer_get_time();
     if (in && in->animated()) {
         int delay = in->loop(pGIFBuf);
-        if(delay >= 0) {
+      if(delay >= 0) {
             display->write((H_RES / 2) - (in->size().first / 2),
                            (V_RES / 2) - (in->size().second / 2),
                            (H_RES / 2) + (in->size().first / 2),
                            (V_RES / 2) + (in->size().second / 2),
                            pGIFBuf);
-//            display.write(
-//                                      (H_RES / 2) - (in->size().first / 2),
-//                                      (V_RES / 2) - (in->size().second / 2),
-//                                      (H_RES / 2) + (in->size().first / 2),
-//                                      (V_RES / 2) + (in->size().second / 2),
-//                                      pGIFBuf);
-            vTaskDelay(delay / portTICK_PERIOD_MS);
+            ESP_LOGI(TAG, "Frame Display time %lli", (esp_timer_get_time()-start)/1000);
+            int calc_delay = delay-static_cast<int>((esp_timer_get_time()-start)/1000);
+            ESP_LOGI(TAG, "Frame Delay: %i, calculated delay %i", delay, calc_delay);
+            if(calc_delay > 0) {
+                vTaskDelay(calc_delay / portTICK_PERIOD_MS);
+            }
         }
         else {
             ESP_LOGI(TAG, "Image loop error");
