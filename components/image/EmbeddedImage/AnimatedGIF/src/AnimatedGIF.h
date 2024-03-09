@@ -42,10 +42,10 @@
 //
 #define MAX_CODE_SIZE 12
 #define MAX_COLORS 256
-#define LZW_BUF_SIZE (6*MAX_CHUNK_SIZE)
+#define LZW_BUF_SIZE (12*MAX_CHUNK_SIZE)
 #define LZW_HIGHWATER (4*MAX_CHUNK_SIZE)
 #ifdef __LINUX__
-#define MAX_WIDTH 2048
+#define MAX_WIDTH 480
 #else
 #define MAX_WIDTH 320
 #endif // __LINUX__
@@ -215,8 +215,8 @@ class AnimatedGIF
 #endif // __cplusplus
 
 // Due to unaligned memory causing an exception, we have to do these macros the slow way
-#define INTELSHORT(p) ((*p) + (*(p+1)<<8))
-#define INTELLONG(p) ((*p) + (*(p+1)<<8) + (*(p+2)<<16) + (*(p+3)<<24))
+#define INTELSHORT(p) (*((unsigned short int*)p))
+#define INTELLONG(p)  (*((unsigned int*)p))
 #define MOTOSHORT(p) (((*(p))<<8) + (*(p+1)))
 #define MOTOLONG(p) (((*p)<<24) + ((*(p+1))<<16) + ((*(p+2))<<8) + (*(p+3)))
 
