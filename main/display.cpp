@@ -266,8 +266,7 @@ void display_task(void *params) {
     // TODO: Check image size before trying to display it
     auto *args = (display_task_args *) params;
 
-    auto panel_handle = args->display->getPanelHandle();
-    auto config = args->image_config;
+    auto config = ImageConfig();
 
 
     bool menu_state = false;
@@ -337,9 +336,10 @@ void display_task(void *params) {
                 case DISPLAY_FILE:
                     in.reset();
                     ESP_LOGI(TAG, "DISPLAY_FILE");
+                    config.reload();
                     menu_state = false;
                     try {
-                        current_file = get_file(config->getPath());
+                        current_file = get_file(config.getPath());
                         in.reset(display_file(factory, current_file.c_str(), pGIFBuf,
                                               args->display));
                     }
@@ -349,7 +349,7 @@ void display_task(void *params) {
                     last_mode = static_cast<DISPLAY_OPTIONS>(option);
                     break;
                 case DISPLAY_NEXT:
-                    if (config->getLocked()) {
+                    if (config.getLocked()) {
                         break;
                     }
                     if(list_directory(current_file.parent_path()).size() <= 1){
@@ -366,7 +366,7 @@ void display_task(void *params) {
                     }
                     break;
                 case DISPLAY_PREVIOUS:
-                    if (config->getLocked()) {
+                    if (config.getLocked()) {
                         break;
                     }
                     if(list_directory(current_file.parent_path()).size() <= 1){
@@ -403,7 +403,7 @@ void display_task(void *params) {
             }
         } else {
             if (!menu_state) {
-                if(last_mode == DISPLAY_FILE && config->getSlideShow() && ((esp_timer_get_time()/1000000)-(last_change/1000000)) > config->getSlideShowTime()){
+                if(last_mode == DISPLAY_FILE && config.getSlideShow() && ((esp_timer_get_time()/1000000)-(last_change/1000000)) > config.getSlideShowTime()){
                     xTaskNotifyIndexed(xTaskGetCurrentTaskHandle(), 0, DISPLAY_NEXT, eSetValueWithOverwrite );
                 } else if(last_mode == DISPLAY_OTA){
                     uint32_t percent;

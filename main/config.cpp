@@ -129,3 +129,14 @@ int ImageConfig::getSlideShowTime() {
     const std::lock_guard<std::mutex> lock(mutex);
     return slideshow_time;
 }
+
+void ImageConfig::reload() {
+    esp_err_t err;
+    handle = nvs::open_nvs_handle("image", NVS_READWRITE, &err);
+    path = get_string_or_default("path", (const char *)"/data");
+    directory = get_string_or_default("directory", (const char *)"/data");
+    image_file = get_string_or_default("image_file", (const char *)"");
+    locked = get_item_or_default("locked", false);
+    slideshow = get_item_or_default("slideshow", false);
+    slideshow_time = get_item_or_default("slideshow_time", 15);
+}

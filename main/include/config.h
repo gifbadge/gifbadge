@@ -26,6 +26,7 @@ public:
     void setSlideShow(bool);
     int getSlideShowTime();
     void setSlideShowTime(int);
+    void reload();
 
 
 private:
