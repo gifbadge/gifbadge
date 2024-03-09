@@ -20,6 +20,7 @@ public:
 
     virtual int open(const char *path) {return 0;};
     virtual bool animated() {return false;};
+    virtual std::string getLastError() = 0;
 };
 
 class ImageFactory {

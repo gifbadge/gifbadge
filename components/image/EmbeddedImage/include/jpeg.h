@@ -34,6 +34,8 @@ public:
 
     int open(const char *path) override;
 
+    std::string getLastError() override;
+
 private:
     JPGuser jpguser{};
     JDEC _dec{};
@@ -43,4 +45,6 @@ private:
     static jpeg_decode_out_t jpeg_decode_out_cb(JDEC *dec, void *bitmap, JRECT *rect);
 
     uint8_t *workbuf{};
+
+    std::string lastErr;
 };

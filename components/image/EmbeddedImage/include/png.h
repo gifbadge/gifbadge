@@ -25,6 +25,8 @@ public:
 
     int open(uint8_t *bin, int size);
 
+    std::string getLastError() override;
+
 
 protected:
     PNG png;

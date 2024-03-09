@@ -153,3 +153,30 @@ int GIF::open(const char *path) {
     }
     return -1;
 }
+
+std::string GIF::getLastError() {
+    switch (gif.getLastError()) {
+        case GIF_SUCCESS:
+            return "GIF_SUCCESS";
+        case GIF_DECODE_ERROR:
+            return "GIF_DECODE_ERROR";
+        case GIF_TOO_WIDE:
+            return "GIF_TOO_WIDE";
+        case GIF_INVALID_PARAMETER:
+            return "GIF_INVALID_PARAMETER";
+        case GIF_UNSUPPORTED_FEATURE:
+            return "GIF_UNSUPPORTED_FEATURE";
+        case GIF_FILE_NOT_OPEN:
+            return "GIF_FILE_NOT_OPEN";
+        case GIF_EARLY_EOF:
+            return "GIF_EARLY_EOF";
+        case GIF_EMPTY_FRAME:
+            return "GIF_EMPTY_FRAME";
+        case GIF_BAD_FILE:
+            return "GIF_BAD_FILE";
+        case GIF_ERROR_MEMORY:
+            return "GIF_ERROR_MEMORY";
+        default:
+            return "Unknown";
+    }
+}

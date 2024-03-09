@@ -12,9 +12,35 @@ JPEG::~JPEG() {
     fclose(jpguser.infile);
 }
 
+static std::string jresult_to_str(JRESULT ret){
+    switch (ret) {
+        case JDR_OK:
+            return "Succeeded";
+        case JDR_INTR:
+            return "Interrupted by output function";
+        case JDR_INP:
+            return "Device error or wrong termination of input stream";
+        case JDR_MEM1:
+            return "Insufficient memory pool for the image";
+        case JDR_MEM2:
+            return "Insufficient stream input buffer";
+        case JDR_PAR:
+            return "Parameter error";
+        case JDR_FMT1:
+            return "Data format error (may be broken data)";
+        case JDR_FMT2:
+            return "Right format but not supported";
+        case JDR_FMT3:
+            return "Not supported JPEG standard";
+    }
+    return "";
+}
+
 int JPEG::loop(uint8_t *outBuf) {
     jpguser.outBuf = outBuf;
-    if (jd_decomp(&_dec, jpeg_decode_out_cb, 0) != JDR_OK) {
+    JRESULT ret = jd_decomp(&_dec, jpeg_decode_out_cb, 0);
+    if(ret != 0){
+        lastErr = jresult_to_str(ret);
         return -1;
     }
     return 0;
@@ -86,12 +112,19 @@ int JPEG::open(const char *path) {
 #endif
 
     if (workbuf == nullptr) {
-        printf("Failed to allocate memory\n");
+        lastErr = "Failed to allocate memory";
+        return -1;
     }
 
-    if (jd_prepare(&_dec, jpeg_decode_in_cb, workbuf, JPEG_WORK_BUF_SIZE, &jpguser) != JDR_OK) {
-        printf("jd_prepare failed");
+    JRESULT ret = jd_prepare(&_dec, jpeg_decode_in_cb, workbuf, JPEG_WORK_BUF_SIZE, &jpguser);
+    if (ret != JDR_OK) {
+        lastErr = jresult_to_str(ret);
+        return -1;
     }
 
-    return -1;
+    return 0;
+}
+
+std::string JPEG::getLastError() {
+    return lastErr;
 }

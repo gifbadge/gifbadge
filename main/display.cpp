@@ -71,6 +71,18 @@ static void display_image_too_large(const std::shared_ptr<Display>& display, uin
                               pGIFBuf);
 }
 
+static void display_err(const std::shared_ptr<Display>& display, uint8_t *pGIFBuf, const char *err) {
+    ESP_LOGI(TAG, "Displaying Error");
+    clear_screen(display, pGIFBuf);
+    render_text_centered(H_RES, V_RES, 10, err, pGIFBuf);
+    display->write(
+            0,
+            0,
+            H_RES,
+            V_RES,
+            pGIFBuf);
+}
+
 static void display_ota(const std::shared_ptr<Display>& display, uint8_t *pGIFBuf, uint32_t percent) {
     ESP_LOGI(TAG, "Displaying OTA Status");
     clear_screen(display, pGIFBuf);
@@ -117,7 +129,13 @@ Image *display_file(ImageFactory factory, const char *path, uint8_t *pGIFBuf, co
     Image *in = factory.create(path);
     clear_screen(display, pGIFBuf);
     if (in) {
-        in->open(path);
+        if(in->open(path) != 0){
+            std::string err = "Error Displaying File\n";
+            err = err + path +"\n" + in->getLastError();
+            display_err(display, pGIFBuf, err.c_str() );
+            delete in;
+            return nullptr;
+        }
         printf("%s x: %i y: %i\n", path, in->size().first, in->size().second);
         auto size = in->size();
         if (size.first > H_RES || size.second > V_RES) {
@@ -140,6 +158,7 @@ Image *display_file(ImageFactory factory, const char *path, uint8_t *pGIFBuf, co
 }
 
 static void image_loop(std::shared_ptr<Image> &in, uint8_t *pGIFBuf, const std::shared_ptr<Display>& display) {
+static int image_loop(std::shared_ptr<Image> &in, uint8_t *pGIFBuf, const std::shared_ptr<Display>& display) {
     if (in && in->animated()) {
         int delay = in->loop(pGIFBuf);
         if(delay >= 0) {
@@ -158,10 +177,13 @@ static void image_loop(std::shared_ptr<Image> &in, uint8_t *pGIFBuf, const std::
         }
         else {
             ESP_LOGI(TAG, "Image loop error");
+            return -1;
         }
     } else {
         vTaskDelay(200 / portTICK_PERIOD_MS);
+        return 0;
     }
+    return 0;
 }
 
 static std::string get_file(const std::filesystem::path &path) {
@@ -364,7 +386,12 @@ void display_task(void *params) {
                     }
                     vTaskDelay(200 / portTICK_PERIOD_MS);
                 } else {
-                    image_loop(in, pGIFBuf, args->display);
+                    if(image_loop(in, pGIFBuf, args->display) != 0){
+                        std::string strerr = "Error Displaying File\n";
+                        strerr += current_file.string() +"\n" + in->getLastError();
+                        display_err(args->display, pGIFBuf, strerr.c_str() );
+                        in.reset();
+                    }
                 }
             } else {
                 vTaskDelay(200 / portTICK_PERIOD_MS);
