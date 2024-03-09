@@ -225,15 +225,9 @@ static int files_get_position(const std::vector<std::string> &files, const std::
 }
 
 static std::filesystem::path files_get_next(const std::filesystem::path &path) {
-    ESP_LOGI(TAG, "Next");
-    ESP_LOGI(TAG, "%s", path.c_str());
     auto files = list_directory(path.parent_path());
-    for (auto &f: files){
-        ESP_LOGI(TAG, "%s", f.c_str());
-    }
     int pos = files_get_position(files, path);
-    ESP_LOGI(TAG, "%i", pos);
-    if (pos >= 0) { //TODO handle error cases
+    if (pos >= 0) {
         if (pos == files.size()-1) {
             return files.at(0);
         } else {
@@ -246,11 +240,9 @@ static std::filesystem::path files_get_next(const std::filesystem::path &path) {
 }
 
 static std::filesystem::path files_get_previous(const std::filesystem::path &path) {
-    ESP_LOGI(TAG, "Previous");
     auto files = list_directory(path.parent_path());
     int pos = files_get_position(files, path);
-    ESP_LOGI(TAG, "%i", pos);
-    if (pos >= 0) { //TODO handle error cases
+    if (pos >= 0) {
         if (pos == 0) {
             return files.at(files.size()-1);
         } else {
