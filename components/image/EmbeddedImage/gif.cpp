@@ -2,6 +2,99 @@
 #include <string>
 #include "bitbank2.h"
 
+#include <cstdio>
+#include <sys/stat.h>
+#include <cstring>
+
+struct mem_buf {
+    uint8_t *buf;
+    FILE *fp;
+    uint8_t *pos;
+    uint8_t *read;
+    size_t size;
+};
+
+static void *OpenFile(const char *fname, int32_t *pSize) {
+    FILE *infile = fopen(fname, "r");
+    setvbuf(infile, nullptr, _IOFBF, 4096);
+    struct stat stats{};
+
+    if (fstat(fileno(infile), &stats) != 0) {
+        return nullptr;
+    }
+
+    *pSize = stats.st_size;
+
+    auto *mem = static_cast<mem_buf *>(malloc(sizeof(mem_buf)));
+    mem->buf = static_cast<uint8_t *>(malloc(stats.st_size));
+//    mem->buf = nullptr;
+    if (mem->buf == nullptr) {
+        printf("Not enough memory to buffer image\n");
+    }
+    mem->fp = infile;
+    mem->pos = mem->buf;
+    mem->read = mem->buf;
+    mem->size = stats.st_size;
+
+    if (infile) {
+        return mem;
+    }
+    return nullptr;
+}
+
+static void CloseFile(void *pHandle) {
+    auto *mem = (mem_buf *) (pHandle);
+    fclose(mem->fp);
+    if (mem->buf != nullptr) {
+        free(mem->buf);
+    }
+    free(mem);
+}
+
+static int32_t ReadFile(bb2_file_tag *pFile, uint8_t *pBuf, int32_t iLen) {
+    if (iLen <= 0) {
+        return 0;
+    }
+    int32_t iBytesRead;
+    iBytesRead = iLen;
+    auto *mem = (mem_buf *) (pFile->fHandle);
+    if (mem->buf == nullptr) {
+        iBytesRead = (int32_t) fread(pBuf, 1, iBytesRead, mem->fp);
+        pFile->iPos = ftell(mem->fp);
+        return iBytesRead;
+    }
+    if (mem->pos + iLen > mem->read) {
+        //We don't have enough in the buffer, read and add it
+        size_t bytes = fread(mem->read, 1, (mem->pos + iLen) - mem->read, mem->fp);
+        int32_t len = mem->read - mem->pos + bytes;
+        mem->read += bytes;
+        memcpy(pBuf, mem->pos, len);
+        mem->pos += len;
+        pFile->iPos = mem->pos - mem->buf;
+        return len;
+    } else {
+        //Already in the buffer, copy it out
+        memcpy(pBuf, mem->pos, iLen);
+        mem->pos += iLen;
+        pFile->iPos = mem->pos - mem->buf;
+        return iLen;
+    }
+}
+
+static int32_t SeekFile(bb2_file_tag *pFile, int32_t iPosition) {
+    printf("Seek %li\n", iPosition);
+    auto *mem = (mem_buf *) (pFile->fHandle);
+    if (mem->buf == nullptr) {
+        fseek(mem->fp, iPosition, SEEK_SET);
+        pFile->iPos = (int32_t) ftell(mem->fp);
+        return pFile->iPos;
+    } else {
+        mem->pos = mem->buf + iPosition;
+        pFile->iPos = iPosition;
+        return iPosition;
+    }
+}
+
 GIF::GIF() = default;
 
 GIF::~GIF() {
@@ -52,7 +145,7 @@ typedef int32_t (*seekfile)(GIFFILE *pFile, int32_t iPosition);
 
 int GIF::open(const char *path) {
     gif.begin(BIG_ENDIAN_PIXELS);
-    if (gif.open(path, bb2OpenFile, bb2CloseFile, (readfile) bb2ReadFile, (seekfile) bb2SeekFile, GIFDraw)) {
+    if (gif.open(path, OpenFile, CloseFile, (readfile) ReadFile, (seekfile) SeekFile, GIFDraw)) {
         gif.allocFrameBuf(GIFAlloc);
         gif.setDrawType(GIF_DRAW_COOKED);
         width = gif.getCanvasWidth();
