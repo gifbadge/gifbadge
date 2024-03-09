@@ -56,7 +56,7 @@ void input_init(const std::shared_ptr<Keys> &keys, QueueHandle_t key_queue) {
     ESP_LOGI(TAG, "input_init");
     const std::lock_guard<std::mutex> lock(input_lock);
     auto *_keyArgs = static_cast<keyArgs *>(malloc(sizeof(keyArgs)));
-    _keyArgs->keys = keys;
+    _keyArgs->keys = keys.get();
     _keyArgs->queue = key_queue;
 
     const esp_timer_create_args_t input_timer_args = {.callback = &input_timer_handler, .arg = _keyArgs, .name = "key_handler"};

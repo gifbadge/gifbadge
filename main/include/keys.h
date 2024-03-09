@@ -13,7 +13,7 @@ struct input_event {
 };
 
 struct keyArgs {
-    std::shared_ptr<Keys> keys;
+    Keys *keys;
     QueueHandle_t queue;
 };
 
