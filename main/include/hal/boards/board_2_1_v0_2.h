@@ -9,6 +9,7 @@
 #include "hal/drivers/backlight_ledc.h"
 #include "hal/drivers/battery_max17048.h"
 #include "hal/drivers/touch_ft5x06.h"
+#include "hal/drivers/keys_esp_io_expander.h"
 #include <driver/sdmmc_host.h>
 
 
@@ -38,9 +39,10 @@ public:
 private:
     std::shared_ptr<battery_max17048> _battery;
     std::shared_ptr<I2C> _i2c;
-    std::shared_ptr<keys_gpio> _keys;
+    std::shared_ptr<keys_esp_io_expander> _keys;
     std::shared_ptr<display_st7701s> _display;
     std::shared_ptr<backlight_ledc> _backlight;
     std::shared_ptr<touch_ft5x06> _touch;
     sdmmc_card_t *card = nullptr;
+  esp_io_expander_handle_t io_expander;
 };
