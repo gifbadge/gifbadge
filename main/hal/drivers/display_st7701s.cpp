@@ -3,11 +3,23 @@
 #include <driver/spi_master.h>
 #include <esp_lcd_panel_commands.h>
 #include <task.h>
+#include <esp_lcd_panel_rgb.h>
 #include "hal/drivers/display_st7701s.h"
 #include "esp_lcd_panel_io_additions.h"
-#include "esp_lcd_st7701.h"
 
 static const char *TAG = "display_st7701s.cpp";
+
+/**
+ * @brief LCD panel initialization commands.
+ *
+ */
+typedef struct {
+  int cmd;                /*<! The specific LCD command */
+  const void *data;       /*<! Buffer that holds the command specific data */
+  size_t data_bytes;      /*<! Size of `data` in memory, in bytes */
+  unsigned int delay_ms;  /*<! Delay in milliseconds after this command */
+} st7701_lcd_init_cmd_t;
+
 
 
 static const st7701_lcd_init_cmd_t buyadisplaycom[] = {
