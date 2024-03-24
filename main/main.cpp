@@ -108,14 +108,14 @@ extern "C" void app_main(void) {
             board->getBacklight(),
     };
 
-    xTaskCreate(display_task, "display_task", 20000, &args, 2, &display_task_handle);
+    xTaskCreate(display_task, "display_task", 10000, &args, 2, &display_task_handle);
 
     sharedState configState{
             imageconfig,
             board,
     };
 
-    xTaskCreate(dump_state, "dump_state", 20000, &configState, 2, nullptr);
+    xTaskCreate(dump_state, "dump_state", 10000, &configState, 2, nullptr);
 
     ota_boot_info();
     ota_init();
