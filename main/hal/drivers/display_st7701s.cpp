@@ -79,7 +79,7 @@ display_st7701s::display_st7701s(spi_line_config_t line_cfg,
             .dc_zero_on_data = 0,
             .lsb_first = 0,
             .cs_high_active = 0,
-            .del_keep_cs_inactive = 0,
+            .del_keep_cs_inactive = 1,
         },
     };
 
