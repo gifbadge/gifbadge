@@ -3,7 +3,6 @@
 #include <esp_timer.h>
 #include <freertos/semphr.h>
 #include <esp_log.h>
-#include <esp_lcd_panel_ops.h>
 #include <sys/stat.h>
 #include <memory>
 #include <utility>
@@ -13,16 +12,14 @@
 
 #include "ui/menu.h"
 #include "keys.h"
-#include "config.h"
 #include "hal/battery.h"
 #include "ui/main_menu.h"
 #include "ui/style.h"
+#include "hw_init.h"
+#include "display.h"
 
 static const char *TAG = "MENU";
 
-
-//TODO: This is bad
-std::shared_ptr<ImageConfig> image_config;
 
 //Static Variables
 static lv_disp_t *disp;

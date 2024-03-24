@@ -82,7 +82,6 @@ static int32_t ReadFile(bb2_file_tag *pFile, uint8_t *pBuf, int32_t iLen) {
 }
 
 static int32_t SeekFile(bb2_file_tag *pFile, int32_t iPosition) {
-    printf("Seek %li\n", iPosition);
     auto *mem = (mem_buf *) (pFile->fHandle);
     if (mem->buf == nullptr) {
         fseek(mem->fp, iPosition, SEEK_SET);
