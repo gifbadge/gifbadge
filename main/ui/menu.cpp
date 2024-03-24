@@ -272,37 +272,41 @@ static void battery_widget(lv_obj_t *scr) {
 
 }
 
+void lvgl_wake_up(){
+  ESP_LOGI(TAG, "Wakeup");
+  _board->pmLock();
+  menu_state = true;
+
+  cbData.display = _board->getDisplay();
+
+  cbData.callbackEnabled = _board->getDisplay()->onColorTransDone(flush_ready, &disp);
+
+  if (_board->getDisplay()->directRender()) {
+    _board->getDisplay()->write(0, 0, _board->getDisplay()->getResolution().first,
+                                _board->getDisplay()->getResolution().second, _board->getDisplay()->getBuffer2());
+  }
+  lv_display_flush_ready(disp); //Always start ready
+  vTaskResume(lvgl_task);
+
+
+  ESP_ERROR_CHECK(esp_timer_start_periodic(lvgl_tick_timer, LVGL_TICK_PERIOD_MS * 1000));
+  if (lvgl_lock(-1)) {
+    lv_group_t *g = lv_group_create();
+    lv_group_set_default(g);
+    lv_indev_set_group(lvgl_encoder, g);
+    lv_obj_t *scr = lv_obj_create(nullptr);
+    lv_screen_load(scr);
+    battery_widget(lv_layer_top());
+    lvgl_unlock();
+  }
+  ESP_LOGI(TAG, "Wakeup Done");
+
+}
+
 
 void lvgl_menu_open() {
-    ESP_LOGI(TAG, "Open");
-    _board->pmLock();
-    menu_state = true;
-
-    cbData.display = _board->getDisplay();
-
-    cbData.callbackEnabled = _board->getDisplay()->onColorTransDone(flush_ready, &disp);
-
-    if (_board->getDisplay()->directRender()) {
-        _board->getDisplay()->write(0, 0, _board->getDisplay()->getResolution().first,
-                                    _board->getDisplay()->getResolution().second, _board->getDisplay()->getBuffer2());
-    }
-    lv_display_flush_ready(disp); //Always start ready
-    vTaskResume(lvgl_task);
-
-
-    ESP_ERROR_CHECK(esp_timer_start_periodic(lvgl_tick_timer, LVGL_TICK_PERIOD_MS * 1000));
-    if (lvgl_lock(-1)) {
-        lv_group_t *g = lv_group_create();
-        lv_group_set_default(g);
-        lv_indev_set_group(lvgl_encoder, g);
-        lv_obj_t *scr = lv_obj_create(nullptr);
-        lv_screen_load(scr);
-        battery_widget(lv_layer_top());
-        lvgl_unlock();
-    }
+    lvgl_wake_up();
     main_menu();
-
-    ESP_LOGI(TAG, "Open Done");
 }
 
 

@@ -8,7 +8,6 @@
 #include "display.h"
 #include "image.h"
 #include "png.h"
-#include "images/usb_png.h"
 #include "images/low_batt_png.h"
 
 #include <nvs_handle.hpp>
@@ -28,25 +27,6 @@ static void clear_screen(const std::shared_ptr<Display> &display, uint8_t *pBuf)
         memset(pBuf, 255, H_RES * V_RES * 2);
         display->write(0, 0, H_RES, V_RES, pBuf);
     }
-}
-
-
-
-static void display_usb_logo(const std::shared_ptr<Display> &display, uint8_t *fBuf) {
-    ESP_LOGI(TAG, "Displaying USB LOGO");
-    clear_screen(display, fBuf);
-    auto *png = new PNGImage();
-    png->open(usb_png, sizeof(usb_png));
-    uint8_t *pBuf = static_cast<uint8_t *>(malloc(png->size().first*png->size().second*2));
-    png->loop(pBuf);
-    display->write(
-                              (H_RES / 2) - (png->size().first / 2),
-                              (V_RES / 2) - (png->size().second / 2),
-                              (H_RES / 2) + ((png->size().first  + 1) / 2),
-                              (V_RES / 2) + ((png->size().second + 1) / 2),
-                              pBuf);
-    delete png;
-    free(pBuf);
 }
 
 static void display_no_image(const std::shared_ptr<Display>& display, uint8_t *pGIFBuf) {
@@ -308,13 +288,6 @@ void display_task(void *params) {
         if(option != DISPLAY_NONE) {
             last_change = esp_timer_get_time();
             switch (option) {
-                case DISPLAY_USB:
-                    in.reset();
-                    ESP_LOGI(TAG, "DISPLAY_USB");
-                    menu_state = false;
-                    display_usb_logo(args->display, pGIFBuf);
-                    last_mode = static_cast<DISPLAY_OPTIONS>(option);
-                    break;
                 case DISPLAY_MENU:
                     in.reset();
                     ESP_LOGI(TAG, "DISPLAY_MENU");

@@ -24,6 +24,7 @@
 #include "hal/i2c.h"
 
 #include "hw_init.h"
+#include "ui/usb_connected.h"
 
 static const char *TAG = "MAIN";
 
@@ -251,7 +252,8 @@ extern "C" void app_main(void) {
     input_event i{};
     MAIN_STATES oldState = MAIN_NONE;
     int64_t last_change = esp_timer_get_time();
-    while (true) {
+    TaskHandle_t lvglHandle = xTaskGetHandle("LVGL");
+  while (true) {
         if (oldState != currentState) {
             ESP_LOGI(TAG, "State %d", currentState);
             switch (currentState) {
@@ -259,7 +261,8 @@ extern "C" void app_main(void) {
                     break;
                 case MAIN_NORMAL:
                     if (oldState == MAIN_USB) {
-                        //Check for OTA File
+                      xTaskNotifyIndexed(lvglHandle, 0, LVGL_STOP, eSetValueWithOverwrite);
+                      //Check for OTA File
                         if (ota_check()) {
                             currentState = MAIN_OTA;
                             xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_OTA, eSetValueWithOverwrite);
@@ -270,7 +273,10 @@ extern "C" void app_main(void) {
                     xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_FILE, eSetValueWithOverwrite);
                     break;
                 case MAIN_USB:
-                    xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_USB, eSetValueWithOverwrite);
+                  xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_MENU, eSetValueWithOverwrite);
+                  vTaskDelay(100 / portTICK_PERIOD_MS);
+                  lvgl_wake_up();
+                  lvgl_usb_connected();
                     break;
                 case MAIN_LOW_BATT:
                     xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_BATT, eSetValueWithOverwrite);
@@ -329,7 +335,6 @@ extern "C" void app_main(void) {
             xQueueReset(input_queue);
         }
         if (currentState != MAIN_USB) {
-            TaskHandle_t lvglHandle = xTaskGetHandle("LVGL");
             switch(board->powerState()){
                 case BOARD_POWER_NORMAL:
                     if(currentState == MAIN_LOW_BATT){
