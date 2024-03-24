@@ -177,32 +177,27 @@ Image *display_file(ImageFactory factory, const char *path, uint8_t *pGIFBuf, co
     return in;
 }
 
-static int image_loop(std::shared_ptr<Image> &in, uint8_t *pGIFBuf, const std::shared_ptr<Display>& display) {
-    int64_t start = esp_timer_get_time();
-    if (in && in->animated()) {
-        int delay = in->loop(pGIFBuf);
-      if(delay >= 0) {
-            display->write((H_RES / 2) - (in->size().first / 2),
-                           (V_RES / 2) - (in->size().second / 2),
-                           (H_RES / 2) + (in->size().first / 2),
-                           (V_RES / 2) + (in->size().second / 2),
-                           pGIFBuf);
-            ESP_LOGI(TAG, "Frame Display time %lli", (esp_timer_get_time()-start)/1000);
-            int calc_delay = delay-static_cast<int>((esp_timer_get_time()-start)/1000);
-            ESP_LOGI(TAG, "Frame Delay: %i, calculated delay %i", delay, calc_delay);
-            if(calc_delay > 0) {
-                vTaskDelay(calc_delay / portTICK_PERIOD_MS);
-            }
-        }
-        else {
-            ESP_LOGI(TAG, "Image loop error");
-            return -1;
-        }
+static int image_loop(std::shared_ptr<Image> &in, uint8_t *pGIFBuf, const std::shared_ptr<Display> &display) {
+  int64_t start = esp_timer_get_time();
+  if (in && in->animated()) {
+    int delay = in->loop(pGIFBuf);
+    if (delay >= 0) {
+      display->write((H_RES/2) - (in->size().first/2),
+                     (V_RES/2) - (in->size().second/2),
+                     (H_RES/2) + (in->size().first/2),
+                     (V_RES/2) + (in->size().second/2),
+                     pGIFBuf);
+//            ESP_LOGI(TAG, "Frame Display time %lli", (esp_timer_get_time()-start)/1000);
+      int calc_delay = delay - static_cast<int>((esp_timer_get_time() - start)/1000);
+//            ESP_LOGI(TAG, "Frame Delay: %i, calculated delay %i", delay, calc_delay);
+      return calc_delay > 0 ? calc_delay : 0;
     } else {
-        vTaskDelay(200 / portTICK_PERIOD_MS);
-        return 0;
+      ESP_LOGI(TAG, "Image loop error");
+      return -1;
     }
-    return 0;
+  } else {
+    return 2000;
+  }
 }
 
 static std::string get_file(const std::filesystem::path &path) {
@@ -297,7 +292,8 @@ void display_task(void *params) {
     ESP_LOGI(TAG, "Display Resolution %ix%i", H_RES, V_RES);
 
     int current_buffer = 1;
-    while (true) {
+    int delay = 0;
+  while (true) {
         uint32_t option;
         if (args->display->directRender()) {
             if (current_buffer != 0) {
@@ -308,7 +304,7 @@ void display_task(void *params) {
                 current_buffer = 1;
             }
         }
-        xTaskNotifyWaitIndexed(0, 0, 0xffffffff, &option, 0);
+        xTaskNotifyWaitIndexed(0, 0, 0xffffffff, &option, delay/portTICK_PERIOD_MS);
         if(option != DISPLAY_NONE) {
             last_change = esp_timer_get_time();
             switch (option) {
@@ -403,9 +399,10 @@ void display_task(void *params) {
                     if(percent != 0){
                         display_ota(args->display, pGIFBuf, percent);
                     }
-                    vTaskDelay(200 / portTICK_PERIOD_MS);
+                    delay = 200;
                 } else {
-                    if(image_loop(in, pGIFBuf, args->display) != 0){
+                  delay = image_loop(in, pGIFBuf, args->display);
+                    if(delay < 0){
                         std::string strerr = "Error Displaying File\n";
                         strerr += current_file.string() +"\n" + in->getLastError();
                         display_err(args->display, pGIFBuf, strerr.c_str() );
@@ -413,7 +410,7 @@ void display_task(void *params) {
                     }
                 }
             } else {
-                vTaskDelay(200 / portTICK_PERIOD_MS);
+                delay = 200;
             }
         }
     }
