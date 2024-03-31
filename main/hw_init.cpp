@@ -4,6 +4,7 @@
 #include "hal/boards/board_2_1_v0_2.h"
 #include "hal/boards/board_1_28_v0_1.h"
 #include "esp_efuse_custom_table.h"
+#include "hal/boards/boards.h"
 
 static const char *TAG = "HW_INIT";
 
@@ -17,13 +18,13 @@ std::shared_ptr<Board> get_board(){
     ESP_LOGI(TAG, "Board %u", board);
     if(!global_board) {
         switch (board) {
-            case 0:
+            case BOARD_1_28_V0:
                 global_board = std::make_shared<board_v0>();
                 break;
-            case 1:
+            case BOARD_2_1_V0_2:
               global_board = std::make_shared<board_2_1_v0_2>();
             break;
-            case 2:
+            case BOARD_1_28_V0_1:
                 global_board = std::make_shared<board_1_28_v0_1>();
                 break;
             default:

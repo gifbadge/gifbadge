@@ -8,6 +8,7 @@
 #include "display.h"
 #include "hal/backlight.h"
 #include "hal/storage.h"
+#include "ota.h"
 
 enum BOARD_POWER {
     BOARD_POWER_NORMAL,
@@ -34,3 +35,4 @@ public:
     virtual StorageInfo storageInfo() = 0;
     virtual esp_err_t StorageFormat() = 0;
 };
+

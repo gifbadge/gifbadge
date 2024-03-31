@@ -12,6 +12,7 @@ idf_component_register(SRCS
         "hal/drivers/battery_analog.cpp"
         "hal/drivers/battery_max17048.cpp"
         "hw_init.cpp"
+        "hal/boards/board_data.c"
         "hal/boards/board_v0.cpp"
         "hal/boards/board_2_1_v0_1.cpp"
         "hal/boards/board_2_1_v0_2.cpp"
@@ -62,3 +63,5 @@ add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/material_icons_special.c
         COMMAND lv_font_conv --bpp 1 --size 180 --format lvgl --lv-include lvgl.h --font ${CMAKE_SOURCE_DIR}/MaterialSymbolsOutlined[FILL,GRAD,opsz,wght].ttf -r"${special_symbols}" --no-compress -o ${CMAKE_CURRENT_BINARY_DIR}/material_icons_special.c
 )
+
+target_link_libraries(${COMPONENT_TARGET} "-u custom_app_desc")

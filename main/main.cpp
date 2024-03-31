@@ -28,6 +28,8 @@
 
 static const char *TAG = "MAIN";
 
+
+
 struct sharedState {
     std::shared_ptr<ImageConfig> image_config;
     std::shared_ptr<Board> board;
@@ -118,7 +120,6 @@ extern "C" void app_main(void) {
     xTaskCreate(dump_state, "dump_state", 10000, &configState, 2, nullptr);
 
     ota_boot_info();
-    ota_init();
 
     lvgl_init(board);
 
@@ -144,6 +145,7 @@ extern "C" void app_main(void) {
                       xTaskNotifyIndexed(lvglHandle, 0, LVGL_STOP, eSetValueWithOverwrite);
                       //Check for OTA File
                         if (ota_check()) {
+                            ota_install();
                             currentState = MAIN_OTA;
                             xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_OTA, eSetValueWithOverwrite);
                             break;
