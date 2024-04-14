@@ -6,6 +6,7 @@
 #include <esp_log.h>
 #include <mutex>
 #include "keys.h"
+#include "hw_init.h"
 
 static const char *TAG = "INPUT";
 
@@ -66,6 +67,10 @@ void input_init(const std::shared_ptr<Keys> &keys, QueueHandle_t key_queue) {
 }
 
 std::map<EVENT_CODE, EVENT_STATE> input_read() {
-    const std::lock_guard<std::mutex> lock(input_lock);
-    return current_state;
+  const std::lock_guard<std::mutex> lock(input_lock);
+  std::map<EVENT_CODE, EVENT_STATE> state;
+  for (auto &button: get_board()->getKeys()->read()) {
+    state[button.first] = button.second;
+  }
+  return state;
 }
