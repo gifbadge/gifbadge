@@ -13,7 +13,7 @@ I2C::I2C(i2c_port_t port, int sda, int scl): _port(port){
             .scl_io_num = scl,
             .sda_pullup_en = GPIO_PULLUP_DISABLE,
             .scl_pullup_en = GPIO_PULLUP_DISABLE,
-            .master = {.clk_speed = 400*1000},
+            .master = {.clk_speed = 100*1000},
             .clk_flags = 0,
     };
     i2c_param_config(port, &conf);
