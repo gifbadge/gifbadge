@@ -11,7 +11,6 @@
 #include <lvgl.h>
 
 #include "ui/menu.h"
-#include "keys.h"
 #include "hal/battery.h"
 #include "ui/main_menu.h"
 #include "ui/style.h"
@@ -130,7 +129,9 @@ void keyboard_read(lv_indev_t *indev, lv_indev_data_t *data) {
 //    ESP_LOGI(TAG, "keyboard_read");
     auto g = lv_indev_get_group(indev);
     bool editing = lv_group_get_editing(g);
-    std::map<EVENT_CODE, EVENT_STATE> keys = input_read();
+    Keys *device = static_cast<Keys *>(lv_indev_get_user_data(indev));
+    assert(device!=nullptr);
+    std::map<EVENT_CODE, EVENT_STATE> keys = device->read();
     if (keys[KEY_UP]) {
         data->enc_diff += editing?+1:-1;
     } else if (keys[KEY_DOWN]) {
@@ -198,6 +199,7 @@ void lvgl_init(std::shared_ptr<Board> board) {
     style_init();
     lvgl_encoder = lv_indev_create();
     lv_indev_set_type(lvgl_encoder, LV_INDEV_TYPE_ENCODER);
+    lv_indev_set_user_data(lvgl_encoder, _board->getKeys().get());
     lv_indev_set_read_cb(lvgl_encoder, keyboard_read);
     lv_timer_set_period(lv_indev_get_read_timer(lvgl_encoder), 150);
 //

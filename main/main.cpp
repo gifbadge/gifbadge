@@ -12,13 +12,11 @@
 
 
 #include "ui/menu.h"
-#include "keys.h"
 #include "hal/hal_usb.h"
 #include "display.h"
 #include "config.h"
 
 #include "ota.h"
-#include "hal/i2c.h"
 
 #include "hw_init.h"
 #include "ui/usb_connected.h"
@@ -94,11 +92,6 @@ extern "C" void app_main(void) {
 
     auto imageconfig = std::make_shared<ImageConfig>();
 
-
-    QueueHandle_t input_queue = xQueueCreate(10, sizeof(input_event));
-    input_init(board->getKeys(), input_queue);
-
-
     TaskHandle_t display_task_handle = nullptr;
 
     display_task_args args = {
@@ -127,7 +120,6 @@ extern "C" void app_main(void) {
         return;
     }
 
-    input_event i{};
     MAIN_STATES oldState = MAIN_NONE;
     int64_t last_change = esp_timer_get_time();
     TaskHandle_t lvglHandle = xTaskGetHandle("LVGL");
@@ -164,29 +156,19 @@ extern "C" void app_main(void) {
             }
             oldState = currentState;
         } else if (currentState == MAIN_NORMAL) {
-            if (xQueuePeek(input_queue, (void *) &i, 50 / portTICK_PERIOD_MS) && !lvgl_menu_state()) {
-                get_event(i);
-                if (i.code == KEY_ENTER && i.value == STATE_PRESSED) {
-                    xQueueReceive(input_queue, (void *) &i, 0);
+            if (!lvgl_menu_state()) {
+              std::map<EVENT_CODE, EVENT_STATE> key_state = board->getKeys()->read();
+                if (key_state[KEY_ENTER] == STATE_PRESSED) {
                     xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_MENU, eSetValueWithOverwrite);
                     vTaskDelay(100 / portTICK_PERIOD_MS);
                     lvgl_menu_open();
                 }
-                if (i.code == KEY_UP && i.value == STATE_PRESSED) {
-                    xQueueReceive(input_queue, (void *) &i, 0);
+                if (key_state[KEY_UP] == STATE_PRESSED) {
                     xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_NEXT, eSetValueWithOverwrite);
                 }
-                if (i.code == KEY_DOWN && i.value == STATE_PRESSED) {
-                    xQueueReceive(input_queue, (void *) &i, 0);
+                if (key_state[KEY_DOWN] == STATE_PRESSED) {
                     xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_PREVIOUS, eSetValueWithOverwrite);
                 }
-                if ((esp_timer_get_time() - i.timestamp) / 1000 > 200) {
-                    xQueueReceive(input_queue, (void *) &i, 0);
-                }
-            }
-            if (lvgl_menu_state()) {
-                //Eat input events when we can't use them
-                xQueueReset(input_queue);
             }
             if (!lvgl_menu_state() && board->getTouch()) {
                 auto e = board->getTouch()->read();
@@ -208,9 +190,6 @@ extern "C" void app_main(void) {
                     ESP_LOGI(TAG, "x: %d y: %d", e.first, e.second);
                 }
             }
-        } else {
-            //Eat input events when we can't use them
-            xQueueReset(input_queue);
         }
         if (currentState != MAIN_USB) {
             switch(board->powerState()){
@@ -235,8 +214,7 @@ extern "C" void app_main(void) {
         }
 
 
-        vTaskDelay(100 / portTICK_PERIOD_MS);
+        vTaskDelay(200 / portTICK_PERIOD_MS);
     }
-
 
 }

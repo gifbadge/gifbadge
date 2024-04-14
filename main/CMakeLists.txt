@@ -1,7 +1,6 @@
 idf_component_register(SRCS
         "main.cpp"
         "ui/menu.cpp"
-        "keys.cpp"
         "display.cpp"
         "config.cpp"
         "file_util.cpp"
