@@ -1,42 +1,42 @@
 #include <esp_partition.h>
 #include <esp_ota_ops.h>
 #include <sys/stat.h>
-#include <cstring>
 #include <esp_app_format.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_log.h"
-#include <cinttypes>
 
 #include "ota.h"
 #include "esp_efuse_custom_table.h"
 
 static const char *TAG = "OTA";
 
-void ota_boot_info() {
-    const esp_partition_t *configured = esp_ota_get_boot_partition();
-    const esp_partition_t *running = esp_ota_get_running_partition();
+namespace OTA {
 
-    ESP_LOGI(TAG, "Total Application Partitions: %d", esp_ota_get_app_partition_count());
-    ESP_LOGI(TAG, "Running partition type %d subtype %d (offset 0x%08" PRIx32 ")",
-             running->type, running->subtype, running->address);
+void bootInfo() {
+  const esp_partition_t *configured = esp_ota_get_boot_partition();
+  const esp_partition_t *running = esp_ota_get_running_partition();
 
-    esp_app_desc_t boot_app_info;
-    if (esp_ota_get_partition_description(configured, &boot_app_info) == ESP_OK) {
-        ESP_LOGI(TAG, "Configured firmware version: %s", boot_app_info.version);
-    }
-    esp_app_desc_t running_app_info;
-    if (esp_ota_get_partition_description(running, &running_app_info) == ESP_OK) {
-        ESP_LOGI(TAG, "Running firmware version: %s", running_app_info.version);
-    }
+  ESP_LOGI(TAG, "Total Application Partitions: %d", esp_ota_get_app_partition_count());
+  ESP_LOGI(TAG, "Running partition type %d subtype %d (offset 0x%08" PRIx32 ")",
+           running->type, running->subtype, running->address);
+
+  esp_app_desc_t boot_app_info;
+  if (esp_ota_get_partition_description(configured, &boot_app_info)==ESP_OK) {
+    ESP_LOGI(TAG, "Configured firmware version: %s", boot_app_info.version);
+  }
+  esp_app_desc_t running_app_info;
+  if (esp_ota_get_partition_description(running, &running_app_info)==ESP_OK) {
+    ESP_LOGI(TAG, "Running firmware version: %s", running_app_info.version);
+  }
 }
 
-bool ota_check(){
-    struct stat   buffer{};
-    return (stat ("/data/ota.bin", &buffer) == 0);
+bool check() {
+  struct stat buffer{};
+  return (stat("/data/ota.bin", &buffer)==0);
 }
 
-ota_validation_err ota_validate() {
+OTA::ota_validation_err validate() {
   FILE *ota_file = fopen("/data/ota.bin", "r");
   esp_image_header_t new_header_info;
   esp_app_desc_t new_app_info;
@@ -45,9 +45,11 @@ ota_validation_err ota_validate() {
   fseek(ota_file, sizeof(esp_image_segment_header_t), SEEK_CUR);
   fread(&new_app_info, 1, sizeof(esp_app_desc_t), ota_file);
   fread(&new_custom_app_desc, 1, sizeof(new_custom_app_desc), ota_file);
-  fseek(ota_file, sizeof(esp_image_header_t)+sizeof(esp_image_segment_header_t)+sizeof(esp_app_desc_t)+1, SEEK_SET);
+  fseek(ota_file,
+        sizeof(esp_image_header_t) + sizeof(esp_image_segment_header_t) + sizeof(esp_app_desc_t) + 1,
+        SEEK_SET);
   auto *supported_boards = static_cast<uint8_t *>(malloc(new_custom_app_desc.num_supported_boards));
-  fread(supported_boards, 1,new_custom_app_desc.num_supported_boards, ota_file);
+  fread(supported_boards, 1, new_custom_app_desc.num_supported_boards, ota_file);
   fclose(ota_file);
 
   ESP_LOGI(TAG, "New Firmware");
@@ -66,19 +68,19 @@ ota_validation_err ota_validate() {
   esp_efuse_read_field_blob(ESP_EFUSE_USER_DATA_BOARD, &board, 8);
   bool supported_board = false;
   for (int x = 0; x < new_custom_app_desc.num_supported_boards; x++) {
-    if(board == supported_boards[x]){
+    if (board==supported_boards[x]) {
       supported_board = true;
       break;
     }
   }
-  if(!supported_board){
+  if (!supported_board) {
     return OTA_WRONG_BOARD;
   }
 
   const esp_partition_t *configured = esp_ota_get_boot_partition();
   const esp_partition_t *running = esp_ota_get_running_partition();
 
-  if (configured != running) {
+  if (configured!=running) {
     ESP_LOGW(TAG, "Configured OTA boot partition at offset 0x%08" PRIx32", but running from offset 0x%08" PRIx32,
              configured->address, running->address);
     ESP_LOGW(TAG, "(This can happen if either the OTA boot data or preferred boot image become corrupted somehow.)");
@@ -87,7 +89,7 @@ ota_validation_err ota_validate() {
            running->type, running->subtype, running->address);
   esp_app_desc_t running_app_info;
 
-  if (esp_ota_get_partition_description(running, &running_app_info) == ESP_OK) {
+  if (esp_ota_get_partition_description(running, &running_app_info)==ESP_OK) {
     ESP_LOGI(TAG, "Running firmware version: %s", running_app_info.version);
   }
 //  if (memcmp(running_app_info.version, new_app_info.version, sizeof(new_app_info.version)) == 0) {
@@ -97,8 +99,7 @@ ota_validation_err ota_validate() {
   return OTA_OK;
 }
 
-
-void ota_task(void *) {
+void task(void *) {
   esp_err_t err;
 
   size_t ota_size = 0;
@@ -108,7 +109,6 @@ void ota_task(void *) {
   }
   ESP_LOGI(TAG, "OTA Update is %zu", ota_size);
 
-
   esp_ota_handle_t update_handle = 0;
   const esp_partition_t *update_partition;
 
@@ -116,18 +116,28 @@ void ota_task(void *) {
   const esp_partition_t *running = esp_ota_get_running_partition();
 
   if (configured!=running) {
-    ESP_LOGW(TAG, "Configured OTA boot partition at offset 0x%08" PRIx32", but running from offset 0x%08" PRIx32, configured->address, running->address);
+    ESP_LOGW(TAG,
+             "Configured OTA boot partition at offset 0x%08" PRIx32", but running from offset 0x%08" PRIx32,
+             configured->address,
+             running->address);
     ESP_LOGW(TAG, "(This can happen if either the OTA boot data or preferred boot image become corrupted somehow.)");
   }
-  ESP_LOGI(TAG, "Running partition type %d subtype %d (offset 0x%08" PRIx32")", running->type, running->subtype, running->address);
+  ESP_LOGI(TAG,
+           "Running partition type %d subtype %d (offset 0x%08" PRIx32")",
+           running->type,
+           running->subtype,
+           running->address);
 
   update_partition = esp_ota_get_next_update_partition(nullptr);
   assert(update_partition!=nullptr);
-  ESP_LOGI(TAG, "Writing to partition subtype %d at offset 0x%" PRIx32, update_partition->subtype, update_partition->address);
+  ESP_LOGI(TAG,
+           "Writing to partition subtype %d at offset 0x%" PRIx32,
+           update_partition->subtype,
+           update_partition->address);
 
-  ota_validation_err validation_err = ota_validate();
-  if(validation_err != OTA_OK){
-    ESP_LOGE(TAG, "ota_validate failed with %i", validation_err);
+  OTA::ota_validation_err validation_err = validate();
+  if (validation_err!=OTA_OK) {
+    ESP_LOGE(TAG, "validate failed with %i", validation_err);
     vTaskDelete(nullptr);
   }
 
@@ -139,7 +149,7 @@ void ota_task(void *) {
   }
 
   FILE *ota_file = fopen("/data/ota.bin", "r");
-  static char ota_buffer[4096 + 1] = {0 };
+  static char ota_buffer[4096 + 1] = {0};
 
   size_t bytes_read;
   while ((bytes_read = fread(ota_buffer, 1, sizeof(ota_buffer), ota_file)) > 0) {
@@ -182,12 +192,9 @@ void ota_task(void *) {
 
 TaskHandle_t ota_task_handle;
 
-void ota_install(){
-  if(!ota_task_handle) {
-    xTaskCreate(ota_task, "ota_task", 20000, nullptr, 2, &ota_task_handle);
+void install() {
+  if (!ota_task_handle) {
+    xTaskCreate(task, "task", 20000, nullptr, 2, &ota_task_handle);
   }
 }
-
-void ota_init(){
-    xTaskCreate(ota_task, "ota_task", 20000, nullptr, 2, &ota_task_handle);
 }

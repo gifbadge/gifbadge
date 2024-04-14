@@ -5,6 +5,9 @@ typedef struct {
   uint8_t supported_boards[];
 } esp_custom_app_desc_t;
 
+#ifdef __cplusplus
+namespace OTA {
+
 typedef enum {
   OTA_OK = 0,
   OTA_WRONG_CHIP,
@@ -13,12 +16,11 @@ typedef enum {
 
 } ota_validation_err;
 
-#ifdef __cplusplus
-void ota_boot_info();
-bool ota_check();
-void ota_install();
-void ota_init();
+void bootInfo();
+bool check();
+void install();
 
-ota_validation_err ota_validate();
+ota_validation_err validate();
+}
 #endif
 

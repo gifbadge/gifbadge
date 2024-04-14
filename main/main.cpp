@@ -116,7 +116,7 @@ extern "C" void app_main(void) {
 
     xTaskCreate(dump_state, "dump_state", 10000, &configState, 2, nullptr);
 
-    ota_boot_info();
+  OTA::bootInfo();
 
     lvgl_init(board);
 
@@ -141,8 +141,8 @@ extern "C" void app_main(void) {
                     if (oldState == MAIN_USB) {
                       xTaskNotifyIndexed(lvglHandle, 0, LVGL_STOP, eSetValueWithOverwrite);
                       //Check for OTA File
-                        if (ota_check()) {
-                            ota_install();
+                        if (OTA::check()) {
+                          OTA::install();
                             currentState = MAIN_OTA;
                             xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_OTA, eSetValueWithOverwrite);
                             break;
@@ -231,7 +231,7 @@ extern "C" void app_main(void) {
             }
         }
         if (currentState == MAIN_OTA) {
-            ota_install();
+          OTA::install();
         }
 
 
