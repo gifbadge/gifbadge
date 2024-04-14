@@ -199,7 +199,7 @@ void lvgl_init(std::shared_ptr<Board> board) {
     lvgl_encoder = lv_indev_create();
     lv_indev_set_type(lvgl_encoder, LV_INDEV_TYPE_ENCODER);
     lv_indev_set_read_cb(lvgl_encoder, keyboard_read);
-    lv_timer_set_period(lv_indev_get_read_timer(lvgl_encoder), 200);
+    lv_timer_set_period(lv_indev_get_read_timer(lvgl_encoder), 150);
 //
 //
     if (_board->getTouch()) {
