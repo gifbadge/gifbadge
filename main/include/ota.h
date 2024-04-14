@@ -8,19 +8,22 @@ typedef struct {
 #ifdef __cplusplus
 namespace OTA {
 
-typedef enum {
-  OTA_OK = 0,
-  OTA_WRONG_CHIP,
-  OTA_WRONG_BOARD,
-  OTA_SAME_VERSION,
+/*!
+ * OTA Validation return value
+ */
+enum class validation_err{
+  OK = 0,
+  WRONG_CHIP,
+  WRONG_BOARD,
+  SAME_VERSION,
 
-} ota_validation_err;
+};
 
 void bootInfo();
 bool check();
 void install();
 
-ota_validation_err validate();
+validation_err validate();
 }
 #endif
 

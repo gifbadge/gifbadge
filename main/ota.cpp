@@ -31,12 +31,20 @@ void bootInfo() {
   }
 }
 
+/*!
+ * Check if the ota.bin exists on storage
+ * @return True if ota.bin exists.
+ */
 bool check() {
   struct stat buffer{};
   return (stat("/data/ota.bin", &buffer)==0);
 }
 
-OTA::ota_validation_err validate() {
+/*!
+ * Validate ota.bin to be a valid update for this device.
+ * @return
+ */
+OTA::validation_err validate() {
   FILE *ota_file = fopen("/data/ota.bin", "r");
   esp_image_header_t new_header_info;
   esp_app_desc_t new_app_info;
@@ -61,7 +69,7 @@ OTA::ota_validation_err validate() {
   }
 
   if (new_header_info.chip_id!=ESP_CHIP_ID_ESP32S3) {
-    return OTA_WRONG_CHIP;
+    return validation_err::WRONG_CHIP;
   }
 
   uint8_t board;
@@ -74,7 +82,7 @@ OTA::ota_validation_err validate() {
     }
   }
   if (!supported_board) {
-    return OTA_WRONG_BOARD;
+    return validation_err::WRONG_BOARD;
   }
 
   const esp_partition_t *configured = esp_ota_get_boot_partition();
@@ -96,9 +104,12 @@ OTA::ota_validation_err validate() {
 //    return OTA_SAME_VERSION;
 //  }
 
-  return OTA_OK;
+  return validation_err::OK;
 }
 
+/*!
+ *  Task used to run the OTA install.
+ */
 void task(void *) {
   esp_err_t err;
 
@@ -135,9 +146,9 @@ void task(void *) {
            update_partition->subtype,
            update_partition->address);
 
-  OTA::ota_validation_err validation_err = validate();
-  if (validation_err!=OTA_OK) {
-    ESP_LOGE(TAG, "validate failed with %i", validation_err);
+  OTA::validation_err validation_err = validate();
+  if (validation_err!=validation_err::OK) {
+    ESP_LOGE(TAG, "validate failed with %d", (int)validation_err);
     vTaskDelete(nullptr);
   }
 
@@ -192,6 +203,9 @@ void task(void *) {
 
 TaskHandle_t ota_task_handle;
 
+/*!
+ * Start the OTA task, which will begin the OTA install process
+ */
 void install() {
   if (!ota_task_handle) {
     xTaskCreate(task, "task", 20000, nullptr, 2, &ota_task_handle);
