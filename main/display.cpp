@@ -351,6 +351,7 @@ void display_task(void *params) {
                     last_mode = static_cast<DISPLAY_OPTIONS>(option);
                     break;
                 case DISPLAY_OTA:
+                    menu_state = false;
                     in.reset();
                     display_ota(args->display, pGIFBuf, 0);
                     last_mode = static_cast<DISPLAY_OPTIONS>(option);

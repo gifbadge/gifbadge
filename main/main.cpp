@@ -81,7 +81,9 @@ extern "C" void app_main(void) {
     storage_callback([](bool state) {
         ESP_LOGI(TAG, "state %u", state);
         if (state) {
-            currentState = MAIN_NORMAL;
+            if(currentState == MAIN_USB) {
+              currentState = MAIN_NORMAL;
+            }
         } else {
             currentState = MAIN_USB;
         }
@@ -135,12 +137,12 @@ extern "C" void app_main(void) {
                       //Check for OTA File
                         if (OTA::check()) {
                           OTA::install();
-                            currentState = MAIN_OTA;
-                            xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_OTA, eSetValueWithOverwrite);
+                          currentState = MAIN_OTA;
+                          vTaskDelay(100 / portTICK_PERIOD_MS);
+                          xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_OTA, eSetValueWithOverwrite);
                             break;
                         }
                     }
-                    xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_FILE, eSetValueWithOverwrite);
                     break;
                 case MAIN_USB:
                   xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_MENU, eSetValueWithOverwrite);
@@ -208,9 +210,6 @@ extern "C" void app_main(void) {
                     board->powerOff();
                     break;
             }
-        }
-        if (currentState == MAIN_OTA) {
-          OTA::install();
         }
 
 
