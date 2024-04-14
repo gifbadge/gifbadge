@@ -1,5 +1,3 @@
-#include <filesystem>
-#include <vector>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
@@ -15,7 +13,6 @@
 
 #include "ui/menu.h"
 #include "keys.h"
-#include "touch.h"
 #include "hal/hal_usb.h"
 #include "display.h"
 #include "config.h"
