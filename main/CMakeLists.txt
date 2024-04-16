@@ -34,6 +34,7 @@ idf_component_register(SRCS
         "ui/style.c"
         "ui/storage.cpp"
         "ui/usb_connected.cpp"
+        "ui/device_info.cpp"
         INCLUDE_DIRS "include")
 #target_compile_options(${COMPONENT_LIB} PRIVATE -DGC9A01=1 -DLV_USE_PERF_MONITOR=1)
 target_compile_options(${COMPONENT_LIB} PRIVATE -DST7706=1 -DLV_USE_PERF_MONITOR=1)

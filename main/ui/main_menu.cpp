@@ -10,7 +10,7 @@
 #include "ui/device_group.h"
 #include "ui/storage.h"
 #include "hw_init.h"
-
+#include "ui/device_info.h"
 
 static void exit_callback(lv_event_t *e){
     auto * obj = static_cast<lv_obj_t *>(lv_event_get_target(e));
@@ -39,6 +39,14 @@ static void storage_callback(lv_event_t *e){
     lv_screen_load(lv_obj_create(nullptr));
     lv_obj_t *window = storage_menu();
     lv_obj_add_event_cb(window, file_options_close, LV_EVENT_DELETE, obj);
+}
+
+static void device_info_callback(lv_event_t *e){
+  auto * obj = static_cast<lv_obj_t *>(lv_event_get_target(e));
+  LV_LOG_USER("%s", lv_label_get_text(obj));
+  lv_screen_load(lv_obj_create(nullptr));
+  lv_obj_t *window = device_info();
+  lv_obj_add_event_cb(window, file_options_close, LV_EVENT_DELETE, obj);
 }
 
 static void BacklightSliderExitCallback(lv_event_t *e) {
@@ -105,6 +113,11 @@ void main_menu()
         lv_obj_add_style(shutdown_label, &menu_font_style, LV_PART_MAIN);
         lv_label_set_text(shutdown_label, "Shutdown");
 
+        lv_obj_t *device_info_btn = lv_file_list_add(main_menu, nullptr);
+        lv_obj_t *device_info_label = lv_label_create(device_info_btn);
+        lv_obj_add_style(device_info_label, &menu_font_style, LV_PART_MAIN);
+        lv_label_set_text(device_info_label, "Device Info");
+
         lv_obj_t *exit_btn = lv_file_list_add(main_menu, nullptr);
         lv_obj_t *exit_label = lv_label_create(exit_btn);
         lv_obj_add_style(exit_label, &menu_font_style, LV_PART_MAIN);
@@ -112,6 +125,7 @@ void main_menu()
 
         lv_obj_add_event_cb(file_label, file_select_callback, LV_EVENT_CLICKED, nullptr);
         lv_obj_add_event_cb(storage_label, storage_callback, LV_EVENT_CLICKED, nullptr);
+        lv_obj_add_event_cb(device_info_label, device_info_callback, LV_EVENT_CLICKED, nullptr);
         lv_obj_add_event_cb(shutdown_label, ShutdownCallback, LV_EVENT_CLICKED, nullptr);
         lv_obj_add_event_cb(exit_label, exit_callback, LV_EVENT_CLICKED, nullptr);
 
