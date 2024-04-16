@@ -136,7 +136,7 @@ void keyboard_read(lv_indev_t *indev, lv_indev_data_t *data) {
         data->enc_diff += editing?+1:-1;
     } else if (keys[KEY_DOWN] == STATE_PRESSED) {
         data->enc_diff += editing?-1:+1;
-    } else if (keys[KEY_ENTER] == STATE_PRESSED) {
+    } else if (keys[KEY_ENTER] == STATE_PRESSED||keys[KEY_ENTER] == STATE_HELD) {
         data->state = LV_INDEV_STATE_PRESSED;
     } else {
         data->state = LV_INDEV_STATE_RELEASED;

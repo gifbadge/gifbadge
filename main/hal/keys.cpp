@@ -1,5 +1,7 @@
 #include "hal/keys.h"
 
+//Key debounce from ZMK firmware implementation https://github.com/zmkfirmware/zmk/blob/main/app/module/lib/zmk_debounce/debounce.c
+
 static uint32_t get_threshold(const struct debounce_state *state,
                               const struct debounce_config *config) {
   return state->pressed ? config->debounce_release_ms : config->debounce_press_ms;

@@ -44,9 +44,8 @@ std::map<EVENT_CODE, EVENT_STATE> keys_esp_io_expander::read() {
   for (auto &button : states) {
     if (button.second >= 0) {
       current_state[button.first] = key_debounce_is_pressed(&_debounce_states[button.first])?STATE_PRESSED:STATE_RELEASED;
-      //Todo: Figure out long presses and LVGL interactions. This solves it in a way that we can't use long presses :(
-      if(button.first != KEY_ENTER && _last_state[button.first] == current_state[button.first]){
-        current_state[button.first] = STATE_RELEASED;
+      if(current_state[button.first] == STATE_PRESSED && _last_state[button.first] == current_state[button.first]){
+        current_state[button.first] = STATE_HELD;
       }
       else{
         _last_state[button.first] = current_state[button.first];

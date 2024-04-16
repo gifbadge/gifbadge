@@ -38,7 +38,8 @@ enum EVENT_CODE {
 
 enum EVENT_STATE {
     STATE_RELEASED,
-    STATE_PRESSED
+    STATE_PRESSED,
+    STATE_HELD,
 };
 
 
