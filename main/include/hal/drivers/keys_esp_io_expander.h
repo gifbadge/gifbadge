@@ -12,10 +12,21 @@ class keys_esp_io_expander: public Keys{
 
   std::map<EVENT_CODE, EVENT_STATE> read() override;
 
-  int pollInterval() override {return 100;};
+  int pollInterval() override {return 50;};
+
+  void poll();
+
  private:
   esp_io_expander_handle_t _io_expander;
   std::map<EVENT_CODE, int> states;
   uint32_t lastLevels = 0;
+
+  std::map<EVENT_CODE, debounce_state> _debounce_states;
+  debounce_config _debounce_config = {10, 10};
+  esp_timer_handle_t keyTimer = nullptr;
+
+  std::map<EVENT_CODE, EVENT_STATE> _last_state;
+
+  long long last;
 
 };

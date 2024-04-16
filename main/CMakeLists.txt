@@ -7,6 +7,7 @@ idf_component_register(SRCS
         "ota.cpp"
         "hal/i2c.cpp"
         "hal/hal_usb.cpp"
+        "hal/keys.cpp"
         "hal/drivers/touch_ft5x06.cpp"
         "hal/drivers/battery_analog.cpp"
         "hal/drivers/battery_max17048.cpp"

@@ -132,11 +132,11 @@ void keyboard_read(lv_indev_t *indev, lv_indev_data_t *data) {
     Keys *device = static_cast<Keys *>(lv_indev_get_user_data(indev));
     assert(device!=nullptr);
     std::map<EVENT_CODE, EVENT_STATE> keys = device->read();
-    if (keys[KEY_UP]) {
+    if (keys[KEY_UP] == STATE_PRESSED) {
         data->enc_diff += editing?+1:-1;
-    } else if (keys[KEY_DOWN]) {
+    } else if (keys[KEY_DOWN] == STATE_PRESSED) {
         data->enc_diff += editing?-1:+1;
-    } else if (keys[KEY_ENTER]) {
+    } else if (keys[KEY_ENTER] == STATE_PRESSED) {
         data->state = LV_INDEV_STATE_PRESSED;
     } else {
         data->state = LV_INDEV_STATE_RELEASED;
@@ -201,7 +201,7 @@ void lvgl_init(std::shared_ptr<Board> board) {
     lv_indev_set_type(lvgl_encoder, LV_INDEV_TYPE_ENCODER);
     lv_indev_set_user_data(lvgl_encoder, _board->getKeys().get());
     lv_indev_set_read_cb(lvgl_encoder, keyboard_read);
-    lv_timer_set_period(lv_indev_get_read_timer(lvgl_encoder), 150);
+    lv_timer_set_period(lv_indev_get_read_timer(lvgl_encoder), 50);
 //
 //
     if (_board->getTouch()) {
