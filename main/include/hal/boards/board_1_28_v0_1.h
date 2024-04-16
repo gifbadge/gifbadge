@@ -37,6 +37,7 @@ public:
     bool storageReady() override;
     StorageInfo storageInfo() override;
     esp_err_t StorageFormat() override;
+    std::string name() override;
 
 
 

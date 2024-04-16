@@ -175,3 +175,7 @@ StorageInfo board_2_1_v0_2::storageInfo() {
   esp_vfs_fat_info("/data", &total_bytes, &free_bytes);
   return {card->cid.name, type, speed, total_bytes, free_bytes};
 }
+
+std::string board_2_1_v0_2::name(){
+  return "2.1\" 0.2-0.3" ;
+}

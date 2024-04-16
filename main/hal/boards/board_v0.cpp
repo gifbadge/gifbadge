@@ -76,3 +76,8 @@ BOARD_POWER board_v0::powerState() {
 StorageInfo board_v0::storageInfo() {
     return StorageInfo();
 }
+
+std::string board_v0::name(){
+  return "1.28\" 0.0" ;
+}
+

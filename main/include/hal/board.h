@@ -34,5 +34,6 @@ public:
     virtual bool storageReady() = 0;
     virtual StorageInfo storageInfo() = 0;
     virtual esp_err_t StorageFormat() = 0;
+    virtual std::string name() = 0;
 };
 
