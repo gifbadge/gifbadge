@@ -45,5 +45,5 @@ private:
     std::shared_ptr<backlight_ledc> _backlight;
     std::shared_ptr<touch_ft5x06> _touch;
     sdmmc_card_t *card = nullptr;
-  esp_io_expander_handle_t _io_expander;
+  esp_io_expander_handle_t _io_expander = nullptr;
 };

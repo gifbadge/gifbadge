@@ -169,7 +169,7 @@ bool board_2_1_v0_2::storageReady() {
 
 StorageInfo board_2_1_v0_2::storageInfo() {
   StorageType type = (card->ocr & SD_OCR_SDHC_CAP) ? StorageType_SDHC : StorageType_SD;
-  double speed = card->real_freq_khz/1000;
+  double speed = card->real_freq_khz/1000.00;
   uint64_t total_bytes;
   uint64_t free_bytes;
   esp_vfs_fat_info("/data", &total_bytes, &free_bytes);
