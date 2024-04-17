@@ -142,16 +142,15 @@ typedef void (*op)();
 typedef struct {
   op press;
   op hold;
-  EVENT_STATE last_state;
-} key_options;
-std::map<EVENT_CODE, key_options> keyOptions;
+} keyCommands;
+std::map<EVENT_CODE, keyCommands> keyOptions;
 EVENT_STATE inputState;
 EVENT_CODE lastKey;
 long long lastKeyPress;
 static void inputTimerHandler(void *args) {
+  auto board = (Board *) args;
   if (currentState == MAIN_NORMAL) {
     if (!lvgl_menu_state()) {
-      auto board = get_board();
       std::map<EVENT_CODE, EVENT_STATE> key_state = board->getKeys()->read();
 
       switch(inputState){
@@ -182,7 +181,7 @@ static void inputTimerHandler(void *args) {
           }
           break;
       }
-
+//TODO: Fix touch
 //      if (board->getTouch()) {
 //        auto e = board->getTouch()->read();
 //        if (e.first > 0 && e.second > 0) {
@@ -205,10 +204,10 @@ static void inputTimerHandler(void *args) {
   }
 }
 
-static void initInputTimer() {
+static void initInputTimer(Board *board) {
   const esp_timer_create_args_t inputTimerArgs = {
       .callback = &inputTimerHandler,
-      .arg = nullptr,
+      .arg = board,
       .dispatch_method = ESP_TIMER_TASK,
       .name = "input_handler",
       .skip_unhandled_events = true
@@ -216,9 +215,9 @@ static void initInputTimer() {
   esp_timer_handle_t inputTimer = nullptr;
   ESP_ERROR_CHECK(esp_timer_create(&inputTimerArgs, &inputTimer));
   ESP_ERROR_CHECK(esp_timer_start_periodic(inputTimer, 50 * 1000));
-  keyOptions.emplace(KEY_UP, key_options{imageNext, imageSpecial1, STATE_RELEASED});
-  keyOptions.emplace(KEY_DOWN, key_options{imagePrevious, imageSpecial2, STATE_RELEASED});
-  keyOptions.emplace(KEY_UP, key_options{openMenu, openMenu, STATE_RELEASED});
+  keyOptions.emplace(KEY_UP, keyCommands{imageNext, imageSpecial1});
+  keyOptions.emplace(KEY_DOWN, keyCommands{imagePrevious, imageSpecial2});
+  keyOptions.emplace(KEY_ENTER, keyCommands{openMenu, openMenu});
 }
 
 extern "C" void app_main(void) {
@@ -274,7 +273,7 @@ extern "C" void app_main(void) {
   MAIN_STATES oldState = MAIN_NONE;
   last_change = esp_timer_get_time();
   TaskHandle_t lvglHandle = xTaskGetHandle("LVGL");
-  initInputTimer();
+  initInputTimer(board.get());
   while (true) {
     if (oldState != currentState) {
       //Handle state transitions
