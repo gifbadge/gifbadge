@@ -323,6 +323,27 @@ void display_task(void *params) {
           in.reset();
           last_mode = static_cast<DISPLAY_OPTIONS>(option);
           display_no_storage(args->display, pGIFBuf);
+          break;
+        case DISPLAY_SPECIAL_1:
+          ESP_LOGI(TAG, "DISPLAY_SPECIAL_1");
+          config.reload();
+          menu_state = false;
+          if(exists(std::filesystem::path("/data/cards/up.png"))) {
+            in.reset();
+            in.reset(display_file(factory, "/data/cards/up.png", pGIFBuf, args->display));
+            last_mode = static_cast<DISPLAY_OPTIONS>(option);
+          }
+          break;
+        case DISPLAY_SPECIAL_2:
+          ESP_LOGI(TAG, "DISPLAY_SPECIAL_2");
+          config.reload();
+          menu_state = false;
+          if(exists(std::filesystem::path("/data/cards/down.png"))) {
+            in.reset();
+            in.reset(display_file(factory, "/data/cards/down.png", pGIFBuf, args->display));
+            last_mode = static_cast<DISPLAY_OPTIONS>(option);
+          };
+          break;
         default:
           break;
       }

@@ -25,6 +25,8 @@ enum DISPLAY_OPTIONS {
   DISPLAY_BATT,
   DISPLAY_OTA,
   DISPLAY_NO_STORAGE,
+  DISPLAY_SPECIAL_1,
+  DISPLAY_SPECIAL_2,
 };
 
 struct display_task_args {

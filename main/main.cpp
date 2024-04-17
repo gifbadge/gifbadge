@@ -105,44 +105,102 @@ static void initLowBatteryTask() {
   ESP_ERROR_CHECK(esp_timer_start_periodic(lowBatteryTimer, 1000 * 1000));
 }
 
+static void openMenu(){
+  TaskHandle_t display_task_handle = xTaskGetHandle("display_task");
+  xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_MENU, eSetValueWithOverwrite);
+  vTaskDelay(100 / portTICK_PERIOD_MS);
+  lvgl_menu_open();
+}
+
+static void imageCurrent(){
+  TaskHandle_t display_task_handle = xTaskGetHandle("display_task");
+  xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_FILE, eSetValueWithOverwrite);
+}
+
+static void imageNext(){
+  TaskHandle_t display_task_handle = xTaskGetHandle("display_task");
+  xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_NEXT, eSetValueWithOverwrite);
+}
+
+static void imagePrevious(){
+  TaskHandle_t display_task_handle = xTaskGetHandle("display_task");
+  xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_PREVIOUS, eSetValueWithOverwrite);
+}
+
+static void imageSpecial1(){
+  TaskHandle_t display_task_handle = xTaskGetHandle("display_task");
+  xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_SPECIAL_1, eSetValueWithOverwrite);
+}
+
+static void imageSpecial2(){
+  TaskHandle_t display_task_handle = xTaskGetHandle("display_task");
+  xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_SPECIAL_2, eSetValueWithOverwrite);
+}
+
 int64_t last_change;
+typedef void (*op)();
+typedef struct {
+  op press;
+  op hold;
+  EVENT_STATE last_state;
+} key_options;
+std::map<EVENT_CODE, key_options> keyOptions;
+EVENT_STATE inputState;
+EVENT_CODE lastKey;
+long long lastKeyPress;
 static void inputTimerHandler(void *args) {
   if (currentState == MAIN_NORMAL) {
     if (!lvgl_menu_state()) {
       auto board = get_board();
-      TaskHandle_t display_task_handle = xTaskGetHandle("display_task");
       std::map<EVENT_CODE, EVENT_STATE> key_state = board->getKeys()->read();
-      if (key_state[KEY_ENTER] == STATE_PRESSED) {
-        xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_MENU, eSetValueWithOverwrite);
-        vTaskDelay(100 / portTICK_PERIOD_MS);
-        lvgl_menu_open();
-      }
-      if (key_state[KEY_UP] == STATE_PRESSED) {
-        xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_NEXT, eSetValueWithOverwrite);
-      }
-      if (key_state[KEY_DOWN] == STATE_PRESSED) {
-        xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_PREVIOUS, eSetValueWithOverwrite);
-      }
-      if (board->getTouch()) {
-        auto e = board->getTouch()->read();
-        if (e.first > 0 && e.second > 0) {
-          if (((esp_timer_get_time() / 1000) - (last_change / 1000)) > 1000) {
-            last_change = esp_timer_get_time();
-            if (e.second < 50) {
-              xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_MENU, eSetValueWithOverwrite);
-              vTaskDelay(100 / portTICK_PERIOD_MS);
-              lvgl_menu_open();
-            }
-            if (e.first < 50) {
-              xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_PREVIOUS, eSetValueWithOverwrite);
-            }
-            if (e.first > 430) {
-              xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_NEXT, eSetValueWithOverwrite);
+
+      switch(inputState){
+        case STATE_RELEASED:
+          for (auto &button : key_state) {
+            if(button.second == STATE_PRESSED){
+              lastKey = button.first;
+              inputState = STATE_PRESSED;
+              lastKeyPress = esp_timer_get_time();
             }
           }
-          ESP_LOGI(TAG, "x: %d y: %d", e.first, e.second);
-        }
+          break;
+        case STATE_PRESSED:
+          if (key_state[lastKey] == STATE_RELEASED) {
+            keyOptions[lastKey].press();
+            inputState = STATE_RELEASED;
+          } else if(esp_timer_get_time()-lastKeyPress > 300*1000) {
+            if (key_state[lastKey] == STATE_HELD) {
+              keyOptions[lastKey].hold();
+              inputState = STATE_HELD;
+            }
+          }
+          break;
+        case STATE_HELD:
+          if(key_state[lastKey] == STATE_RELEASED){
+            imageCurrent();
+            inputState = STATE_RELEASED;
+          }
+          break;
       }
+
+//      if (board->getTouch()) {
+//        auto e = board->getTouch()->read();
+//        if (e.first > 0 && e.second > 0) {
+//          if (((esp_timer_get_time() / 1000) - (last_change / 1000)) > 1000) {
+//            last_change = esp_timer_get_time();
+//            if (e.second < 50) {
+//              openMenu();
+//            }
+//            if (e.first < 50) {
+//              imageNext();
+//            }
+//            if (e.first > 430) {
+//              imagePrevious();
+//            }
+//          }
+//          ESP_LOGI(TAG, "x: %d y: %d", e.first, e.second);
+//        }
+//      }
     }
   }
 }
@@ -158,6 +216,9 @@ static void initInputTimer() {
   esp_timer_handle_t inputTimer = nullptr;
   ESP_ERROR_CHECK(esp_timer_create(&inputTimerArgs, &inputTimer));
   ESP_ERROR_CHECK(esp_timer_start_periodic(inputTimer, 50 * 1000));
+  keyOptions.emplace(KEY_UP, key_options{imageNext, imageSpecial1, STATE_RELEASED});
+  keyOptions.emplace(KEY_DOWN, key_options{imagePrevious, imageSpecial2, STATE_RELEASED});
+  keyOptions.emplace(KEY_UP, key_options{openMenu, openMenu, STATE_RELEASED});
 }
 
 extern "C" void app_main(void) {
