@@ -4,7 +4,6 @@
 
 static const char *TAG = "keys_esp_io_expander";
 
-
 static void pollKeys(void *args) {
   auto *keys = (keys_esp_io_expander *) args;
   keys->poll();
@@ -34,8 +33,8 @@ keys_esp_io_expander::keys_esp_io_expander(esp_io_expander_handle_t io_expander,
   };
 
   ESP_ERROR_CHECK(esp_timer_create(&keyTimerArgs, &keyTimer));
-  ESP_ERROR_CHECK(esp_timer_start_periodic(keyTimer, 5*1000));
-  last = esp_timer_get_time()/1000;
+  ESP_ERROR_CHECK(esp_timer_start_periodic(keyTimer, 5 * 1000));
+  last = esp_timer_get_time() / 1000;
 }
 
 std::map<EVENT_CODE, EVENT_STATE> keys_esp_io_expander::read() {
@@ -43,11 +42,11 @@ std::map<EVENT_CODE, EVENT_STATE> keys_esp_io_expander::read() {
   std::map<EVENT_CODE, EVENT_STATE> current_state;
   for (auto &button : states) {
     if (button.second >= 0) {
-      current_state[button.first] = key_debounce_is_pressed(&_debounce_states[button.first])?STATE_PRESSED:STATE_RELEASED;
-      if(current_state[button.first] == STATE_PRESSED && _last_state[button.first] == current_state[button.first]){
+      current_state[button.first] =
+          key_debounce_is_pressed(&_debounce_states[button.first]) ? STATE_PRESSED : STATE_RELEASED;
+      if (current_state[button.first] == STATE_PRESSED && _last_state[button.first] == current_state[button.first]) {
         current_state[button.first] = STATE_HELD;
-      }
-      else{
+      } else {
         _last_state[button.first] = current_state[button.first];
       }
     }
@@ -57,19 +56,18 @@ std::map<EVENT_CODE, EVENT_STATE> keys_esp_io_expander::read() {
 
 void keys_esp_io_expander::poll() {
   uint32_t levels = lastLevels;
-  if (esp_io_expander_get_level(_io_expander, 0xffff, &levels)==ESP_OK) {
+  if (esp_io_expander_get_level(_io_expander, 0xffff, &levels) == ESP_OK) {
     //only update when we have a good read
     lastLevels = levels;
 
-    auto time = esp_timer_get_time()/1000;
-
+    auto time = esp_timer_get_time() / 1000;
 
     std::map<EVENT_CODE, EVENT_STATE> current_state;
     for (auto &button : states) {
       if (button.second >= 0) {
         bool state = levels & (1 << button.second);
-        key_debounce_update(&_debounce_states[button.first], state==0, time - last, &_debounce_config);
-        if(key_debounce_get_changed(&_debounce_states[button.first])){
+        key_debounce_update(&_debounce_states[button.first], state == 0, time - last, &_debounce_config);
+        if (key_debounce_get_changed(&_debounce_states[button.first])) {
           ESP_LOGI(TAG, "%i changed", button.first);
         }
       }

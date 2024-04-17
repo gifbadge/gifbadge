@@ -7,28 +7,27 @@
 #include "hal/battery.h"
 #include "hal/i2c.h"
 
-class battery_max17048 final: public Battery{
-public:
-    explicit battery_max17048(std::shared_ptr<I2C>, gpio_num_t vbus_pin);
-    ~battery_max17048() final;
+class battery_max17048 final : public Battery {
+ public:
+  explicit battery_max17048(std::shared_ptr<I2C>, gpio_num_t vbus_pin);
+  ~battery_max17048() final;
 
-    BatteryStatus read() final;
+  BatteryStatus read() final;
 
-    int pollInterval() override { return 1000;};
+  int pollInterval() override { return 1000; };
 
-    double getVoltage() override;
+  double getVoltage() override;
 
-    int getSoc() override;
+  int getSoc() override;
 
-    double getRate() override;
+  double getRate() override;
 
-    bool isCharging() override;
+  bool isCharging() override;
 
-
-private:
-    std::shared_ptr<I2C> _i2c;
-    double _voltage;
-    int _soc;
-    double _rate;
-    gpio_num_t _vbus_pin;
+ private:
+  std::shared_ptr<I2C> _i2c;
+  double _voltage;
+  int _soc;
+  double _rate;
+  gpio_num_t _vbus_pin;
 };

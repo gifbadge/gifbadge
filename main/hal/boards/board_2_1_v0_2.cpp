@@ -11,10 +11,10 @@
 
 static const char *TAG = "board_2_1_v0_2";
 
-static bool checkSdState(esp_io_expander_handle_t io_expander){
+static bool checkSdState(esp_io_expander_handle_t io_expander) {
   uint32_t levels;
   esp_io_expander_get_level(io_expander, 0xffff, &levels);
-  if (levels&(IO_EXPANDER_PIN_NUM_15)) {
+  if (levels & (IO_EXPANDER_PIN_NUM_15)) {
     return false;
   }
   return true;
@@ -23,8 +23,8 @@ static bool checkSdState(esp_io_expander_handle_t io_expander){
 static bool sdState;
 
 static void checkSDTimer(void *arg) {
-  auto io_expander = (esp_io_expander_handle_t)arg;
-  if(checkSdState(io_expander) != sdState){
+  auto io_expander = (esp_io_expander_handle_t) arg;
+  if (checkSdState(io_expander) != sdState) {
     esp_restart();
   }
 }
@@ -60,7 +60,9 @@ board_2_1_v0_2::board_2_1_v0_2() {
   };
   _display = std::make_shared<display_st7701s>(line_config, 2, 1, 45, 46, rgb);
 
-  esp_io_expander_set_dir(_io_expander, IO_EXPANDER_PIN_NUM_14|IO_EXPANDER_PIN_NUM_12|IO_EXPANDER_PIN_NUM_13, IO_EXPANDER_INPUT);
+  esp_io_expander_set_dir(_io_expander,
+                          IO_EXPANDER_PIN_NUM_14 | IO_EXPANDER_PIN_NUM_12 | IO_EXPANDER_PIN_NUM_13,
+                          IO_EXPANDER_INPUT);
   esp_io_expander_print_state(_io_expander);
   _keys = std::make_shared<keys_esp_io_expander>(_io_expander, 14, 12, 13);
 
@@ -82,7 +84,7 @@ board_2_1_v0_2::board_2_1_v0_2() {
 
 
 //    gpio_pullup_en(GPIO_NUM_40);
-  if(checkSdState(_io_expander)) {
+  if (checkSdState(_io_expander)) {
     if (init_sdmmc_slot(GPIO_NUM_40,
                         GPIO_NUM_41,
                         GPIO_NUM_39,
@@ -91,7 +93,7 @@ board_2_1_v0_2::board_2_1_v0_2() {
                         GPIO_NUM_42,
                         GPIO_NUM_NC,
                         &card,
-                        4)==ESP_OK) {
+                        4) == ESP_OK) {
       usb_init_mmc(0, &card);
     }
   }
@@ -143,7 +145,7 @@ std::shared_ptr<Backlight> board_2_1_v0_2::getBacklight() {
 
 void board_2_1_v0_2::powerOff() {
   ESP_LOGI(TAG, "Poweroff");
-  vTaskDelay(100/portTICK_PERIOD_MS);
+  vTaskDelay(100 / portTICK_PERIOD_MS);
   esp_io_expander_set_level(_io_expander, IO_EXPANDER_PIN_NUM_3, 1);
 
 }
@@ -169,13 +171,13 @@ bool board_2_1_v0_2::storageReady() {
 
 StorageInfo board_2_1_v0_2::storageInfo() {
   StorageType type = (card->ocr & SD_OCR_SDHC_CAP) ? StorageType_SDHC : StorageType_SD;
-  double speed = card->real_freq_khz/1000.00;
+  double speed = card->real_freq_khz / 1000.00;
   uint64_t total_bytes;
   uint64_t free_bytes;
   esp_vfs_fat_info("/data", &total_bytes, &free_bytes);
   return {card->cid.name, type, speed, total_bytes, free_bytes};
 }
 
-std::string board_2_1_v0_2::name(){
-  return "2.1\" 0.2-0.3" ;
+std::string board_2_1_v0_2::name() {
+  return "2.1\" 0.2-0.3";
 }

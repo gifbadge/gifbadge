@@ -14,15 +14,15 @@ extern "C"
 
 /*Data of canvas*/
 typedef struct {
-    lv_obj_t obj;
-    lv_obj_t *cont;
-    lv_obj_t *head_area;
-    lv_obj_t *browser_area;
-    lv_obj_t *file_table;
-    lv_obj_t *path_label;
-    const char *sel_fn;
-    void *user_data;
-    lv_style_t *icon_style;
+  lv_obj_t obj;
+  lv_obj_t *cont;
+  lv_obj_t *head_area;
+  lv_obj_t *browser_area;
+  lv_obj_t *file_table;
+  lv_obj_t *path_label;
+  const char *sel_fn;
+  void *user_data;
+  lv_style_t *icon_style;
 } lv_file_list_t;
 
 extern const lv_obj_class_t lv_file_list_class;

@@ -5,22 +5,22 @@
 
 #include "hal/battery.h"
 
-class battery_analog final: public Battery{
-public:
-    explicit battery_analog(adc_channel_t);
-    ~battery_analog() final;
+class battery_analog final : public Battery {
+ public:
+  explicit battery_analog(adc_channel_t);
+  ~battery_analog() final;
 
-    BatteryStatus read() final;
+  BatteryStatus read() final;
 
-    int pollInterval() override { return 250;};
+  int pollInterval() override { return 250; };
 
-    double getVoltage() override {return 0;};
+  double getVoltage() override { return 0; };
 
-    int getSoc() override {return 0;};
+  int getSoc() override { return 0; };
 
-    double getRate() override {return 0;};
+  double getRate() override { return 0; };
 
-    bool isCharging() override {return false;};
+  bool isCharging() override { return false; };
 
 //    if(battery_config->getSoc() > 4){
 //        lv_style_set_text_color(&battery_style, lv_color_black());
@@ -46,9 +46,9 @@ public:
 //
 //    }
 
-private:
-    adc_oneshot_unit_handle_t adc_handle;
-    adc_cali_handle_t calibration_scheme;
-    double present_value = 0;
-    double alpha = 0.05;
+ private:
+  adc_oneshot_unit_handle_t adc_handle;
+  adc_cali_handle_t calibration_scheme;
+  double present_value = 0;
+  double alpha = 0.05;
 };

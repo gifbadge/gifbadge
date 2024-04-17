@@ -5,22 +5,22 @@
 #include <hal/gpio_types.h>
 
 struct button_state {
-    gpio_num_t pin;
-    std::string name;
-    bool state;
-    int64_t time;
+  gpio_num_t pin;
+  std::string name;
+  bool state;
+  int64_t time;
 };
 
 //#define 	BIT(n)   (1UL << (n))
-#define 	BIT_MASK(n)   (BIT(n) - 1UL)
+#define    BIT_MASK(n)   (BIT(n) - 1UL)
 
 #define DEBOUNCE_COUNTER_BITS 14
 #define DEBOUNCE_COUNTER_MAX BIT_MASK(DEBOUNCE_COUNTER_BITS)
 
 struct debounce_state {
-  bool pressed : 1;
-  bool changed : 1;
-  uint16_t counter : DEBOUNCE_COUNTER_BITS;
+  bool pressed: 1;
+  bool changed: 1;
+  uint16_t counter: DEBOUNCE_COUNTER_BITS;
 };
 
 struct debounce_config {
@@ -31,24 +31,23 @@ struct debounce_config {
 };
 
 enum EVENT_CODE {
-    KEY_UP,
-    KEY_DOWN,
-    KEY_ENTER,
+  KEY_UP,
+  KEY_DOWN,
+  KEY_ENTER,
 };
 
 enum EVENT_STATE {
-    STATE_RELEASED,
-    STATE_PRESSED,
-    STATE_HELD,
+  STATE_RELEASED,
+  STATE_PRESSED,
+  STATE_HELD,
 };
 
-
-class Keys{
-public:
-    Keys() = default;
-    virtual ~Keys() = default;
-    virtual std::map<EVENT_CODE, EVENT_STATE> read() = 0;
-    virtual int pollInterval() = 0;
+class Keys {
+ public:
+  Keys() = default;
+  virtual ~Keys() = default;
+  virtual std::map<EVENT_CODE, EVENT_STATE> read() = 0;
+  virtual int pollInterval() = 0;
   /**
 * Debounces one switch.
 *
@@ -57,8 +56,8 @@ public:
 * @param elapsed_ms Time elapsed since the previous update in milliseconds.
 * @param config Debounce settings.
 */
-    void key_debounce_update(struct debounce_state *state, const bool active, const int elapsed_ms,
-                  const struct debounce_config *config);
+  void key_debounce_update(struct debounce_state *state, const bool active, const int elapsed_ms,
+                           const struct debounce_config *config);
 
 /**
  * @returns whether the switch is either latched as pressed or it is potentially

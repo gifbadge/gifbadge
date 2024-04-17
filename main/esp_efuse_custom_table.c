@@ -16,14 +16,10 @@
 // To show efuse_table run the command 'show_efuse_table'.
 
 static const esp_efuse_desc_t USER_DATA_BOARD[] = {
-    {EFUSE_BLK3, 0, 8}, 	 // Board Type,
+    {EFUSE_BLK3, 0, 8},     // Board Type,
 };
 
-
-
-
-
-const esp_efuse_desc_t* ESP_EFUSE_USER_DATA_BOARD[] = {
-    &USER_DATA_BOARD[0],    		// Board Type
+const esp_efuse_desc_t *ESP_EFUSE_USER_DATA_BOARD[] = {
+    &USER_DATA_BOARD[0],            // Board Type
     NULL
 };

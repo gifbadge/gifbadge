@@ -9,35 +9,31 @@
 #include "hal/drivers/keys_gpio.h"
 #include "hal/drivers/display_gc9a01.h"
 
+class board_v0 : public Board {
+ public:
+  board_v0();
+  ~board_v0() override = default;
 
-class board_v0: public Board{
-public:
-    board_v0();
-    ~board_v0() override = default;
+  std::shared_ptr<Battery> getBattery() override;
+  std::shared_ptr<Touch> getTouch() override;
+  std::shared_ptr<I2C> getI2c() override;
+  std::shared_ptr<Keys> getKeys() override;
+  std::shared_ptr<Display> getDisplay() override;
+  std::shared_ptr<Backlight> getBacklight() override;
 
-    std::shared_ptr<Battery> getBattery() override;
-    std::shared_ptr<Touch> getTouch() override;
-    std::shared_ptr<I2C> getI2c() override;
-    std::shared_ptr<Keys> getKeys() override;
-    std::shared_ptr<Display> getDisplay() override;
-    std::shared_ptr<Backlight> getBacklight() override;
+  void powerOff() override;
+  void pmLock() override {};
+  void pmRelease() override {};
+  BOARD_POWER powerState() override;
+  bool storageReady() override { return true; };
+  StorageInfo storageInfo() override;
+  esp_err_t StorageFormat() override { return ESP_OK; };
+  std::string name() override;
 
-    void powerOff() override;
-    void pmLock() override {};
-    void pmRelease() override {};
-    BOARD_POWER powerState() override;
-    bool storageReady() override {return true;};
-    StorageInfo storageInfo() override;
-    esp_err_t StorageFormat() override {return ESP_OK;};
-    std::string name() override;
-
-
-
-
-private:
-    std::shared_ptr<battery_analog> _battery;
-    std::shared_ptr<I2C> _i2c;
-    std::shared_ptr<keys_gpio> _keys;
-    std::shared_ptr<display_gc9a01> _display;
-    std::shared_ptr<Backlight> _backlight;
+ private:
+  std::shared_ptr<battery_analog> _battery;
+  std::shared_ptr<I2C> _i2c;
+  std::shared_ptr<keys_gpio> _keys;
+  std::shared_ptr<display_gc9a01> _display;
+  std::shared_ptr<Backlight> _backlight;
 };

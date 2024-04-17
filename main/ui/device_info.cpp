@@ -11,7 +11,7 @@ static void exit_callback(lv_event_t *e) {
   lv_obj_del(static_cast<lv_obj_t *>(lv_event_get_user_data(e)));
 }
 
-lv_obj_t *device_info(){
+lv_obj_t *device_info() {
   if (lvgl_lock(-1)) {
     new_group();
     lv_obj_t *cont_flex = lv_file_list_create(lv_scr_act());
@@ -27,7 +27,7 @@ lv_obj_t *device_info(){
     lv_obj_add_style(serial_number_label, &menu_font_style, LV_PART_MAIN);
     lv_label_set_text(serial_number_label, ("Serial: " + std::string("")).c_str());
 
-    const esp_app_desc_t* description = esp_app_get_description();
+    const esp_app_desc_t *description = esp_app_get_description();
     lv_obj_t *version = lv_file_list_add(cont_flex, nullptr);
     lv_obj_t *version_label = lv_label_create(version);
     lv_obj_add_style(version_label, &menu_font_style, LV_PART_MAIN);
@@ -39,7 +39,6 @@ lv_obj_t *device_info(){
     lv_label_set_text(exit_label, "Exit");
 
     lv_obj_add_event_cb(exit_label, exit_callback, LV_EVENT_CLICKED, cont_flex);
-
 
     lv_file_list_scroll_to_view(cont_flex, 0);
 

@@ -17,39 +17,36 @@
 #define GPIO_VBUS_DETECT GPIO_NUM_6
 #define GPIO_SHUTDOWN GPIO_NUM_7
 
-class board_1_28_v0_1: public Board{
-public:
-    board_1_28_v0_1();
-    ~board_1_28_v0_1() override = default;
+class board_1_28_v0_1 : public Board {
+ public:
+  board_1_28_v0_1();
+  ~board_1_28_v0_1() override = default;
 
-    std::shared_ptr<Battery> getBattery() override;
-    std::shared_ptr<Touch> getTouch() override;
-    std::shared_ptr<I2C> getI2c() override;
-    std::shared_ptr<Keys> getKeys() override;
-    std::shared_ptr<Display> getDisplay() override;
-    std::shared_ptr<Backlight> getBacklight() override;
+  std::shared_ptr<Battery> getBattery() override;
+  std::shared_ptr<Touch> getTouch() override;
+  std::shared_ptr<I2C> getI2c() override;
+  std::shared_ptr<Keys> getKeys() override;
+  std::shared_ptr<Display> getDisplay() override;
+  std::shared_ptr<Backlight> getBacklight() override;
 
-    void powerOff() override;
-    void pmLock() override;
-    void pmRelease() override;
+  void powerOff() override;
+  void pmLock() override;
+  void pmRelease() override;
 
-    BOARD_POWER powerState() override;
-    bool storageReady() override;
-    StorageInfo storageInfo() override;
-    esp_err_t StorageFormat() override;
-    std::string name() override;
+  BOARD_POWER powerState() override;
+  bool storageReady() override;
+  StorageInfo storageInfo() override;
+  esp_err_t StorageFormat() override;
+  std::string name() override;
 
-
-
-
-private:
-    std::shared_ptr<battery_max17048> _battery;
-    std::shared_ptr<I2C> _i2c;
-    std::shared_ptr<keys_gpio> _keys;
-    std::shared_ptr<display_gc9a01> _display;
-    std::shared_ptr<backlight_ledc> _backlight;
-    std::shared_ptr<touch_ft5x06> _touch;
-    sdmmc_card_t *card = nullptr;
-    SemaphoreHandle_t pmLockCount;
-    esp_pm_lock_handle_t pmLockHandle;
+ private:
+  std::shared_ptr<battery_max17048> _battery;
+  std::shared_ptr<I2C> _i2c;
+  std::shared_ptr<keys_gpio> _keys;
+  std::shared_ptr<display_gc9a01> _display;
+  std::shared_ptr<backlight_ledc> _backlight;
+  std::shared_ptr<touch_ft5x06> _touch;
+  sdmmc_card_t *card = nullptr;
+  SemaphoreHandle_t pmLockCount;
+  esp_pm_lock_handle_t pmLockHandle;
 };

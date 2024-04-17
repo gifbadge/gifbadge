@@ -34,7 +34,7 @@ void Keys::key_debounce_update(struct debounce_state *state,
   // threshold, the state flips and we reset the counter.
   state->changed = false;
 
-  if (active==state->pressed) {
+  if (active == state->pressed) {
     decrement_counter(state, elapsed_ms);
     return;
   }

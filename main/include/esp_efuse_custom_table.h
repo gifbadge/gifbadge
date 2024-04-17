@@ -17,7 +17,7 @@ extern "C" {
 // To show efuse_table run the command 'show_efuse_table'.
 
 
-extern const esp_efuse_desc_t* ESP_EFUSE_USER_DATA_BOARD[];
+extern const esp_efuse_desc_t *ESP_EFUSE_USER_DATA_BOARD[];
 
 #ifdef __cplusplus
 }

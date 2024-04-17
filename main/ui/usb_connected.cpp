@@ -4,8 +4,7 @@
 #include "ui/menu.h"
 #include "ui/style.h"
 
-void lvgl_usb_connected()
-{
+void lvgl_usb_connected() {
   if (lvgl_lock(-1)) {
     lv_obj_t *scr = lv_scr_act();
     lv_obj_t *cont = lv_obj_create(scr);

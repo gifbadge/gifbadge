@@ -106,7 +106,7 @@ static void initLowBatteryTask() {
 }
 
 int64_t last_change;
-static void inputTimerHandler(void *args){
+static void inputTimerHandler(void *args) {
   if (currentState == MAIN_NORMAL) {
     if (!lvgl_menu_state()) {
       auto board = get_board();
@@ -159,7 +159,6 @@ static void initInputTimer() {
   ESP_ERROR_CHECK(esp_timer_create(&inputTimerArgs, &inputTimer));
   ESP_ERROR_CHECK(esp_timer_start_periodic(inputTimer, 50 * 1000));
 }
-
 
 extern "C" void app_main(void) {
   esp_err_t err;

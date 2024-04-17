@@ -16,7 +16,7 @@ static const char *TAG = "USB";
 static mount_callback callback = nullptr;
 
 void storage_callback(mount_callback _callback) {
-  if (_callback!=nullptr) {
+  if (_callback != nullptr) {
     callback = _callback;
   }
 
@@ -25,7 +25,7 @@ void storage_callback(mount_callback _callback) {
 // callback that is delivered when storage is mounted/unmounted by application.
 static void storage_mount_changed_cb(tinyusb_msc_event_t *event) {
   ESP_LOGI(TAG, "Storage mounted to application: %s", event->mount_changed_data.is_mounted ? "Yes" : "No");
-  if (callback!=nullptr) {
+  if (callback != nullptr) {
     callback(event->mount_changed_data.is_mounted);
   }
 }
@@ -35,7 +35,7 @@ esp_err_t init_int_flash(wl_handle_t *wl_handle) {
 
   const esp_partition_t
       *data_partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_FAT, "data");
-  if (data_partition==nullptr) {
+  if (data_partition == nullptr) {
     ESP_LOGE(TAG, "Failed to find FATFS partition. Check the partition table.");
     return ESP_ERR_NOT_FOUND;
   }
@@ -69,14 +69,14 @@ esp_err_t init_ext_flash(int mosi, int miso, int sclk, int cs, wl_handle_t *wl_h
 
   // Probe the Flash chip and initialize it
   err = esp_flash_init(ext_flash);
-  if (err!=ESP_OK) {
+  if (err != ESP_OK) {
     ESP_LOGE(TAG, "Failed to initialize external Flash: %s (0x%x)", esp_err_to_name(err), err);
   }
 
   // Print out the ID and size
   uint32_t id;
   ESP_ERROR_CHECK(esp_flash_read_id(ext_flash, &id));
-  ESP_LOGI(TAG, "Initialized external Flash, size=%" PRIu32 " KB, ID=0x%" PRIx32, ext_flash->size/1024, id);
+  ESP_LOGI(TAG, "Initialized external Flash, size=%" PRIu32 " KB, ID=0x%" PRIx32, ext_flash->size / 1024, id);
   uint32_t size;
   esp_flash_get_physical_size(ext_flash, &size);
   ESP_LOGI(TAG, "Flash Size %" PRIu32 " KB", size);
@@ -84,7 +84,7 @@ esp_err_t init_ext_flash(int mosi, int miso, int sclk, int cs, wl_handle_t *wl_h
   ESP_LOGI(TAG,
            "Adding external Flash as a partition, label=\"%s\", size=%" PRIu32 " KB",
            "ext_data",
-           ext_flash->size/1024);
+           ext_flash->size / 1024);
   const esp_partition_t *fat_partition;
   ESP_ERROR_CHECK(esp_partition_register_external(ext_flash,
                                                   0,
@@ -194,7 +194,7 @@ esp_err_t mount_sdmmc_slot(gpio_num_t clk,
   slot_config.d3 = d3;
   slot_config.cd = cd;
 
-  esp_vfs_fat_sdmmc_mount_config_t mount_config = {.max_files = 5, .allocation_unit_size = 16*1024};
+  esp_vfs_fat_sdmmc_mount_config_t mount_config = {.max_files = 5, .allocation_unit_size = 16 * 1024};
   ret = esp_vfs_fat_sdmmc_mount("/data", &host, &slot_config, &mount_config, card);
   sdmmc_card_print_info(stdout, *card);
   return ret;
@@ -216,7 +216,7 @@ void usb_init_mmc(int usb_sense, sdmmc_card_t **card) {
   const tinyusb_config_t tusb_cfg =
       {.device_descriptor = nullptr, .string_descriptor = nullptr, .string_descriptor_count = 0, .external_phy = false, .configuration_descriptor = nullptr, .self_powered =
       usb_sense
-          !=GPIO_NUM_NC, //If usb_vbus is valid, set to self powered. Otherwise assume this is handled somewhere else
+          != GPIO_NUM_NC, //If usb_vbus is valid, set to self powered. Otherwise assume this is handled somewhere else
           .vbus_monitor_io = usb_sense,};
 
   ESP_ERROR_CHECK(tinyusb_driver_install(&tusb_cfg));

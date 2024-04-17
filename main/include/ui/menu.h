@@ -18,19 +18,19 @@
 #define LVGL_TASK_PRIORITY     2
 
 struct flushCbData {
-    std::shared_ptr<Display> display;
-    bool callbackEnabled;
+  std::shared_ptr<Display> display;
+  bool callbackEnabled;
 };
 
-extern "C"{
-    extern lv_indev_t *lvgl_encoder;
-    extern lv_indev_t *lvgl_touch;
+extern "C" {
+extern lv_indev_t *lvgl_encoder;
+extern lv_indev_t *lvgl_touch;
 }
 
-enum LVGL_TASK_SIGNALS{
-    LVGL_NONE,
-    LVGL_STOP,
-    LVGL_EXIT
+enum LVGL_TASK_SIGNALS {
+  LVGL_NONE,
+  LVGL_STOP,
+  LVGL_EXIT
 };
 
 bool lvgl_lock(int timeout_ms);

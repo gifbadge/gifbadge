@@ -11,30 +11,27 @@
 #include "esp_lcd_panel_vendor.h"
 #include "esp_lcd_panel_ops.h"
 
-
 #include "config.h"
 #include "hal/backlight.h"
 #include "hal/display.h"
 
-
 enum DISPLAY_OPTIONS {
-    DISPLAY_NONE,
-    DISPLAY_FILE,
+  DISPLAY_NONE,
+  DISPLAY_FILE,
 //    DISPLAY_USB,
-    DISPLAY_MENU,
-    DISPLAY_NEXT,
-    DISPLAY_PREVIOUS,
-    DISPLAY_BATT,
-    DISPLAY_OTA,
-    DISPLAY_NO_STORAGE,
+  DISPLAY_MENU,
+  DISPLAY_NEXT,
+  DISPLAY_PREVIOUS,
+  DISPLAY_BATT,
+  DISPLAY_OTA,
+  DISPLAY_NO_STORAGE,
 };
 
 struct display_task_args {
-    std::shared_ptr<Display> display;
-    std::shared_ptr<ImageConfig> image_config;
-    std::shared_ptr<Backlight> backlight;
+  std::shared_ptr<Display> display;
+  std::shared_ptr<ImageConfig> image_config;
+  std::shared_ptr<Backlight> backlight;
 };
-
 
 void display_task(void *params);
 

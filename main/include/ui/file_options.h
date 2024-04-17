@@ -3,7 +3,7 @@
 extern "C"
 {
 #endif
-lv_obj_t * FileOptions();
+lv_obj_t *FileOptions();
 #ifdef __cplusplus
 }
 #endif

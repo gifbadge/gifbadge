@@ -24,6 +24,6 @@ dependencies:
   # esp_lcd_touch_stmpe610: "^1.0"
   # espressif/esp_lcd_st7796: "^1.0"
   # atanisoft/esp_lcd_ili9488: "~1.0.0"
-#  espressif/esp_jpeg: "^1.0.5~1"
+  #  espressif/esp_jpeg: "^1.0.5~1"
   espressif/esp_tinyusb: "*"
   espressif/tinyusb: '^0.15.0~5'

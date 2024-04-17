@@ -11,7 +11,7 @@ namespace OTA {
 /*!
  * OTA Validation return value
  */
-enum class validation_err{
+enum class validation_err {
   OK = 0,
   WRONG_CHIP,
   WRONG_BOARD,

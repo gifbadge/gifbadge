@@ -16,3 +16,9 @@
 [submodule "components/lvgl"]
 	path = components/lvgl
 	url = https://github.com/lvgl/lvgl.git
+[submodule "components/lvgl__lvgl"]
+	path = components/lvgl__lvgl
+	url = https://github.com/lvgl/lvgl.git
+[submodule "lv_font_conv"]
+	path = lv_font_conv
+	url = https://github.com/lvgl/lv_font_conv.git

@@ -11,7 +11,6 @@ extern "C"
 
 extern lv_indev_t *lvgl_encoder;
 
-
 lv_indev_t *get_encoder() {
 //    lv_indev_t *dev;
 //    while (true) {
@@ -25,21 +24,21 @@ lv_indev_t *get_encoder() {
 //            return NULL;
 //        }
 //    }
-    return lvgl_encoder;
+  return lvgl_encoder;
 }
 
 lv_group_t *new_group() {
-    lv_group_t *g = lv_group_create();
-    lv_group_set_default(g);
-    lv_indev_set_group(get_encoder(), g);
-    return g;
+  lv_group_t *g = lv_group_create();
+  lv_group_set_default(g);
+  lv_indev_set_group(get_encoder(), g);
+  return g;
 }
 
 lv_group_t *restore_group(lv_obj_t *parent) {
-    lv_group_t *g = lv_obj_get_group(parent);
-    lv_indev_set_group(get_encoder(), g);
-    lv_group_set_default(g);
-    return g;
+  lv_group_t *g = lv_obj_get_group(parent);
+  lv_indev_set_group(get_encoder(), g);
+  lv_group_set_default(g);
+  return g;
 }
 
 #ifdef __cplusplus

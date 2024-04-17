@@ -17,7 +17,6 @@ lv_group_t *new_group();
 
 lv_group_t *restore_group(lv_obj_t *);
 
-
 #ifdef __cplusplus
 }
 #endif

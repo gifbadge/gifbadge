@@ -12,38 +12,34 @@
 #include "hal/drivers/keys_esp_io_expander.h"
 #include <driver/sdmmc_host.h>
 
+class board_2_1_v0_2 : public Board {
+ public:
+  board_2_1_v0_2();
+  ~board_2_1_v0_2() override = default;
 
-class board_2_1_v0_2: public Board{
-public:
-    board_2_1_v0_2();
-    ~board_2_1_v0_2() override = default;
+  std::shared_ptr<Battery> getBattery() override;
+  std::shared_ptr<Touch> getTouch() override;
+  std::shared_ptr<I2C> getI2c() override;
+  std::shared_ptr<Keys> getKeys() override;
+  std::shared_ptr<Display> getDisplay() override;
+  std::shared_ptr<Backlight> getBacklight() override;
 
-    std::shared_ptr<Battery> getBattery() override;
-    std::shared_ptr<Touch> getTouch() override;
-    std::shared_ptr<I2C> getI2c() override;
-    std::shared_ptr<Keys> getKeys() override;
-    std::shared_ptr<Display> getDisplay() override;
-    std::shared_ptr<Backlight> getBacklight() override;
+  void powerOff() override;
+  void pmLock() override {};
+  void pmRelease() override {};
+  BOARD_POWER powerState() override;
+  bool storageReady() override;
+  StorageInfo storageInfo() override;
+  esp_err_t StorageFormat() override { return ESP_OK; };
+  std::string name() override;
 
-    void powerOff() override;
-    void pmLock() override {};
-    void pmRelease() override {};
-    BOARD_POWER powerState() override;
-    bool storageReady() override;
-    StorageInfo storageInfo() override;
-    esp_err_t StorageFormat() override {return ESP_OK;};
-    std::string name() override;
-
-
-
-
-private:
-    std::shared_ptr<battery_max17048> _battery;
-    std::shared_ptr<I2C> _i2c;
-    std::shared_ptr<keys_esp_io_expander> _keys;
-    std::shared_ptr<display_st7701s> _display;
-    std::shared_ptr<backlight_ledc> _backlight;
-    std::shared_ptr<touch_ft5x06> _touch;
-    sdmmc_card_t *card = nullptr;
+ private:
+  std::shared_ptr<battery_max17048> _battery;
+  std::shared_ptr<I2C> _i2c;
+  std::shared_ptr<keys_esp_io_expander> _keys;
+  std::shared_ptr<display_st7701s> _display;
+  std::shared_ptr<backlight_ledc> _backlight;
+  std::shared_ptr<touch_ft5x06> _touch;
+  sdmmc_card_t *card = nullptr;
   esp_io_expander_handle_t _io_expander = nullptr;
 };
