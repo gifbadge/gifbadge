@@ -267,7 +267,9 @@ void display_task(void *params) {
           config.reload();
           menu_state = false;
           try {
-            current_file = get_file(config.getPath());
+            if(current_file.empty()) {
+              current_file = get_file(config.getPath());
+            }
             in.reset(display_file(factory, current_file.c_str(), pGIFBuf, args->display));
           } catch (std::out_of_range &err) {
             display_no_image(args->display, pGIFBuf);
