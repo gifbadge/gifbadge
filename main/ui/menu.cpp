@@ -211,25 +211,47 @@ void lvgl_init(std::shared_ptr<Board> board) {
 
 void battery_update(lv_obj_t *widget) {
   auto battery = static_cast<Battery *>(lv_obj_get_user_data(widget));
-  if (battery->getSoc() > 90) {
-    lv_obj_clear_state(widget, LV_STATE_CHECKED);
-    lv_label_set_text(widget, LV_SYMBOL_BATTERY_FULL);
-  } else if (battery->getSoc() > 70) {
-    lv_obj_clear_state(widget, LV_STATE_CHECKED);
-    lv_label_set_text(widget, LV_SYMBOL_BATTERY_3);
-  } else if (battery->getSoc() > 45) {
-    lv_obj_clear_state(widget, LV_STATE_CHECKED);
-    lv_label_set_text(widget, LV_SYMBOL_BATTERY_2);
-
-  } else if (battery->getSoc() > 10) {
-    lv_obj_clear_state(widget, LV_STATE_CHECKED);
-    lv_label_set_text(widget, LV_SYMBOL_BATTERY_1);
-  } else {
+  if (battery->status() == Battery::State::ERROR) {
     lv_obj_add_state(widget, LV_STATE_CHECKED);
-    lv_label_set_text(widget, LV_SYMBOL_BATTERY_EMPTY);
+    lv_label_set_text(widget, ICON_BATTERY_ALERT);
+  } else if (battery->status() == Battery::State::NOT_PRESENT) {
+    lv_obj_clear_state(widget, LV_STATE_CHECKED);
+    lv_label_set_text(widget, ICON_BATTERY_REMOVED);
+  } else if (battery->status() == Battery::State::CHARGING) {
+    lv_obj_clear_state(widget, LV_STATE_CHECKED);
+    if (battery->getSoc() > 90) {
+      lv_label_set_text(widget, ICON_BATTERY_100);
+    } else if (battery->getSoc() > 80) {
+      lv_label_set_text(widget, ICON_BATTERY_CHARGING_80);
+    } else if (battery->getSoc() > 50) {
+      lv_label_set_text(widget, ICON_BATTERY_CHARGING_50);
+    } else if (battery->getSoc() > 30) {
+      lv_label_set_text(widget, ICON_BATTERY_CHARGING_30);
+    } else {
+      lv_label_set_text(widget, ICON_BATTERY_CHARGING_0);
+    }
+  } else {
+    if (battery->getSoc() > 90) {
+      lv_obj_clear_state(widget, LV_STATE_CHECKED);
+      lv_label_set_text(widget, ICON_BATTERY_100);
+    } else if (battery->getSoc() > 80) {
+      lv_obj_clear_state(widget, LV_STATE_CHECKED);
+      lv_label_set_text(widget, ICON_BATTERY_80);
+    } else if (battery->getSoc() > 50) {
+      lv_obj_clear_state(widget, LV_STATE_CHECKED);
+      lv_label_set_text(widget, ICON_BATTERY_50);
 
+    } else if (battery->getSoc() > 30) {
+      lv_obj_clear_state(widget, LV_STATE_CHECKED);
+      lv_label_set_text(widget, ICON_BATTERY_30);
+    } else {
+      lv_obj_add_state(widget, LV_STATE_CHECKED);
+      lv_label_set_text(widget, ICON_BATTERY_0);
+    }
   }
 }
+
+
 
 static void battery_widget(lv_obj_t *scr) {
   lv_obj_t *battery_bar = lv_obj_create(scr);
@@ -242,8 +264,9 @@ static void battery_widget(lv_obj_t *scr) {
   lv_obj_set_width(battery, LV_PCT(100));
   lv_obj_add_style(battery, &battery_style_normal, 0);
   lv_obj_add_style(battery, &battery_style_empty, LV_STATE_CHECKED);
+  lv_obj_add_style(battery, &icon_style, 0);
   lv_obj_set_pos(battery, 0, 10);
-  lv_label_set_text(battery, LV_SYMBOL_BATTERY_EMPTY);
+  lv_label_set_text(battery, ICON_BATTERY_0);
   lv_obj_add_state(battery, LV_STATE_CHECKED);
 
   lv_obj_set_user_data(battery, _board->getBattery().get());
