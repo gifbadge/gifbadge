@@ -5,6 +5,7 @@
 #include "hal/boards/board_1_28_v0_1.h"
 #include "esp_efuse_custom_table.h"
 #include "hal/boards/boards.h"
+#include "hal/boards/board_2_1_v0_4.h"
 
 static const char *TAG = "HW_INIT";
 
@@ -25,6 +26,9 @@ std::shared_ptr<Board> get_board() {
         break;
       case BOARD_1_28_V0_1:
         global_board = std::make_shared<board_1_28_v0_1>();
+        break;
+      case BOARD_2_1_V0_4:
+        global_board = std::make_shared<board_2_1_v0_4>();
         break;
       default:
         return nullptr;
