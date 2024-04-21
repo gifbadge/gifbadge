@@ -8,6 +8,7 @@
 #include "ui/widgets/file_list/file_list.h"
 #include "ui/device_group.h"
 #include "ui/style.h"
+#include "ui/menu.h"
 
 extern "C" {
 
@@ -108,7 +109,7 @@ void file_list(lv_obj_t *parent) {
 }
 
 lv_obj_t *file_select(const char *top, const char *current) {
-  lv_screen_load(lv_obj_create(nullptr));
+  lv_screen_load(create_screen());
   new_group();
   lv_obj_t *cont_flex = lv_file_list_create(lv_scr_act());
   lv_file_list_icon_style(cont_flex, &icon_style);

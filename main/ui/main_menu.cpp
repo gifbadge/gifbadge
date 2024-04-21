@@ -20,15 +20,27 @@ static void exit_callback(lv_event_t *e) {
 }
 
 static void file_options_close(lv_event_t *e) {
-  lv_obj_t *obj = lv_obj_get_parent(static_cast<lv_obj_t *>(lv_event_get_user_data(e)));
-  restore_group(obj);
-  lv_screen_load(lv_obj_get_screen(obj));
+  lv_obj_t *root_obj = static_cast<lv_obj_t *>(lv_event_get_user_data(e));
+  if(lv_obj_is_valid(root_obj)){
+    lv_obj_t *obj = lv_obj_get_parent(root_obj);
+    restore_group(obj);
+    lv_obj_t *scr = lv_obj_get_screen(obj);
+    if(lv_obj_is_valid(scr)) {
+      lv_screen_load(lv_obj_get_screen(scr));
+    }
+    lv_obj_t *to_delete = static_cast<lv_obj_t *>(lv_event_get_target(e));
+    if(lv_obj_is_valid(to_delete)){
+      lv_obj_delete(lv_obj_get_screen(to_delete));
+    }
+  }
 }
 
 static void file_select_callback(lv_event_t *e) {
   auto *obj = static_cast<lv_obj_t *>(lv_event_get_target(e));
   LV_LOG_USER("%s", lv_label_get_text(obj));
-  lv_screen_load(lv_obj_create(nullptr));
+  lv_obj_t *old_scr = lv_screen_active();
+  lv_screen_load(create_screen());
+  lv_obj_set_user_data(lv_screen_active(), old_scr);
   lv_obj_t *file_options_window = FileOptions();
   lv_obj_add_event_cb(file_options_window, file_options_close, LV_EVENT_DELETE, obj);
 }
@@ -36,7 +48,7 @@ static void file_select_callback(lv_event_t *e) {
 static void storage_callback(lv_event_t *e) {
   auto *obj = static_cast<lv_obj_t *>(lv_event_get_target(e));
   LV_LOG_USER("%s", lv_label_get_text(obj));
-  lv_screen_load(lv_obj_create(nullptr));
+  lv_screen_load(create_screen());
   lv_obj_t *window = storage_menu();
   lv_obj_add_event_cb(window, file_options_close, LV_EVENT_DELETE, obj);
 }
@@ -44,7 +56,7 @@ static void storage_callback(lv_event_t *e) {
 static void device_info_callback(lv_event_t *e) {
   auto *obj = static_cast<lv_obj_t *>(lv_event_get_target(e));
   LV_LOG_USER("%s", lv_label_get_text(obj));
-  lv_screen_load(lv_obj_create(nullptr));
+  lv_screen_load(create_screen());
   lv_obj_t *window = device_info();
   lv_obj_add_event_cb(window, file_options_close, LV_EVENT_DELETE, obj);
 }
@@ -66,6 +78,10 @@ static void BacklightSliderChangedCallback(lv_event_t *e) {
   lv_obj_t *obj = lv_event_get_target_obj(e);
   int level = lv_slider_get_value(obj) * 10;
   get_board()->getBacklight()->setLevel(level);
+}
+
+static void mainMenuCleanup(lv_event_t *e){
+  lv_group_delete(static_cast<lv_group_t *>(lv_event_get_user_data(e)));
 }
 
 void main_menu() {
@@ -125,6 +141,7 @@ void main_menu() {
     lv_obj_add_event_cb(device_info_label, device_info_callback, LV_EVENT_CLICKED, nullptr);
     lv_obj_add_event_cb(shutdown_label, ShutdownCallback, LV_EVENT_CLICKED, nullptr);
     lv_obj_add_event_cb(exit_label, exit_callback, LV_EVENT_CLICKED, nullptr);
+    lv_obj_add_event_cb(scr, mainMenuCleanup, LV_EVENT_DELETE, lv_group_get_default());
 
     lv_file_list_scroll_to_view(main_menu, 0);
     lvgl_unlock();

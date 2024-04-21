@@ -6,7 +6,9 @@
 
 void lvgl_usb_connected() {
   if (lvgl_lock(-1)) {
-    lv_obj_t *scr = lv_scr_act();
+    destroy_screens();
+    lv_obj_t *scr = create_screen();
+    lv_screen_load(scr);
     lv_obj_t *cont = lv_obj_create(scr);
     lv_obj_set_size(cont, LV_PCT(100), LV_PCT(100));
     lv_obj_t *label = lv_image_create(cont);

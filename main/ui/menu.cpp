@@ -38,6 +38,23 @@ lv_indev_t *lvgl_encoder;
 lv_indev_t *lvgl_touch;
 }
 
+std::vector<lv_obj_t *> screens;
+
+lv_obj_t * create_screen(){
+  lv_obj_t *scr = lv_obj_create(nullptr);
+  screens.emplace_back(scr);
+  return scr;
+}
+
+void destroy_screens(){
+  for(auto &scr:screens){
+    if(lv_obj_is_valid(scr)) {
+      lv_obj_delete(scr);
+    }
+  }
+  screens.clear();
+}
+
 static bool IRAM_ATTR flush_ready(esp_lcd_panel_io_handle_t, esp_lcd_panel_io_event_data_t *, void *) {
   lv_display_flush_ready(disp);
   return false;
@@ -73,7 +90,8 @@ void lvgl_close() {
   _board->getDisplay()->onColorTransDone(nullptr, nullptr);
 
   if (lvgl_lock(-1)) {
-    lv_obj_clean(lv_scr_act());
+    destroy_screens();
+    lv_obj_clean(lv_layer_top());
 //        lv_disp_remove(disp);
     lvgl_unlock();
   }
@@ -311,7 +329,7 @@ void lvgl_wake_up() {
       lv_group_t *g = lv_group_create();
       lv_group_set_default(g);
       lv_indev_set_group(lvgl_encoder, g);
-      lv_obj_t *scr = lv_obj_create(nullptr);
+      lv_obj_t *scr = create_screen();
       lv_screen_load(scr);
       battery_widget(lv_layer_top());
       lvgl_unlock();
