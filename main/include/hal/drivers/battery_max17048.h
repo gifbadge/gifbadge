@@ -24,10 +24,17 @@ class battery_max17048 final : public Battery {
 
   bool isCharging() override;
 
+  void removed() override;
+
+  void inserted() override;
+
+  State status() override;
+
  private:
   std::shared_ptr<I2C> _i2c;
   double _voltage;
   int _soc;
   double _rate;
   gpio_num_t _vbus_pin;
+  bool present;
 };

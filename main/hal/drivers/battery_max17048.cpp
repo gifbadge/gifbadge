@@ -54,5 +54,29 @@ double battery_max17048::getRate() {
 }
 
 bool battery_max17048::isCharging() {
-  return gpio_get_level(_vbus_pin);
+  return gpio_get_level(_vbus_pin) && _rate > 1;
+}
+
+void battery_max17048::removed() {
+  present = false;
+}
+
+void battery_max17048::inserted() {
+  present = true;
+}
+
+Battery::State battery_max17048::status() {
+  if(!present){
+    return State::NOT_PRESENT;
+  }
+  if(gpio_get_level(_vbus_pin) && _rate > 1){
+    return State::CHARGING;
+  }
+  if(gpio_get_level(_vbus_pin)){
+    return State::CONNECTED_NOT_CHARGING;
+  }
+  if(!gpio_get_level(_vbus_pin)) {
+    return State::DISCHARGING;
+  }
+  return Battery::State::ERROR;
 }

@@ -22,6 +22,12 @@ class battery_analog final : public Battery {
 
   bool isCharging() override { return false; };
 
+  void removed() override {};
+
+  void inserted() override {};
+
+  Battery::State status() override { return Battery::State::OK ;}
+
 //    if(battery_config->getSoc() > 4){
 //        lv_style_set_text_color(&battery_style, lv_color_black());
 //        lv_label_set_text(widget, LV_SYMBOL_BATTERY_FULL);
