@@ -44,3 +44,5 @@ bool lvgl_menu_state();
 lv_obj_t *create_screen();
 void destroy_screens();
 
+typedef lv_obj_t *(*MenuType)();
+

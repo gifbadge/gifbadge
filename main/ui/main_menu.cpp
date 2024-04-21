@@ -15,50 +15,10 @@
 static void exit_callback(lv_event_t *e) {
   auto *obj = static_cast<lv_obj_t *>(lv_event_get_target(e));
   LV_LOG_USER("%s", lv_label_get_text(obj));
+static lv_obj_t * exit_callback() {
   TaskHandle_t handle = xTaskGetHandle("LVGL");
   xTaskNotifyIndexed(handle, 0, LVGL_STOP, eSetValueWithOverwrite);
-}
-
-static void file_options_close(lv_event_t *e) {
-  lv_obj_t *root_obj = static_cast<lv_obj_t *>(lv_event_get_user_data(e));
-  if(lv_obj_is_valid(root_obj)){
-    lv_obj_t *obj = lv_obj_get_parent(root_obj);
-    restore_group(obj);
-    lv_obj_t *scr = lv_obj_get_screen(obj);
-    if(lv_obj_is_valid(scr)) {
-      lv_screen_load(lv_obj_get_screen(scr));
-    }
-    lv_obj_t *to_delete = static_cast<lv_obj_t *>(lv_event_get_target(e));
-    if(lv_obj_is_valid(to_delete)){
-      lv_obj_delete(lv_obj_get_screen(to_delete));
-    }
-  }
-}
-
-static void file_select_callback(lv_event_t *e) {
-  auto *obj = static_cast<lv_obj_t *>(lv_event_get_target(e));
-  LV_LOG_USER("%s", lv_label_get_text(obj));
-  lv_obj_t *old_scr = lv_screen_active();
-  lv_screen_load(create_screen());
-  lv_obj_set_user_data(lv_screen_active(), old_scr);
-  lv_obj_t *file_options_window = FileOptions();
-  lv_obj_add_event_cb(file_options_window, file_options_close, LV_EVENT_DELETE, obj);
-}
-
-static void storage_callback(lv_event_t *e) {
-  auto *obj = static_cast<lv_obj_t *>(lv_event_get_target(e));
-  LV_LOG_USER("%s", lv_label_get_text(obj));
-  lv_screen_load(create_screen());
-  lv_obj_t *window = storage_menu();
-  lv_obj_add_event_cb(window, file_options_close, LV_EVENT_DELETE, obj);
-}
-
-static void device_info_callback(lv_event_t *e) {
-  auto *obj = static_cast<lv_obj_t *>(lv_event_get_target(e));
-  LV_LOG_USER("%s", lv_label_get_text(obj));
-  lv_screen_load(create_screen());
-  lv_obj_t *window = device_info();
-  lv_obj_add_event_cb(window, file_options_close, LV_EVENT_DELETE, obj);
+  return nullptr;
 }
 
 static void BacklightSliderExitCallback(lv_event_t *e) {
@@ -70,8 +30,9 @@ static void BacklightSliderExitCallback(lv_event_t *e) {
   restore_group(static_cast<lv_obj_t *>(lv_event_get_user_data(e)));
 }
 
-static void ShutdownCallback(lv_event_t *e) {
+static lv_obj_t *ShutdownCallback() {
   get_board()->powerOff();
+  return nullptr;
 }
 
 static void BacklightSliderChangedCallback(lv_event_t *e) {
@@ -82,6 +43,51 @@ static void BacklightSliderChangedCallback(lv_event_t *e) {
 
 static void mainMenuCleanup(lv_event_t *e){
   lv_group_delete(static_cast<lv_group_t *>(lv_event_get_user_data(e)));
+}
+
+typedef struct {
+  MenuType callback;
+} subMenuData;
+
+static void cleanupSubMenu(lv_event_t *e){
+  free(lv_event_get_user_data(e));
+}
+
+static void closeSubMenu(lv_event_t *e) {
+  lv_obj_t *root_obj = static_cast<lv_obj_t *>(lv_event_get_user_data(e));
+  if(lv_obj_is_valid(root_obj)){
+    lv_obj_t *obj = lv_obj_get_parent(root_obj);
+    restore_group(obj);
+    lv_obj_t *scr = lv_obj_get_screen(obj);
+    if(lv_obj_is_valid(scr)) {
+      lv_screen_load(lv_obj_get_screen(scr));
+    }
+  }
+}
+
+static void openSubMenu(lv_event_t *e){
+  auto *obj = static_cast<lv_obj_t *>(lv_event_get_target(e));
+  auto *data = static_cast<subMenuData *>(lv_event_get_user_data(e));
+  LV_LOG_USER("%s", lv_label_get_text(obj));
+  lv_screen_load(create_screen());
+  lv_obj_t *window = data->callback();
+  if(window) {
+    lv_obj_add_event_cb(window, closeSubMenu, LV_EVENT_DELETE, obj);
+  }
+}
+
+static lv_obj_t *subMenu(lv_obj_t *parent, const char *name, MenuType menu){
+  lv_obj_t *button = lv_file_list_add(parent, nullptr);
+  lv_obj_t *label = lv_label_create(button);
+  lv_obj_add_style(label, &menu_font_style, LV_PART_MAIN);
+  lv_label_set_text(label, name);
+
+  auto *data = static_cast<subMenuData *>(malloc(sizeof(subMenuData)));
+  data->callback = menu;
+
+  lv_obj_add_event_cb(label, openSubMenu, LV_EVENT_CLICKED, data);
+  lv_obj_add_event_cb(label, cleanupSubMenu, LV_EVENT_DELETE, data);
+  return button;
 }
 
 void main_menu() {
@@ -111,36 +117,12 @@ void main_menu() {
     }
     lv_slider_set_value(slider, backlight_level, LV_ANIM_OFF);
 
-    lv_obj_t *file_btn = lv_file_list_add(main_menu, nullptr);
-    lv_obj_t *file_label = lv_label_create(file_btn);
-    lv_obj_add_style(file_label, &menu_font_style, LV_PART_MAIN);
-    lv_label_set_text(file_label, "File Select");
+    subMenu(main_menu, "File Select", &FileOptions);
+    subMenu(main_menu, "Storage", &storage_menu);
+    subMenu(main_menu, "Device Info", &device_info);
+    subMenu(main_menu, "Shutdown", &ShutdownCallback);
+    subMenu(main_menu, "Exit", &exit_callback);
 
-    lv_obj_t *storage_btn = lv_file_list_add(main_menu, nullptr);
-    lv_obj_t *storage_label = lv_label_create(storage_btn);
-    lv_obj_add_style(storage_label, &menu_font_style, LV_PART_MAIN);
-    lv_label_set_text(storage_label, "Storage");
-
-    lv_obj_t *shutdown_btn = lv_file_list_add(main_menu, nullptr);
-    lv_obj_t *shutdown_label = lv_label_create(shutdown_btn);
-    lv_obj_add_style(shutdown_label, &menu_font_style, LV_PART_MAIN);
-    lv_label_set_text(shutdown_label, "Shutdown");
-
-    lv_obj_t *device_info_btn = lv_file_list_add(main_menu, nullptr);
-    lv_obj_t *device_info_label = lv_label_create(device_info_btn);
-    lv_obj_add_style(device_info_label, &menu_font_style, LV_PART_MAIN);
-    lv_label_set_text(device_info_label, "Device Info");
-
-    lv_obj_t *exit_btn = lv_file_list_add(main_menu, nullptr);
-    lv_obj_t *exit_label = lv_label_create(exit_btn);
-    lv_obj_add_style(exit_label, &menu_font_style, LV_PART_MAIN);
-    lv_label_set_text(exit_label, "Exit");
-
-    lv_obj_add_event_cb(file_label, file_select_callback, LV_EVENT_CLICKED, nullptr);
-    lv_obj_add_event_cb(storage_label, storage_callback, LV_EVENT_CLICKED, nullptr);
-    lv_obj_add_event_cb(device_info_label, device_info_callback, LV_EVENT_CLICKED, nullptr);
-    lv_obj_add_event_cb(shutdown_label, ShutdownCallback, LV_EVENT_CLICKED, nullptr);
-    lv_obj_add_event_cb(exit_label, exit_callback, LV_EVENT_CLICKED, nullptr);
     lv_obj_add_event_cb(scr, mainMenuCleanup, LV_EVENT_DELETE, lv_group_get_default());
 
     lv_file_list_scroll_to_view(main_menu, 0);
