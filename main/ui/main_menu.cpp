@@ -12,9 +12,6 @@
 #include "hw_init.h"
 #include "ui/device_info.h"
 
-static void exit_callback(lv_event_t *e) {
-  auto *obj = static_cast<lv_obj_t *>(lv_event_get_target(e));
-  LV_LOG_USER("%s", lv_label_get_text(obj));
 static lv_obj_t * exit_callback() {
   TaskHandle_t handle = xTaskGetHandle("LVGL");
   xTaskNotifyIndexed(handle, 0, LVGL_STOP, eSetValueWithOverwrite);
