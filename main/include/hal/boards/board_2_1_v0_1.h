@@ -31,6 +31,7 @@ class board_2_1_v0_1 : public Board {
   StorageInfo storageInfo() override;
   esp_err_t StorageFormat() override { return ESP_OK; };
   std::string name() override;
+  bool powerConnected() override;
 
  private:
   std::shared_ptr<battery_max17048> _battery;

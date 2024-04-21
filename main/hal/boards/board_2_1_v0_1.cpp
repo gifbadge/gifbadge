@@ -152,3 +152,6 @@ StorageInfo board_2_1_v0_1::storageInfo() {
 std::string board_2_1_v0_1::name() {
   return "2.1\" 0.1";
 }
+bool board_2_1_v0_1::powerConnected() {
+  return false;
+}

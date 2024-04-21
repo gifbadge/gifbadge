@@ -35,5 +35,6 @@ class Board {
   virtual StorageInfo storageInfo() = 0;
   virtual esp_err_t StorageFormat() = 0;
   virtual std::string name() = 0;
+  virtual bool powerConnected() = 0;
 };
 

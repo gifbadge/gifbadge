@@ -70,6 +70,7 @@ board_2_1_v0_2::board_2_1_v0_2() {
   _backlight->setLevel(100);
   _touch = std::make_shared<touch_ft5x06>(_i2c);
 
+  //TODO: Check if we can use DFS with the RGB LCD
   esp_pm_config_t pm_config = {.max_freq_mhz = 240, .min_freq_mhz = 240, .light_sleep_enable = false};
   esp_pm_configure(&pm_config);
 
@@ -180,4 +181,7 @@ StorageInfo board_2_1_v0_2::storageInfo() {
 
 std::string board_2_1_v0_2::name() {
   return "2.1\" 0.2-0.3";
+}
+bool board_2_1_v0_2::powerConnected() {
+  return false;
 }
