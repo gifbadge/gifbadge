@@ -54,12 +54,15 @@ void dump_state(void *arg) {
     ESP_LOGI(TAG, "Rate: %f", args->board->getBattery()->getRate());
     ESP_LOGI(TAG, "%s", args->board->getBattery()->isCharging() ? "Charging" : "Discharging");
 
+    ESP_LOGI(TAG, "State: %d", static_cast<int>(args->board->getBattery()->status()));
+
+
     esp_pm_lock_release(pm_lock);
     vTaskDelay(10000 / portTICK_PERIOD_MS);
   }
 }
 
-MAIN_STATES currentState = MAIN_NORMAL;
+MAIN_STATES currentState = MAIN_NONE;
 
 /*!
  * Task to check battery status, and update device
@@ -275,6 +278,10 @@ extern "C" void app_main(void) {
   TaskHandle_t lvglHandle = xTaskGetHandle("LVGL");
   initInputTimer(board.get());
   while (true) {
+    if(currentState == MAIN_NONE){
+      currentState = MAIN_NORMAL;
+      imageCurrent();
+    }
     if (oldState != currentState) {
       //Handle state transitions
       ESP_LOGI(TAG, "State %d", currentState);
