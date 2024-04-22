@@ -2,7 +2,6 @@
 #include <esp_log.h>
 #include <driver/sdmmc_defs.h>
 #include <esp_vfs_fat.h>
-#include <vfs_fat_internal.h>
 #include <esp_task_wdt.h>
 #include <esp_sleep.h>
 #include "hal/boards/board_1_28_v0_1.h"
@@ -31,6 +30,7 @@ static void IRAM_ATTR usb_connected(void *arg) {
 board_1_28_v0_1::board_1_28_v0_1() {
   _i2c = std::make_shared<I2C>(I2C_NUM_0, 17, 18);
   _battery = std::make_shared<battery_max17048>(_i2c, GPIO_VBUS_DETECT);
+  _battery->inserted(); //Battery not removable. So set this
   _keys = std::make_shared<keys_gpio>(GPIO_NUM_0, GPIO_NUM_2, GPIO_NUM_1);
   _display = std::make_shared<display_gc9a01>(35, 36, 34, 37, 38);
   _backlight = std::make_shared<backlight_ledc>(GPIO_NUM_9, 0);
@@ -125,7 +125,7 @@ void board_1_28_v0_1::powerOff() {
 
 BOARD_POWER board_1_28_v0_1::powerState() {
   //TODO Detect USB power status, implement critical level
-  if (_battery->isCharging()) {
+  if (powerConnected()) {
     return BOARD_POWER_NORMAL;
   }
   if (_battery->getSoc() < 12) {
@@ -187,6 +187,7 @@ esp_err_t board_1_28_v0_1::StorageFormat() {
 std::string board_1_28_v0_1::name() {
   return "1.28\" 0.1-0.2";
 }
+
 bool board_1_28_v0_1::powerConnected() {
-  return false;
+  return gpio_get_level(GPIO_VBUS_DETECT);
 }

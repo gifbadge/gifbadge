@@ -32,6 +32,7 @@ static void checkSDTimer(void *arg) {
 board_2_1_v0_2::board_2_1_v0_2() {
   _i2c = std::make_shared<I2C>(I2C_NUM_0, 47, 48);
   _battery = std::make_shared<battery_max17048>(_i2c, GPIO_NUM_0);
+  _battery->inserted(); //Set battery inserted, as we can't detect status on this revision
   /*G3, G4, G5, R1, R2, R3, R4, R5, B1, B2, B3, B4, B5, G0, G1, G2 */
   std::array<int, 16> rgb = {11, 12, 13, 3, 4, 5, 6, 7, 14, 15, 16, 17, 18, 8, 9, 10};
 //    uint8_t data = IO_EXPANDER_PIN_NUM_3;
@@ -152,8 +153,7 @@ void board_2_1_v0_2::powerOff() {
 }
 
 BOARD_POWER board_2_1_v0_2::powerState() {
-  //TODO Detect USB power status, implement critical level
-  if (_battery->isCharging()) {
+  if (powerConnected()) {
     return BOARD_POWER_NORMAL;
   }
   if (_battery->getSoc() < 12) {
@@ -183,5 +183,5 @@ std::string board_2_1_v0_2::name() {
   return "2.1\" 0.2-0.3";
 }
 bool board_2_1_v0_2::powerConnected() {
-  return false;
+  return gpio_get_level(GPIO_NUM_0);
 }
