@@ -25,13 +25,6 @@ board_v0::board_v0() {
 
   esp_pm_config_t pm_config = {.max_freq_mhz = 240, .min_freq_mhz = 240, .light_sleep_enable = false};
   esp_pm_configure(&pm_config);
-
-  uint8_t data;
-  _i2c->read_reg(0x15, 0x0E, &data, 1);
-  if (data == 0x2) {
-    ESP_LOGI(TAG, "MXC4005 accelerometer detected");
-  }
-
 }
 
 std::shared_ptr<Battery> board_v0::getBattery() {
@@ -76,5 +69,10 @@ StorageInfo board_v0::storageInfo() {
 
 std::string board_v0::name() {
   return "1.28\" 0.0";
+}
+
+bool board_v0::powerConnected() {
+  // No provisions in design to monitor this
+  return false;
 }
 
