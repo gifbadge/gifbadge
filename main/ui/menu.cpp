@@ -117,7 +117,6 @@ void task(void *) {
     switch (option) {
       case LVGL_STOP:
         lvgl_close();
-        xTaskNotifyIndexed(handle, 0, DISPLAY_FILE, eSetValueWithOverwrite);
         vTaskSuspend(nullptr);
         break;
       case LVGL_EXIT:

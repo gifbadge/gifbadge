@@ -291,13 +291,17 @@ extern "C" void app_main(void) {
         case MAIN_NORMAL:
           if (oldState == MAIN_USB) {
             xTaskNotifyIndexed(lvglHandle, 0, LVGL_STOP, eSetValueWithOverwrite);
+            vTaskDelay(100 / portTICK_PERIOD_MS);
             //Check for OTA File
             if (OTA::check()) {
+              xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_OTA, eSetValueWithOverwrite);
+              vTaskDelay(100 / portTICK_PERIOD_MS);
               OTA::install();
               currentState = MAIN_OTA;
-              vTaskDelay(100 / portTICK_PERIOD_MS);
-              xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_OTA, eSetValueWithOverwrite);
               break;
+            }
+            else {
+              xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_FILE, eSetValueWithOverwrite);
             }
           }
           break;
