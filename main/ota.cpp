@@ -163,13 +163,18 @@ void task(void *) {
   static char ota_buffer[4096 + 1] = {0};
 
   size_t bytes_read;
+
+  uint32_t last_percent = 0;
   while ((bytes_read = fread(ota_buffer, 1, sizeof(ota_buffer), ota_file)) > 0) {
 
     //Update the progress on the display
     TaskHandle_t display_task_handle = xTaskGetHandle("display_task");
     uint32_t percent = ((float) ftell(ota_file) / ota_size) * 100;
     ESP_LOGI(TAG, "%%%lu", percent);
-    xTaskNotifyIndexed(display_task_handle, 1, percent, eSetValueWithOverwrite);
+    if(last_percent != percent){
+      last_percent = percent;
+      xTaskNotifyIndexed(display_task_handle, 1, percent, eSetValueWithOverwrite);
+    }
 
     err = esp_ota_write(update_handle, (const void *) ota_buffer, bytes_read);
     if (err != ESP_OK) {
