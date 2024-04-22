@@ -107,7 +107,6 @@ int render_text_centered(int16_t x_max, int16_t y_max, int16_t margin, const cha
     state.height = y_max;
     state.buffer = buffer;
     state.y = (y_max/2)-((height+1)/2);
-    ESP_LOGI("FONT", "Y %d", state.y);
 
     state.font = font;
     state.alignment = MF_ALIGN_CENTER;
