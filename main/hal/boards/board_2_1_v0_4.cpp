@@ -187,7 +187,6 @@ void board_2_1_v0_4::powerOff() {
 }
 
 BOARD_POWER board_2_1_v0_4::powerState() {
-  //TODO Detect USB power status, implement critical level
   if (powerConnected()) {
     return BOARD_POWER_NORMAL;
   }
