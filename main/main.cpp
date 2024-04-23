@@ -110,8 +110,6 @@ static void initLowBatteryTask() {
 
 static void openMenu(){
   TaskHandle_t display_task_handle = xTaskGetHandle("display_task");
-  xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_MENU, eSetValueWithOverwrite);
-  vTaskDelay(100 / portTICK_PERIOD_MS);
   lvgl_menu_open();
 }
 
@@ -306,7 +304,6 @@ extern "C" void app_main(void) {
           }
           break;
         case MAIN_USB:
-          xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_MENU, eSetValueWithOverwrite);
           vTaskDelay(100 / portTICK_PERIOD_MS);
           lvgl_wake_up();
           lvgl_usb_connected();

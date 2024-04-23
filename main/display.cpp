@@ -15,6 +15,7 @@
 
 #include "font_render.h"
 #include "file_util.h"
+#include "ui/menu.h"
 
 static const char *TAG = "DISPLAY";
 
@@ -203,7 +204,7 @@ void display_task(void *params) {
 
   auto config = ImageConfig();
 
-  bool menu_state = false;
+  bool oldMenuState = false;
 
   H_RES = args->display->getResolution().first;
   V_RES = args->display->getResolution().second;
@@ -255,17 +256,10 @@ void display_task(void *params) {
     if (option != DISPLAY_NONE) {
       last_change = esp_timer_get_time();
       switch (option) {
-        case DISPLAY_MENU:
-          in.reset();
-          ESP_LOGI(TAG, "DISPLAY_MENU");
-          menu_state = true;
-          last_mode = static_cast<DISPLAY_OPTIONS>(option);
-          break;
         case DISPLAY_FILE:
           in.reset();
           ESP_LOGI(TAG, "DISPLAY_FILE");
           config.reload();
-          menu_state = false;
           try {
             if(current_file.empty()) {
               current_file = get_file(config.getPath());
@@ -314,7 +308,6 @@ void display_task(void *params) {
           last_mode = static_cast<DISPLAY_OPTIONS>(option);
           break;
         case DISPLAY_OTA:
-          menu_state = false;
           in.reset();
           display_ota(args->display, pGIFBuf, 0);
           last_mode = static_cast<DISPLAY_OPTIONS>(option);
@@ -327,7 +320,6 @@ void display_task(void *params) {
         case DISPLAY_SPECIAL_1:
           ESP_LOGI(TAG, "DISPLAY_SPECIAL_1");
           config.reload();
-          menu_state = false;
           if(exists(std::filesystem::path("/data/cards/up.png"))) {
             in.reset();
             in.reset(display_file(factory, "/data/cards/up.png", pGIFBuf, args->display));
@@ -337,7 +329,6 @@ void display_task(void *params) {
         case DISPLAY_SPECIAL_2:
           ESP_LOGI(TAG, "DISPLAY_SPECIAL_2");
           config.reload();
-          menu_state = false;
           if(exists(std::filesystem::path("/data/cards/down.png"))) {
             in.reset();
             in.reset(display_file(factory, "/data/cards/down.png", pGIFBuf, args->display));
@@ -348,7 +339,7 @@ void display_task(void *params) {
           break;
       }
     } else {
-      if (!menu_state) {
+      if (!lvgl_menu_state()) {
         if (last_mode == DISPLAY_FILE && config.getSlideShow()
             && ((esp_timer_get_time() / 1000000) - (last_change / 1000000)) > config.getSlideShowTime()) {
           xTaskNotifyIndexed(xTaskGetCurrentTaskHandle(), 0, DISPLAY_NEXT, eSetValueWithOverwrite);
@@ -360,6 +351,9 @@ void display_task(void *params) {
           }
           delay = 200;
         } else {
+          if(oldMenuState){
+            in.reset(display_file(factory, current_file.c_str(), pGIFBuf, args->display));
+          }
           delay = image_loop(in, pGIFBuf, args->display);
           if (delay < 0) {
             std::string strerr = "Error Displaying File\n";
@@ -371,6 +365,7 @@ void display_task(void *params) {
       } else {
         delay = 200;
       }
+      oldMenuState = lvgl_menu_state();
     }
   }
 }
