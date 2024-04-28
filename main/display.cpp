@@ -200,21 +200,21 @@ static std::filesystem::path files_get_previous(const std::filesystem::path &pat
 
 void display_task(void *params) {
   // TODO: Check image size before trying to display it
-  auto *args = (display_task_args *) params;
+  auto *board = (Board *) params;
 
   auto config = ImageConfig();
 
   bool oldMenuState = false;
 
-  H_RES = args->display->getResolution().first;
-  V_RES = args->display->getResolution().second;
+  H_RES = board->getDisplay()->getResolution().first;
+  V_RES = board->getDisplay()->getResolution().second;
 
 
   // user can flush pre-defined pattern to the screen before we turn on the screen or backlight
-  uint8_t *pGIFBuf = args->display->getBuffer();
+  uint8_t *pGIFBuf = board->getDisplay()->getBuffer();
 
   memset(pGIFBuf, 255, H_RES * V_RES * 2);
-  args->display->write(0, 0, H_RES, V_RES, pGIFBuf);
+  board->getDisplay()->write(0, 0, H_RES, V_RES, pGIFBuf);
 
   esp_err_t err;
   int backlight_level;
@@ -225,7 +225,7 @@ void display_task(void *params) {
   }
   handle.reset();
 
-  args->backlight->setLevel(backlight_level * 10);
+  board->getBacklight()->setLevel(backlight_level * 10);
 
   std::shared_ptr<Image> in;
   std::vector<std::string> files = list_directory("/data");
@@ -242,12 +242,12 @@ void display_task(void *params) {
   int delay = 0;
   while (true) {
     uint32_t option;
-    if (args->display->directRender()) {
+    if (board->getDisplay()->directRender()) {
       if (current_buffer != 0) {
-        pGIFBuf = args->display->getBuffer();
+        pGIFBuf = board->getDisplay()->getBuffer();
         current_buffer = 0;
       } else {
-        pGIFBuf = args->display->getBuffer2();
+        pGIFBuf = board->getDisplay()->getBuffer2();
         current_buffer = 1;
       }
     }
@@ -263,9 +263,9 @@ void display_task(void *params) {
             if(current_file.empty()) {
               current_file = get_file(config.getPath());
             }
-            in.reset(display_file(current_file.c_str(), pGIFBuf, args->display));
+            in.reset(display_file(current_file.c_str(), pGIFBuf, board->getDisplay()));
           } catch (std::out_of_range &err) {
-            display_no_image(args->display, pGIFBuf);
+            display_no_image(board->getDisplay(), pGIFBuf);
           }
           last_mode = static_cast<DISPLAY_OPTIONS>(option);
           break;
@@ -279,9 +279,9 @@ void display_task(void *params) {
           in.reset();
           try {
             current_file = files_get_next(current_file);
-            in.reset(display_file(current_file.c_str(), pGIFBuf, args->display));
+            in.reset(display_file(current_file.c_str(), pGIFBuf, board->getDisplay()));
           } catch (std::out_of_range &err) {
-            display_no_image(args->display, pGIFBuf);
+            display_no_image(board->getDisplay(), pGIFBuf);
           }
           break;
         case DISPLAY_PREVIOUS:
@@ -294,34 +294,34 @@ void display_task(void *params) {
           in.reset();
           try {
             current_file = files_get_previous(current_file);
-            in.reset(display_file(current_file.c_str(), pGIFBuf, args->display));
+            in.reset(display_file(current_file.c_str(), pGIFBuf, board->getDisplay()));
           } catch (std::out_of_range &err) {
-            display_no_image(args->display, pGIFBuf);
+            display_no_image(board->getDisplay(), pGIFBuf);
           }
           break;
         case DISPLAY_BATT:
           in.reset();
           if (last_mode != DISPLAY_BATT) {
-            display_image_batt(args->display, pGIFBuf);
+            display_image_batt(board->getDisplay(), pGIFBuf);
           }
           last_mode = static_cast<DISPLAY_OPTIONS>(option);
           break;
         case DISPLAY_OTA:
           in.reset();
-          display_ota(args->display, pGIFBuf, 0);
+          display_ota(board->getDisplay(), pGIFBuf, 0);
           last_mode = static_cast<DISPLAY_OPTIONS>(option);
           break;
         case DISPLAY_NO_STORAGE:
           in.reset();
           last_mode = static_cast<DISPLAY_OPTIONS>(option);
-          display_no_storage(args->display, pGIFBuf);
+          display_no_storage(board->getDisplay(), pGIFBuf);
           break;
         case DISPLAY_SPECIAL_1:
           ESP_LOGI(TAG, "DISPLAY_SPECIAL_1");
           config.reload();
           if(exists(std::filesystem::path("/data/cards/up.png"))) {
             in.reset();
-            in.reset(display_file("/data/cards/up.png", pGIFBuf, args->display));
+            in.reset(display_file("/data/cards/up.png", pGIFBuf, board->getDisplay()));
             last_mode = static_cast<DISPLAY_OPTIONS>(option);
           }
           break;
@@ -330,7 +330,7 @@ void display_task(void *params) {
           config.reload();
           if(exists(std::filesystem::path("/data/cards/down.png"))) {
             in.reset();
-            in.reset(display_file("/data/cards/down.png", pGIFBuf, args->display));
+            in.reset(display_file("/data/cards/down.png", pGIFBuf, board->getDisplay()));
             last_mode = static_cast<DISPLAY_OPTIONS>(option);
           };
           break;
@@ -346,18 +346,18 @@ void display_task(void *params) {
           uint32_t percent;
           xTaskNotifyWaitIndexed(1, 0, 0xffffffff, &percent, 0);
           if (percent != 0) {
-            display_ota(args->display, pGIFBuf, percent);
+            display_ota(board->getDisplay(), pGIFBuf, percent);
           }
           delay = 200;
         } else {
           if(oldMenuState){
-            in.reset(display_file(current_file.c_str(), pGIFBuf, args->display));
+            in.reset(display_file(current_file.c_str(), pGIFBuf, board->getDisplay()));
           }
-          delay = image_loop(in, pGIFBuf, args->display);
+          delay = image_loop(in, pGIFBuf, board->getDisplay());
           if (delay < 0) {
             std::string strerr = "Error Displaying File\n";
             strerr += current_file.string() + "\n" + in->getLastError();
-            display_err(args->display, pGIFBuf, strerr.c_str());
+            display_err(board->getDisplay(), pGIFBuf, strerr.c_str());
             in.reset();
           }
         }

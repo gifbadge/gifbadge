@@ -13,7 +13,6 @@
 #include "ui/menu.h"
 #include "hal/hal_usb.h"
 #include "display.h"
-#include "config.h"
 
 #include "ota.h"
 
@@ -132,13 +131,9 @@ extern "C" void app_main(void) {
 
   std::shared_ptr<Board> board = get_board();
 
-  auto imageconfig = std::make_shared<ImageConfig>();
-
   TaskHandle_t display_task_handle = nullptr;
 
-  display_task_args args = {board->getDisplay(), imageconfig, board->getBacklight(),};
-
-  xTaskCreate(display_task, "display_task", 10000, &args, 2, &display_task_handle);
+  xTaskCreate(display_task, "display_task", 10000, board.get(), 2, &display_task_handle);
 
   dumpDebugTimerInit(board.get());
 
