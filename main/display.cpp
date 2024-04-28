@@ -84,21 +84,21 @@ static void display_image_batt(const std::shared_ptr<Display> &display, uint8_t 
   free(pBuf);
 }
 
-Image *display_file(ImageFactory factory, const char *path, uint8_t *pGIFBuf, const std::shared_ptr<Display> &display) {
-  Image *in = factory.create(path);
+Image *display_file(const std::filesystem::path& path, uint8_t *pGIFBuf, const std::shared_ptr<Display> &display) {
+  Image *in = ImageFactory(path.c_str());
   if (in) {
-    if (in->open(path) != 0) {
+    if (in->open(path.c_str()) != 0) {
       std::string err = "Error Displaying File\n";
-      err = err + path + "\n" + in->getLastError();
+      err = err + path.c_str() + "\n" + in->getLastError();
       display_err(display, pGIFBuf, err.c_str());
       delete in;
       return nullptr;
     }
-    printf("%s x: %i y: %i\n", path, in->size().first, in->size().second);
+    printf("%s x: %i y: %i\n", path.c_str(), in->size().first, in->size().second);
     auto size = in->size();
     if (size.first > H_RES || size.second > V_RES) {
       delete in;
-      display_image_too_large(display, pGIFBuf, path);
+      display_image_too_large(display, pGIFBuf, path.c_str());
       return nullptr;
     }
     int delay;
@@ -227,7 +227,6 @@ void display_task(void *params) {
 
   args->backlight->setLevel(backlight_level * 10);
 
-  ImageFactory factory;
   std::shared_ptr<Image> in;
   std::vector<std::string> files = list_directory("/data");
 
@@ -264,7 +263,7 @@ void display_task(void *params) {
             if(current_file.empty()) {
               current_file = get_file(config.getPath());
             }
-            in.reset(display_file(factory, current_file.c_str(), pGIFBuf, args->display));
+            in.reset(display_file(current_file.c_str(), pGIFBuf, args->display));
           } catch (std::out_of_range &err) {
             display_no_image(args->display, pGIFBuf);
           }
@@ -280,7 +279,7 @@ void display_task(void *params) {
           in.reset();
           try {
             current_file = files_get_next(current_file);
-            in.reset(display_file(factory, current_file.c_str(), pGIFBuf, args->display));
+            in.reset(display_file(current_file.c_str(), pGIFBuf, args->display));
           } catch (std::out_of_range &err) {
             display_no_image(args->display, pGIFBuf);
           }
@@ -295,7 +294,7 @@ void display_task(void *params) {
           in.reset();
           try {
             current_file = files_get_previous(current_file);
-            in.reset(display_file(factory, current_file.c_str(), pGIFBuf, args->display));
+            in.reset(display_file(current_file.c_str(), pGIFBuf, args->display));
           } catch (std::out_of_range &err) {
             display_no_image(args->display, pGIFBuf);
           }
@@ -322,7 +321,7 @@ void display_task(void *params) {
           config.reload();
           if(exists(std::filesystem::path("/data/cards/up.png"))) {
             in.reset();
-            in.reset(display_file(factory, "/data/cards/up.png", pGIFBuf, args->display));
+            in.reset(display_file("/data/cards/up.png", pGIFBuf, args->display));
             last_mode = static_cast<DISPLAY_OPTIONS>(option);
           }
           break;
@@ -331,7 +330,7 @@ void display_task(void *params) {
           config.reload();
           if(exists(std::filesystem::path("/data/cards/down.png"))) {
             in.reset();
-            in.reset(display_file(factory, "/data/cards/down.png", pGIFBuf, args->display));
+            in.reset(display_file("/data/cards/down.png", pGIFBuf, args->display));
             last_mode = static_cast<DISPLAY_OPTIONS>(option);
           };
           break;
@@ -352,7 +351,7 @@ void display_task(void *params) {
           delay = 200;
         } else {
           if(oldMenuState){
-            in.reset(display_file(factory, current_file.c_str(), pGIFBuf, args->display));
+            in.reset(display_file(current_file.c_str(), pGIFBuf, args->display));
           }
           delay = image_loop(in, pGIFBuf, args->display);
           if (delay < 0) {

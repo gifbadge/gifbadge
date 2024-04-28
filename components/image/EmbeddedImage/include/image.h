@@ -23,19 +23,4 @@ public:
     virtual std::string getLastError() = 0;
 };
 
-class ImageFactory {
-public:
-    using TCreateMethod = Image*(*)();
-
-    ImageFactory();
-
-    ~ImageFactory();
-
-    static bool addFormat(const std::string &extension, TCreateMethod funcCreate);
-
-    Image *create(const char *path);
-
-private:
-    static std::map<std::string, TCreateMethod> formats;
-
-};
+Image *ImageFactory(const char *path);
