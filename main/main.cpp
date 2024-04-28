@@ -14,53 +14,50 @@
 #include "hal/hal_usb.h"
 #include "display.h"
 #include "config.h"
-#include "hal/keys.h"
 
 #include "ota.h"
 
 #include "hw_init.h"
 #include "ui/usb_connected.h"
+#include "input.h"
 
 static const char *TAG = "MAIN";
 
-struct sharedState {
-  std::shared_ptr<ImageConfig> image_config;
-  std::shared_ptr<Board> board;
-};
-
-enum MAIN_STATES {
-  MAIN_NONE,
-  MAIN_NORMAL,
-  MAIN_USB,
-  MAIN_LOW_BATT,
-  MAIN_OTA,
-};
-
-void dump_state(void *arg) {
-  auto *args = (sharedState *) arg;
+void dumpDebugFunc(void *arg) {
+  auto *args = (Board *) arg;
   esp_pm_lock_handle_t pm_lock;
   esp_pm_lock_create(ESP_PM_NO_LIGHT_SLEEP, 0, "output_lock", &pm_lock);
 
-  while (true) {
     esp_pm_lock_acquire(pm_lock);
 //        vTaskDelay(1000/portTICK_PERIOD_MS);
-    if (true) {
+    if (false) {
       esp_pm_dump_locks(stdout);
       char out[1000];
       vTaskGetRunTimeStats(out);
       printf("%s", out);
     }
-    ESP_LOGI(TAG, "SOC: %i", args->board->getBattery()->getSoc());
-    ESP_LOGI(TAG, "Voltage: %f", args->board->getBattery()->getVoltage());
-    ESP_LOGI(TAG, "Rate: %f", args->board->getBattery()->getRate());
-    ESP_LOGI(TAG, "%s", args->board->getBattery()->isCharging() ? "Charging" : "Discharging");
+    ESP_LOGI(TAG, "SOC: %i", args->getBattery()->getSoc());
+    ESP_LOGI(TAG, "Voltage: %f", args->getBattery()->getVoltage());
+//    ESP_LOGI(TAG, "Rate: %f", args->getBattery()->getRate());
+//    ESP_LOGI(TAG, "State: %d", static_cast<int>(args->getBattery()->status()));
+    heap_caps_print_heap_info(MALLOC_CAP_INTERNAL);
 
-    ESP_LOGI(TAG, "State: %d", static_cast<int>(args->board->getBattery()->status()));
-
+    heap_caps_print_heap_info(MALLOC_CAP_SPIRAM);
 
     esp_pm_lock_release(pm_lock);
-    vTaskDelay(10000 / portTICK_PERIOD_MS);
-  }
+}
+
+static void dumpDebugTimerInit(void *args) {
+  const esp_timer_create_args_t dumpDebugTimerArgs = {
+      .callback = &dumpDebugFunc,
+      .arg = args,
+      .dispatch_method = ESP_TIMER_TASK,
+      .name = "dumpDebugTimer",
+      .skip_unhandled_events = true
+  };
+  esp_timer_handle_t dumpDebugTimer = nullptr;
+  ESP_ERROR_CHECK(esp_timer_create(&dumpDebugTimerArgs, &dumpDebugTimer));
+  ESP_ERROR_CHECK(esp_timer_start_periodic(dumpDebugTimer, 10000 * 1000));
 }
 
 MAIN_STATES currentState = MAIN_NONE;
@@ -109,114 +106,6 @@ static void initLowBatteryTask() {
   ESP_ERROR_CHECK(esp_timer_start_periodic(lowBatteryTimer, 1000 * 1000));
 }
 
-static void openMenu(){
-  lvgl_menu_open();
-}
-
-static void imageCurrent(){
-  TaskHandle_t display_task_handle = xTaskGetHandle("display_task");
-  xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_FILE, eSetValueWithOverwrite);
-}
-
-static void imageNext(){
-  TaskHandle_t display_task_handle = xTaskGetHandle("display_task");
-  xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_NEXT, eSetValueWithOverwrite);
-}
-
-static void imagePrevious(){
-  TaskHandle_t display_task_handle = xTaskGetHandle("display_task");
-  xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_PREVIOUS, eSetValueWithOverwrite);
-}
-
-static void imageSpecial1(){
-  TaskHandle_t display_task_handle = xTaskGetHandle("display_task");
-  xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_SPECIAL_1, eSetValueWithOverwrite);
-}
-
-static void imageSpecial2(){
-  TaskHandle_t display_task_handle = xTaskGetHandle("display_task");
-  xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_SPECIAL_2, eSetValueWithOverwrite);
-}
-
-int64_t last_change;
-typedef void (*op)();
-typedef struct {
-  op press;
-  op hold;
-} keyCommands;
-const keyCommands keyOptions[KEY_MAX] = {keyCommands{imageNext, imageSpecial1}, keyCommands{imagePrevious, imageSpecial2}, keyCommands{openMenu, openMenu}};
-EVENT_STATE inputState;
-int lastKey;
-long long lastKeyPress;
-static void inputTimerHandler(void *args) {
-  auto board = (Board *) args;
-  if (currentState == MAIN_NORMAL) {
-    if (!lvgl_menu_state()) {
-      EVENT_STATE *key_state = board->getKeys()->read();
-
-      switch(inputState){
-        case STATE_RELEASED:
-          for (int b = 0; b < KEY_MAX; b++) {
-            if(key_state[b] == STATE_PRESSED){
-              lastKey = b;
-              inputState = STATE_PRESSED;
-              lastKeyPress = esp_timer_get_time();
-            }
-          }
-          break;
-        case STATE_PRESSED:
-          if (key_state[lastKey] == STATE_RELEASED) {
-            keyOptions[lastKey].press();
-            inputState = STATE_RELEASED;
-          } else if(esp_timer_get_time()-lastKeyPress > 300*1000) {
-            if (key_state[lastKey] == STATE_HELD) {
-              keyOptions[lastKey].hold();
-              inputState = STATE_HELD;
-            }
-          }
-          break;
-        case STATE_HELD:
-          if(key_state[lastKey] == STATE_RELEASED){
-            imageCurrent();
-            inputState = STATE_RELEASED;
-          }
-          break;
-      }
-//TODO: Fix touch
-//      if (board->getTouch()) {
-//        auto e = board->getTouch()->read();
-//        if (e.first > 0 && e.second > 0) {
-//          if (((esp_timer_get_time() / 1000) - (last_change / 1000)) > 1000) {
-//            last_change = esp_timer_get_time();
-//            if (e.second < 50) {
-//              openMenu();
-//            }
-//            if (e.first < 50) {
-//              imageNext();
-//            }
-//            if (e.first > 430) {
-//              imagePrevious();
-//            }
-//          }
-//          ESP_LOGI(TAG, "x: %d y: %d", e.first, e.second);
-//        }
-//      }
-    }
-  }
-}
-
-static void initInputTimer(Board *board) {
-  const esp_timer_create_args_t inputTimerArgs = {
-      .callback = &inputTimerHandler,
-      .arg = board,
-      .dispatch_method = ESP_TIMER_TASK,
-      .name = "input_handler",
-      .skip_unhandled_events = true
-  };
-  esp_timer_handle_t inputTimer = nullptr;
-  ESP_ERROR_CHECK(esp_timer_create(&inputTimerArgs, &inputTimer));
-  ESP_ERROR_CHECK(esp_timer_start_periodic(inputTimer, 50 * 1000));
-}
 
 extern "C" void app_main(void) {
   esp_err_t err;
@@ -251,9 +140,7 @@ extern "C" void app_main(void) {
 
   xTaskCreate(display_task, "display_task", 10000, &args, 2, &display_task_handle);
 
-  sharedState configState{imageconfig, board,};
-
-  xTaskCreate(dump_state, "dump_state", 10000, &configState, 2, nullptr);
+  dumpDebugTimerInit(board.get());
 
   OTA::bootInfo();
 
@@ -269,13 +156,12 @@ extern "C" void app_main(void) {
   }
 
   MAIN_STATES oldState = MAIN_NONE;
-  last_change = esp_timer_get_time();
   TaskHandle_t lvglHandle = xTaskGetHandle("LVGL");
   initInputTimer(board.get());
   while (true) {
     if(currentState == MAIN_NONE){
       currentState = MAIN_NORMAL;
-      imageCurrent();
+      xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_FILE, eSetValueWithOverwrite);
     }
     if (oldState != currentState) {
       //Handle state transitions

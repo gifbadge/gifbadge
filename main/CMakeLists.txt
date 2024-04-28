@@ -5,6 +5,7 @@ idf_component_register(SRCS
         "config.cpp"
         "file_util.cpp"
         "ota.cpp"
+        "input.cpp"
         "hal/i2c.cpp"
         "hal/hal_usb.cpp"
         "hal/keys.cpp"
