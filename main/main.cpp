@@ -14,6 +14,7 @@
 #include "hal/hal_usb.h"
 #include "display.h"
 #include "config.h"
+#include "hal/keys.h"
 
 #include "ota.h"
 
@@ -143,21 +144,21 @@ typedef struct {
   op press;
   op hold;
 } keyCommands;
-std::map<EVENT_CODE, keyCommands> keyOptions;
+const keyCommands keyOptions[KEY_MAX] = {keyCommands{imageNext, imageSpecial1}, keyCommands{imagePrevious, imageSpecial2}, keyCommands{openMenu, openMenu}};
 EVENT_STATE inputState;
-EVENT_CODE lastKey;
+int lastKey;
 long long lastKeyPress;
 static void inputTimerHandler(void *args) {
   auto board = (Board *) args;
   if (currentState == MAIN_NORMAL) {
     if (!lvgl_menu_state()) {
-      std::map<EVENT_CODE, EVENT_STATE> key_state = board->getKeys()->read();
+      EVENT_STATE *key_state = board->getKeys()->read();
 
       switch(inputState){
         case STATE_RELEASED:
-          for (auto &button : key_state) {
-            if(button.second == STATE_PRESSED){
-              lastKey = button.first;
+          for (int b = 0; b < KEY_MAX; b++) {
+            if(key_state[b] == STATE_PRESSED){
+              lastKey = b;
               inputState = STATE_PRESSED;
               lastKeyPress = esp_timer_get_time();
             }
@@ -215,9 +216,6 @@ static void initInputTimer(Board *board) {
   esp_timer_handle_t inputTimer = nullptr;
   ESP_ERROR_CHECK(esp_timer_create(&inputTimerArgs, &inputTimer));
   ESP_ERROR_CHECK(esp_timer_start_periodic(inputTimer, 50 * 1000));
-  keyOptions.emplace(KEY_UP, keyCommands{imageNext, imageSpecial1});
-  keyOptions.emplace(KEY_DOWN, keyCommands{imagePrevious, imageSpecial2});
-  keyOptions.emplace(KEY_ENTER, keyCommands{openMenu, openMenu});
 }
 
 extern "C" void app_main(void) {

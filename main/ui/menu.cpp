@@ -144,7 +144,7 @@ void keyboard_read(lv_indev_t *indev, lv_indev_data_t *data) {
   bool editing = lv_group_get_editing(g);
   Keys *device = static_cast<Keys *>(lv_indev_get_user_data(indev));
   assert(device != nullptr);
-  std::map<EVENT_CODE, EVENT_STATE> keys = device->read();
+  EVENT_STATE *keys = device->read();
   if (keys[KEY_UP] == STATE_PRESSED) {
     data->enc_diff += editing ? +1 : -1;
   } else if (keys[KEY_DOWN] == STATE_PRESSED) {

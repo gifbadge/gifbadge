@@ -12,17 +12,13 @@ static void pollKeys(void *args) {
 keys_esp_io_expander::keys_esp_io_expander(esp_io_expander_handle_t io_expander, int up, int down, int enter)
     : _io_expander(io_expander) {
 
-  states.emplace(KEY_UP, up);
-  states.emplace(KEY_DOWN, down);
-  states.emplace(KEY_ENTER, enter);
+  buttonConfig[KEY_UP] = up;
+  buttonConfig[KEY_DOWN] = down;
+  buttonConfig[KEY_ENTER] = enter;
 
-  _last_state.emplace(KEY_UP, STATE_RELEASED);
-  _last_state.emplace(KEY_DOWN, STATE_RELEASED);
-  _last_state.emplace(KEY_ENTER, STATE_RELEASED);
-
-  _debounce_states.emplace(KEY_UP, debounce_state{false, false, 0});
-  _debounce_states.emplace(KEY_DOWN, debounce_state{false, false, 0});
-  _debounce_states.emplace(KEY_ENTER, debounce_state{false, false, 0});
+  _debounce_states[KEY_UP] = debounce_state{false, false, 0};
+  _debounce_states[KEY_DOWN] = debounce_state{false, false, 0};
+  _debounce_states[KEY_ENTER] = debounce_state{false, false, 0};
 
   const esp_timer_create_args_t keyTimerArgs = {
       .callback = &pollKeys,
@@ -37,21 +33,19 @@ keys_esp_io_expander::keys_esp_io_expander(esp_io_expander_handle_t io_expander,
   last = esp_timer_get_time() / 1000;
 }
 
-std::map<EVENT_CODE, EVENT_STATE> keys_esp_io_expander::read() {
-
-  std::map<EVENT_CODE, EVENT_STATE> current_state;
-  for (auto &button : states) {
-    if (button.second >= 0) {
-      current_state[button.first] =
-          key_debounce_is_pressed(&_debounce_states[button.first]) ? STATE_PRESSED : STATE_RELEASED;
-      if (current_state[button.first] == STATE_PRESSED && _last_state[button.first] == current_state[button.first]) {
-        current_state[button.first] = STATE_HELD;
+EVENT_STATE * keys_esp_io_expander::read() {
+  for (int b = 0; b < KEY_MAX; b++) {
+    if (buttonConfig[b] >= 0) {
+      EVENT_STATE state = key_debounce_is_pressed(&_debounce_states[b]) ? STATE_PRESSED : STATE_RELEASED;
+      if (state == STATE_PRESSED && last_state[b] == state) {
+        _currentState[b] = STATE_HELD;
       } else {
-        _last_state[button.first] = current_state[button.first];
+        last_state[b] = state;
+        _currentState[b] = state;
       }
     }
   }
-  return current_state;
+  return _currentState;
 }
 
 void keys_esp_io_expander::poll() {
@@ -62,13 +56,12 @@ void keys_esp_io_expander::poll() {
 
     auto time = esp_timer_get_time() / 1000;
 
-    std::map<EVENT_CODE, EVENT_STATE> current_state;
-    for (auto &button : states) {
-      if (button.second >= 0) {
-        bool state = levels & (1 << button.second);
-        key_debounce_update(&_debounce_states[button.first], state == 0, time - last, &_debounce_config);
-        if (key_debounce_get_changed(&_debounce_states[button.first])) {
-          ESP_LOGI(TAG, "%i changed", button.first);
+    for (int b = 0; b < KEY_MAX; b++) {
+      if (buttonConfig[b] >= 0) {
+        bool state = levels & (1 << buttonConfig[b]);
+        key_debounce_update(&_debounce_states[b], state == 0, static_cast<int>(time - last), &_debounce_config);
+        if (key_debounce_get_changed(&_debounce_states[b])) {
+          ESP_LOGI(TAG, "%i changed", b);
         }
       }
     }
