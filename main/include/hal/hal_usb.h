@@ -30,6 +30,8 @@ esp_err_t mount_sdmmc_slot(gpio_num_t clk,
                            sdmmc_card_t **card,
                            int width);
 
+esp_err_t mount_ext_flash(int mosi, int miso, int sclk, int cs, wl_handle_t *wl_handle);
+
 void usb_init_mmc(int usb_sense, sdmmc_card_t **card);
 void usb_init_wearlevel(wl_handle_t *wl_handle);
 

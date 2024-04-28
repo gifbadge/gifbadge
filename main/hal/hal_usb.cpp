@@ -43,7 +43,7 @@ esp_err_t init_int_flash(wl_handle_t *wl_handle) {
   return wl_mount(data_partition, wl_handle);
 }
 
-esp_err_t init_ext_flash(int mosi, int miso, int sclk, int cs, wl_handle_t *wl_handle) {
+static const esp_partition_t* int_ext_flash_hw(int mosi, int miso, int sclk, int cs){
   esp_err_t err;
   const spi_bus_config_t bus_config =
       {.mosi_io_num = mosi, .miso_io_num = miso, .sclk_io_num = sclk, .quadwp_io_num = -1, .quadhd_io_num = -1,};
@@ -93,6 +93,12 @@ esp_err_t init_ext_flash(int mosi, int miso, int sclk, int cs, wl_handle_t *wl_h
                                                   ESP_PARTITION_TYPE_DATA,
                                                   ESP_PARTITION_SUBTYPE_DATA_FAT,
                                                   &fat_partition));
+  return fat_partition;
+}
+
+esp_err_t init_ext_flash(int mosi, int miso, int sclk, int cs, wl_handle_t *wl_handle) {
+
+  const esp_partition_t *fat_partition = int_ext_flash_hw(mosi, miso, sclk, cs);
 
   return wl_mount(fat_partition, wl_handle);
 }
@@ -199,6 +205,18 @@ esp_err_t mount_sdmmc_slot(gpio_num_t clk,
   sdmmc_card_print_info(stdout, *card);
   return ret;
 
+}
+
+esp_err_t mount_ext_flash(int mosi, int miso, int sclk, int cs, wl_handle_t *wl_handle){
+  const esp_vfs_fat_mount_config_t mount_config = {
+      .format_if_mount_failed = true,
+      .max_files = 4,
+      .allocation_unit_size = CONFIG_WL_SECTOR_SIZE,
+  };
+
+  const esp_partition_t *fat_partition = int_ext_flash_hw(mosi, miso, sclk, cs);
+
+  return esp_vfs_fat_spiflash_mount_rw_wl("/data", "ext_data", &mount_config, wl_handle);
 }
 
 bool storage_free() {
