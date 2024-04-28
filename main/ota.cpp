@@ -174,9 +174,8 @@ void task(void *) {
   while ((bytes_read = fread(ota_buffer, 1, sizeof(ota_buffer), ota_file)) > 0) {
 
     //Update the progress on the display
-    TaskHandle_t display_task_handle = xTaskGetHandle("display_task");
-    uint32_t percent = ((float) ftell(ota_file) / ota_size) * 100;
-    ESP_LOGI(TAG, "%%%lu", percent);
+    int percent = static_cast<int>((100*ftell(ota_file) + ota_size/2)/ota_size);
+    ESP_LOGI(TAG, "%%%d", percent);
     ota_percent = percent;
 
     err = esp_ota_write(update_handle, (const void *) ota_buffer, bytes_read);
