@@ -343,12 +343,11 @@ void display_task(void *params) {
             && ((esp_timer_get_time() / 1000000) - (last_change / 1000000)) > config.getSlideShowTime()) {
           xTaskNotifyIndexed(xTaskGetCurrentTaskHandle(), 0, DISPLAY_NEXT, eSetValueWithOverwrite);
         } else if (last_mode == DISPLAY_OTA) {
-          uint32_t percent;
-          xTaskNotifyWaitIndexed(1, 0, 0xffffffff, &percent, 0);
+          int percent = OTA::ota_status();
           if (percent != 0) {
             display_ota(board->getDisplay(), pGIFBuf, percent);
           }
-          delay = 200;
+          delay = 1000;
         } else {
           if(oldMenuState){
             in.reset(display_file(current_file.c_str(), pGIFBuf, board->getDisplay()));

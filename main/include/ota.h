@@ -24,6 +24,7 @@ bool check();
 void install();
 
 validation_err validate();
+int ota_status();
 }
 #endif
 

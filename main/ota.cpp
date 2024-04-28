@@ -107,6 +107,12 @@ OTA::validation_err validate() {
   return validation_err::OK;
 }
 
+static int ota_percent;
+
+int ota_status(){
+  return ota_percent;
+}
+
 /*!
  *  Task used to run the OTA install.
  */
@@ -164,17 +170,14 @@ void task(void *) {
 
   size_t bytes_read;
 
-  uint32_t last_percent = 0;
+  ota_percent = 0;
   while ((bytes_read = fread(ota_buffer, 1, sizeof(ota_buffer), ota_file)) > 0) {
 
     //Update the progress on the display
     TaskHandle_t display_task_handle = xTaskGetHandle("display_task");
     uint32_t percent = ((float) ftell(ota_file) / ota_size) * 100;
     ESP_LOGI(TAG, "%%%lu", percent);
-    if(last_percent != percent){
-      last_percent = percent;
-      xTaskNotifyIndexed(display_task_handle, 1, percent, eSetValueWithOverwrite);
-    }
+    ota_percent = percent;
 
     err = esp_ota_write(update_handle, (const void *) ota_buffer, bytes_read);
     if (err != ESP_OK) {
