@@ -109,7 +109,6 @@ static void initLowBatteryTask() {
 }
 
 static void openMenu(){
-  TaskHandle_t display_task_handle = xTaskGetHandle("display_task");
   lvgl_menu_open();
 }
 
