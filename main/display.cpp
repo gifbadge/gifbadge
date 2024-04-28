@@ -55,7 +55,7 @@ static void display_err(const std::shared_ptr<Display> &display, uint8_t *pGIFBu
 static void display_ota(const std::shared_ptr<Display> &display, uint8_t *pGIFBuf, uint32_t percent) {
   ESP_LOGI(TAG, "Displaying OTA Status");
   clear_screen(display, pGIFBuf);
-  char tmp[255];
+  char tmp[50];
   sprintf(tmp, "Update In Progress\n%lu%%", percent);
   render_text_centered(H_RES, V_RES, 10, tmp, pGIFBuf);
   display->write(0, 0, H_RES, V_RES, pGIFBuf);
@@ -73,7 +73,7 @@ static void display_image_batt(const std::shared_ptr<Display> &display, uint8_t 
   clear_screen(display, fBuf);
   auto *png = new PNGImage();
   png->open(low_batt_png, sizeof(low_batt_png));
-  uint8_t *pBuf = static_cast<uint8_t *>(malloc(png->size().first * png->size().second * 2));
+  uint8_t *pBuf = static_cast<uint8_t *>(heap_caps_malloc(png->size().first * png->size().second * 2, MALLOC_CAP_SPIRAM));
   png->loop(pBuf);
   display->write((H_RES / 2) - (png->size().first / 2),
                  (V_RES / 2) - (png->size().second / 2),
@@ -112,7 +112,7 @@ Image *display_file(const std::filesystem::path& path, uint8_t *pGIFBuf, const s
     } else {
       clear_screen(display, pGIFBuf); //Only need to clear the screen if the image won't fill it
       delay = 0;
-      auto *pBuf = static_cast<uint8_t *>(malloc(size.first * size.second * 2));
+      auto *pBuf = static_cast<uint8_t *>(heap_caps_malloc(size.first * size.second * 2, MALLOC_CAP_SPIRAM));
       delay = in->loop(pBuf);
       display->write((H_RES / 2) - (in->size().first / 2),
                      (V_RES / 2) - (in->size().second / 2),

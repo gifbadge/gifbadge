@@ -200,7 +200,7 @@ void lvgl_init(std::shared_ptr<Board> board) {
   size_t buffer_size = _board->getDisplay()->getResolution().first * _board->getDisplay()->getResolution().second * 2;
   ESP_LOGI(TAG, "Display Buffer Size %u", buffer_size);
   if (_board->getDisplay()->directRender()) {
-    void *buffer = malloc(buffer_size);
+    void *buffer = heap_caps_malloc(buffer_size, MALLOC_CAP_SPIRAM);
     lv_display_set_buffers(disp, buffer, nullptr, buffer_size,
                            LV_DISPLAY_RENDER_MODE_FULL);
   } else {

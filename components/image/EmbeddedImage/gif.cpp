@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <sys/stat.h>
 #include <cstring>
+#include <esp_heap_caps.h>
 
 struct mem_buf {
     uint8_t *buf;
@@ -25,11 +26,16 @@ static void *OpenFile(const char *fname, int32_t *pSize) {
 
     *pSize = stats.st_size;
 
-    auto *mem = static_cast<mem_buf *>(malloc(sizeof(mem_buf)));
-    mem->buf = static_cast<uint8_t *>(malloc(stats.st_size));
-//    mem->buf = nullptr;
+  heap_caps_print_heap_info(MALLOC_CAP_SPIRAM);
+  auto *mem = static_cast<mem_buf *>(malloc(sizeof(mem_buf)));
+    if(stats.st_size <= heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM)){
+      mem->buf = static_cast<uint8_t *>(heap_caps_malloc(stats.st_size, MALLOC_CAP_SPIRAM));
+    }
+    else {
+      printf("Not enough memory to buffer image\n");
+      mem->buf = nullptr;
+    }
     if (mem->buf == nullptr) {
-        printf("Not enough memory to buffer image\n");
     }
     mem->fp = infile;
     mem->pos = mem->buf;
@@ -134,7 +140,7 @@ Image *GIF::create() {
 }
 
 void *GIFAlloc(uint32_t u32Size) {
-    return malloc(u32Size);
+    return heap_caps_malloc(u32Size, MALLOC_CAP_SPIRAM);
 } /* GIFAlloc() */
 
 
