@@ -49,7 +49,7 @@ void backlight_ledc::state(bool state) {
 
 void backlight_ledc::setLevel(int level) {
   lastLevel = level;
-  uint32_t duty = (level) * 2.56;
+  uint32_t duty = (level*256)/100;
   ESP_LOGI(TAG, "backlight level: %lu\n", duty);
   ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, duty);
   ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0);
