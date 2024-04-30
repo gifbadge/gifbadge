@@ -48,6 +48,5 @@ class board_1_28_v0_1 : public Board {
   std::shared_ptr<backlight_ledc> _backlight;
   std::shared_ptr<touch_ft5x06> _touch;
   sdmmc_card_t *card = nullptr;
-  SemaphoreHandle_t pmLockCount;
-  esp_pm_lock_handle_t pmLockHandle;
+  esp_pm_lock_handle_t pmLockHandle = nullptr;
 };
