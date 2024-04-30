@@ -6,7 +6,6 @@
 #include <sys/stat.h>
 #include <memory>
 #include <utility>
-#include <map>
 #include "esp_lcd_panel_io.h"
 #include <lvgl.h>
 
@@ -25,7 +24,7 @@ static TaskHandle_t lvgl_task;
 static flushCbData cbData;
 static esp_timer_handle_t lvgl_tick_timer;
 static bool menu_state;
-static std::shared_ptr<Board> _board;
+static std::shared_ptr<Board> global_board;
 static SemaphoreHandle_t lvgl_mux = nullptr;
 
 
@@ -87,7 +86,7 @@ void lvgl_unlock() {
 
 void lvgl_close() {
   ESP_LOGI(TAG, "Close");
-  _board->getDisplay()->onColorTransDone(nullptr, nullptr);
+  global_board->getDisplay()->onColorTransDone(nullptr, nullptr);
 
   if (lvgl_lock(-1)) {
     destroy_screens();
@@ -101,7 +100,7 @@ void lvgl_close() {
   ESP_ERROR_CHECK(esp_timer_stop(lvgl_tick_timer));
   menu_state = false;
   ESP_LOGI(TAG, "Close Done");
-  _board->pmRelease();
+  global_board->pmRelease();
 }
 
 void task(void *) {
@@ -174,7 +173,7 @@ void touch_read(lv_indev_t *drv, lv_indev_data_t *data) {
 }
 
 void lvgl_init(std::shared_ptr<Board> board) {
-  _board = std::move(board);
+  global_board = std::move(board);
 
   menu_state = false;
 
@@ -194,32 +193,32 @@ void lvgl_init(std::shared_ptr<Board> board) {
 
   xTaskCreate(task, "LVGL", 10000, nullptr, LVGL_TASK_PRIORITY, &lvgl_task);
 
-  disp = lv_display_create(_board->getDisplay()->getResolution().first, _board->getDisplay()->getResolution().second);
+  disp = lv_display_create(global_board->getDisplay()->getResolution().first, global_board->getDisplay()->getResolution().second);
   lv_display_set_flush_cb(disp, flush_cb);
-  size_t buffer_size = _board->getDisplay()->getResolution().first * _board->getDisplay()->getResolution().second * 2;
+  size_t buffer_size = global_board->getDisplay()->getResolution().first * global_board->getDisplay()->getResolution().second * 2;
   ESP_LOGI(TAG, "Display Buffer Size %u", buffer_size);
-  if (_board->getDisplay()->directRender()) {
+  if (global_board->getDisplay()->directRender()) {
     void *buffer = heap_caps_malloc(buffer_size, MALLOC_CAP_SPIRAM);
     lv_display_set_buffers(disp, buffer, nullptr, buffer_size,
                            LV_DISPLAY_RENDER_MODE_FULL);
   } else {
-    lv_display_set_buffers(disp, _board->getDisplay()->getBuffer(), nullptr, buffer_size,
+    lv_display_set_buffers(disp, global_board->getDisplay()->getBuffer(), nullptr, buffer_size,
                            LV_DISPLAY_RENDER_MODE_FULL);
   }
 
   style_init();
   lvgl_encoder = lv_indev_create();
   lv_indev_set_type(lvgl_encoder, LV_INDEV_TYPE_ENCODER);
-  lv_indev_set_user_data(lvgl_encoder, _board->getKeys().get());
+  lv_indev_set_user_data(lvgl_encoder, global_board->getKeys().get());
   lv_indev_set_read_cb(lvgl_encoder, keyboard_read);
   lv_timer_set_period(lv_indev_get_read_timer(lvgl_encoder), 50);
 //
 //
-  if (_board->getTouch()) {
+  if (global_board->getTouch()) {
     lvgl_touch = lv_indev_create();
     lv_indev_set_type(lvgl_touch, LV_INDEV_TYPE_POINTER);
     lv_indev_set_read_cb(lvgl_touch, touch_read);
-    lv_indev_set_driver_data(lvgl_touch, _board->getTouch().get());
+    lv_indev_set_driver_data(lvgl_touch, global_board->getTouch().get());
     lv_timer_set_period(lv_indev_get_read_timer(lvgl_touch), 150);
   }
 
@@ -285,7 +284,7 @@ static void battery_widget(lv_obj_t *scr) {
   lv_label_set_text(battery, ICON_BATTERY_0);
   lv_obj_add_state(battery, LV_STATE_CHECKED);
 
-  lv_obj_set_user_data(battery, _board->getBattery().get());
+  lv_obj_set_user_data(battery, global_board->getBattery().get());
 
 
   //TODO: See why this causes a freeze in LVGL
@@ -308,16 +307,16 @@ static void battery_widget(lv_obj_t *scr) {
 void lvgl_wake_up() {
   if(!menu_state) {
     ESP_LOGI(TAG, "Wakeup");
-    _board->pmLock();
+    global_board->pmLock();
     menu_state = true;
 
-    cbData.display = _board->getDisplay();
+    cbData.display = global_board->getDisplay();
 
-    cbData.callbackEnabled = _board->getDisplay()->onColorTransDone(flush_ready, &disp);
+    cbData.callbackEnabled = global_board->getDisplay()->onColorTransDone(flush_ready, &disp);
 
-    if (_board->getDisplay()->directRender()) {
-      _board->getDisplay()->write(0, 0, _board->getDisplay()->getResolution().first,
-                                  _board->getDisplay()->getResolution().second, _board->getDisplay()->getBuffer2());
+    if (global_board->getDisplay()->directRender()) {
+      global_board->getDisplay()->write(0, 0, global_board->getDisplay()->getResolution().first,
+                                        global_board->getDisplay()->getResolution().second, global_board->getDisplay()->getBuffer2());
     }
     lv_display_flush_ready(disp); //Always start ready
     vTaskResume(lvgl_task);
