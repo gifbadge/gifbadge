@@ -78,26 +78,6 @@ std::filesystem::path ImageConfig::getPath() {
   return path;
 }
 
-void ImageConfig::setDirectory(const std::filesystem::path &value) {
-  const std::lock_guard<std::mutex> lock(mutex);
-  directory = value;
-}
-
-std::filesystem::path ImageConfig::getDirectory() {
-  const std::lock_guard<std::mutex> lock(mutex);
-  return directory;
-}
-
-void ImageConfig::setFile(const std::filesystem::path &value) {
-  const std::lock_guard<std::mutex> lock(mutex);
-  image_file = value;
-}
-
-std::filesystem::path ImageConfig::getFile() {
-  const std::lock_guard<std::mutex> lock(mutex);
-  return image_file;
-}
-
 void ImageConfig::setLocked(bool state) {
   const std::lock_guard<std::mutex> lock(mutex);
   locked = state;

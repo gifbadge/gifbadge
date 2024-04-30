@@ -15,10 +15,6 @@ class ImageConfig {
 
   void setPath(const std::filesystem::path &);
   std::filesystem::path getPath();
-  void setDirectory(const std::filesystem::path &);
-  std::filesystem::path getDirectory();
-  void setFile(const std::filesystem::path &);
-  std::filesystem::path getFile();
   void setLocked(bool);
   bool getLocked();
   bool getSlideShow();
