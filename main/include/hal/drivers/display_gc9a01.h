@@ -17,7 +17,7 @@ class display_gc9a01 : public Display {
   void write_from_buffer() override;
   bool directRender() override { return false; };
  private:
-  esp_lcd_panel_handle_t panel_handle;
-  esp_lcd_panel_io_handle_t io_handle;
-  uint8_t *buffer;
+  esp_lcd_panel_handle_t panel_handle = nullptr;
+  esp_lcd_panel_io_handle_t io_handle = nullptr;
+  uint8_t *buffer = nullptr;
 };
