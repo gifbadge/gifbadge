@@ -13,11 +13,11 @@ static const char *TAG = "board_1_28_v0_1";
 
 esp_pm_lock_handle_t usb_pm;
 
-static void IRAM_ATTR sdcard_removed(void *arg) {
+static void IRAM_ATTR sdcard_removed(void *) {
   esp_restart();
 }
 
-static void IRAM_ATTR usb_connected(void *arg) {
+static void IRAM_ATTR usb_connected(void *) {
   if (gpio_get_level(GPIO_VBUS_DETECT)) {
     esp_pm_lock_acquire(usb_pm);
     esp_rom_gpio_connect_in_signal(GPIO_MATRIX_CONST_ONE_INPUT, USB_SRP_BVALID_IN_IDX, false);
