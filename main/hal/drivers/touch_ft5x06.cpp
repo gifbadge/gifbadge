@@ -41,10 +41,6 @@ touch_ft5x06::touch_ft5x06(std::shared_ptr<I2C> bus) : _bus(std::move(bus)) {
   _bus->write_reg(0x38, FT5x06_ID_G_PERIODMONITOR, &out, 1);
 }
 
-touch_ft5x06::~touch_ft5x06() {
-
-}
-
 std::pair<int16_t, int16_t> touch_ft5x06::read() {
   uint8_t data;
   _bus->read_reg(0x38, FT5x06_TOUCH_POINTS, &data, 1);
