@@ -183,7 +183,7 @@ static void scroll_event_cb(lv_event_t *e) {
 //            lv_sqrt(x_sqr, &res, 0x8000);   /*Use lvgl's built in sqrt root function*/
 //            x = (int32_t) (r - res.i);
       uint32_t x_sqr = r * r - diff_y * diff_y;
-      int res = sqrt(x_sqr);
+      int res = (int)sqrt(x_sqr);
 //            lv_sqrt(x_sqr, &res, 0x8000);   /*Use lvgl's built in sqrt root function*/
       x = (int32_t) (r - res);
     }
