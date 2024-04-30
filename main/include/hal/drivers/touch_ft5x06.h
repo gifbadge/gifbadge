@@ -59,7 +59,7 @@
 #define FT5x06_ID_G_FT5201ID            (0xA8)
 #define FT5x06_ID_G_ERR                 (0xA9)
 
-class touch_ft5x06 : public Touch {
+class touch_ft5x06 final : public Touch {
  public:
   explicit touch_ft5x06(std::shared_ptr<I2C> bus);
   ~touch_ft5x06() final;
