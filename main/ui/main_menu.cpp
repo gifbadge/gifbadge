@@ -51,7 +51,7 @@ static void cleanupSubMenu(lv_event_t *e){
 }
 
 static void closeSubMenu(lv_event_t *e) {
-  lv_obj_t *root_obj = static_cast<lv_obj_t *>(lv_event_get_user_data(e));
+  auto *root_obj = static_cast<lv_obj_t *>(lv_event_get_user_data(e));
   if(lv_obj_is_valid(root_obj)){
     lv_obj_t *obj = lv_obj_get_parent(root_obj);
     restore_group(obj);
