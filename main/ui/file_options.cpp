@@ -59,10 +59,6 @@ static void FileOptionsFileSelect(lv_event_t *e) {
   lv_obj_add_event_cb(file_window, FileWindowClose, LV_EVENT_DELETE, lv_event_get_target(e));
 }
 
-static void FileOptionsRollerDefocus(lv_event_t *e) {
-  restore_group(static_cast<lv_obj_t *>(lv_event_get_user_data(e)));
-}
-
 static void FileOptionsMutuallyExclusive(lv_event_t *e) {
   auto *lock_switch = static_cast<lv_obj_t *>(lv_event_get_target(e));
   auto *slideshow_btn = static_cast<lv_obj_t *>(lv_event_get_user_data(e));
