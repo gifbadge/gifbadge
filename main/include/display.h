@@ -27,12 +27,6 @@ enum DISPLAY_OPTIONS {
   DISPLAY_SPECIAL_2,
 };
 
-struct display_task_args {
-  std::shared_ptr<Display> display;
-  std::shared_ptr<ImageConfig> image_config;
-  std::shared_ptr<Backlight> backlight;
-};
-
 void display_task(void *params);
 
 std::vector<std::string> list_directory(const std::string &path);
