@@ -35,15 +35,10 @@ lv_group_t *new_group() {
 }
 
 lv_group_t *restore_group(lv_obj_t *parent) {
-  if(lv_obj_is_valid(parent)) {
-    lv_group_t *old_group = lv_group_get_default();
-    lv_group_t *g = lv_obj_get_group(parent);
-    lv_indev_set_group(get_encoder(), g);
-    lv_group_set_default(g);
-    lv_group_delete(old_group);
-    return g;
-  }
-  return NULL;
+  lv_group_t *g = lv_obj_get_group(parent);
+  lv_indev_set_group(get_encoder(), g);
+  lv_group_set_default(g);
+  return g;
 }
 
 #ifdef __cplusplus
