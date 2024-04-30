@@ -24,8 +24,7 @@ class display_st7701s : public Display {
   bool directRender() override { return true; };
  private:
   size_t fb_number = 2;
-  esp_lcd_panel_handle_t panel_handle;
-  esp_lcd_panel_io_handle_t io_handle;
-  void *_fb0;
-  void *_fb1;
+  esp_lcd_panel_handle_t panel_handle = nullptr;
+  void *_fb0 = nullptr;
+  void *_fb1 = nullptr;
 };
