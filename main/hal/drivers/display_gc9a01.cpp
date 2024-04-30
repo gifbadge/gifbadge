@@ -43,6 +43,7 @@ display_gc9a01::display_gc9a01(int mosi, int sck, int cs, int dc, int reset) {
       .flags = {
           .dc_low_on_data = 0,
           .octal_mode = 0,
+          .quad_mode = 0,
           .sio_mode = 0,
           .lsb_first = 0,
           .cs_high_active = 0,
@@ -54,6 +55,7 @@ display_gc9a01::display_gc9a01(int mosi, int sck, int cs, int dc, int reset) {
   esp_lcd_panel_dev_config_t panel_config = {
       .reset_gpio_num = reset,
       .rgb_endian = LCD_RGB_ENDIAN_BGR,
+      .data_endian = LCD_RGB_DATA_ENDIAN_BIG,
       .bits_per_pixel = 16,
       .flags = {
           .reset_active_high = 0,
