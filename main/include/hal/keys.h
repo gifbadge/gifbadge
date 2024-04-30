@@ -57,7 +57,7 @@ class Keys {
 * @param elapsed_ms Time elapsed since the previous update in milliseconds.
 * @param config Debounce settings.
 */
-  void key_debounce_update(struct debounce_state *state, const bool active, const int elapsed_ms,
+  static void key_debounce_update(struct debounce_state *state, bool active, int elapsed_ms,
                            const struct debounce_config *config);
 
 /**
@@ -65,18 +65,18 @@ class Keys {
  * pressed but the debouncer has not yet made a decision. If this returns true,
  * the kscan driver should continue to poll quickly.
  */
-  bool key_debounce_is_active(const struct debounce_state *state);
+  static bool key_debounce_is_active(const struct debounce_state *state);
 
 /**
  * @returns whether the switch is latched as pressed.
  */
-  bool key_debounce_is_pressed(const struct debounce_state *state);
+  static bool key_debounce_is_pressed(const struct debounce_state *state);
 
 /**
  * @returns whether the pressed state of the switch changed in the last call to
  * debounce_update.
  */
-  bool key_debounce_get_changed(const struct debounce_state *state);
+  static bool key_debounce_get_changed(const struct debounce_state *state);
 
  protected:
   EVENT_STATE last_state[KEY_MAX] = {};
