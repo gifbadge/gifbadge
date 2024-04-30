@@ -16,7 +16,9 @@ battery_max17048::battery_max17048(std::shared_ptr<I2C> i2c, gpio_num_t vbus_pin
         bat->read();
       },
       .arg = this,
-      .name = "battery_max17048"
+      .dispatch_method = ESP_TIMER_TASK,
+      .name = "battery_max17048",
+      .skip_unhandled_events = true
   };
   esp_timer_handle_t battery_handler_handle = nullptr;
   ESP_ERROR_CHECK(esp_timer_create(&battery_timer_args, &battery_handler_handle));
