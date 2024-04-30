@@ -108,7 +108,6 @@ void task(void *) {
   bool running = true;
   ESP_LOGI(TAG, "Starting LVGL task");
   uint32_t task_delay_ms = 0;
-  TaskHandle_t handle = xTaskGetHandle("display_task");
   vTaskSuspend(nullptr); //Wait until we are actually needed
 
   while (running) {

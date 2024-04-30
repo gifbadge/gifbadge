@@ -214,7 +214,7 @@ esp_err_t mount_ext_flash(int mosi, int miso, int sclk, int cs, wl_handle_t *wl_
       .allocation_unit_size = CONFIG_WL_SECTOR_SIZE,
   };
 
-  const esp_partition_t *fat_partition = int_ext_flash_hw(mosi, miso, sclk, cs);
+  int_ext_flash_hw(mosi, miso, sclk, cs);
 
   return esp_vfs_fat_spiflash_mount_rw_wl("/data", "ext_data", &mount_config, wl_handle);
 }

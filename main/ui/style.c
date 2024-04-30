@@ -15,8 +15,7 @@ lv_style_t menu_font_style;
 void style_init() {
   lv_obj_t *btn = lv_btn_create(lv_scr_act());
   lv_color_t btn_text_colour = lv_obj_get_style_text_color(btn, LV_PART_MAIN);
-  lv_color_t btn_colour = lv_obj_get_style_bg_color(btn, LV_PART_MAIN);
-  lv_obj_del(btn);
+  lv_obj_delete(btn);
   lv_style_init(&icon_style);
   lv_style_init(&menu_font_style);
 

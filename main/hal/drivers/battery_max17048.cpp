@@ -23,10 +23,6 @@ battery_max17048::battery_max17048(std::shared_ptr<I2C> i2c, gpio_num_t vbus_pin
   esp_timer_start_periodic(battery_handler_handle, pollInterval() * 1000);
 }
 
-battery_max17048::~battery_max17048() {
-
-}
-
 BatteryStatus battery_max17048::read() {
   uint8_t d[2];
   _i2c->read_reg(0x36, 0x02, d, 2);

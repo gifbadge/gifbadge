@@ -111,7 +111,6 @@ Image *display_file(const std::filesystem::path& path, uint8_t *pGIFBuf, const s
                      pGIFBuf);
     } else {
       clear_screen(display, pGIFBuf); //Only need to clear the screen if the image won't fill it
-      delay = 0;
       auto *pBuf = static_cast<uint8_t *>(heap_caps_malloc(size.first * size.second * 2, MALLOC_CAP_SPIRAM));
       delay = in->loop(pBuf);
       display->write((H_RES / 2) - (in->size().first / 2),
