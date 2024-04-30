@@ -18,13 +18,13 @@ class keys_esp_io_expander : public Keys {
 
  private:
   esp_io_expander_handle_t _io_expander;
-  int buttonConfig[KEY_MAX];
+  int buttonConfig[KEY_MAX] = {};
   uint32_t lastLevels = 0;
 
-  debounce_state _debounce_states[KEY_MAX];
+  debounce_state _debounce_states[KEY_MAX] = {};
   debounce_config _debounce_config = {10, 10};
   esp_timer_handle_t keyTimer = nullptr;
-  EVENT_STATE _currentState[KEY_MAX];
+  EVENT_STATE _currentState[KEY_MAX] = {};
 
   long long last;
 
