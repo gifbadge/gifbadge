@@ -142,6 +142,7 @@ display_st7701s::display_st7701s(spi_line_config_t line_cfg,
       .bits_per_pixel = 16,
       .num_fbs = fb_number,
       .bounce_buffer_size_px = 0, //10*H_RES,
+      .sram_trans_align = 0,
       .psram_trans_align = 64,
       .hsync_gpio_num = hsync,
       .vsync_gpio_num = vsync,
@@ -154,6 +155,7 @@ display_st7701s::display_st7701s(spi_line_config_t line_cfg,
                          rgb[11], rgb[12], rgb[13], rgb[14], rgb[15]},
 
       .flags = {
+          .disp_active_low = 0,
           .fb_in_psram = 1,
       }
   };
@@ -184,12 +186,8 @@ void display_st7701s::write_from_buffer() {
 
 }
 
-static bool cb_func(esp_lcd_panel_handle_t panel, const esp_lcd_rgb_panel_event_data_t *edata, void *user_ctx) {
-  return false;
-}
-
 bool display_st7701s::onColorTransDone(esp_lcd_panel_io_color_trans_done_cb_t callback, void *ctx) {
-  esp_lcd_rgb_panel_event_callbacks_t callbacks{.on_vsync = reinterpret_cast<esp_lcd_rgb_panel_vsync_cb_t>(callback)};
+  esp_lcd_rgb_panel_event_callbacks_t callbacks{.on_vsync = reinterpret_cast<esp_lcd_rgb_panel_vsync_cb_t>(callback), .on_bounce_empty=nullptr, .on_bounce_frame_finish = nullptr};
   esp_lcd_rgb_panel_register_event_callbacks(panel_handle, &callbacks, ctx);
   return true;
 }
