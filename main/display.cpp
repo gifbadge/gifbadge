@@ -19,8 +19,8 @@
 
 static const char *TAG = "DISPLAY";
 
-int H_RES;
-int V_RES;
+int16_t H_RES;
+int16_t V_RES;
 
 static void clear_screen(const std::shared_ptr<Display> &display, uint8_t *pBuf) {
   if (pBuf != nullptr) {
@@ -205,8 +205,8 @@ void display_task(void *params) {
 
   bool oldMenuState = false;
 
-  H_RES = board->getDisplay()->getResolution().first;
-  V_RES = board->getDisplay()->getResolution().second;
+  H_RES = static_cast<int16_t>(board->getDisplay()->getResolution().first);
+  V_RES = static_cast<int16_t>(board->getDisplay()->getResolution().second);
 
 
   // user can flush pre-defined pattern to the screen before we turn on the screen or backlight
@@ -331,7 +331,7 @@ void display_task(void *params) {
             in.reset();
             in.reset(display_file("/data/cards/down.png", pGIFBuf, board->getDisplay()));
             last_mode = static_cast<DISPLAY_OPTIONS>(option);
-          };
+          }
           break;
         default:
           break;
