@@ -20,8 +20,6 @@ class battery_analog final : public Battery {
 
   double getRate() override { return 0; };
 
-  bool isCharging() override { return false; };
-
   void removed() override {};
 
   void inserted() override {};

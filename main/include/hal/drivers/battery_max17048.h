@@ -22,8 +22,6 @@ class battery_max17048 final : public Battery {
 
   double getRate() override;
 
-  bool isCharging() override;
-
   void removed() override;
 
   void inserted() override;

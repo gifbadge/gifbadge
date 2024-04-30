@@ -51,10 +51,6 @@ double battery_max17048::getRate() {
   return _rate;
 }
 
-bool battery_max17048::isCharging() {
-  return gpio_get_level(_vbus_pin) && _rate > 1;
-}
-
 void battery_max17048::removed() {
   present = false;
 }
