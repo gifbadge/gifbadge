@@ -1,11 +1,4 @@
 #pragma once
-
-struct BatteryStatus {
-  double voltage;
-  int soc;
-  double rate;
-};
-
 class Battery {
  public:
 
@@ -22,8 +15,6 @@ class Battery {
   Battery() = default;
 
   virtual ~Battery() = default;
-
-  virtual BatteryStatus read() = 0;
 
   virtual int pollInterval() = 0;
 

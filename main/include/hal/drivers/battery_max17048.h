@@ -12,7 +12,7 @@ class battery_max17048 final : public Battery {
   explicit battery_max17048(std::shared_ptr<I2C>, gpio_num_t vbus_pin);
   ~battery_max17048() final = default;
 
-  BatteryStatus read() final;
+  void poll();
 
   int pollInterval() override { return 1000; };
 
