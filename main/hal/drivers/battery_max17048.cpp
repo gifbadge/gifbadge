@@ -52,6 +52,10 @@ void battery_max17048::removed() {
 }
 
 void battery_max17048::inserted() {
+  // Quickstart. so the MAX17048 restarts it's SOC algorythm.
+  //Prevents erroneous readings if battery is swapped while charging
+  uint8_t cmd[] = {0x80, 0x00};
+  _i2c->write_reg(0x36, 0x06, cmd, 2);
   present = true;
 }
 
