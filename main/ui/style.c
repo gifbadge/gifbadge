@@ -19,13 +19,25 @@ void style_init() {
   lv_style_init(&icon_style);
   lv_style_init(&menu_font_style);
 
+  lv_style_init(&battery_style_normal);
+  lv_style_set_text_color(&battery_style_normal, btn_text_colour);
+  lv_style_set_text_align(&battery_style_normal, LV_TEXT_ALIGN_CENTER);
+
+  lv_style_init(&battery_style_empty);
+  lv_style_set_text_color(&battery_style_empty, lv_color_hex(0xFF0000));
+  lv_style_set_text_align(&battery_style_empty, LV_TEXT_ALIGN_CENTER);
+
   lv_style_set_text_color(&icon_style, btn_text_colour);
   if (lv_disp_get_hor_res(NULL) > 240) {
     lv_style_set_text_font(&icon_style, &material_icons_56);
     lv_style_set_text_font(&menu_font_style, &lv_font_montserrat_28);
+    lv_style_set_text_font(&battery_style_normal, &material_icons_56);
+    lv_style_set_text_font(&battery_style_empty, &material_icons_56);
   } else {
     lv_style_set_text_font(&icon_style, &material_icons);
     lv_style_set_text_font(&menu_font_style, &lv_font_montserrat_14);
+    lv_style_set_text_font(&battery_style_normal, &material_icons);
+    lv_style_set_text_font(&battery_style_empty, &material_icons);
   }
 
   lv_obj_t *drop = lv_dropdown_create(lv_scr_act());
@@ -38,15 +50,7 @@ void style_init() {
   lv_style_set_pad_all(&file_select_style, lv_obj_get_style_pad_bottom(drop, LV_PART_MAIN));
   lv_obj_del(drop);
 
-  lv_style_init(&battery_style_normal);
-  lv_style_set_text_color(&battery_style_normal, btn_text_colour);
-  lv_style_set_text_font(&battery_style_normal, &lv_font_montserrat_28);
-  lv_style_set_text_align(&battery_style_normal, LV_TEXT_ALIGN_CENTER);
 
-  lv_style_init(&battery_style_empty);
-  lv_style_set_text_color(&battery_style_empty, lv_color_hex(0xFF0000));
-  lv_style_set_text_font(&battery_style_empty, &lv_font_montserrat_28);
-  lv_style_set_text_align(&battery_style_empty, LV_TEXT_ALIGN_CENTER);
 
   lv_style_init(&container_style);
   lv_style_set_pad_all(&container_style, 0);
