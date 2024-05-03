@@ -11,6 +11,12 @@ lv_style_t container_style;
 lv_style_t icon_style;
 lv_style_t file_select_style;
 lv_style_t menu_font_style;
+lv_style_t style_battery_indicator;
+lv_style_t style_battery_main;
+lv_style_t style_battery_icon;
+
+
+
 
 void style_init() {
   lv_obj_t *btn = lv_btn_create(lv_scr_act());
@@ -56,6 +62,20 @@ void style_init() {
   lv_style_set_pad_all(&container_style, 0);
   lv_style_set_border_side(&container_style, LV_BORDER_SIDE_NONE);
   lv_style_set_bg_opa(&container_style, 0);
+
+  lv_style_init(&style_battery_indicator);
+  lv_style_set_bg_opa(&style_battery_indicator, LV_OPA_COVER);
+  lv_style_set_bg_color(&style_battery_indicator, lv_obj_get_style_bg_color(lv_scr_act(), LV_PART_MAIN));
+
+  lv_style_init(&style_battery_main);
+  lv_style_set_bg_opa(&style_battery_main, LV_OPA_COVER);
+  lv_style_set_bg_color(&style_battery_main, btn_text_colour);
+  lv_style_set_pad_hor(&style_battery_main, 5);
+  lv_style_set_pad_ver(&style_battery_main, 5);
+
+  lv_style_init(&style_battery_icon);
+  lv_style_set_bg_opa(&style_battery_icon, LV_OPA_COVER);
+  lv_style_set_bg_color(&style_battery_icon, lv_obj_get_style_bg_color(lv_scr_act(), LV_PART_MAIN));
 
 //    lv_style_init(&icon_style);
 //    lv_style_set_text_color(&icon_style, lv_color_black());

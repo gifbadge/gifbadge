@@ -15,6 +15,7 @@
 #include "ui/style.h"
 #include "hw_init.h"
 #include "display.h"
+#include "ui/widgets/battery/lv_battery.h"
 
 static const char *TAG = "MENU";
 
@@ -224,39 +225,32 @@ void lvgl_init(std::shared_ptr<Board> board) {
 
 }
 
-void battery_update(lv_obj_t *widget) {
+void battery_percent_update(lv_obj_t *widget) {
   auto battery = static_cast<Battery *>(lv_obj_get_user_data(widget));
-  lv_obj_remove_state(widget, LV_STATE_CHECKED);
-  if (battery->status() == Battery::State::ERROR) {
-    lv_obj_add_state(widget, LV_STATE_CHECKED);
-    lv_label_set_text(widget, ICON_BATTERY_ALERT);
-  } else if (battery->status() == Battery::State::NOT_PRESENT) {
-    lv_label_set_text(widget, ICON_BATTERY_REMOVED);
-  } else if (battery->status() == Battery::State::CHARGING) {
-    if (battery->getSoc() > 90) {
-      lv_label_set_text(widget, ICON_BATTERY_100);
-    } else if (battery->getSoc() > 80) {
-      lv_label_set_text(widget, ICON_BATTERY_CHARGING_80);
-    } else if (battery->getSoc() > 50) {
-      lv_label_set_text(widget, ICON_BATTERY_CHARGING_50);
-    } else if (battery->getSoc() > 30) {
-      lv_label_set_text(widget, ICON_BATTERY_CHARGING_30);
-    } else {
-      lv_label_set_text(widget, ICON_BATTERY_CHARGING_0);
-    }
+  if (battery->status() == Battery::State::ERROR || battery->status() == Battery::State::NOT_PRESENT) {
+    lv_battery_set_value(widget, 0);
   } else {
-    if (battery->getSoc() > 90) {
-      lv_label_set_text(widget, ICON_BATTERY_100);
-    } else if (battery->getSoc() > 80) {
-      lv_label_set_text(widget, ICON_BATTERY_80);
-    } else if (battery->getSoc() > 50) {
-      lv_label_set_text(widget, ICON_BATTERY_50);
-    } else if (battery->getSoc() > 30) {
-      lv_label_set_text(widget, ICON_BATTERY_30);
-    } else {
-      lv_obj_add_state(widget, LV_STATE_CHECKED);
-      lv_label_set_text(widget, ICON_BATTERY_0);
-    }
+    lv_battery_set_value(widget, battery->getSoc());
+  }
+}
+
+void battery_symbol_update(lv_obj_t *cont) {
+  auto battery = static_cast<Battery *>(lv_obj_get_user_data(cont));
+  lv_obj_t *symbol = lv_obj_get_child(cont, 0);
+  lv_obj_set_style_bg_opa(cont, LV_OPA_COVER, LV_PART_MAIN);
+  lv_obj_remove_state(cont, LV_OBJ_FLAG_HIDDEN);
+  if (battery->status() == Battery::State::ERROR) {
+    lv_image_set_src(symbol, LV_SYMBOL_DUMMY "\uf22f");
+    lv_obj_set_style_text_color(symbol, lv_color_hex(0xeed202), LV_PART_MAIN); //Yellow
+  } else if (battery->status() == Battery::State::NOT_PRESENT) {
+    lv_image_set_src(symbol, LV_SYMBOL_DUMMY "\ue5cd");
+    lv_obj_set_style_text_color(symbol, lv_color_hex(0xff0033), LV_PART_MAIN); //Red
+  } else if (battery->status() == Battery::State::CHARGING) {
+    lv_image_set_src(symbol, LV_SYMBOL_DUMMY "\uea0b");
+    lv_obj_set_style_text_color(symbol, lv_color_hex(0x50C878), LV_PART_MAIN); //Green
+  } else {
+    lv_obj_add_state(cont, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_set_style_bg_opa(cont, LV_OPA_TRANSP, LV_PART_MAIN);
   }
 }
 
@@ -267,33 +261,60 @@ static void battery_widget(lv_obj_t *scr) {
   lv_obj_set_size(battery_bar, lv_pct(100), LV_SIZE_CONTENT);
   lv_obj_set_style_bg_color(battery_bar, lv_obj_get_style_bg_color(lv_scr_act(), LV_PART_MAIN), LV_PART_MAIN);
   lv_obj_set_style_border_side(battery_bar, LV_BORDER_SIDE_NONE, LV_PART_MAIN);
-  lv_obj_set_style_pad_all(battery_bar, 0, LV_PART_MAIN);
+  lv_obj_set_style_pad_all(battery_bar, 5, LV_PART_MAIN);
 
-  lv_obj_t *battery = lv_label_create(battery_bar);
-  lv_obj_set_width(battery, LV_PCT(100));
-  lv_obj_add_style(battery, &battery_style_normal, 0);
-  lv_obj_add_style(battery, &battery_style_empty, LV_STATE_CHECKED);
-  lv_obj_set_pos(battery, 0, 10);
-  lv_label_set_text(battery, ICON_BATTERY_0);
-  lv_obj_add_state(battery, LV_STATE_CHECKED);
-
-  lv_obj_set_user_data(battery, global_board->getBattery().get());
+  lv_obj_t *bar = lv_battery_create(battery_bar);
+  lv_obj_add_style(bar, &style_battery_indicator, LV_PART_INDICATOR);
+  lv_obj_add_style(bar, &style_battery_main, LV_PART_MAIN);
+  lv_obj_set_size(bar, 20, 40);
+  lv_obj_center(bar);
+  lv_obj_set_user_data(bar, global_board->getBattery().get());
 
 
   //TODO: See why this causes a freeze in LVGL
-  lv_obj_add_event_cb(battery, [](lv_event_t *e) {
-    battery_update(static_cast<lv_obj_t *>(lv_event_get_target(e)));
+  lv_obj_add_event_cb(bar, [](lv_event_t *e) {
+    battery_percent_update(static_cast<lv_obj_t *>(lv_event_get_target(e)));
   }, LV_EVENT_REFRESH, nullptr);
-  battery_update(battery);
+  battery_percent_update(bar);
 
   lv_timer_t *timer = lv_timer_create([](lv_timer_t *timer) {
     auto *obj = (lv_obj_t *) timer->user_data;
     lv_obj_send_event(obj, LV_EVENT_REFRESH, nullptr);
-  }, 30000, battery);
-  lv_obj_add_event_cb(battery, [](lv_event_t *e) {
+  }, 30000, bar);
+  lv_obj_add_event_cb(bar, [](lv_event_t *e) {
     auto *timer = (lv_timer_t *) e->user_data;
     lv_timer_del(timer);
   }, LV_EVENT_DELETE, timer);
+
+  lv_obj_t *battery_symbol_cont = lv_obj_create(battery_bar);
+  lv_obj_remove_style_all(battery_symbol_cont);
+  lv_obj_set_size(battery_symbol_cont, 24, 24);
+  lv_obj_set_style_bg_color(battery_symbol_cont, lv_obj_get_style_bg_color(lv_scr_act(), LV_PART_MAIN), LV_PART_MAIN);
+  lv_obj_set_style_bg_opa(battery_symbol_cont, LV_OPA_COVER, LV_PART_MAIN);
+  lv_obj_align_to(battery_symbol_cont, bar, LV_ALIGN_BOTTOM_RIGHT, 18, 12);
+  lv_obj_set_style_radius(battery_symbol_cont, LV_RADIUS_CIRCLE, LV_PART_MAIN);
+
+  lv_obj_t *battery_symbol = lv_img_create(battery_symbol_cont);
+  lv_obj_align(battery_symbol, LV_ALIGN_CENTER, 0, 0);
+  lv_obj_set_style_text_font(battery_symbol, &battery_symbols_14, LV_PART_MAIN);
+  lv_obj_set_style_text_align(battery_symbol, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
+
+  lv_obj_set_user_data(battery_symbol_cont, global_board->getBattery().get());
+
+  //TODO: See why this causes a freeze in LVGL
+  lv_obj_add_event_cb(battery_symbol_cont, [](lv_event_t *e) {
+    battery_symbol_update(static_cast<lv_obj_t *>(lv_event_get_target(e)));
+  }, LV_EVENT_REFRESH, nullptr);
+  battery_symbol_update(battery_symbol_cont);
+
+  lv_timer_t *timer_icon = lv_timer_create([](lv_timer_t *timer) {
+    auto *obj = (lv_obj_t *) timer->user_data;
+    lv_obj_send_event(obj, LV_EVENT_REFRESH, nullptr);
+  }, 30000, battery_symbol_cont);
+  lv_obj_add_event_cb(battery_symbol_cont, [](lv_event_t *e) {
+    auto *timer = (lv_timer_t *) e->user_data;
+    lv_timer_del(timer);
+  }, LV_EVENT_DELETE, timer_icon);
 
 }
 

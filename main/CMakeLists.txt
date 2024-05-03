@@ -27,6 +27,7 @@ idf_component_register(SRCS
         ${CMAKE_CURRENT_BINARY_DIR}/material_icons.c
         ${CMAKE_CURRENT_BINARY_DIR}/material_icons_56.c
         ${CMAKE_CURRENT_BINARY_DIR}/material_icons_special.c
+        ${CMAKE_CURRENT_BINARY_DIR}/battery_symbols_14.c
         "esp_efuse_custom_table.c"
         "ui/menu.cpp"
         "ui/device_group.c"
@@ -34,6 +35,7 @@ idf_component_register(SRCS
         "ui/main_menu.cpp"
         "ui/file_options.cpp"
         "ui/widgets/file_list/file_list.c"
+        "ui/widgets/battery/lv_battery.c"
         "ui/style.c"
         "ui/storage.cpp"
         "ui/usb_connected.cpp"
@@ -52,6 +54,8 @@ message(font_symbols="${font_symbols}")
 set(special_symbols "0xe1e0,0xe3f4")
 message(special_symbols="${special_symbols}")
 
+set(battery_symbols "0xea0b,0xf22f,0xe5cd") #Charging,!, X
+
 add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/material_icons.c
         COMMAND lv_font_conv --bpp 1 --size 28 --format lvgl --lv-include lvgl.h --font ${CMAKE_SOURCE_DIR}/MaterialSymbolsOutlined[FILL,GRAD,opsz,wght].ttf -r"${font_symbols}" --no-compress -o ${CMAKE_CURRENT_BINARY_DIR}/material_icons.c
@@ -60,6 +64,11 @@ add_custom_command(
 add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/material_icons_56.c
         COMMAND lv_font_conv --bpp 1 --size 56 --format lvgl --lv-include lvgl.h --font ${CMAKE_SOURCE_DIR}/MaterialSymbolsOutlined[FILL,GRAD,opsz,wght].ttf -r"${font_symbols}" --no-compress -o ${CMAKE_CURRENT_BINARY_DIR}/material_icons_56.c
+)
+
+add_custom_command(
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/battery_symbols_14.c
+        COMMAND lv_font_conv --bpp 1 --size 14 --format lvgl --lv-include lvgl.h --font ${CMAKE_SOURCE_DIR}/MaterialSymbolsOutlined[FILL,GRAD,opsz,wght]-Filled.ttf -r"${battery_symbols}" --no-compress -o ${CMAKE_CURRENT_BINARY_DIR}/battery_symbols_14.c
 )
 
 add_custom_command(
