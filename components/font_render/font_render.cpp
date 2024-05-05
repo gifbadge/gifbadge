@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <cstring>
 #include <esp_log.h>
+#include <endian.h>
 
 /********************************************
  * Callbacks to specify rendering behaviour *

@@ -24,7 +24,7 @@ display_gc9a01::display_gc9a01(int mosi, int sck, int cs, int dc, int reset) {
       .data7_io_num = -1,
       .max_transfer_sz = 16384, //H_RES * V_RES * sizeof(uint16_t),
       .flags = 0,
-      .isr_cpu_id = INTR_CPU_ID_AUTO,
+      .isr_cpu_id = ESP_INTR_CPU_AFFINITY_AUTO,
       .intr_flags = 0,
   };
   ESP_ERROR_CHECK(spi_bus_initialize(SPI2_HOST, &buscfg, SPI_DMA_CH_AUTO));
