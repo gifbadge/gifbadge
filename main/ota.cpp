@@ -166,7 +166,7 @@ void task(void *) {
   }
 
   FILE *ota_file = fopen("/data/ota.bin", "r");
-  static char ota_buffer[4096 + 1] = {0};
+  static char *ota_buffer = static_cast<char *>(malloc(4091 + 1));
 
   size_t bytes_read;
 
@@ -196,12 +196,18 @@ void task(void *) {
     } else {
       ESP_LOGE(TAG, "esp_ota_end failed (%s)!", esp_err_to_name(err));
     }
+    if(ota_buffer){
+      free(ota_buffer);
+    }
     vTaskDelete(nullptr);
   }
 
   err = esp_ota_set_boot_partition(update_partition);
   if (err != ESP_OK) {
     ESP_LOGE(TAG, "esp_ota_set_boot_partition failed (%s)!", esp_err_to_name(err));
+    if(ota_buffer){
+      free(ota_buffer);
+    }
     vTaskDelete(nullptr);
   }
   ESP_LOGI(TAG, "Prepare to restart system!");
