@@ -192,7 +192,7 @@ void lvgl_init(std::shared_ptr<Board> board) {
   lvgl_tick_timer = nullptr;
   ESP_ERROR_CHECK(esp_timer_create(&lvgl_tick_timer_args, &lvgl_tick_timer));
 
-  xTaskCreate(task, "LVGL", 10000, nullptr, LVGL_TASK_PRIORITY, &lvgl_task);
+  xTaskCreate(task, "LVGL", 7*1024, nullptr, LVGL_TASK_PRIORITY, &lvgl_task);
 
   disp = lv_display_create(global_board->getDisplay()->getResolution().first, global_board->getDisplay()->getResolution().second);
   lv_display_set_flush_cb(disp, flush_cb);
