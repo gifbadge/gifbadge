@@ -2,6 +2,7 @@
 
 #include <utility>
 #include <esp_log.h>
+#include <esp_timer.h>
 
 static const char *TAG = "battery_max17048";
 
