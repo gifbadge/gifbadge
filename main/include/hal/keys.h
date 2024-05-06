@@ -1,15 +1,8 @@
 #pragma once
 
 #include <map>
-#include <string>
 #include <hal/gpio_types.h>
-
-struct button_state {
-  gpio_num_t pin;
-  std::string name;
-  bool state;
-  int64_t time;
-};
+#include <cstdint>
 
 //#define 	BIT(n)   (1UL << (n))
 #define    BIT_MASK(n)   (BIT(n) - 1UL)
