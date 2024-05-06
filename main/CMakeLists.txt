@@ -40,7 +40,8 @@ idf_component_register(SRCS
         "ui/storage.cpp"
         "ui/usb_connected.cpp"
         "ui/device_info.cpp"
-        INCLUDE_DIRS "include")
+        INCLUDE_DIRS "include"
+REQUIRES esp_psram esp_adc nvs_flash efuse app_update image font_render lvgl esp_io_expander_cat9532 esp_io_expander tinyusb esp_tinyusb esp_timer)
 #target_compile_options(${COMPONENT_LIB} PRIVATE -DGC9A01=1 -DLV_USE_PERF_MONITOR=1)
 target_compile_options(${COMPONENT_LIB} PRIVATE -DST7706=1 -DLV_USE_PERF_MONITOR=1)
 target_compile_options(${COMPONENT_LIB} PRIVATE -D__LINUX__)
@@ -63,7 +64,7 @@ add_custom_command(
 
 add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/material_icons_56.c
-        COMMAND lv_font_conv --bpp 1 --size 56 --format lvgl --lv-include lvgl.h --font ${CMAKE_SOURCE_DIR}/MaterialSymbolsOutlined[FILL,GRAD,opsz,wght].ttf -r"${font_symbols}" --no-compress -o ${CMAKE_CURRENT_BINARY_DIR}/material_icons_56.c
+        COMMAND lv_font_conv --bpp 1 --size 56 --format lvgl --lv-include lvgl.h --font ${CMAKE_SOURCE_DIR}/MaterialSymbolsOutlined[FILL,GRAD,opsz,wght].ttf -r"${font_symbols}" -o ${CMAKE_CURRENT_BINARY_DIR}/material_icons_56.c
 )
 
 add_custom_command(
@@ -73,7 +74,7 @@ add_custom_command(
 
 add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/material_icons_special.c
-        COMMAND lv_font_conv --bpp 1 --size 180 --format lvgl --lv-include lvgl.h --font ${CMAKE_SOURCE_DIR}/MaterialSymbolsOutlined[FILL,GRAD,opsz,wght].ttf -r"${special_symbols}" --no-compress -o ${CMAKE_CURRENT_BINARY_DIR}/material_icons_special.c
+        COMMAND lv_font_conv --bpp 1 --size 180 --format lvgl --lv-include lvgl.h --font ${CMAKE_SOURCE_DIR}/MaterialSymbolsOutlined[FILL,GRAD,opsz,wght].ttf -r"${special_symbols}" -o ${CMAKE_CURRENT_BINARY_DIR}/material_icons_special.c
 )
 
 target_link_libraries(${COMPONENT_TARGET} "-u custom_app_desc")
