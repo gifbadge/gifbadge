@@ -12,7 +12,7 @@ JPEG::~JPEG() {
     fclose(jpguser.infile);
 }
 
-static std::string jresult_to_str(JRESULT ret){
+static const char *jresult_to_str(JRESULT ret){
     switch (ret) {
         case JDR_OK:
             return "Succeeded";
@@ -125,6 +125,6 @@ int JPEG::open(const char *path) {
     return 0;
 }
 
-std::string JPEG::getLastError() {
+const char * JPEG::getLastError() {
     return lastErr;
 }

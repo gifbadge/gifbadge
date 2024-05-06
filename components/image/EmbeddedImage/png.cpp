@@ -41,7 +41,7 @@ void PNGImage::PNGDraw(PNGDRAW *pDraw) {
     config->png->getLineAsRGB565(pDraw, line, PNG_RGB565_BIG_ENDIAN, 0xffffffff);
 }
 
-std::string PNGImage::getLastError() {
+const char * PNGImage::getLastError() {
     switch(png.getLastError()){
         case PNG_SUCCESS:
             return "PNG_SUCCESS";

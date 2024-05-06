@@ -26,7 +26,7 @@ public:
 
     bool animated() override {return true;};
 
-    std::string getLastError() override;
+    const char *getLastError() override;
 
 
 private:

@@ -159,7 +159,7 @@ int GIF::open(const char *path) {
     return -1;
 }
 
-std::string GIF::getLastError() {
+const char *GIF::getLastError() {
     switch (gif.getLastError()) {
         case GIF_SUCCESS:
             return "GIF_SUCCESS";

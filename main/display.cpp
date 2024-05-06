@@ -84,21 +84,21 @@ static void display_image_batt(const std::shared_ptr<Display> &display, uint8_t 
   free(pBuf);
 }
 
-Image *display_file(const std::filesystem::path& path, uint8_t *pGIFBuf, const std::shared_ptr<Display> &display) {
-  Image *in = ImageFactory(path.c_str());
+Image *display_file(const char *path, uint8_t *pGIFBuf, const std::shared_ptr<Display> &display) {
+  Image *in = ImageFactory(path);
   if (in) {
-    if (in->open(path.c_str()) != 0) {
-      std::string err = "Error Displaying File\n";
-      err = err + path.c_str() + "\n" + in->getLastError();
-      display_err(display, pGIFBuf, err.c_str());
+    if (in->open(path) != 0) {
+      char errorString[255];
+      snprintf(errorString, sizeof(errorString), "Error Displaying File\n%s\n%s", path, in->getLastError());
+      display_err(display, pGIFBuf, errorString);
       delete in;
       return nullptr;
     }
-    printf("%s x: %i y: %i\n", path.c_str(), in->size().first, in->size().second);
+    printf("%s x: %i y: %i\n", path, in->size().first, in->size().second);
     auto size = in->size();
     if (size.first > H_RES || size.second > V_RES) {
       delete in;
-      display_image_too_large(display, pGIFBuf, path.c_str());
+      display_image_too_large(display, pGIFBuf, path);
       return nullptr;
     }
     int delay;
@@ -150,13 +150,42 @@ static int image_loop(std::shared_ptr<Image> &in, uint8_t *pGIFBuf, const std::s
   }
 }
 
-static std::string get_file(const std::filesystem::path &path) {
-  FILE *fp = fopen(path.c_str(), "r");
-  if (fp != nullptr) {
-    fclose(fp);
-    return path;
+static int get_file(const char *path, char *outPath, size_t outLen) {
+  char inPath[128];
+  strncpy(inPath, path, sizeof(inPath)-1);
+
+  //Check if we are starting with a valid file, and just return it if we are
+  if (valid_file(path)) {
+    strncpy(outPath, path, outLen - 1);
+    return 0;
   }
-  return list_directory(path).at(0);
+  char *base = inPath;
+  //Check if it's a directory
+  if (!is_dir(path)) {
+    //It's not a directory. Get the directory
+    base = dirname(inPath);
+  }
+  struct dirent *de;  // Pointer for directory entry
+
+  DIR *dr = opendir(base);
+
+  if (dr == nullptr) {
+    return -1;
+  }
+
+  while ((de = readdir(dr)) != nullptr) {
+    if (snprintf(outPath, outLen, "%s/%s", base, de->d_name) < 0) {
+      return -1;
+    }
+    if (valid_file(outPath)) {
+      ESP_LOGI(TAG, "%s", outPath);
+      closedir(dr);
+      return 0;
+    }
+  }
+  closedir(dr);
+  outPath[0] = '\0';
+  return -1;
 }
 
 static int files_get_position(const std::vector<std::string> &files, const std::string &name) {
@@ -253,19 +282,20 @@ void display_task(void *params) {
     xTaskNotifyWaitIndexed(0, 0, 0xffffffff, &option, delay / portTICK_PERIOD_MS);
     if (option != DISPLAY_NONE) {
       last_change = esp_timer_get_time();
+      char tmpPath[255];
       switch (option) {
         case DISPLAY_FILE:
           in.reset();
           ESP_LOGI(TAG, "DISPLAY_FILE");
           config.reload();
-          try {
-            if(current_file.empty()) {
-              current_file = get_file(config.getPath());
+          if(!valid_file(current_file.c_str())) {
+            if(get_file(config.getPath().c_str(), tmpPath, sizeof(tmpPath)) == 0){
+              current_file = tmpPath;
+            } else {
+              display_no_image(board->getDisplay(), pGIFBuf);
             }
-            in.reset(display_file(current_file.c_str(), pGIFBuf, board->getDisplay()));
-          } catch (std::out_of_range &err) {
-            display_no_image(board->getDisplay(), pGIFBuf);
           }
+          in.reset(display_file(current_file.c_str(), pGIFBuf, board->getDisplay()));
           last_mode = static_cast<DISPLAY_OPTIONS>(option);
           break;
         case DISPLAY_NEXT:
@@ -318,7 +348,7 @@ void display_task(void *params) {
         case DISPLAY_SPECIAL_1:
           ESP_LOGI(TAG, "DISPLAY_SPECIAL_1");
           config.reload();
-          if(exists(std::filesystem::path("/data/cards/up.png"))) {
+          if(valid_file("/data/cards/up.png")) {
             in.reset();
             in.reset(display_file("/data/cards/up.png", pGIFBuf, board->getDisplay()));
             last_mode = static_cast<DISPLAY_OPTIONS>(option);
@@ -327,7 +357,7 @@ void display_task(void *params) {
         case DISPLAY_SPECIAL_2:
           ESP_LOGI(TAG, "DISPLAY_SPECIAL_2");
           config.reload();
-          if(exists(std::filesystem::path("/data/cards/down.png"))) {
+          if(valid_file("/data/cards/down.png")) {
             in.reset();
             in.reset(display_file("/data/cards/down.png", pGIFBuf, board->getDisplay()));
             last_mode = static_cast<DISPLAY_OPTIONS>(option);

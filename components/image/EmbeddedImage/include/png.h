@@ -25,7 +25,7 @@ public:
 
     int open(uint8_t *bin, int size);
 
-    std::string getLastError() override;
+    const char * getLastError() override;
 
 
 protected:

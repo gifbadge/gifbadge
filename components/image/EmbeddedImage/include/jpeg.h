@@ -34,7 +34,7 @@ public:
 
     int open(const char *path) override;
 
-    std::string getLastError() override;
+    const char * getLastError() override;
 
 private:
     JPGuser jpguser{};
@@ -46,5 +46,5 @@ private:
 
     uint8_t *workbuf{};
 
-    std::string lastErr;
+    const char *lastErr;
 };
