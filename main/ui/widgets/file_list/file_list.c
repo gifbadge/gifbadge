@@ -135,11 +135,6 @@ static void callback_dispatcher(lv_event_t *e) {
       lv_obj_add_state(obj, LV_STATE_CHECKED);
     }
     lv_obj_send_event(obj, LV_EVENT_VALUE_CHANGED, NULL);
-  } else if (lv_obj_has_class(obj, &lv_roller_class)) {
-    lv_indev_set_group(lv_indev_get_act(), lv_obj_get_group(obj));
-    lv_group_focus_next(lv_obj_get_group(obj));
-    lv_group_set_editing(lv_obj_get_group(obj), true);
-    lv_obj_send_event(obj, LV_EVENT_FOCUSED, NULL);
   } else if (lv_obj_has_class(obj, &lv_slider_class)) {
     lv_indev_set_group(lv_indev_get_act(), lv_obj_get_group(obj));
 //        lv_group_focus_next(lv_obj_get_group(obj));
