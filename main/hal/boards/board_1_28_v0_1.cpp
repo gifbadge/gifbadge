@@ -184,7 +184,7 @@ esp_err_t board_1_28_v0_1::StorageFormat() {
   return ret;
 }
 
-std::string board_1_28_v0_1::name() {
+const char * board_1_28_v0_1::name() {
   return "1.28\" 0.1-0.2";
 }
 

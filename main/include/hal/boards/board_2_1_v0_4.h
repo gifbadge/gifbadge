@@ -31,7 +31,7 @@ class board_2_1_v0_4 : public Board {
   bool storageReady() override;
   StorageInfo storageInfo() override;
   esp_err_t StorageFormat() override { return ESP_OK; };
-  std::string name() override;
+  const char * name() override;
   bool powerConnected() override;
 
 

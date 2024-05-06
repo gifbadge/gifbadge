@@ -37,7 +37,7 @@ class board_1_28_v0_1 : public Board {
   bool storageReady() override;
   StorageInfo storageInfo() override;
   esp_err_t StorageFormat() override;
-  std::string name() override;
+  const char * name() override;
   bool powerConnected() override;
 
  private:

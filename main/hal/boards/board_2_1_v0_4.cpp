@@ -213,7 +213,7 @@ StorageInfo board_2_1_v0_4::storageInfo() {
   return {card->cid.name, type, speed, total_bytes, free_bytes};
 }
 
-std::string board_2_1_v0_4::name() {
+const char * board_2_1_v0_4::name() {
   return "2.1\" 0.4";
 }
 

@@ -20,18 +20,21 @@ lv_obj_t *device_info() {
     lv_obj_t *board_name = lv_file_list_add(cont_flex, nullptr);
     lv_obj_t *board_name_label = lv_label_create(board_name);
     lv_obj_add_style(board_name, &menu_font_style, LV_PART_MAIN);
-    lv_label_set_text(board_name_label, ("Version: " + get_board()->name()).c_str());
+    char tmpStr[50];
+    snprintf(tmpStr, sizeof(tmpStr), "Version: %s", get_board()->name());
+    lv_label_set_text(board_name_label, tmpStr);
 
     lv_obj_t *serial_number = lv_file_list_add(cont_flex, nullptr);
     lv_obj_t *serial_number_label = lv_label_create(serial_number);
     lv_obj_add_style(serial_number_label, &menu_font_style, LV_PART_MAIN);
-    lv_label_set_text(serial_number_label, ("Serial: " + std::string("")).c_str());
+    lv_label_set_text(serial_number_label, "Serial: ");
 
     const esp_app_desc_t *description = esp_app_get_description();
     lv_obj_t *version = lv_file_list_add(cont_flex, nullptr);
     lv_obj_t *version_label = lv_label_create(version);
     lv_obj_add_style(version_label, &menu_font_style, LV_PART_MAIN);
-    lv_label_set_text(version_label, (std::string("SW Version: ") + description->version).c_str());
+    snprintf(tmpStr, sizeof(tmpStr), "SW Version: %s", description->version);
+    lv_label_set_text(version_label, tmpStr);
 
     lv_obj_t *exit_btn = lv_file_list_add(cont_flex, nullptr);
     lv_obj_t *exit_label = lv_label_create(exit_btn);
