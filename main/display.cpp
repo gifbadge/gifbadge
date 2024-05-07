@@ -379,9 +379,9 @@ void display_task(void *params) {
         if(in) {
           delay = display_image(in.get(), pGIFBuf, board->getDisplay());
           if (delay < 0) {
-            std::string strerr = "Error Displaying File\n";
-            strerr += current_file.string() + "\n" + in->getLastError();
-            display_err(board->getDisplay(), pGIFBuf, strerr.c_str());
+            char errMsg[255];
+            snprintf(errMsg, sizeof(errMsg), "Error Displaying File\n%s\n%s",  current_file.c_str(), in->getLastError());
+            display_err(board->getDisplay(), pGIFBuf, errMsg);
             in.reset();
           }
         }
