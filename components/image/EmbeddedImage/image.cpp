@@ -11,15 +11,18 @@ std::array<Image*(*)(), 4> handlers = {GIF::create, JPEG::create, JPEG::create, 
 
 Image *ImageFactory(const char *path) {
   char extension[5] = {};
-  strncpy(extension, strrchr(path, '.'), 4);
-  printf("Extension: %s\n", extension);
-  for (auto &c : extension) {
-    c = tolower(c);
-  }
+  const char *ext = strrchr(path, '.');
+  if(ext != nullptr) {
+    strncpy(extension, ext, 4);
+    printf("Extension: %s\n", extension);
+    for (auto &c : extension) {
+      c = tolower(c);
+    }
 
-  for (int i = 0; i < extensions.size(); i++) {
-    if (extensions[i] == extension) {
-      return handlers[i]();
+    for (int i = 0; i < extensions.size(); i++) {
+      if (extensions[i] == extension) {
+        return handlers[i]();
+      }
     }
   }
   return nullptr;
