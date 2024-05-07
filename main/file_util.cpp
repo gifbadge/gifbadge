@@ -69,7 +69,14 @@ bool valid_file(const char *path){
     ESP_LOGI(TAG, "%s %i %i", path, info.fattrib & AM_DIR, info.fattrib & AM_HID);
     if (!((info.fattrib & AM_DIR) || (info.fattrib & AM_HID))) {
       if (basename(path)[0] != '.' && basename(path)[0] != '~') {
-        return true;
+        const char *dot = strrchr(path, '.');
+        if(dot != nullptr) {
+          if (strcasecmp(dot, ".gif") == 0 || strcasecmp(dot, ".jpeg") == 0 || strcasecmp(dot, ".jpg") == 0
+              || strcasecmp(dot, ".png") == 0) {
+            //TODO: Improve this hack
+            return true;
+          }
+        }
       }
     }
   }
