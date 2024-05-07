@@ -91,6 +91,9 @@ void file_list(lv_obj_t *parent) {
     while ((ep = readdir(dp)) != nullptr) {
       if (ep->d_name[0] == '.')
         continue;
+      if(strcasecmp(ep->d_name, "System Volume Information") == 0){
+        continue;
+      }
       if (ep->d_type == DT_DIR)
         file_entry(parent, ICON_FOLDER, ep->d_name);
     }
