@@ -145,6 +145,10 @@ Image *display_file(const char *path, uint8_t *pGIFBuf, const std::shared_ptr<Di
       display_image_too_large(display, pGIFBuf, path);
       return nullptr;
     }
+  } else {
+    char errMsg[255];
+    snprintf(errMsg, sizeof(errMsg), "Could not Display\n%s", path);
+    display_err(display, pGIFBuf, errMsg);
   }
   return in;
 }
