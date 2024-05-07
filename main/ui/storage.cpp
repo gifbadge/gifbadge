@@ -105,13 +105,8 @@ static void StorageFormatOK(lv_event_t *e) {
 static void StorageRefresh(lv_event_t *e) {
   auto *fields = static_cast<StorageFields *>(lv_event_get_user_data(e));
   StorageInfo info = get_board()->storageInfo();
-  lv_bar_set_value(fields->space_bar,
-                   ceil(100.00 - ((static_cast<double>(info.free_bytes) / info.total_bytes) * 100)),
-                   LV_ANIM_OFF);
-  lv_label_set_text_fmt(fields->space_label,
-                        "%.0f/%.0fMB",
-                        (double) (info.total_bytes - info.free_bytes) / 1000 / 1000,
-                        (double) (info.total_bytes) / 1000 / 1000);
+  lv_bar_set_value(fields->space_bar, (info.free_bytes +  info.total_bytes/2)/info.total_bytes, LV_ANIM_OFF);
+  lv_label_set_text_fmt(fields->space_label, "%llu/%lluMB", (info.total_bytes - info.free_bytes)/1000000, info.total_bytes/1000000);
 }
 
 static void StorageFormat(lv_event_t *e) {
