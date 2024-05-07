@@ -165,13 +165,15 @@ void task(void *) {
     vTaskDelete(nullptr);
   }
 
+#define OTA_BUFFER_SIZE 4096+1
+
   FILE *ota_file = fopen("/data/ota.bin", "r");
-  static char *ota_buffer = static_cast<char *>(malloc(4091 + 1));
+  static char *ota_buffer = static_cast<char *>(malloc(OTA_BUFFER_SIZE));
 
   size_t bytes_read;
 
   ota_percent = 0;
-  while ((bytes_read = fread(ota_buffer, 1, sizeof(ota_buffer), ota_file)) > 0) {
+  while ((bytes_read = fread(ota_buffer, 1, OTA_BUFFER_SIZE, ota_file)) > 0) {
 
     //Update the progress on the display
     int percent = static_cast<int>((100*ftell(ota_file) + ota_size/2)/ota_size);
