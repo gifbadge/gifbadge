@@ -9,7 +9,7 @@ class Display {
   virtual ~Display() = default;
 
   virtual esp_lcd_panel_handle_t getPanelHandle() = 0;
-  virtual std::pair<int, int> getResolution() = 0;
+  virtual std::pair<int16_t, int16_t> getResolution() = 0;
   virtual bool onColorTransDone(esp_lcd_panel_io_color_trans_done_cb_t, void *) = 0;
   virtual uint8_t *getBuffer() = 0;
   virtual uint8_t *getBuffer2() = 0;

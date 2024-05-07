@@ -119,7 +119,7 @@ int GIF::loop(uint8_t *outBuf) {
 //    return gif->playFrame(false, nullptr, (void *) &gifuser);
 }
 
-std::pair<int, int> GIF::size() {
+std::pair<int16_t, int16_t> GIF::size() {
     return {gif.getCanvasWidth(), gif.getCanvasHeight()};
 }
 

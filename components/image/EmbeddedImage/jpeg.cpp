@@ -46,7 +46,7 @@ int JPEG::loop(uint8_t *outBuf) {
     return 0;
 }
 
-std::pair<int, int> JPEG::size() {
+std::pair<int16_t, int16_t> JPEG::size() {
     return {_dec.width, _dec.height};
 }
 

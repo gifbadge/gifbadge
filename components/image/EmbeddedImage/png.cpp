@@ -10,10 +10,10 @@ PNGImage::~PNGImage() {
 int PNGImage::loop(uint8_t *outBuf) {
     pnguser config = {.png = &png, .buffer = outBuf};
     png.decode((void *) &config, 0);
-    return -1;
+    return 0;
 }
 
-std::pair<int, int> PNGImage::size() {
+std::pair<int16_t, int16_t> PNGImage::size() {
     return {png.getWidth(), png.getHeight()};
 }
 

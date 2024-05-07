@@ -20,7 +20,7 @@ public:
 
     int loop(uint8_t *outBuf) override;
 
-    std::pair<int, int> size() final;
+    std::pair<int16_t, int16_t> size() final;
 
     static Image * create();
 

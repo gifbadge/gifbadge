@@ -16,7 +16,7 @@ public:
 
     virtual int loop(uint8_t *outBuf) {return 0;};
 
-    virtual std::pair<int, int> size() {return{0,0};};
+    virtual std::pair<int16_t, int16_t> size() {return{0, 0};};
 
     virtual int open(const char *path) {return 0;};
     virtual bool animated() {return false;};
