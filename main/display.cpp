@@ -98,7 +98,7 @@ static int display_image(Image *in, uint8_t *pGIFBuf, const std::shared_ptr<Disp
     y2 = display->getResolution().second;
   } else {
     if(lastSize > in->size()) {
-      clear_screen(display, pGIFBuf); //Only need to clear the screen if the image won't fill it
+      clear_screen(display, pGIFBuf); //Only need to clear the screen if the image won't fill it, and the last image was bigger
     }
     localBuf = static_cast<uint8_t *>(heap_caps_malloc(in->size().first * in->size().second * 2, MALLOC_CAP_SPIRAM));
     x1 = (display->getResolution().first / 2) - (in->size().first / 2);
@@ -366,6 +366,7 @@ void display_task(void *params) {
           break;
       }
     }
+    delay = 1000;
     if (!lvgl_menu_state()) {
       if (last_mode == DISPLAY_FILE && config.getSlideShow()
           && ((esp_timer_get_time() / 1000000) - (last_change / 1000000)) > config.getSlideShowTime()) {
@@ -390,8 +391,6 @@ void display_task(void *params) {
           }
         }
       }
-    } else {
-      delay = 200;
     }
     oldMenuState = lvgl_menu_state();
   }
