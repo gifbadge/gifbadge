@@ -164,6 +164,7 @@ display_st7701s::display_st7701s(spi_line_config_t line_cfg,
   ESP_LOGD(TAG, "new RGB panel @%p", panel_handle);
   ESP_ERROR_CHECK(esp_lcd_panel_init(panel_handle));
   esp_lcd_rgb_panel_get_frame_buffer(panel_handle, fb_number, &_fb0, &_fb1);
+  size = {480, 480};
 }
 
 esp_lcd_panel_handle_t display_st7701s::getPanelHandle() {

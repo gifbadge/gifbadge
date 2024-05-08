@@ -61,7 +61,7 @@ static bool IRAM_ATTR flush_ready(esp_lcd_panel_io_handle_t, esp_lcd_panel_io_ev
 }
 
 static void flush_cb(lv_disp_t *, const lv_area_t *area, uint8_t *color_map) {
-  lv_draw_sw_rgb565_swap(color_map, cbData.display->getResolution().first * cbData.display->getResolution().second);
+  lv_draw_sw_rgb565_swap(color_map, cbData.display->size.first * cbData.display->size.second);
   cbData.display->write(
       area->x1,
       area->y1,
@@ -196,9 +196,9 @@ void lvgl_init(std::shared_ptr<Board> board) {
 
   xTaskCreate(task, "LVGL", 7*1024, nullptr, LVGL_TASK_PRIORITY, &lvgl_task);
 
-  disp = lv_display_create(global_board->getDisplay()->getResolution().first, global_board->getDisplay()->getResolution().second);
+  disp = lv_display_create(global_board->getDisplay()->size.first, global_board->getDisplay()->size.second);
   lv_display_set_flush_cb(disp, flush_cb);
-  size_t buffer_size = global_board->getDisplay()->getResolution().first * global_board->getDisplay()->getResolution().second * 2;
+  size_t buffer_size = global_board->getDisplay()->size.first * global_board->getDisplay()->size.second * 2;
   ESP_LOGI(TAG, "Display Buffer Size %u", buffer_size);
   if (global_board->getDisplay()->directRender()) {
     void *buffer = heap_caps_malloc(buffer_size, MALLOC_CAP_SPIRAM);
@@ -331,8 +331,8 @@ void lvgl_wake_up() {
     cbData.callbackEnabled = global_board->getDisplay()->onColorTransDone(flush_ready, &disp);
 
     if (global_board->getDisplay()->directRender()) {
-      global_board->getDisplay()->write(0, 0, global_board->getDisplay()->getResolution().first,
-                                        global_board->getDisplay()->getResolution().second, global_board->getDisplay()->getBuffer2());
+      global_board->getDisplay()->write(0, 0, global_board->getDisplay()->size.first,
+                                        global_board->getDisplay()->size.second, global_board->getDisplay()->getBuffer2());
     }
     lv_display_flush_ready(disp); //Always start ready
     vTaskResume(lvgl_task);

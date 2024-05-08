@@ -21,16 +21,16 @@ static const char *TAG = "DISPLAY";
 
 static void clear_screen(const std::shared_ptr<Display> &display, uint8_t *pBuf) {
   if (pBuf != nullptr) {
-    memset(pBuf, 255, display->getResolution().first * display->getResolution().second * 2);
-    display->write(0, 0, display->getResolution().first, display->getResolution().second, pBuf);
+    memset(pBuf, 255, display->size.first * display->size.second * 2);
+    display->write(0, 0, display->size.first, display->size.second, pBuf);
   }
 }
 
 static void display_no_image(const std::shared_ptr<Display> &display, uint8_t *pGIFBuf) {
   ESP_LOGI(TAG, "Displaying No Image");
   clear_screen(display, pGIFBuf);
-  render_text_centered(display->getResolution().first, display->getResolution().second, 10, "No Image", pGIFBuf);
-  display->write(0, 0, display->getResolution().first, display->getResolution().second, pGIFBuf);
+  render_text_centered(display->size.first, display->size.second, 10, "No Image", pGIFBuf);
+  display->write(0, 0, display->size.first, display->size.second, pGIFBuf);
 }
 
 static void display_image_too_large(const std::shared_ptr<Display> &display, uint8_t *pGIFBuf, const char *path) {
@@ -38,15 +38,15 @@ static void display_image_too_large(const std::shared_ptr<Display> &display, uin
   clear_screen(display, pGIFBuf);
   char tmp[255];
   sprintf(tmp, "Image too Large\n%s", path);
-  render_text_centered(display->getResolution().first, display->getResolution().second, 10, tmp, pGIFBuf);
-  display->write(0, 0, display->getResolution().first, display->getResolution().second, pGIFBuf);
+  render_text_centered(display->size.first, display->size.second, 10, tmp, pGIFBuf);
+  display->write(0, 0, display->size.first, display->size.second, pGIFBuf);
 }
 
 static void display_err(const std::shared_ptr<Display> &display, uint8_t *pGIFBuf, const char *err) {
   ESP_LOGI(TAG, "Displaying Error");
   clear_screen(display, pGIFBuf);
-  render_text_centered(display->getResolution().first, display->getResolution().second, 10, err, pGIFBuf);
-  display->write(0, 0, display->getResolution().first, display->getResolution().second, pGIFBuf);
+  render_text_centered(display->size.first, display->size.second, 10, err, pGIFBuf);
+  display->write(0, 0, display->size.first, display->size.second, pGIFBuf);
 }
 
 static void display_ota(const std::shared_ptr<Display> &display, uint8_t *pGIFBuf, uint32_t percent) {
@@ -54,15 +54,15 @@ static void display_ota(const std::shared_ptr<Display> &display, uint8_t *pGIFBu
   clear_screen(display, pGIFBuf);
   char tmp[50];
   sprintf(tmp, "Update In Progress\n%lu%%", percent);
-  render_text_centered(display->getResolution().first, display->getResolution().second, 10, tmp, pGIFBuf);
-  display->write(0, 0, display->getResolution().first, display->getResolution().second, pGIFBuf);
+  render_text_centered(display->size.first, display->size.second, 10, tmp, pGIFBuf);
+  display->write(0, 0, display->size.first, display->size.second, pGIFBuf);
 }
 
 static void display_no_storage(const std::shared_ptr<Display> &display, uint8_t *pGIFBuf) {
   ESP_LOGI(TAG, "Displaying No Storage");
   clear_screen(display, pGIFBuf);
-  render_text_centered(display->getResolution().first, display->getResolution().second, 10, "No SDCARD", pGIFBuf);
-  display->write(0, 0, display->getResolution().first, display->getResolution().second, pGIFBuf);
+  render_text_centered(display->size.first, display->size.second, 10, "No SDCARD", pGIFBuf);
+  display->write(0, 0, display->size.first, display->size.second, pGIFBuf);
 }
 
 static void display_image_batt(const std::shared_ptr<Display> &display, uint8_t *buf) {
@@ -70,10 +70,10 @@ static void display_image_batt(const std::shared_ptr<Display> &display, uint8_t 
   clear_screen(display, buf);
   PNGImage png;
   png.open(low_batt_png, sizeof(low_batt_png));
-  int16_t xOffset = (display->getResolution().first / 2) - (png.size().first / 2);
-  int16_t yOffset = (display->getResolution().second / 2) - ((png.size().second + 1) / 2);
-  png.loop(buf, xOffset, yOffset, display->getResolution().first);
-  display->write(0, 0, display->getResolution().first, display->getResolution().second, buf);
+  int16_t xOffset = (display->size.first / 2) - (png.size().first / 2);
+  int16_t yOffset = (display->size.second / 2) - ((png.size().second + 1) / 2);
+  png.loop(buf, xOffset, yOffset, display->size.first);
+  display->write(0, 0, display->size.first, display->size.second, buf);
 }
 
 static std::pair<int16_t, int16_t> lastSize = {0,0};
@@ -85,20 +85,20 @@ static int displayFile(Image *in, uint8_t *pGIFBuf, const std::shared_ptr<Displa
   int delay;
   int16_t xOffset = 0;
   int16_t yOffset = 0;
-  if (in->size() != display->getResolution()) {
+  if (in->size() != display->size) {
     if(lastSize > in->size()) {
       clear_screen(display, pGIFBuf); //Only need to clear the screen if the image won't fill it, and the last image was bigger
     }
-    xOffset = (display->getResolution().first / 2) - (in->size().first / 2);
-    yOffset = (display->getResolution().second / 2) - ((in->size().second + 1) / 2);
+    xOffset = (display->size.first / 2) - (in->size().first / 2);
+    yOffset = (display->size.second / 2) - ((in->size().second + 1) / 2);
   }
   ESP_LOGI(TAG, "%d %d", xOffset, yOffset);
-  delay = in->loop(pGIFBuf, xOffset, yOffset, display->getResolution().first);
+  delay = in->loop(pGIFBuf, xOffset, yOffset, display->size.first);
   if (delay < 0) {
     ESP_LOGI(TAG, "Image loop error");
     return -1;
   } else {
-    display->write(0, 0, display->getResolution().first, display->getResolution().second, pGIFBuf);
+    display->write(0, 0, display->size.first, display->size.second, pGIFBuf);
   }
   int calc_delay = delay - static_cast<int>((esp_timer_get_time() - start) / 1000);
 #ifdef FRAMETIME
@@ -163,7 +163,7 @@ Image *openFile(const char *path, uint8_t *pGIFBuf, const std::shared_ptr<Displa
     }
     printf("%s x: %i y: %i\n", path, in->size().first, in->size().second);
     auto size = in->size();
-    if (size > display->getResolution()) {
+    if (size > display->size) {
       delete in;
       display_image_too_large(display, pGIFBuf, path);
       return nullptr;
@@ -240,8 +240,8 @@ void display_task(void *params) {
   // user can flush pre-defined pattern to the screen before we turn on the screen or backlight
   uint8_t *pGIFBuf = board->getDisplay()->getBuffer();
 
-  memset(pGIFBuf, 255, board->getDisplay()->getResolution().first * board->getDisplay()->getResolution().second * 2);
-  board->getDisplay()->write(0, 0, board->getDisplay()->getResolution().first, board->getDisplay()->getResolution().second, pGIFBuf);
+  memset(pGIFBuf, 255, board->getDisplay()->size.first * board->getDisplay()->size.second * 2);
+  board->getDisplay()->write(0, 0, board->getDisplay()->size.first, board->getDisplay()->size.second, pGIFBuf);
 
   esp_err_t err;
   int backlight_level;
@@ -263,7 +263,7 @@ void display_task(void *params) {
 
   last_change = esp_timer_get_time();
 
-  ESP_LOGI(TAG, "Display Resolution %ix%i", board->getDisplay()->getResolution().first, board->getDisplay()->getResolution().second);
+  ESP_LOGI(TAG, "Display Resolution %ix%i", board->getDisplay()->size.first, board->getDisplay()->size.second);
 
   int delay = 1000;
   while (true) {

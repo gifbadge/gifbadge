@@ -72,6 +72,7 @@ display_gc9a01::display_gc9a01(int mosi, int sck, int cs, int dc, int reset) {
   gpio_hold_en((gpio_num_t) reset); //Don't toggle the reset signal on light sleep
   ESP_ERROR_CHECK(esp_lcd_panel_disp_on_off(panel_handle, true));
   buffer = (uint8_t *) heap_caps_malloc(240 * 240 * 2, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+  size = {240, 240};
 }
 
 esp_lcd_panel_handle_t display_gc9a01::getPanelHandle() {
@@ -94,7 +95,7 @@ void display_gc9a01::write(int x_start, int y_start, int x_end, int y_end,
 }
 
 void display_gc9a01::write_from_buffer() {
-  esp_lcd_panel_draw_bitmap(panel_handle, 0, 0, getResolution().first, getResolution().second, buffer);
+  esp_lcd_panel_draw_bitmap(panel_handle, 0, 0, size.first, size.second, buffer);
 }
 
 uint8_t *display_gc9a01::getBuffer2() {
