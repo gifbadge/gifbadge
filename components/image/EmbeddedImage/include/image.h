@@ -14,7 +14,7 @@ public:
 
     virtual ~Image() = default;
 
-    virtual int loop(uint8_t *outBuf) {return 0;};
+    virtual int loop(uint8_t *outBuf, int16_t x, int16_t y, int16_t width) {return 0;};
 
     virtual std::pair<int16_t, int16_t> size() {return{0, 0};};
 

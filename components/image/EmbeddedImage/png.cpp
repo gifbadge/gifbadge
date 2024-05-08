@@ -7,8 +7,8 @@ PNGImage::~PNGImage() {
     png.close();
 }
 
-int PNGImage::loop(uint8_t *outBuf) {
-    pnguser config = {.png = &png, .buffer = outBuf};
+int PNGImage::loop(uint8_t *outBuf, int16_t x, int16_t y, int16_t width) {
+    pnguser config = {.png = &png, .buffer = outBuf, .x = x, .y = y, .width = width};
     png.decode((void *) &config, 0);
     return 0;
 }
@@ -37,7 +37,8 @@ int PNGImage::open(uint8_t *bin, int size) {
 void PNGImage::PNGDraw(PNGDRAW *pDraw) {
     auto *config = (pnguser *) pDraw->pUser;
     auto *buffer = (uint16_t *) config->buffer;
-    uint16_t *line = &buffer[pDraw->y * pDraw->iWidth];
+    uint32_t y = (pDraw->y+config->y) * config->width;
+    uint16_t *line = &buffer[y+config->x];
     config->png->getLineAsRGB565(pDraw, line, PNG_RGB565_BIG_ENDIAN, 0xffffffff);
 }
 

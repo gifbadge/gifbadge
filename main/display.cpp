@@ -65,20 +65,15 @@ static void display_no_storage(const std::shared_ptr<Display> &display, uint8_t 
   display->write(0, 0, display->getResolution().first, display->getResolution().second, pGIFBuf);
 }
 
-static void display_image_batt(const std::shared_ptr<Display> &display, uint8_t *fBuf) {
+static void display_image_batt(const std::shared_ptr<Display> &display, uint8_t *buf) {
   ESP_LOGI(TAG, "Displaying Low Battery");
-  clear_screen(display, fBuf);
-  auto *png = new PNGImage();
-  png->open(low_batt_png, sizeof(low_batt_png));
-  uint8_t *pBuf = static_cast<uint8_t *>(heap_caps_malloc(png->size().first * png->size().second * 2, MALLOC_CAP_SPIRAM));
-  png->loop(pBuf);
-  display->write((display->getResolution().first / 2) - (png->size().first / 2),
-                 (display->getResolution().second / 2) - (png->size().second / 2),
-                 (display->getResolution().first / 2) + ((png->size().first + 1) / 2),
-                 (display->getResolution().second / 2) + ((png->size().second + 1) / 2),
-                 pBuf);
-  delete png;
-  free(pBuf);
+  clear_screen(display, buf);
+  PNGImage png;
+  png.open(low_batt_png, sizeof(low_batt_png));
+  int16_t xOffset = (display->getResolution().first / 2) - (png.size().first / 2);
+  int16_t yOffset = (display->getResolution().second / 2) - ((png.size().second + 1) / 2);
+  png.loop(buf, xOffset, yOffset, display->getResolution().first);
+  display->write(0, 0, display->getResolution().first, display->getResolution().second, buf);
 }
 
 static std::pair<int16_t, int16_t> lastSize = {0,0};
@@ -88,41 +83,27 @@ static std::pair<int16_t, int16_t> lastSize = {0,0};
 static int displayFile(Image *in, uint8_t *pGIFBuf, const std::shared_ptr<Display> &display) {
   int64_t start = esp_timer_get_time();
   int delay;
-  uint8_t *localBuf;
-  int x1, x2, y1, y2;
-  if (in->size() == display->getResolution()) {
-    localBuf = pGIFBuf;
-    x1 = 0;
-    x2 = display->getResolution().first;
-    y1 = 0;
-    y2 = display->getResolution().second;
-  } else {
+  int16_t xOffset = 0;
+  int16_t yOffset = 0;
+  if (in->size() != display->getResolution()) {
     if(lastSize > in->size()) {
       clear_screen(display, pGIFBuf); //Only need to clear the screen if the image won't fill it, and the last image was bigger
     }
-    localBuf = static_cast<uint8_t *>(heap_caps_malloc(in->size().first * in->size().second * 2, MALLOC_CAP_SPIRAM));
-    x1 = (display->getResolution().first / 2) - (in->size().first / 2);
-    x2 = (display->getResolution().first / 2) + (in->size().first / 2);
-    y1 = (display->getResolution().second / 2) - ((in->size().second + 1) / 2);
-    y2 = (display->getResolution().second / 2) + ((in->size().second + 1) / 2);
+    xOffset = (display->getResolution().first / 2) - (in->size().first / 2);
+    yOffset = (display->getResolution().second / 2) - ((in->size().second + 1) / 2);
   }
-  delay = in->loop(localBuf);
+  ESP_LOGI(TAG, "%d %d", xOffset, yOffset);
+  delay = in->loop(pGIFBuf, xOffset, yOffset, display->getResolution().first);
   if (delay < 0) {
     ESP_LOGI(TAG, "Image loop error");
-    if (localBuf != pGIFBuf) {
-      free(localBuf);
-    }
     return -1;
   } else {
-    display->write(x1, y1, x2, y2, localBuf);
+    display->write(0, 0, display->getResolution().first, display->getResolution().second, pGIFBuf);
   }
   int calc_delay = delay - static_cast<int>((esp_timer_get_time() - start) / 1000);
 #ifdef FRAMETIME
   ESP_LOGI(TAG, "Frame Delay: %i, calculated delay %i", delay, calc_delay);
 #endif
-  if (localBuf != pGIFBuf) {
-    free(localBuf);
-  }
   lastSize = in->size();
   if(in->animated()) {
     return calc_delay > 0 ? calc_delay : 0;

@@ -6,6 +6,9 @@
 struct pnguser {
     PNG *png;
     uint8_t *buffer;
+    int16_t x;
+    int16_t y;
+    int16_t width;
 };
 
 class PNGImage : public Image {
@@ -15,7 +18,7 @@ public:
 
     ~PNGImage() override;
 
-    int loop(uint8_t *outBuf) override;
+    int loop(uint8_t *outBuf, int16_t x, int16_t y, int16_t width) override;
 
     std::pair<int16_t, int16_t> size() override;
 

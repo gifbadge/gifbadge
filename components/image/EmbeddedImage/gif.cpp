@@ -108,8 +108,8 @@ GIF::~GIF() {
     gif.close();
 }
 
-int GIF::loop(uint8_t *outBuf) {
-    GIFUser gifuser = {outBuf, width};
+int GIF::loop(uint8_t *outBuf, int16_t x, int16_t y, int16_t width) {
+    GIFUser gifuser = {outBuf, x, y, width};
     int frameDelay;
     if (gif.playFrame(false, &frameDelay,  (void *) &gifuser) == -1) {
         printf("GIF Error: %i\n", gif.getLastError());
@@ -130,8 +130,8 @@ void GIF::GIFDraw(GIFDRAW *pDraw) {
     auto *gifuser = static_cast<GIFUser *>(pDraw->pUser);
     auto *buffer = (uint16_t *) gifuser->buffer;
 
-    y = pDraw->iY + pDraw->y; // current line
-    d = &buffer[pDraw->iX + (y * gifuser->width)];
+    y = pDraw->iY + pDraw->y + gifuser->y; // current line
+    d = &buffer[gifuser->x + pDraw->iX + (y * gifuser->width)];
     memcpy(d, pDraw->pPixels, pDraw->iWidth * 2);
 }
 
