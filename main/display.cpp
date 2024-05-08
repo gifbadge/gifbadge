@@ -85,7 +85,7 @@ static std::pair<int16_t, int16_t> lastSize = {0,0};
 
 //#define FRAMETIME
 
-static int display_image(Image *in, uint8_t *pGIFBuf, const std::shared_ptr<Display> &display) {
+static int displayFile(Image *in, uint8_t *pGIFBuf, const std::shared_ptr<Display> &display) {
   int64_t start = esp_timer_get_time();
   int delay;
   uint8_t *localBuf;
@@ -105,7 +105,6 @@ static int display_image(Image *in, uint8_t *pGIFBuf, const std::shared_ptr<Disp
     x2 = (display->getResolution().first / 2) + (in->size().first / 2);
     y1 = (display->getResolution().second / 2) - ((in->size().second + 1) / 2);
     y2 = (display->getResolution().second / 2) + ((in->size().second + 1) / 2);
-    ESP_LOGI(TAG, "Draw Size %d %d %d %d", x1, x2, y1, y2);
   }
   delay = in->loop(localBuf);
   if (delay < 0) {
@@ -133,38 +132,13 @@ static int display_image(Image *in, uint8_t *pGIFBuf, const std::shared_ptr<Disp
   }
 }
 
-Image *display_file(const char *path, uint8_t *pGIFBuf, const std::shared_ptr<Display> &display) {
-  Image *in = ImageFactory(path);
-  if (in) {
-    if (in->open(path) != 0) {
-      char errorString[255];
-      snprintf(errorString, sizeof(errorString), "Error Displaying File\n%s\n%s", path, in->getLastError());
-      display_err(display, pGIFBuf, errorString);
-      delete in;
-      return nullptr;
-    }
-    printf("%s x: %i y: %i\n", path, in->size().first, in->size().second);
-    auto size = in->size();
-    if (size > display->getResolution()) {
-      delete in;
-      display_image_too_large(display, pGIFBuf, path);
-      return nullptr;
-    }
-  } else {
-    char errMsg[255];
-    snprintf(errMsg, sizeof(errMsg), "Could not Display\n%s", path);
-    display_err(display, pGIFBuf, errMsg);
-  }
-  return in;
-}
-
 static int get_file(const char *path, char *outPath, size_t outLen) {
   char inPath[128];
   strncpy(inPath, path, sizeof(inPath)-1);
 
   //Check if we are starting with a valid file, and just return it if we are
   if (valid_file(path)) {
-    strncpy(outPath, path, outLen - 1);
+    strncpy(outPath, inPath, outLen - 1);
     return 0;
   }
   char *base = inPath;
@@ -196,10 +170,45 @@ static int get_file(const char *path, char *outPath, size_t outLen) {
   return -1;
 }
 
+Image *openFile(const char *path, uint8_t *pGIFBuf, const std::shared_ptr<Display> &display) {
+  Image *in = ImageFactory(path);
+  if (in) {
+    if (in->open(path) != 0) {
+      char errorString[255];
+      snprintf(errorString, sizeof(errorString), "Error Displaying File\n%s\n%s", path, in->getLastError());
+      display_err(display, pGIFBuf, errorString);
+      delete in;
+      return nullptr;
+    }
+    printf("%s x: %i y: %i\n", path, in->size().first, in->size().second);
+    auto size = in->size();
+    if (size > display->getResolution()) {
+      delete in;
+      display_image_too_large(display, pGIFBuf, path);
+      return nullptr;
+    }
+  } else {
+    char errMsg[255];
+    snprintf(errMsg, sizeof(errMsg), "Could not Display\n%s", path);
+    display_err(display, pGIFBuf, errMsg);
+  }
+  return in;
+}
+
+Image *openFileUpdatePath(char *path, size_t pathLen, uint8_t *pGIFBuf, const std::shared_ptr<Display> &display){
+  if (get_file(path, path, pathLen) != 0) {
+    display_no_image(display, pGIFBuf);
+    return nullptr;
+  }
+  return openFile(path, pGIFBuf, display);
+}
+
+
+
 static int files_get_position(const std::vector<std::string> &files, const std::string &name) {
 //    auto files = list_directory(path);
   auto result = std::find(files.begin(), files.end(), name.c_str());
-  if (result == files.end()) {
+  if (result == files.end() ||files.empty()) {
     return -1;
   } else {
     return std::distance(files.begin(), result);
@@ -216,7 +225,7 @@ static std::filesystem::path files_get_next(const std::filesystem::path &path) {
       return files.at(pos + 1);
     }
   } else {
-    return files.at(0);
+    return "";
   }
 }
 
@@ -230,8 +239,15 @@ static std::filesystem::path files_get_previous(const std::filesystem::path &pat
       return files.at(pos - 1);
     }
   } else {
-    return files.at(0);
+    return "";
   }
+}
+
+static int64_t last_change;
+
+static bool slideshowChange(DISPLAY_OPTIONS last_mode, ImageConfig &config){
+  int64_t lastChange = ((esp_timer_get_time() / 1000000) - (last_change / 1000000));
+  return last_mode == DISPLAY_FILE && config.getSlideShow() &&  lastChange > config.getSlideShowTime();
 }
 
 void display_task(void *params) {
@@ -262,11 +278,11 @@ void display_task(void *params) {
   std::shared_ptr<Image> in;
   std::vector<std::string> files = list_directory("/data");
 
-  std::filesystem::path current_file;
+  char current_file[128];
 
   DISPLAY_OPTIONS last_mode = DISPLAY_NONE;
 
-  int64_t last_change = esp_timer_get_time();
+  last_change = esp_timer_get_time();
 
   ESP_LOGI(TAG, "Display Resolution %ix%i", board->getDisplay()->getResolution().first, board->getDisplay()->getResolution().second);
 
@@ -286,84 +302,58 @@ void display_task(void *params) {
     xTaskNotifyWaitIndexed(0, 0, 0xffffffff, &option, delay / portTICK_PERIOD_MS);
     if (option != DISPLAY_NONE) {
       last_change = esp_timer_get_time();
-      char tmpPath[255];
+      config.reload();
+      in.reset();
       switch (option) {
         case DISPLAY_FILE:
-          in.reset();
           ESP_LOGI(TAG, "DISPLAY_FILE");
-          config.reload();
-          if (!valid_file(current_file.c_str())) {
-            if (get_file(config.getPath().c_str(), tmpPath, sizeof(tmpPath)) == 0) {
-              current_file = tmpPath;
-            } else {
-              display_no_image(board->getDisplay(), pGIFBuf);
-            }
-          }
-          in.reset(display_file(current_file.c_str(), pGIFBuf, board->getDisplay()));
+          strncpy(current_file, config.getPath().c_str(), sizeof(current_file)-1);
+          in.reset(openFileUpdatePath(current_file, sizeof(current_file), pGIFBuf, board->getDisplay()));
           last_mode = static_cast<DISPLAY_OPTIONS>(option);
           break;
         case DISPLAY_NEXT:
           if (config.getLocked()) {
             break;
           }
-          if (list_directory(current_file.parent_path()).size() <= 1) {
-            break;
-          }
-          in.reset();
-          try {
-            current_file = files_get_next(current_file);
-            in.reset(display_file(current_file.c_str(), pGIFBuf, board->getDisplay()));
-          } catch (std::out_of_range &err) {
-            display_no_image(board->getDisplay(), pGIFBuf);
+          if(!files_get_next(current_file).empty()){
+            strncpy(current_file,  files_get_next(current_file).c_str(), sizeof(current_file)-1);
+            in.reset(openFileUpdatePath(current_file, sizeof(current_file), pGIFBuf, board->getDisplay()));
           }
           break;
         case DISPLAY_PREVIOUS:
           if (config.getLocked()) {
             break;
           }
-          if (list_directory(current_file.parent_path()).size() <= 1) {
-            break;
-          }
-          in.reset();
-          try {
-            current_file = files_get_previous(current_file);
-            in.reset(display_file(current_file.c_str(), pGIFBuf, board->getDisplay()));
-          } catch (std::out_of_range &err) {
-            display_no_image(board->getDisplay(), pGIFBuf);
+          if(!files_get_previous(current_file).empty()){
+            strncpy(current_file, files_get_previous(current_file).c_str(), sizeof(current_file)-1);
+            in.reset(openFileUpdatePath(current_file, sizeof(current_file), pGIFBuf, board->getDisplay()));
           }
           break;
         case DISPLAY_BATT:
-          in.reset();
           if (last_mode != DISPLAY_BATT) {
             display_image_batt(board->getDisplay(), pGIFBuf);
           }
           last_mode = static_cast<DISPLAY_OPTIONS>(option);
           break;
         case DISPLAY_OTA:
-          in.reset();
           display_ota(board->getDisplay(), pGIFBuf, 0);
           last_mode = static_cast<DISPLAY_OPTIONS>(option);
           break;
         case DISPLAY_NO_STORAGE:
-          in.reset();
           last_mode = static_cast<DISPLAY_OPTIONS>(option);
           display_no_storage(board->getDisplay(), pGIFBuf);
           break;
         case DISPLAY_SPECIAL_1:
           ESP_LOGI(TAG, "DISPLAY_SPECIAL_1");
-          config.reload();
           if (valid_file("/data/cards/up.png")) {
-            in.reset();
-            in.reset(display_file("/data/cards/up.png", pGIFBuf, board->getDisplay()));
+            in.reset(openFile("/data/cards/up.png", pGIFBuf, board->getDisplay()));
             last_mode = static_cast<DISPLAY_OPTIONS>(option);
           }
           break;
         case DISPLAY_SPECIAL_2:
           ESP_LOGI(TAG, "DISPLAY_SPECIAL_2");
-          config.reload();
           if (valid_file("/data/cards/down.png")) {
-            in.reset();
-            in.reset(display_file("/data/cards/down.png", pGIFBuf, board->getDisplay()));
+            in.reset(openFile("/data/cards/down.png", pGIFBuf, board->getDisplay()));
             last_mode = static_cast<DISPLAY_OPTIONS>(option);
           }
           break;
@@ -373,8 +363,7 @@ void display_task(void *params) {
     }
     delay = 1000;
     if (!lvgl_menu_state()) {
-      if (last_mode == DISPLAY_FILE && config.getSlideShow()
-          && ((esp_timer_get_time() / 1000000) - (last_change / 1000000)) > config.getSlideShowTime()) {
+      if (slideshowChange(last_mode, config)) {
         xTaskNotifyIndexed(xTaskGetCurrentTaskHandle(), 0, DISPLAY_NEXT, eSetValueWithOverwrite);
       } else if (last_mode == DISPLAY_OTA) {
         int percent = OTA::ota_status();
@@ -384,13 +373,13 @@ void display_task(void *params) {
         delay = 1000;
       } else {
         if (oldMenuState) {
-          in.reset(display_file(current_file.c_str(), pGIFBuf, board->getDisplay()));
+          in.reset(openFileUpdatePath(current_file, sizeof(current_file), pGIFBuf, board->getDisplay()));
         }
         if(in) {
-          delay = display_image(in.get(), pGIFBuf, board->getDisplay());
+          delay = displayFile(in.get(), pGIFBuf, board->getDisplay());
           if (delay < 0) {
             char errMsg[255];
-            snprintf(errMsg, sizeof(errMsg), "Error Displaying File\n%s\n%s",  current_file.c_str(), in->getLastError());
+            snprintf(errMsg, sizeof(errMsg), "Error Displaying File\n%s\n%s",  current_file, in->getLastError());
             display_err(board->getDisplay(), pGIFBuf, errMsg);
             in.reset();
           }
