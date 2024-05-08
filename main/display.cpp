@@ -125,7 +125,12 @@ static int display_image(Image *in, uint8_t *pGIFBuf, const std::shared_ptr<Disp
     free(localBuf);
   }
   lastSize = in->size();
-  return calc_delay > 0 ? calc_delay : 0;
+  if(in->animated()) {
+    return calc_delay > 0 ? calc_delay : 0;
+  }
+  else{
+    return 60*1000;
+  }
 }
 
 Image *display_file(const char *path, uint8_t *pGIFBuf, const std::shared_ptr<Display> &display) {
