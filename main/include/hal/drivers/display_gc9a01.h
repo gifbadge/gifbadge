@@ -19,5 +19,4 @@ class display_gc9a01 : public Display {
  private:
   esp_lcd_panel_handle_t panel_handle = nullptr;
   esp_lcd_panel_io_handle_t io_handle = nullptr;
-  uint8_t *buffer = nullptr;
 };

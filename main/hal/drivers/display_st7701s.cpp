@@ -179,6 +179,7 @@ uint8_t *display_st7701s::getBuffer2() {
 }
 
 void display_st7701s::write(int x_start, int y_start, int x_end, int y_end, const void *color_data) {
+  buffer = static_cast<uint8_t *>(color_data == _fb0 ? _fb1 : _fb0);
   esp_lcd_panel_draw_bitmap(panel_handle, x_start, y_start, x_end, y_end, color_data);
 }
 

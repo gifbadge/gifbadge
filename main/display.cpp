@@ -265,19 +265,10 @@ void display_task(void *params) {
 
   ESP_LOGI(TAG, "Display Resolution %ix%i", board->getDisplay()->getResolution().first, board->getDisplay()->getResolution().second);
 
-  int current_buffer = 1;
   int delay = 1000;
   while (true) {
     uint32_t option;
-    if (board->getDisplay()->directRender()) {
-      if (current_buffer != 0) {
-        pGIFBuf = board->getDisplay()->getBuffer();
-        current_buffer = 0;
-      } else {
-        pGIFBuf = board->getDisplay()->getBuffer2();
-        current_buffer = 1;
-      }
-    }
+    pGIFBuf = board->getDisplay()->buffer;
     xTaskNotifyWaitIndexed(0, 0, 0xffffffff, &option, delay / portTICK_PERIOD_MS);
     if (option != DISPLAY_NONE) {
       last_change = esp_timer_get_time();
