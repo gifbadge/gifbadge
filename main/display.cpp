@@ -256,8 +256,6 @@ void display_task(void *params) {
 
   auto config = ImageConfig();
 
-  bool oldMenuState = false;
-
   // user can flush pre-defined pattern to the screen before we turn on the screen or backlight
   uint8_t *pGIFBuf = board->getDisplay()->getBuffer();
 
@@ -372,9 +370,6 @@ void display_task(void *params) {
         }
         delay = 1000;
       } else {
-        if (oldMenuState) {
-          in.reset(openFileUpdatePath(current_file, sizeof(current_file), pGIFBuf, board->getDisplay()));
-        }
         if(in) {
           delay = displayFile(in.get(), pGIFBuf, board->getDisplay());
           if (delay < 0) {
@@ -386,6 +381,5 @@ void display_task(void *params) {
         }
       }
     }
-    oldMenuState = lvgl_menu_state();
   }
 }

@@ -109,6 +109,7 @@ void task(void *) {
   ESP_LOGI(TAG, "Starting LVGL task");
   uint32_t task_delay_ms = 0;
   vTaskSuspend(nullptr); //Wait until we are actually needed
+  TaskHandle_t display_task_handle = xTaskGetHandle("display_task");
 
   while (running) {
     uint32_t option;
@@ -116,6 +117,7 @@ void task(void *) {
     switch (option) {
       case LVGL_STOP:
         lvgl_close();
+        xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_NONE, eSetValueWithOverwrite); //Notify the display task to redraw
         vTaskSuspend(nullptr);
         break;
       case LVGL_EXIT:
