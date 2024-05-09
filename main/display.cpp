@@ -279,7 +279,9 @@ void display_task(void *params) {
       switch (option) {
         case DISPLAY_FILE:
           ESP_LOGI(TAG, "DISPLAY_FILE");
-          strncpy(current_file, config.getPath().c_str(), sizeof(current_file)-1);
+          if(!valid_file(current_file)) {
+            strncpy(current_file, config.getPath().c_str(), sizeof(current_file) - 1);
+          }
           in.reset(openFileUpdatePath(current_file, sizeof(current_file), pGIFBuf, board->getDisplay()));
           last_mode = static_cast<DISPLAY_OPTIONS>(option);
           break;
