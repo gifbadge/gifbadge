@@ -85,19 +85,7 @@ bool display_gc9a01::onColorTransDone(esp_lcd_panel_io_color_trans_done_cb_t flu
   return true;
 }
 
-uint8_t *display_gc9a01::getBuffer() {
-  return buffer;
-}
-
 void display_gc9a01::write(int x_start, int y_start, int x_end, int y_end,
                            const void *color_data) {
   esp_lcd_panel_draw_bitmap(panel_handle, x_start, y_start, x_end, y_end, color_data);
-}
-
-void display_gc9a01::write_from_buffer() {
-  esp_lcd_panel_draw_bitmap(panel_handle, 0, 0, size.first, size.second, buffer);
-}
-
-uint8_t *display_gc9a01::getBuffer2() {
-  return nullptr;
 }

@@ -92,7 +92,6 @@ static int displayFile(Image *in, uint8_t *pGIFBuf, const std::shared_ptr<Displa
     xOffset = (display->size.first / 2) - (in->size().first / 2);
     yOffset = (display->size.second / 2) - ((in->size().second + 1) / 2);
   }
-  ESP_LOGI(TAG, "%d %d", xOffset, yOffset);
   delay = in->loop(pGIFBuf, xOffset, yOffset, display->size.first);
   if (delay < 0) {
     ESP_LOGI(TAG, "Image loop error");
@@ -237,11 +236,13 @@ void display_task(void *params) {
 
   auto config = ImageConfig();
 
-  // user can flush pre-defined pattern to the screen before we turn on the screen or backlight
-  uint8_t *pGIFBuf = board->getDisplay()->getBuffer();
+  auto display = board->getDisplay();
 
-  memset(pGIFBuf, 255, board->getDisplay()->size.first * board->getDisplay()->size.second * 2);
-  board->getDisplay()->write(0, 0, board->getDisplay()->size.first, board->getDisplay()->size.second, pGIFBuf);
+  // user can flush pre-defined pattern to the screen before we turn on the screen or backlight
+
+
+  memset(display->buffer, 255, display->size.first * display->size.second * 2);
+  display->write(0, 0, display->size.first, display->size.second, display->buffer);
 
   esp_err_t err;
   int backlight_level;
@@ -263,13 +264,14 @@ void display_task(void *params) {
 
   last_change = esp_timer_get_time();
 
-  ESP_LOGI(TAG, "Display Resolution %ix%i", board->getDisplay()->size.first, board->getDisplay()->size.second);
+  ESP_LOGI(TAG, "Display Resolution %ix%i", display->size.first, display->size.second);
 
   int delay = 1000;
+  uint8_t *pGIFBuf;
   while (true) {
     uint32_t option;
-    pGIFBuf = board->getDisplay()->buffer;
     xTaskNotifyWaitIndexed(0, 0, 0xffffffff, &option, delay / portTICK_PERIOD_MS);
+    pGIFBuf = display->buffer;
     if (option != DISPLAY_NONE) {
       last_change = esp_timer_get_time();
       config.reload();

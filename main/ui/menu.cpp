@@ -27,7 +27,7 @@ static esp_timer_handle_t lvgl_tick_timer;
 static bool menu_state;
 static std::shared_ptr<Board> global_board;
 static SemaphoreHandle_t lvgl_mux = nullptr;
-
+static SemaphoreHandle_t flushSem;
 
 
 
@@ -56,7 +56,7 @@ void destroy_screens(){
 }
 
 static bool IRAM_ATTR flush_ready(esp_lcd_panel_io_handle_t, esp_lcd_panel_io_event_data_t *, void *) {
-  lv_display_flush_ready(disp);
+  xSemaphoreGive(flushSem);
   return false;
 }
 
@@ -68,6 +68,8 @@ static void flush_cb(lv_disp_t *, const lv_area_t *area, uint8_t *color_map) {
       area->x2 + 1,
       area->y2 + 1,
       color_map);
+  lv_display_set_buffers(disp, cbData.display->buffer, nullptr, cbData.display->size.first * cbData.display->size.second * 2,
+                         LV_DISPLAY_RENDER_MODE_FULL);
 }
 
 static void tick([[maybe_unused]] void *arg) {
@@ -175,6 +177,10 @@ void touch_read(lv_indev_t *drv, lv_indev_data_t *data) {
   }
 }
 
+void flushWait(lv_display_t * disp){
+  xSemaphoreTake(flushSem, portMAX_DELAY);
+}
+
 void lvgl_init(std::shared_ptr<Board> board) {
   global_board = std::move(board);
 
@@ -183,6 +189,7 @@ void lvgl_init(std::shared_ptr<Board> board) {
   lv_init();
 
   lvgl_mux = xSemaphoreCreateRecursiveMutex();
+  flushSem = xSemaphoreCreateBinary();
 
   const esp_timer_create_args_t lvgl_tick_timer_args = {
       .callback = &tick,
@@ -198,16 +205,9 @@ void lvgl_init(std::shared_ptr<Board> board) {
 
   disp = lv_display_create(global_board->getDisplay()->size.first, global_board->getDisplay()->size.second);
   lv_display_set_flush_cb(disp, flush_cb);
-  size_t buffer_size = global_board->getDisplay()->size.first * global_board->getDisplay()->size.second * 2;
-  ESP_LOGI(TAG, "Display Buffer Size %u", buffer_size);
-  if (global_board->getDisplay()->directRender()) {
-    void *buffer = heap_caps_malloc(buffer_size, MALLOC_CAP_SPIRAM);
-    lv_display_set_buffers(disp, buffer, nullptr, buffer_size,
-                           LV_DISPLAY_RENDER_MODE_FULL);
-  } else {
-    lv_display_set_buffers(disp, global_board->getDisplay()->getBuffer(), nullptr, buffer_size,
-                           LV_DISPLAY_RENDER_MODE_FULL);
-  }
+  lv_display_set_flush_wait_cb(disp, flushWait);
+  lv_display_set_buffers(disp, global_board->getDisplay()->buffer, nullptr, global_board->getDisplay()->size.first * global_board->getDisplay()->size.second * 2,
+                         LV_DISPLAY_RENDER_MODE_FULL);
 
   style_init();
   lvgl_encoder = lv_indev_create();
@@ -328,14 +328,12 @@ void lvgl_wake_up() {
 
     cbData.display = global_board->getDisplay();
 
-    cbData.callbackEnabled = global_board->getDisplay()->onColorTransDone(flush_ready, &disp);
+    cbData.callbackEnabled = cbData.display->onColorTransDone(flush_ready, &disp);
 
-    if (global_board->getDisplay()->directRender()) {
-      global_board->getDisplay()->write(0, 0, global_board->getDisplay()->size.first,
-                                        global_board->getDisplay()->size.second, global_board->getDisplay()->getBuffer2());
-    }
-    lv_display_flush_ready(disp); //Always start ready
+    xSemaphoreGive(flushSem);
     vTaskResume(lvgl_task);
+
+
 
     ESP_ERROR_CHECK(esp_timer_start_periodic(lvgl_tick_timer, LVGL_TICK_PERIOD_MS * 1000));
     if (lvgl_lock(-1)) {

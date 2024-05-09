@@ -4,6 +4,7 @@
 #include <esp_lcd_panel_commands.h>
 #include <task.h>
 #include <esp_lcd_panel_rgb.h>
+#include <esp_timer.h>
 #include "hal/drivers/display_st7701s.h"
 #include "esp_lcd_panel_io_additions.h"
 
@@ -68,6 +69,14 @@ static const st7701_lcd_init_cmd_t buyadisplaycom[] = {
 //        {0x23, (uint8_t[]) {},                                                                              0,  0},
 
 };
+
+static void flushTimer(void *args){
+  auto callback = static_cast<esp_lcd_panel_io_color_trans_done_cb_t *>(args);
+  if(*callback){
+    (*callback)(nullptr, nullptr, nullptr);
+  }
+
+}
 
 display_st7701s::display_st7701s(spi_line_config_t line_cfg,
                                  int hsync,
@@ -165,32 +174,31 @@ display_st7701s::display_st7701s(spi_line_config_t line_cfg,
   ESP_ERROR_CHECK(esp_lcd_panel_init(panel_handle));
   esp_lcd_rgb_panel_get_frame_buffer(panel_handle, fb_number, &_fb0, &_fb1);
   size = {480, 480};
+  buffer = static_cast<uint8_t *>(_fb0);
+
+  const esp_timer_create_args_t flushTimerArgs = {
+      .callback = &flushTimer,
+      .arg = &flushCallback,
+      .dispatch_method = ESP_TIMER_TASK,
+      .name = "st7701s flush timer",
+      .skip_unhandled_events = true
+  };
+  ESP_ERROR_CHECK(esp_timer_create(&flushTimerArgs, &flushTimerHandle));
 }
 
 esp_lcd_panel_handle_t display_st7701s::getPanelHandle() {
   return panel_handle;
 }
 
-uint8_t *display_st7701s::getBuffer() {
-  return static_cast<uint8_t *>(_fb0);
-}
-
-uint8_t *display_st7701s::getBuffer2() {
-  return static_cast<uint8_t *>(_fb1);
-}
-
 void display_st7701s::write(int x_start, int y_start, int x_end, int y_end, const void *color_data) {
   buffer = static_cast<uint8_t *>(color_data == _fb0 ? _fb1 : _fb0);
   esp_lcd_panel_draw_bitmap(panel_handle, x_start, y_start, x_end, y_end, color_data);
-}
-
-void display_st7701s::write_from_buffer() {
+  ESP_ERROR_CHECK(esp_timer_start_once(flushTimerHandle, 30*1000));
 
 }
 
 bool display_st7701s::onColorTransDone(esp_lcd_panel_io_color_trans_done_cb_t callback, void *ctx) {
-  esp_lcd_rgb_panel_event_callbacks_t callbacks{.on_vsync = reinterpret_cast<esp_lcd_rgb_panel_vsync_cb_t>(callback), .on_bounce_empty=nullptr, .on_bounce_frame_finish = nullptr};
-  esp_lcd_rgb_panel_register_event_callbacks(panel_handle, &callbacks, ctx);
+  flushCallback = callback;
   return true;
 }
 
