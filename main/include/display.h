@@ -28,5 +28,3 @@ enum DISPLAY_OPTIONS {
 };
 
 void display_task(void *params);
-
-std::vector<std::string> list_directory(const std::string &path);
