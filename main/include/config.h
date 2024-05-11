@@ -5,7 +5,6 @@
 
 #include <nvs_flash.h>
 #include <nvs_handle.hpp>
-#include <filesystem>
 
 class ImageConfig {
  public:
@@ -13,8 +12,8 @@ class ImageConfig {
   ~ImageConfig();
   void save();
 
-  void setPath(const std::filesystem::path &);
-  std::filesystem::path getPath();
+  void setPath(const char *);
+  const char * getPath();
   void setLocked(bool);
   bool getLocked();
   bool getSlideShow();
@@ -27,12 +26,10 @@ class ImageConfig {
   std::unique_ptr<nvs::NVSHandle> handle;
   template<typename T>
   T get_item_or_default(const char *key, T value);
-  std::string get_string_or_default(const char *item, std::string value);
+  void get_string_or_default(const char *item, const char* default_value, char *out, size_t out_len);
 
   std::mutex mutex;
-  std::filesystem::path directory;
-  std::filesystem::path image_file;
-  std::filesystem::path path;
+  char path[255];
   bool locked;
   bool slideshow;
   int slideshow_time;

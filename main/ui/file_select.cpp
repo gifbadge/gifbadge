@@ -2,13 +2,14 @@
 // Created by gifbadge on 26/01/24.
 //
 
-#include <filesystem>
 #include <dirent.h>
 #include "ui/file_select.h"
 #include "ui/widgets/file_list/file_list.h"
 #include "ui/device_group.h"
 #include "ui/style.h"
 #include "ui/menu.h"
+#include "directory.h"
+#include "file_util.h"
 
 extern "C" {
 
@@ -17,42 +18,45 @@ struct file_data {
   char current[255];
 };
 
-static void file_list_chdir(lv_obj_t *parent, const std::filesystem::path &path) {
-  LV_LOG_USER("chdir Path: %s", (path).c_str());
+static void file_list_chdir(lv_obj_t *parent, const char *path) {
+  LV_LOG_USER("chdir Path: %s", path);
   auto *d = static_cast<file_data *>(lv_file_list_get_user_data(parent));
-  strcpy(d->current, path.c_str());
+  if(d->current != path){
+    strcpy(d->current, path);
+  }
   lv_file_list_clear(parent);
   file_list(parent);
   lv_file_list_scroll_to_view(parent, 0);
 }
 
 static void file_event_handler(lv_event_t *e) {
-
   auto *container = static_cast<lv_obj_t *>(lv_event_get_user_data(e));
   auto *d = static_cast<file_data *>(lv_file_list_get_user_data(container));
 
   auto *obj = static_cast<lv_obj_t *>(lv_event_get_target(e));
   char *text = lv_label_get_text(obj);
-  auto path = std::filesystem::path(d->current);
-  LV_LOG_USER("Clicked: %s %s", path.c_str(), text);
+
+  char new_path[256];
+
+  LV_LOG_USER("Clicked: %s %s", d->current, text);
   if (strcmp(text, "Up") == 0) {
-    LV_LOG_USER("Clicked: %s", path.c_str());
-    file_list_chdir(container, (path / "..").lexically_normal());
+    dirname(d->current);
+    file_list_chdir(container, d->current);
   } else if (strcmp(text, "Entire Folder") == 0) {
-    if (!std::filesystem::is_directory(path)) {
-      path = (path.parent_path());
+    if (!is_directory(d->current)) {
+      dirname(d->current);
     }
-    strcpy(d->current, (path).lexically_normal().c_str());
     lv_obj_del(container);
   } else {
-    if (std::filesystem::is_regular_file(path)) {
-      path = path.parent_path();
+    if (!is_directory(d->current)) {
+      dirname(d->current);
     }
-    LV_LOG_USER("Save Path: %s", (path / text).c_str());
-    if (std::filesystem::is_directory(path / text)) {
-      file_list_chdir(container, path / text);
-    } else if (std::filesystem::is_regular_file(path / text)) {
-      strcpy(d->current, (path / text).lexically_normal().c_str());
+    snprintf(new_path, sizeof(new_path), "%s/%s", d->current, text);
+    LV_LOG_USER("Save Path: %s", new_path);
+    if (is_directory(new_path)) {
+      file_list_chdir(container, new_path);
+    } else if (is_file(new_path)) {
+      strcpy(d->current, new_path);
       lv_obj_del(container);
     }
   }
@@ -70,25 +74,25 @@ static lv_obj_t *file_entry(lv_obj_t *parent, const char *icon, const char *text
 
 void file_list(lv_obj_t *parent) {
   auto *d = static_cast<file_data *>(lv_file_list_get_user_data(parent));
-  auto top = std::filesystem::path(d->top);
-  auto current = std::filesystem::path(d->current);
-  if (!std::filesystem::is_directory(current)) {
-    current = current.parent_path();
+  char *top = d->top;
+  char *current = d->current;
+
+  if(!is_directory(current)){
+    current = dirname(current);
   }
 
-  if (top.compare(current.lexically_normal()) < 0) {
+  if (compare_path(top, current) != 0) {
     LV_LOG_USER("Not in Top");
     file_entry(parent, ICON_UP, "Up");
   }
   file_entry(parent, ICON_FOLDER_OPEN, "Entire Folder");
 
-  LV_LOG_USER("Path: %s", current.c_str());
+  LV_LOG_USER("Path: %s", current);
 
-  DIR *dp;
+  DIR_SORTED dir;
   struct dirent *ep;
-  dp = opendir(current.c_str());
-  if (dp != nullptr) {
-    while ((ep = readdir(dp)) != nullptr) {
+  if (opendir_sorted(&dir, current)) {
+    while ((ep = readdir_sorted(&dir)) != nullptr) {
       if (ep->d_name[0] == '.')
         continue;
       if(strcasecmp(ep->d_name, "System Volume Information") == 0){
@@ -97,17 +101,16 @@ void file_list(lv_obj_t *parent) {
       if (ep->d_type == DT_DIR)
         file_entry(parent, ICON_FOLDER, ep->d_name);
     }
-  }
-  closedir(dp);
-  dp = opendir(current.c_str());
-  if (dp != nullptr) {
-    while ((ep = readdir(dp)) != nullptr) {
+
+  rewinddir_sorted(&dir);
+
+    while ((ep = readdir_sorted(&dir)) != nullptr) {
       if (ep->d_name[0] == '.')
         continue;
       if (ep->d_type == DT_REG)
         file_entry(parent, ICON_IMAGE, ep->d_name);
     }
-    closedir(dp);
+    closedir_sorted(&dir);
   }
 }
 

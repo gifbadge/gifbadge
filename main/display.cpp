@@ -17,9 +17,15 @@
 #include "file_util.h"
 #include "ui/menu.h"
 
+#include "directory.h"
+
 static const char *TAG = "DISPLAY";
 
 static void clear_screen(const std::shared_ptr<Display> &display, uint8_t *pBuf) {
+static DIR_SORTED dir;
+
+static int file_position;
+
   if (pBuf != nullptr) {
     memset(pBuf, 255, display->size.first * display->size.second * 2);
     display->write(0, 0, display->size.first, display->size.second, pBuf);
@@ -119,6 +125,11 @@ static int get_file(const char *path, char *outPath, size_t outLen) {
   //Check if we are starting with a valid file, and just return it if we are
   if (valid_file(path)) {
     strncpy(outPath, inPath, outLen - 1);
+    if(!dir.dirptr){
+      opendir_sorted(&dir, dirname(inPath));
+    }
+    file_position = directory_get_position(&dir, basename(outPath));
+    ESP_LOGI(TAG, "%i", file_position);
     return 0;
   }
   char *base = inPath;
@@ -129,23 +140,23 @@ static int get_file(const char *path, char *outPath, size_t outLen) {
   }
   struct dirent *de;  // Pointer for directory entry
 
-  DIR *dr = opendir(base);
+  closedir_sorted(&dir);
 
-  if (dr == nullptr) {
+  if (!opendir_sorted(&dir, base)) {
     return -1;
   }
 
-  while ((de = readdir(dr)) != nullptr) {
+  while ((de = readdir_sorted(&dir)) != nullptr) {
     if (snprintf(outPath, outLen, "%s/%s", base, de->d_name) < 0) {
       return -1;
     }
     if (valid_file(outPath)) {
+      file_position = directory_get_position(&dir, basename(outPath));
+      ESP_LOGI(TAG, "%i", file_position);
       ESP_LOGI(TAG, "%s", outPath);
-      closedir(dr);
       return 0;
     }
   }
-  closedir(dr);
   outPath[0] = '\0';
   return -1;
 }
@@ -181,46 +192,6 @@ Image *openFileUpdatePath(char *path, size_t pathLen, uint8_t *pGIFBuf, const st
     return nullptr;
   }
   return openFile(path, pGIFBuf, display);
-}
-
-
-
-static int files_get_position(const std::vector<std::string> &files, const std::string &name) {
-//    auto files = list_directory(path);
-  auto result = std::find(files.begin(), files.end(), name.c_str());
-  if (result == files.end() ||files.empty()) {
-    return -1;
-  } else {
-    return std::distance(files.begin(), result);
-  }
-}
-
-static std::filesystem::path files_get_next(const std::filesystem::path &path) {
-  auto files = list_directory(path.parent_path());
-  int pos = files_get_position(files, path);
-  if (pos >= 0) {
-    if (pos == files.size() - 1) {
-      return files.at(0);
-    } else {
-      return files.at(pos + 1);
-    }
-  } else {
-    return "";
-  }
-}
-
-static std::filesystem::path files_get_previous(const std::filesystem::path &path) {
-  auto files = list_directory(path.parent_path());
-  int pos = files_get_position(files, path);
-  if (pos >= 0) {
-    if (pos == 0) {
-      return files.at(files.size() - 1);
-    } else {
-      return files.at(pos - 1);
-    }
-  } else {
-    return "";
-  }
 }
 
 static int64_t last_change;
@@ -280,7 +251,7 @@ void display_task(void *params) {
         case DISPLAY_FILE:
           ESP_LOGI(TAG, "DISPLAY_FILE");
           if(!valid_file(current_file)) {
-            strncpy(current_file, config.getPath().c_str(), sizeof(current_file) - 1);
+            strncpy(current_file, config.getPath(), sizeof(current_file) - 1);
           }
           in.reset(openFileUpdatePath(current_file, sizeof(current_file), pGIFBuf, board->getDisplay()));
           last_mode = static_cast<DISPLAY_OPTIONS>(option);
@@ -289,19 +260,15 @@ void display_task(void *params) {
           if (config.getLocked()) {
             break;
           }
-          if(!files_get_next(current_file).empty()){
-            strncpy(current_file,  files_get_next(current_file).c_str(), sizeof(current_file)-1);
-            in.reset(openFileUpdatePath(current_file, sizeof(current_file), pGIFBuf, board->getDisplay()));
-          }
+          snprintf(current_file,  sizeof(current_file)-1, "%s/%s", dirname(current_file), directory_get_next(&dir, file_position));
+          in.reset(openFileUpdatePath(current_file, sizeof(current_file), pGIFBuf, board->getDisplay()));
           break;
         case DISPLAY_PREVIOUS:
           if (config.getLocked()) {
             break;
           }
-          if(!files_get_previous(current_file).empty()){
-            strncpy(current_file, files_get_previous(current_file).c_str(), sizeof(current_file)-1);
+          snprintf(current_file,  sizeof(current_file)-1, "%s/%s", dirname(current_file), directory_get_previous(&dir, file_position));
             in.reset(openFileUpdatePath(current_file, sizeof(current_file), pGIFBuf, board->getDisplay()));
-          }
           break;
         case DISPLAY_BATT:
           if (last_mode != DISPLAY_BATT) {

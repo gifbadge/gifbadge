@@ -121,7 +121,7 @@ lv_obj_t *FileOptions() {
 
     lv_obj_t *file_label = lv_label_create(file_select);
     lv_obj_add_style(file_label, &menu_font_style, LV_PART_MAIN);
-    lv_label_set_text(file_label, config.getPath().c_str());
+    lv_label_set_text(file_label, config.getPath());
     lv_label_set_long_mode(file_label, LV_LABEL_LONG_SCROLL_CIRCULAR);
     lv_obj_set_flex_grow(file_label, 1);
     lv_obj_add_style(file_label, &file_select_style, LV_PART_MAIN);

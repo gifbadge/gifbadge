@@ -1,24 +1,21 @@
 #include "config.h"
 #include <nvs_flash.h>
 #include <nvs_handle.hpp>
+#include <cstring>
 
 static const char *TAG = "CONFIG";
 
 ImageConfig::ImageConfig() {
   esp_err_t err;
   handle = nvs::open_nvs_handle("image", NVS_READWRITE, &err);
-  path = get_string_or_default("path", (const char *) "/data");
-  directory = get_string_or_default("directory", (const char *) "/data");
-  image_file = get_string_or_default("image_file", (const char *) "");
+  get_string_or_default("path", (const char *) "/data", path, sizeof(path));
   locked = get_item_or_default("locked", false);
   slideshow = get_item_or_default("slideshow", false);
   slideshow_time = get_item_or_default("slideshow_time", 15);
 }
 
 ImageConfig::~ImageConfig() {
-  handle->set_string("path", path.c_str());
-  handle->set_string("directory", directory.c_str());
-  handle->set_string("image_file", image_file.c_str());
+  handle->set_string("path", path);
   handle->set_item("locked", locked);
   handle->set_item("slideshow", slideshow);
   handle->set_item("slideshow_time", slideshow_time);
@@ -26,9 +23,7 @@ ImageConfig::~ImageConfig() {
 }
 
 void ImageConfig::save() {
-  handle->set_string("path", path.c_str());
-  handle->set_string("directory", directory.c_str());
-  handle->set_string("image_file", image_file.c_str());
+  handle->set_string("path", path);
   handle->set_item("locked", locked);
   handle->set_item("slideshow", slideshow);
   handle->set_item("slideshow_time", slideshow_time);
@@ -52,28 +47,20 @@ T ImageConfig::get_item_or_default(const char *item, T value) {
   }
 }
 
-std::string ImageConfig::get_string_or_default(const char *item, std::string value) {
+void ImageConfig::get_string_or_default(const char *item, const char* default_value, char *out, size_t out_len) {
   esp_err_t err;
-  char ret[128];
-  err = handle->get_string(item, ret, 128);
-  switch (err) {
-    case ESP_OK:
-      return ret;
-    case ESP_ERR_NVS_NOT_FOUND:
-      handle->set_string(item, value.c_str());
+    if(handle->get_string(item, out, out_len) == ESP_ERR_NVS_NOT_FOUND) {
+      handle->set_string(item, default_value);
       handle->commit();
-      return value;
-    default :
-      return value;
-  }
+    }
 }
 
-void ImageConfig::setPath(const std::filesystem::path &value) {
+void ImageConfig::setPath(const char *value) {
   const std::lock_guard<std::mutex> lock(mutex);
-  path = value;
+  strncpy(path, value, sizeof(path)-1);
 }
 
-std::filesystem::path ImageConfig::getPath() {
+const char * ImageConfig::getPath() {
   const std::lock_guard<std::mutex> lock(mutex);
   return path;
 }
@@ -111,9 +98,7 @@ int ImageConfig::getSlideShowTime() {
 void ImageConfig::reload() {
   esp_err_t err;
   handle = nvs::open_nvs_handle("image", NVS_READWRITE, &err);
-  path = get_string_or_default("path", (const char *) "/data");
-  directory = get_string_or_default("directory", (const char *) "/data");
-  image_file = get_string_or_default("image_file", (const char *) "");
+  get_string_or_default("path", (const char *) "/data", path, sizeof(path));
   locked = get_item_or_default("locked", false);
   slideshow = get_item_or_default("slideshow", false);
   slideshow_time = get_item_or_default("slideshow_time", 15);

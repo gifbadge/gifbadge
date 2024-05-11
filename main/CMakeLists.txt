@@ -41,7 +41,7 @@ idf_component_register(SRCS
         "ui/usb_connected.cpp"
         "ui/device_info.cpp"
         INCLUDE_DIRS "include"
-REQUIRES esp_psram esp_adc nvs_flash efuse app_update image font_render lvgl esp_io_expander_cat9532 esp_io_expander tinyusb esp_tinyusb esp_timer)
+REQUIRES esp_psram esp_adc nvs_flash efuse app_update image font_render lvgl esp_io_expander_cat9532 esp_io_expander tinyusb esp_tinyusb esp_timer fileutil)
 #target_compile_options(${COMPONENT_LIB} PRIVATE -DGC9A01=1 -DLV_USE_PERF_MONITOR=1)
 target_compile_options(${COMPONENT_LIB} PRIVATE -DST7706=1 -DLV_USE_PERF_MONITOR=1)
 target_compile_options(${COMPONENT_LIB} PRIVATE -D__LINUX__)
