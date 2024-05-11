@@ -134,7 +134,7 @@ static int get_file(const char *path, char *outPath, size_t outLen) {
   }
   char *base = inPath;
   //Check if it's a directory
-  if (!is_dir(path)) {
+  if (!is_directory(path)) {
     //It's not a directory. Get the directory
     base = dirname(inPath);
   }
