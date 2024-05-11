@@ -21,25 +21,25 @@
 
 static const char *TAG = "DISPLAY";
 
-static void clear_screen(const std::shared_ptr<Display> &display, uint8_t *pBuf) {
 static DIR_SORTED dir;
 
 static int file_position;
 
+static void clear_screen(Display *display, uint8_t *pBuf) {
   if (pBuf != nullptr) {
     memset(pBuf, 255, display->size.first * display->size.second * 2);
     display->write(0, 0, display->size.first, display->size.second, pBuf);
   }
 }
 
-static void display_no_image(const std::shared_ptr<Display> &display, uint8_t *pGIFBuf) {
+static void display_no_image(Display *display, uint8_t *pGIFBuf) {
   ESP_LOGI(TAG, "Displaying No Image");
   clear_screen(display, pGIFBuf);
   render_text_centered(display->size.first, display->size.second, 10, "No Image", pGIFBuf);
   display->write(0, 0, display->size.first, display->size.second, pGIFBuf);
 }
 
-static void display_image_too_large(const std::shared_ptr<Display> &display, uint8_t *pGIFBuf, const char *path) {
+static void display_image_too_large(Display *display, uint8_t *pGIFBuf, const char *path) {
   ESP_LOGI(TAG, "Displaying Image To Large");
   clear_screen(display, pGIFBuf);
   char tmp[255];
@@ -48,14 +48,14 @@ static void display_image_too_large(const std::shared_ptr<Display> &display, uin
   display->write(0, 0, display->size.first, display->size.second, pGIFBuf);
 }
 
-static void display_err(const std::shared_ptr<Display> &display, uint8_t *pGIFBuf, const char *err) {
+static void display_err(Display *display, uint8_t *pGIFBuf, const char *err) {
   ESP_LOGI(TAG, "Displaying Error");
   clear_screen(display, pGIFBuf);
   render_text_centered(display->size.first, display->size.second, 10, err, pGIFBuf);
   display->write(0, 0, display->size.first, display->size.second, pGIFBuf);
 }
 
-static void display_ota(const std::shared_ptr<Display> &display, uint8_t *pGIFBuf, uint32_t percent) {
+static void display_ota(Display *display, uint8_t *pGIFBuf, uint32_t percent) {
   ESP_LOGI(TAG, "Displaying OTA Status");
   clear_screen(display, pGIFBuf);
   char tmp[50];
@@ -64,14 +64,14 @@ static void display_ota(const std::shared_ptr<Display> &display, uint8_t *pGIFBu
   display->write(0, 0, display->size.first, display->size.second, pGIFBuf);
 }
 
-static void display_no_storage(const std::shared_ptr<Display> &display, uint8_t *pGIFBuf) {
+static void display_no_storage(Display *display, uint8_t *pGIFBuf) {
   ESP_LOGI(TAG, "Displaying No Storage");
   clear_screen(display, pGIFBuf);
   render_text_centered(display->size.first, display->size.second, 10, "No SDCARD", pGIFBuf);
   display->write(0, 0, display->size.first, display->size.second, pGIFBuf);
 }
 
-static void display_image_batt(const std::shared_ptr<Display> &display, uint8_t *buf) {
+static void display_image_batt(Display *display, uint8_t *buf) {
   ESP_LOGI(TAG, "Displaying Low Battery");
   clear_screen(display, buf);
   PNGImage png;
@@ -86,7 +86,7 @@ static std::pair<int16_t, int16_t> lastSize = {0,0};
 
 //#define FRAMETIME
 
-static int displayFile(Image *in, uint8_t *pGIFBuf, const std::shared_ptr<Display> &display) {
+static int displayFile(Image *in, uint8_t *pGIFBuf, Display *display) {
   int64_t start = esp_timer_get_time();
   int delay;
   int16_t xOffset = 0;
@@ -161,7 +161,7 @@ static int get_file(const char *path, char *outPath, size_t outLen) {
   return -1;
 }
 
-Image *openFile(const char *path, uint8_t *pGIFBuf, const std::shared_ptr<Display> &display) {
+Image *openFile(const char *path, uint8_t *pGIFBuf, Display *display) {
   Image *in = ImageFactory(path);
   if (in) {
     if (in->open(path) != 0) {
@@ -186,7 +186,7 @@ Image *openFile(const char *path, uint8_t *pGIFBuf, const std::shared_ptr<Displa
   return in;
 }
 
-Image *openFileUpdatePath(char *path, size_t pathLen, uint8_t *pGIFBuf, const std::shared_ptr<Display> &display){
+Image *openFileUpdatePath(char *path, size_t pathLen, uint8_t *pGIFBuf, Display *display){
   if (get_file(path, path, pathLen) != 0) {
     display_no_image(display, pGIFBuf);
     return nullptr;
@@ -207,7 +207,7 @@ void display_task(void *params) {
 
   auto config = ImageConfig();
 
-  auto display = board->getDisplay();
+  auto display = board->getDisplay().get();
 
   // user can flush pre-defined pattern to the screen before we turn on the screen or backlight
 
@@ -227,7 +227,6 @@ void display_task(void *params) {
   board->getBacklight()->setLevel(backlight_level * 10);
 
   std::shared_ptr<Image> in;
-  std::vector<std::string> files = list_directory("/data");
 
   char current_file[128];
 
@@ -253,7 +252,7 @@ void display_task(void *params) {
           if(!valid_file(current_file)) {
             strncpy(current_file, config.getPath(), sizeof(current_file) - 1);
           }
-          in.reset(openFileUpdatePath(current_file, sizeof(current_file), pGIFBuf, board->getDisplay()));
+          in.reset(openFileUpdatePath(current_file, sizeof(current_file), pGIFBuf, display));
           last_mode = static_cast<DISPLAY_OPTIONS>(option);
           break;
         case DISPLAY_NEXT:
@@ -261,40 +260,40 @@ void display_task(void *params) {
             break;
           }
           snprintf(current_file,  sizeof(current_file)-1, "%s/%s", dirname(current_file), directory_get_next(&dir, file_position));
-          in.reset(openFileUpdatePath(current_file, sizeof(current_file), pGIFBuf, board->getDisplay()));
+          in.reset(openFileUpdatePath(current_file, sizeof(current_file), pGIFBuf, display));
           break;
         case DISPLAY_PREVIOUS:
           if (config.getLocked()) {
             break;
           }
           snprintf(current_file,  sizeof(current_file)-1, "%s/%s", dirname(current_file), directory_get_previous(&dir, file_position));
-            in.reset(openFileUpdatePath(current_file, sizeof(current_file), pGIFBuf, board->getDisplay()));
+            in.reset(openFileUpdatePath(current_file, sizeof(current_file), pGIFBuf, display));
           break;
         case DISPLAY_BATT:
           if (last_mode != DISPLAY_BATT) {
-            display_image_batt(board->getDisplay(), pGIFBuf);
+            display_image_batt(board->getDisplay().get(), pGIFBuf);
           }
           last_mode = static_cast<DISPLAY_OPTIONS>(option);
           break;
         case DISPLAY_OTA:
-          display_ota(board->getDisplay(), pGIFBuf, 0);
+          display_ota(board->getDisplay().get(), pGIFBuf, 0);
           last_mode = static_cast<DISPLAY_OPTIONS>(option);
           break;
         case DISPLAY_NO_STORAGE:
           last_mode = static_cast<DISPLAY_OPTIONS>(option);
-          display_no_storage(board->getDisplay(), pGIFBuf);
+          display_no_storage(board->getDisplay().get(), pGIFBuf);
           break;
         case DISPLAY_SPECIAL_1:
           ESP_LOGI(TAG, "DISPLAY_SPECIAL_1");
           if (valid_file("/data/cards/up.png")) {
-            in.reset(openFile("/data/cards/up.png", pGIFBuf, board->getDisplay()));
+            in.reset(openFile("/data/cards/up.png", pGIFBuf, display));
             last_mode = static_cast<DISPLAY_OPTIONS>(option);
           }
           break;
         case DISPLAY_SPECIAL_2:
           ESP_LOGI(TAG, "DISPLAY_SPECIAL_2");
           if (valid_file("/data/cards/down.png")) {
-            in.reset(openFile("/data/cards/down.png", pGIFBuf, board->getDisplay()));
+            in.reset(openFile("/data/cards/down.png", pGIFBuf, display));
             last_mode = static_cast<DISPLAY_OPTIONS>(option);
           }
           break;
@@ -309,16 +308,16 @@ void display_task(void *params) {
       } else if (last_mode == DISPLAY_OTA) {
         int percent = OTA::ota_status();
         if (percent != 0) {
-          display_ota(board->getDisplay(), pGIFBuf, percent);
+          display_ota(display, pGIFBuf, percent);
         }
         delay = 1000;
       } else {
         if(in) {
-          delay = displayFile(in.get(), pGIFBuf, board->getDisplay());
+          delay = displayFile(in.get(), pGIFBuf, display);
           if (delay < 0) {
             char errMsg[255];
             snprintf(errMsg, sizeof(errMsg), "Error Displaying File\n%s\n%s",  current_file, in->getLastError());
-            display_err(board->getDisplay(), pGIFBuf, errMsg);
+            display_err(board->getDisplay().get(), pGIFBuf, errMsg);
             in.reset();
           }
         }
