@@ -15,7 +15,6 @@ idf_component_register(SRCS
         "hw_init.cpp"
         "hal/boards/board_data.c"
         "hal/boards/board_v0.cpp"
-        "hal/boards/board_2_1_v0_1.cpp"
         "hal/boards/board_2_1_v0_2.cpp"
         "hal/boards/board_2_1_v0_4.cpp"
         "hal/boards/board_1_28_v0_1.cpp"
