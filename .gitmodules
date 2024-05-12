@@ -1,27 +1,16 @@
-[submodule "components/image/AnimatedGIF"]
-	path = components/image/AnimatedGIF
+[submodule "components/image/EmbeddedImage/AnimatedGIF"]
+	path = components/image/EmbeddedImage/AnimatedGIF
 	url = https://github.com/bitbank2/AnimatedGIF.git
-[submodule "components/image/PNGdec"]
-	path = components/image/PNGdec
+[submodule "components/image/EmbeddedImage/PNGdec"]
+	path = components/image/EmbeddedImage/PNGdec
 	url = https://github.com/bitbank2/PNGdec.git
-[submodule "components/image/JPEGDEC"]
-	path = components/image/JPEGDEC
-	url = https://github.com/bitbank2/JPEGDEC.git
 [submodule "components/font_render/mcufont"]
 	path = components/font_render/mcufont
 	url = https://github.com/mcufont/mcufont.git
-[submodule "components/lvgl"]
-	path = components/lvgl
-	url = https://github.com/lvgl/lvgl.git
-[submodule "components/lvgl"]
-	path = components/lvgl
-	url = https://github.com/lvgl/lvgl.git
 [submodule "components/lvgl__lvgl"]
 	path = components/lvgl__lvgl
 	url = https://github.com/lvgl/lvgl.git
 [submodule "lv_font_conv"]
 	path = lv_font_conv
 	url = https://github.com/lvgl/lv_font_conv.git
-[submodule "components/image/EmbeddedImage/AnimatedGIF"]
-	path = components/image/EmbeddedImage/AnimatedGIF
-	url = https://github.com/bitbank2/AnimatedGIF.git
+
