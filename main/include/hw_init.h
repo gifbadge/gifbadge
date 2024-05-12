@@ -3,4 +3,4 @@
 #include "hal/drivers/battery_analog.h"
 #include "hal/board.h"
 
-std::shared_ptr<Board> get_board();
+Board *get_board();

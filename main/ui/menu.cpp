@@ -25,7 +25,7 @@ static TaskHandle_t lvgl_task;
 static flushCbData cbData;
 static esp_timer_handle_t lvgl_tick_timer;
 static bool menu_state;
-static std::shared_ptr<Board> global_board;
+static Board *global_board;
 static SemaphoreHandle_t lvgl_mux = nullptr;
 static SemaphoreHandle_t flushSem;
 
@@ -181,8 +181,8 @@ void flushWait(lv_display_t * disp){
   xSemaphoreTake(flushSem, portMAX_DELAY);
 }
 
-void lvgl_init(std::shared_ptr<Board> board) {
-  global_board = std::move(board);
+void lvgl_init(Board *board) {
+  global_board = board;
 
   menu_state = false;
 
@@ -212,7 +212,7 @@ void lvgl_init(std::shared_ptr<Board> board) {
   style_init();
   lvgl_encoder = lv_indev_create();
   lv_indev_set_type(lvgl_encoder, LV_INDEV_TYPE_ENCODER);
-  lv_indev_set_user_data(lvgl_encoder, global_board->getKeys().get());
+  lv_indev_set_user_data(lvgl_encoder, global_board->getKeys());
   lv_indev_set_read_cb(lvgl_encoder, keyboard_read);
   lv_timer_set_period(lv_indev_get_read_timer(lvgl_encoder), 50);
 //
@@ -221,7 +221,7 @@ void lvgl_init(std::shared_ptr<Board> board) {
     lvgl_touch = lv_indev_create();
     lv_indev_set_type(lvgl_touch, LV_INDEV_TYPE_POINTER);
     lv_indev_set_read_cb(lvgl_touch, touch_read);
-    lv_indev_set_driver_data(lvgl_touch, global_board->getTouch().get());
+    lv_indev_set_driver_data(lvgl_touch, global_board->getTouch());
     lv_timer_set_period(lv_indev_get_read_timer(lvgl_touch), 150);
   }
 
@@ -270,7 +270,7 @@ static void battery_widget(lv_obj_t *scr) {
   lv_obj_add_style(bar, &style_battery_main, LV_PART_MAIN);
   lv_obj_set_size(bar, 20, 40);
   lv_obj_center(bar);
-  lv_obj_set_user_data(bar, global_board->getBattery().get());
+  lv_obj_set_user_data(bar, global_board->getBattery());
 
 
   //TODO: See why this causes a freeze in LVGL
@@ -301,7 +301,7 @@ static void battery_widget(lv_obj_t *scr) {
   lv_obj_set_style_text_font(battery_symbol, &battery_symbols_14, LV_PART_MAIN);
   lv_obj_set_style_text_align(battery_symbol, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
 
-  lv_obj_set_user_data(battery_symbol_cont, global_board->getBattery().get());
+  lv_obj_set_user_data(battery_symbol_cont, global_board->getBattery());
 
   //TODO: See why this causes a freeze in LVGL
   lv_obj_add_event_cb(battery_symbol_cont, [](lv_event_t *e) {

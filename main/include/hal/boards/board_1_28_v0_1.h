@@ -22,12 +22,12 @@ class board_1_28_v0_1 : public Board {
   board_1_28_v0_1();
   ~board_1_28_v0_1() override = default;
 
-  std::shared_ptr<Battery> getBattery() override;
-  std::shared_ptr<Touch> getTouch() override;
-  std::shared_ptr<I2C> getI2c() override;
-  std::shared_ptr<Keys> getKeys() override;
-  std::shared_ptr<Display> getDisplay() override;
-  std::shared_ptr<Backlight> getBacklight() override;
+  Battery * getBattery() override;
+  Touch * getTouch() override;
+  I2C * getI2c() override;
+  Keys * getKeys() override;
+  Display * getDisplay() override;
+  Backlight * getBacklight() override;
 
   void powerOff() override;
   void pmLock() override;
@@ -41,12 +41,12 @@ class board_1_28_v0_1 : public Board {
   bool powerConnected() override;
 
  private:
-  std::shared_ptr<battery_max17048> _battery;
-  std::shared_ptr<I2C> _i2c;
-  std::shared_ptr<keys_gpio> _keys;
-  std::shared_ptr<display_gc9a01> _display;
-  std::shared_ptr<backlight_ledc> _backlight;
-  std::shared_ptr<touch_ft5x06> _touch;
+  battery_max17048 *_battery;
+  I2C *_i2c;
+  keys_gpio * _keys;
+  display_gc9a01 * _display;
+  backlight_ledc * _backlight;
+  touch_ft5x06 * _touch;
   sdmmc_card_t *card = nullptr;
   esp_pm_lock_handle_t pmLockHandle = nullptr;
 };

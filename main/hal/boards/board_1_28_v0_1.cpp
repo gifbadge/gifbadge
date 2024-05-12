@@ -28,12 +28,12 @@ static void IRAM_ATTR usb_connected(void *) {
 }
 
 board_1_28_v0_1::board_1_28_v0_1() {
-  _i2c = std::make_shared<I2C>(I2C_NUM_0, 17, 18);
-  _battery = std::make_shared<battery_max17048>(_i2c, GPIO_VBUS_DETECT);
+  _i2c = new I2C(I2C_NUM_0, 17, 18);
+  _battery = new battery_max17048(_i2c, GPIO_VBUS_DETECT);
   _battery->inserted(); //Battery not removable. So set this
-  _keys = std::make_shared<keys_gpio>(GPIO_NUM_0, GPIO_NUM_2, GPIO_NUM_1);
-  _display = std::make_shared<display_gc9a01>(35, 36, 34, 37, 38);
-  _backlight = std::make_shared<backlight_ledc>(GPIO_NUM_9, 0);
+  _keys = new keys_gpio(GPIO_NUM_0, GPIO_NUM_2, GPIO_NUM_1);
+  _display = new display_gc9a01(35, 36, 34, 37, 38);
+  _backlight = new backlight_ledc(GPIO_NUM_9, 0);
   _backlight->setLevel(100);
 
   esp_pm_config_t pm_config = {.max_freq_mhz = 240, .min_freq_mhz = 40, .light_sleep_enable = true};
@@ -92,27 +92,27 @@ board_1_28_v0_1::board_1_28_v0_1() {
   esp_pm_lock_create(ESP_PM_CPU_FREQ_MAX, 0, "Board Lock", &pmLockHandle);
 }
 
-std::shared_ptr<Battery> board_1_28_v0_1::getBattery() {
+Battery * board_1_28_v0_1::getBattery() {
   return _battery;
 }
 
-std::shared_ptr<Touch> board_1_28_v0_1::getTouch() {
+Touch * board_1_28_v0_1::getTouch() {
   return _touch;
 }
 
-std::shared_ptr<I2C> board_1_28_v0_1::getI2c() {
+I2C * board_1_28_v0_1::getI2c() {
   return _i2c;
 }
 
-std::shared_ptr<Keys> board_1_28_v0_1::getKeys() {
+Keys * board_1_28_v0_1::getKeys() {
   return _keys;
 }
 
-std::shared_ptr<Display> board_1_28_v0_1::getDisplay() {
+Display * board_1_28_v0_1::getDisplay() {
   return _display;
 }
 
-std::shared_ptr<Backlight> board_1_28_v0_1::getBacklight() {
+Backlight * board_1_28_v0_1::getBacklight() {
   return _backlight;
 }
 

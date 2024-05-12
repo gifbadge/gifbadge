@@ -30,8 +30,8 @@ static void checkSDTimer(void *arg) {
 }
 
 board_2_1_v0_2::board_2_1_v0_2() {
-  _i2c = std::make_shared<I2C>(I2C_NUM_0, 47, 48);
-  _battery = std::make_shared<battery_max17048>(_i2c, GPIO_NUM_0);
+  _i2c = new I2C(I2C_NUM_0, 47, 48);
+  _battery = new battery_max17048(_i2c, GPIO_NUM_0);
   _battery->inserted(); //Set battery inserted, as we can't detect status on this revision
   /*G3, G4, G5, R1, R2, R3, R4, R5, B1, B2, B3, B4, B5, G0, G1, G2 */
   std::array<int, 16> rgb = {11, 12, 13, 3, 4, 5, 6, 7, 14, 15, 16, 17, 18, 8, 9, 10};
@@ -59,17 +59,17 @@ board_2_1_v0_2::board_2_1_v0_2() {
       .sda_gpio_num = 4,
       .io_expander = _io_expander,                        // Set to NULL if not using IO expander
   };
-  _display = std::make_shared<display_st7701s>(line_config, 2, 1, 45, 46, rgb);
+  _display = new display_st7701s(line_config, 2, 1, 45, 46, rgb);
 
   esp_io_expander_set_dir(_io_expander,
                           IO_EXPANDER_PIN_NUM_14 | IO_EXPANDER_PIN_NUM_12 | IO_EXPANDER_PIN_NUM_13,
                           IO_EXPANDER_INPUT);
   esp_io_expander_print_state(_io_expander);
-  _keys = std::make_shared<keys_esp_io_expander>(_io_expander, 14, 12, 13);
+  _keys = new keys_esp_io_expander(_io_expander, 14, 12, 13);
 
-  _backlight = std::make_shared<backlight_ledc>(GPIO_NUM_21, 0);
+  _backlight = new backlight_ledc(GPIO_NUM_21, 0);
   _backlight->setLevel(100);
-  _touch = std::make_shared<touch_ft5x06>(_i2c);
+  _touch = new touch_ft5x06(_i2c);
 
   //TODO: Check if we can use DFS with the RGB LCD
   esp_pm_config_t pm_config = {.max_freq_mhz = 240, .min_freq_mhz = 240, .light_sleep_enable = false};
@@ -121,27 +121,27 @@ board_2_1_v0_2::board_2_1_v0_2() {
 
 }
 
-std::shared_ptr<Battery> board_2_1_v0_2::getBattery() {
+Battery * board_2_1_v0_2::getBattery() {
   return _battery;
 }
 
-std::shared_ptr<Touch> board_2_1_v0_2::getTouch() {
+Touch * board_2_1_v0_2::getTouch() {
   return _touch;
 }
 
-std::shared_ptr<I2C> board_2_1_v0_2::getI2c() {
+I2C * board_2_1_v0_2::getI2c() {
   return _i2c;
 }
 
-std::shared_ptr<Keys> board_2_1_v0_2::getKeys() {
+Keys * board_2_1_v0_2::getKeys() {
   return _keys;
 }
 
-std::shared_ptr<Display> board_2_1_v0_2::getDisplay() {
+Display * board_2_1_v0_2::getDisplay() {
   return _display;
 }
 
-std::shared_ptr<Backlight> board_2_1_v0_2::getBacklight() {
+Backlight * board_2_1_v0_2::getBacklight() {
   return _backlight;
 }
 

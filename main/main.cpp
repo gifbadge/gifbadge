@@ -66,7 +66,7 @@ MAIN_STATES currentState = MAIN_NONE;
  * @param args
  */
 static void lowBatteryTask(void *args) {
-  std::shared_ptr<Board> board = get_board();
+  Board *board = get_board();
   TaskHandle_t lvglHandle;
   TaskHandle_t display_task_handle;
 
@@ -129,13 +129,13 @@ extern "C" void app_main(void) {
     }
   });
 
-  std::shared_ptr<Board> board = get_board();
+  Board *board = get_board();
 
   TaskHandle_t display_task_handle = nullptr;
 
   xTaskCreate(display_task, "display_task", 10000, board.get(), 2, &display_task_handle);
 
-  dumpDebugTimerInit(board.get());
+  dumpDebugTimerInit(board);
 
   OTA::bootInfo();
 
@@ -152,7 +152,7 @@ extern "C" void app_main(void) {
 
   MAIN_STATES oldState = MAIN_NONE;
   TaskHandle_t lvglHandle = xTaskGetHandle("LVGL");
-  initInputTimer(board.get());
+  initInputTimer(board);
   while (true) {
     if(currentState == MAIN_NONE){
       currentState = MAIN_NORMAL;

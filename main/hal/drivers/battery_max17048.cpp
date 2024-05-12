@@ -6,8 +6,8 @@
 
 static const char *TAG = "battery_max17048";
 
-battery_max17048::battery_max17048(std::shared_ptr<I2C> i2c, gpio_num_t vbus_pin)
-    : _i2c(std::move(i2c)), _vbus_pin(vbus_pin) {
+battery_max17048::battery_max17048(I2C *i2c, gpio_num_t vbus_pin)
+    : _i2c(i2c), _vbus_pin(vbus_pin) {
   uint8_t data[2];
   _i2c->read_reg(0x36, 0x08, data, 2);
   ESP_LOGI(TAG, "MAX17048 Version %u %u", data[0], data[1]);

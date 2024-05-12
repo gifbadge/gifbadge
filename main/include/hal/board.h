@@ -21,12 +21,12 @@ class Board {
   Board() = default;
   virtual ~Board() = default;
 
-  virtual std::shared_ptr<Battery> getBattery() = 0;
-  virtual std::shared_ptr<Touch> getTouch() = 0;
-  virtual std::shared_ptr<I2C> getI2c() = 0;
-  virtual std::shared_ptr<Keys> getKeys() = 0;
-  virtual std::shared_ptr<Display> getDisplay() = 0;
-  virtual std::shared_ptr<Backlight> getBacklight() = 0;
+  virtual Battery * getBattery() = 0;
+  virtual Touch * getTouch() = 0;
+  virtual I2C * getI2c() = 0;
+  virtual Keys * getKeys() = 0;
+  virtual Display * getDisplay() = 0;
+  virtual Backlight * getBacklight() = 0;
   virtual void powerOff() = 0;
   virtual BOARD_POWER powerState() = 0;
   virtual void pmLock() = 0;

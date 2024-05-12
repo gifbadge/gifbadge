@@ -13,11 +13,11 @@
 static const char *TAG = "board_v0";
 
 board_v0::board_v0() {
-  _i2c = std::make_shared<I2C>(I2C_NUM_0, 21, 18);
-  _battery = std::make_shared<battery_analog>(ADC_CHANNEL_9);
-  _keys = std::make_shared<keys_gpio>(GPIO_NUM_43, GPIO_NUM_44, GPIO_NUM_0);
-  _display = std::make_shared<display_gc9a01>(35, 36, 34, 37, 46);
-  _backlight = std::make_shared<backlight_ledc>(GPIO_NUM_45, 0);
+  _i2c = new I2C(I2C_NUM_0, 21, 18);
+  _battery = new battery_analog(ADC_CHANNEL_9);
+  _keys = new keys_gpio(GPIO_NUM_43, GPIO_NUM_44, GPIO_NUM_0);
+  _display = new display_gc9a01(35, 36, 34, 37, 46);
+  _backlight = new backlight_ledc(GPIO_NUM_45, 0);
 
   static wl_handle_t wl_handle = WL_INVALID_HANDLE;
   ESP_ERROR_CHECK(init_ext_flash(39, 41, 40, 42, &wl_handle));
@@ -27,27 +27,27 @@ board_v0::board_v0() {
   esp_pm_configure(&pm_config);
 }
 
-std::shared_ptr<Battery> board_v0::getBattery() {
+Battery * board_v0::getBattery() {
   return _battery;
 }
 
-std::shared_ptr<Touch> board_v0::getTouch() {
+Touch * board_v0::getTouch() {
   return nullptr;
 }
 
-std::shared_ptr<I2C> board_v0::getI2c() {
+I2C * board_v0::getI2c() {
   return _i2c;
 }
 
-std::shared_ptr<Keys> board_v0::getKeys() {
+Keys * board_v0::getKeys() {
   return _keys;
 }
 
-std::shared_ptr<Display> board_v0::getDisplay() {
+Display * board_v0::getDisplay() {
   return _display;
 }
 
-std::shared_ptr<Backlight> board_v0::getBacklight() {
+Backlight * board_v0::getBacklight() {
   return _backlight;
 }
 

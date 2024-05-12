@@ -17,12 +17,12 @@ class board_2_1_v0_4 : public Board {
   board_2_1_v0_4();
   ~board_2_1_v0_4() override = default;
 
-  std::shared_ptr<Battery> getBattery() override;
-  std::shared_ptr<Touch> getTouch() override;
-  std::shared_ptr<I2C> getI2c() override;
-  std::shared_ptr<Keys> getKeys() override;
-  std::shared_ptr<Display> getDisplay() override;
-  std::shared_ptr<Backlight> getBacklight() override;
+  Battery * getBattery() override;
+  Touch * getTouch() override;
+  I2C * getI2c() override;
+  Keys * getKeys() override;
+  Display * getDisplay() override;
+  Backlight * getBacklight() override;
 
   void powerOff() override;
   void pmLock() override {};
@@ -36,21 +36,24 @@ class board_2_1_v0_4 : public Board {
 
 
  private:
-  std::shared_ptr<battery_max17048> _battery;
-  std::shared_ptr<I2C> _i2c;
-  std::shared_ptr<keys_esp_io_expander> _keys;
-  std::shared_ptr<display_st7701s> _display;
-  std::shared_ptr<backlight_ledc> _backlight;
-  std::shared_ptr<touch_ft5x06> _touch;
+  battery_max17048 * _battery;
+  I2C *_i2c;
+  keys_esp_io_expander * _keys;
+  display_st7701s * _display;
+  backlight_ledc * _backlight;
+  touch_ft5x06 * _touch;
   sdmmc_card_t *card = nullptr;
   esp_io_expander_handle_t _io_expander = nullptr;
 
   typedef struct {
-    std::shared_ptr<battery_max17048> battery;
+    battery_max17048 * battery;
     esp_io_expander_handle_t io_expander;
   } batteryTimerArgs;
 
   batteryTimerArgs _batteryTimerArgs;
   static bool checkBatteryInstalled(esp_io_expander_handle_t io_expander);
   static void batteryTimer(void *args);
+
+  void *buffer;
+
 };

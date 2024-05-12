@@ -207,7 +207,7 @@ void display_task(void *params) {
 
   auto config = ImageConfig();
 
-  auto display = board->getDisplay().get();
+  auto display = board->getDisplay();
 
   // user can flush pre-defined pattern to the screen before we turn on the screen or backlight
 
@@ -271,17 +271,17 @@ void display_task(void *params) {
           break;
         case DISPLAY_BATT:
           if (last_mode != DISPLAY_BATT) {
-            display_image_batt(board->getDisplay().get(), pGIFBuf);
+            display_image_batt(board->getDisplay(), pGIFBuf);
           }
           last_mode = static_cast<DISPLAY_OPTIONS>(option);
           break;
         case DISPLAY_OTA:
-          display_ota(board->getDisplay().get(), pGIFBuf, 0);
+          display_ota(board->getDisplay(), pGIFBuf, 0);
           last_mode = static_cast<DISPLAY_OPTIONS>(option);
           break;
         case DISPLAY_NO_STORAGE:
           last_mode = static_cast<DISPLAY_OPTIONS>(option);
-          display_no_storage(board->getDisplay().get(), pGIFBuf);
+          display_no_storage(board->getDisplay(), pGIFBuf);
           break;
         case DISPLAY_SPECIAL_1:
           ESP_LOGI(TAG, "DISPLAY_SPECIAL_1");
@@ -317,7 +317,7 @@ void display_task(void *params) {
           if (delay < 0) {
             char errMsg[255];
             snprintf(errMsg, sizeof(errMsg), "Error Displaying File\n%s\n%s",  current_file, in->getLastError());
-            display_err(board->getDisplay().get(), pGIFBuf, errMsg);
+            display_err(board->getDisplay(), pGIFBuf, errMsg);
             in.reset();
           }
         }

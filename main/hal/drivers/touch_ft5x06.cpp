@@ -2,7 +2,7 @@
 
 #include <utility>
 
-touch_ft5x06::touch_ft5x06(std::shared_ptr<I2C> bus) : _bus(std::move(bus)) {
+touch_ft5x06::touch_ft5x06(I2C *bus) : _bus(bus) {
   // Valid touching detect threshold
   uint8_t out;
   out = 70;

@@ -61,10 +61,10 @@
 
 class touch_ft5x06 final : public Touch {
  public:
-  explicit touch_ft5x06(std::shared_ptr<I2C> bus);
+  explicit touch_ft5x06(I2C *bus);
   ~touch_ft5x06() override = default;
 
   std::pair<int16_t, int16_t> read() override;
  private:
-  std::shared_ptr<I2C> _bus;
+  I2C *_bus;
 };
