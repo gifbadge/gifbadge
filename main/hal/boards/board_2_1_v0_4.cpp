@@ -49,6 +49,7 @@ void board_2_1_v0_4::batteryTimer(void *args){
 }
 
 board_2_1_v0_4::board_2_1_v0_4() {
+//  buffer = malloc(480*480+0x6100);
   _i2c = new I2C(I2C_NUM_0, 47, 48);
   _battery = new battery_max17048(_i2c, GPIO_NUM_0);
   /*G3, G4, G5, R1, R2, R3, R4, R5, B1, B2, B3, B4, B5, G0, G1, G2 */

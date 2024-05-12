@@ -32,7 +32,7 @@ public:
 
     static Image* create();
 
-    int open(const char *path) override;
+    int open(const char *path, void *buffer) override;
 
     const char * getLastError() override;
 

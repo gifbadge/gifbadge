@@ -39,6 +39,7 @@ class board_1_28_v0_1 : public Board {
   esp_err_t StorageFormat() override;
   const char * name() override;
   bool powerConnected() override;
+  void * turboBuffer() override {return nullptr;};
 
  private:
   battery_max17048 *_battery;

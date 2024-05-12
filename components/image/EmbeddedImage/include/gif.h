@@ -18,7 +18,7 @@ public:
 
     ~GIF() override;
 
-    int open(const char *path) override;
+    int open(const char *path, void *buffer) override;
 
     int loop(uint8_t *outBuf, int16_t x, int16_t y, int16_t width) override;
 

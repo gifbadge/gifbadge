@@ -30,6 +30,8 @@ class board_v0 : public Board {
   esp_err_t StorageFormat() override { return ESP_OK; };
   const char *name() override;
   bool powerConnected() override;
+  void * turboBuffer() override {return nullptr;};
+
 
  private:
   battery_analog * _battery;

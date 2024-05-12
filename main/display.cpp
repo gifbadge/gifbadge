@@ -84,7 +84,7 @@ static void display_image_batt(Display *display, uint8_t *buf) {
 
 static std::pair<int16_t, int16_t> lastSize = {0,0};
 
-//#define FRAMETIME
+#define FRAMETIME
 
 static int displayFile(Image *in, uint8_t *pGIFBuf, Display *display) {
   int64_t start = esp_timer_get_time();
@@ -164,7 +164,7 @@ static int get_file(const char *path, char *outPath, size_t outLen) {
 Image *openFile(const char *path, uint8_t *pGIFBuf, Display *display) {
   Image *in = ImageFactory(path);
   if (in) {
-    if (in->open(path) != 0) {
+    if (in->open(path, nullptr) != 0) {
       char errorString[255];
       snprintf(errorString, sizeof(errorString), "Error Displaying File\n%s\n%s", path, in->getLastError());
       display_err(display, pGIFBuf, errorString);

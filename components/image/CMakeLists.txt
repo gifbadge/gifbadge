@@ -8,4 +8,4 @@ include_directories("EmbeddedImage/AnimatedGIF/src")
 include_directories("EmbeddedImage/PNGdec/src")
 
 
-target_compile_options(${COMPONENT_LIB} PRIVATE -D__LINUX__)
+#target_compile_options(${COMPONENT_LIB} PRIVATE -D__LINUX__)

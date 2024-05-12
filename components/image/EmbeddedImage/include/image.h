@@ -18,7 +18,7 @@ public:
 
     virtual std::pair<int16_t, int16_t> size() {return{0, 0};};
 
-    virtual int open(const char *path) {return 0;};
+    virtual int open(const char *path, void *buffer) {return 0;};
     virtual bool animated() {return false;};
     virtual const char * getLastError() = 0;
 };

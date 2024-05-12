@@ -25,7 +25,7 @@ typedef int32_t (*readfile)(PNGFILE *pFile, uint8_t *pBuf, int32_t iLen);
 typedef int32_t (*seekfile)(PNGFILE *pFile, int32_t iPosition);
 
 
-int PNGImage::open(const char *path) {
+int PNGImage::open(const char *path, void *buffer) {
     return png.open(path, bb2OpenFile, bb2CloseFile, (readfile)bb2ReadFile, (seekfile)bb2SeekFile, PNGDraw);
 }
 

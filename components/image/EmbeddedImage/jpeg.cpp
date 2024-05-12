@@ -99,7 +99,7 @@ Image *JPEG::create() {
 }
 
 
-int JPEG::open(const char *path) {
+int JPEG::open(const char *path, void *buffer) {
     jpguser.infile = fopen(path, "r");
     fseek(jpguser.infile, 0, SEEK_END);
     jpguser.size = ftell(jpguser.infile);

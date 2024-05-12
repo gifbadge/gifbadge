@@ -36,5 +36,6 @@ class Board {
   virtual esp_err_t StorageFormat() = 0;
   virtual const char * name() = 0;
   virtual bool powerConnected() = 0;
+  virtual void *turboBuffer() = 0;
 };
 

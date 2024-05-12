@@ -57,7 +57,7 @@ static void CloseFile(void *pHandle) {
     free(mem);
 }
 
-static int32_t ReadFile(bb2_file_tag *pFile, uint8_t *pBuf, int32_t iLen) {
+static int32_t ReadFile(GIFFILE *pFile, uint8_t *pBuf, int32_t iLen) {
     if (iLen <= 0) {
         return 0;
     }
@@ -87,7 +87,7 @@ static int32_t ReadFile(bb2_file_tag *pFile, uint8_t *pBuf, int32_t iLen) {
     }
 }
 
-static int32_t SeekFile(bb2_file_tag *pFile, int32_t iPosition) {
+static int32_t SeekFile(GIFFILE *pFile, int32_t iPosition) {
     auto *mem = (mem_buf *) (pFile->fHandle);
     if (mem->buf == nullptr) {
         fseek(mem->fp, iPosition, SEEK_SET);
@@ -148,9 +148,12 @@ typedef int32_t (*readfile)(GIFFILE *pFile, uint8_t *pBuf, int32_t iLen);
 
 typedef int32_t (*seekfile)(GIFFILE *pFile, int32_t iPosition);
 
-int GIF::open(const char *path) {
+int GIF::open(const char *path, void *buffer) {
     gif.begin(BIG_ENDIAN_PIXELS);
     if (gif.open(path, OpenFile, CloseFile, (readfile) ReadFile, (seekfile) SeekFile, GIFDraw)) {
+      if(buffer){
+        gif.setTurboBuf(buffer);
+      }
         gif.allocFrameBuf(GIFAlloc);
         gif.setDrawType(GIF_DRAW_COOKED);
         width = gif.getCanvasWidth();
