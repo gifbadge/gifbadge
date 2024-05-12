@@ -12,9 +12,10 @@ typedef struct {
   DIR *dirptr;
   int count;
   int index;
+  const char * path;
 } DIR_SORTED;
 
-int opendir_sorted(DIR_SORTED *, const char *dirname);
+int opendir_sorted(DIR_SORTED *, const char *dirname, int(*validator)(const char *, const char *));
 
 struct dirent *readdir_sorted(DIR_SORTED *);
 
@@ -26,9 +27,9 @@ void rewinddir_sorted(DIR_SORTED *dirp);
 
 int directory_get_position(DIR_SORTED *dirp, const char *file);
 
-const char * directory_get_next(DIR_SORTED *dirp, int pos);
+const char * directory_get_increment(DIR_SORTED *dirp, int pos, int increment);
 
-const char * directory_get_previous(DIR_SORTED *dirp, int pos);
+void directory_print(DIR_SORTED *dirp);
 
 int is_directory(const char* path);
 

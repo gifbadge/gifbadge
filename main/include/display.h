@@ -25,6 +25,7 @@ enum DISPLAY_OPTIONS {
   DISPLAY_NO_STORAGE,
   DISPLAY_SPECIAL_1,
   DISPLAY_SPECIAL_2,
+  DISPLAY_NOTIFY_CHANGE,
 };
 
 void display_task(void *params);

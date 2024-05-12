@@ -84,7 +84,7 @@ static void display_image_batt(Display *display, uint8_t *buf) {
 
 static std::pair<int16_t, int16_t> lastSize = {0,0};
 
-#define FRAMETIME
+//#define FRAMETIME
 
 static int displayFile(Image *in, uint8_t *pGIFBuf, Display *display) {
   int64_t start = esp_timer_get_time();
@@ -118,6 +118,16 @@ static int displayFile(Image *in, uint8_t *pGIFBuf, Display *display) {
   }
 }
 
+static int validator(const char *path, const char *file) {
+  char inPath[128];
+  snprintf(inPath, sizeof(inPath) - 1, "%s/%s", path, file);
+  if (!valid_file(inPath)) {
+    return 0;
+  }
+//  ESP_LOGI(TAG, "%s", inPath);
+  return 1;
+}
+
 static int get_file(const char *path, char *outPath, size_t outLen) {
   char inPath[128];
   strncpy(inPath, path, sizeof(inPath)-1);
@@ -126,7 +136,7 @@ static int get_file(const char *path, char *outPath, size_t outLen) {
   if (valid_file(path)) {
     strncpy(outPath, inPath, outLen - 1);
     if(!dir.dirptr){
-      opendir_sorted(&dir, dirname(inPath));
+      opendir_sorted(&dir, dirname(inPath), validator);
     }
     file_position = directory_get_position(&dir, basename(outPath));
     ESP_LOGI(TAG, "%i", file_position);
@@ -142,7 +152,7 @@ static int get_file(const char *path, char *outPath, size_t outLen) {
 
   closedir_sorted(&dir);
 
-  if (!opendir_sorted(&dir, base)) {
+  if (!opendir_sorted(&dir, base, validator)) {
     return -1;
   }
 
@@ -226,7 +236,7 @@ void display_task(void *params) {
 
   board->getBacklight()->setLevel(backlight_level * 10);
 
-  std::shared_ptr<Image> in;
+  Image *in = nullptr;
 
   char current_file[128];
 
@@ -238,6 +248,8 @@ void display_task(void *params) {
 
   int delay = 1000;
   uint8_t *pGIFBuf;
+  vTaskDelay(1000/portTICK_PERIOD_MS);
+  bool redraw = false;
   while (true) {
     uint32_t option;
     xTaskNotifyWaitIndexed(0, 0, 0xffffffff, &option, delay / portTICK_PERIOD_MS);
@@ -245,29 +257,30 @@ void display_task(void *params) {
     if (option != DISPLAY_NONE) {
       last_change = esp_timer_get_time();
       config.reload();
-      in.reset();
+      delete in;
+      in = nullptr;
       switch (option) {
         case DISPLAY_FILE:
           ESP_LOGI(TAG, "DISPLAY_FILE");
           if(!valid_file(current_file)) {
             strncpy(current_file, config.getPath(), sizeof(current_file) - 1);
           }
-          in.reset(openFileUpdatePath(current_file, sizeof(current_file), pGIFBuf, display));
+          in = openFileUpdatePath(current_file, sizeof(current_file), pGIFBuf, display);
           last_mode = static_cast<DISPLAY_OPTIONS>(option);
           break;
         case DISPLAY_NEXT:
           if (config.getLocked()) {
             break;
           }
-          snprintf(current_file,  sizeof(current_file)-1, "%s/%s", dirname(current_file), directory_get_next(&dir, file_position));
-          in.reset(openFileUpdatePath(current_file, sizeof(current_file), pGIFBuf, display));
+          snprintf(current_file,  sizeof(current_file)-1, "%s/%s", dirname(current_file), directory_get_increment(&dir, file_position, 1));
+          in = openFileUpdatePath(current_file, sizeof(current_file), pGIFBuf, display);
           break;
         case DISPLAY_PREVIOUS:
           if (config.getLocked()) {
             break;
           }
-          snprintf(current_file,  sizeof(current_file)-1, "%s/%s", dirname(current_file), directory_get_previous(&dir, file_position));
-            in.reset(openFileUpdatePath(current_file, sizeof(current_file), pGIFBuf, display));
+          snprintf(current_file,  sizeof(current_file)-1, "%s/%s", dirname(current_file), directory_get_increment(&dir, file_position, -1));
+            in = openFileUpdatePath(current_file, sizeof(current_file), pGIFBuf, display);
           break;
         case DISPLAY_BATT:
           if (last_mode != DISPLAY_BATT) {
@@ -286,16 +299,19 @@ void display_task(void *params) {
         case DISPLAY_SPECIAL_1:
           ESP_LOGI(TAG, "DISPLAY_SPECIAL_1");
           if (valid_file("/data/cards/up.png")) {
-            in.reset(openFile("/data/cards/up.png", pGIFBuf, display));
+            in = openFile("/data/cards/up.png", pGIFBuf, display);
             last_mode = static_cast<DISPLAY_OPTIONS>(option);
           }
           break;
         case DISPLAY_SPECIAL_2:
           ESP_LOGI(TAG, "DISPLAY_SPECIAL_2");
           if (valid_file("/data/cards/down.png")) {
-            in.reset(openFile("/data/cards/down.png", pGIFBuf, display));
+            in = openFile("/data/cards/down.png", pGIFBuf, display);
             last_mode = static_cast<DISPLAY_OPTIONS>(option);
           }
+          break;
+        case DISPLAY_NOTIFY_CHANGE:
+          redraw = true;
           break;
         default:
           break;
@@ -312,13 +328,19 @@ void display_task(void *params) {
         }
         delay = 1000;
       } else {
+        if(redraw){
+          strncpy(current_file, config.getPath(), sizeof(current_file) - 1);
+          in = openFileUpdatePath(current_file, sizeof(current_file), pGIFBuf, display);
+          redraw = false;
+        }
         if(in) {
-          delay = displayFile(in.get(), pGIFBuf, display);
+          delay = displayFile(in, pGIFBuf, display);
           if (delay < 0) {
             char errMsg[255];
             snprintf(errMsg, sizeof(errMsg), "Error Displaying File\n%s\n%s",  current_file, in->getLastError());
             display_err(board->getDisplay(), pGIFBuf, errMsg);
-            in.reset();
+            delete in;
+            in = nullptr;
           }
         }
       }

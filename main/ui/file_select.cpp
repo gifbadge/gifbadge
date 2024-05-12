@@ -91,7 +91,7 @@ void file_list(lv_obj_t *parent) {
 
   DIR_SORTED dir;
   struct dirent *ep;
-  if (opendir_sorted(&dir, current)) {
+  if (opendir_sorted(&dir, current, nullptr)) {
     while ((ep = readdir_sorted(&dir)) != nullptr) {
       if (ep->d_name[0] == '.')
         continue;
