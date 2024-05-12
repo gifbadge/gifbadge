@@ -6,6 +6,7 @@
 #include "ui/device_group.h"
 #include "ui/menu.h"
 #include "ui/style.h"
+#include "display.h"
 
 static const char *TAG = "file_options";
 
@@ -48,6 +49,10 @@ static void FileOptionsSave(lv_event_t *e) {
   config.setSlideShowTime(slideshow_time);
 
   config.save();
+
+  TaskHandle_t handle = xTaskGetHandle("display_task");
+  xTaskNotifyIndexed(handle, 0, DISPLAY_NOTIFY_CHANGE, eSetValueWithOverwrite);
+
 
   lv_obj_del(fields->container);
   free(fields);
