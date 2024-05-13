@@ -5,4 +5,3 @@
 #include <ff.h>
 
 bool valid_file(const char *path);
-char *dirname (char *path);

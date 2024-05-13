@@ -1,4 +1,5 @@
 #include <string.h>
+#include "dirname.h"
 
 char *dirname(char *path) {
   static const char dot[] = ".";

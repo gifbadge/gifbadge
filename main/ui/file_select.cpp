@@ -10,6 +10,7 @@
 #include "ui/menu.h"
 #include "directory.h"
 #include "file_util.h"
+#include "dirname.h"
 
 extern "C" {
 

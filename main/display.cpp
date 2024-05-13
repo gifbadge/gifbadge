@@ -18,6 +18,7 @@
 #include "ui/menu.h"
 
 #include "directory.h"
+#include "dirname.h"
 
 static const char *TAG = "DISPLAY";
 
