@@ -75,7 +75,7 @@ static void display_image_batt(Display *display, uint8_t *buf) {
   ESP_LOGI(TAG, "Displaying Low Battery");
   clear_screen(display, buf);
   PNGImage png;
-  png.open(low_batt_png, sizeof(low_batt_png));
+  png.open((uint8_t *)low_batt_png, sizeof(low_batt_png));
   int16_t xOffset = (display->size.first / 2) - (png.size().first / 2);
   int16_t yOffset = (display->size.second / 2) - ((png.size().second + 1) / 2);
   png.loop(buf, xOffset, yOffset, display->size.first);
