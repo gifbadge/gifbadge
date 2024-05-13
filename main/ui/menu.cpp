@@ -177,7 +177,7 @@ void touch_read(lv_indev_t *drv, lv_indev_data_t *data) {
   }
 }
 
-void flushWait(lv_display_t *){
+static void flushWaitCb(lv_display_t *){
   xSemaphoreTake(flushSem, portMAX_DELAY);
 }
 
@@ -205,7 +205,7 @@ void lvgl_init(Board *board) {
 
   disp = lv_display_create(global_board->getDisplay()->size.first, global_board->getDisplay()->size.second);
   lv_display_set_flush_cb(disp, flush_cb);
-  lv_display_set_flush_wait_cb(disp, flushWait);
+  lv_display_set_flush_wait_cb(disp, flushWaitCb);
   lv_display_set_buffers(disp, global_board->getDisplay()->buffer, nullptr, global_board->getDisplay()->size.first * global_board->getDisplay()->size.second * 2,
                          LV_DISPLAY_RENDER_MODE_FULL);
 
