@@ -5,6 +5,8 @@
 #include <tuple>
 #include <memory>
 #include <map>
+#include <array>
+
 
 
 class Image {
@@ -22,5 +24,7 @@ public:
     virtual bool animated() {return false;};
     virtual const char * getLastError() = 0;
 };
+
+extern std::array<const char*, 4> extensions;
 
 Image *ImageFactory(const char *path);
