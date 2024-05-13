@@ -177,7 +177,7 @@ void touch_read(lv_indev_t *drv, lv_indev_data_t *data) {
   }
 }
 
-void flushWait(lv_display_t * disp){
+void flushWait(lv_display_t *){
   xSemaphoreTake(flushSem, portMAX_DELAY);
 }
 
