@@ -165,7 +165,11 @@ display_st7701s::display_st7701s(spi_line_config_t line_cfg,
 
       .flags = {
           .disp_active_low = 0,
+          .refresh_on_demand = 0,
           .fb_in_psram = 1,
+          .double_fb = 0,
+          .no_fb = 0,
+          .bb_invalidate_cache = 0
       }
   };
 
