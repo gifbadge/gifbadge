@@ -8,7 +8,6 @@
 
 #include <cstring>
 #include <nvs_flash.h>
-#include <nvs_handle.hpp>
 
 #include "ui/menu.h"
 #include "hal/hal_usb.h"

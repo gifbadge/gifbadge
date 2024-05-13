@@ -1,6 +1,5 @@
 #include "hal/drivers/battery_max17048.h"
 
-#include <utility>
 #include <esp_log.h>
 #include <esp_timer.h>
 

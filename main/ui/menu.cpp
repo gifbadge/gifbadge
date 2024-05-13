@@ -3,9 +3,6 @@
 #include <esp_timer.h>
 #include <freertos/semphr.h>
 #include <esp_log.h>
-#include <sys/stat.h>
-#include <memory>
-#include <utility>
 #include "esp_lcd_panel_io.h"
 #include <lvgl.h>
 

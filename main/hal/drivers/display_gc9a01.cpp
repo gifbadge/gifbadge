@@ -1,7 +1,6 @@
 #include <driver/spi_master.h>
 #include <esp_lcd_panel_vendor.h>
 #include <esp_lcd_panel_ops.h>
-#include <hal/gpio_hal.h>
 #include <driver/gpio.h>
 #include <esp_log.h>
 #include "esp_lcd_gc9a01.h"
