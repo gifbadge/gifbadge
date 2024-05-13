@@ -133,8 +133,6 @@ extern "C" void app_main(void) {
 
   TaskHandle_t display_task_handle = nullptr;
 
-  xTaskCreate(display_task, "display_task", 10000, board.get(), 2, &display_task_handle);
-
   dumpDebugTimerInit(board);
 
   OTA::bootInfo();
@@ -149,6 +147,8 @@ extern "C" void app_main(void) {
     xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_NO_STORAGE, eSetValueWithOverwrite);
     while (true);
   }
+
+  xTaskCreatePinnedToCore(display_task, "display_task", 5000, board, 2, &display_task_handle, 1);
 
   MAIN_STATES oldState = MAIN_NONE;
   TaskHandle_t lvglHandle = xTaskGetHandle("LVGL");
