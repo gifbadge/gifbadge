@@ -165,7 +165,7 @@ void task(void *) {
     vTaskDelete(nullptr);
   }
 
-#define OTA_BUFFER_SIZE 4096+1
+#define OTA_BUFFER_SIZE (4096+1)
 
   FILE *ota_file = fopen("/data/ota.bin", "r");
   static char *ota_buffer = static_cast<char *>(malloc(OTA_BUFFER_SIZE));
