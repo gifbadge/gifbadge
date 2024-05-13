@@ -66,7 +66,7 @@ MAIN_STATES currentState = MAIN_NONE;
  * @param args
  */
 static void lowBatteryTask(void *args) {
-  Board *board = get_board();
+  auto *board = static_cast<Board *>(args);
   TaskHandle_t lvglHandle;
   TaskHandle_t display_task_handle;
 
@@ -92,10 +92,10 @@ static void lowBatteryTask(void *args) {
   }
 }
 
-static void initLowBatteryTask() {
+static void initLowBatteryTask(Board *board) {
   const esp_timer_create_args_t lowBatteryArgs = {
       .callback = &lowBatteryTask,
-      .arg = nullptr,
+      .arg = board,
       .dispatch_method = ESP_TIMER_TASK,
       .name = "low_battery_handler",
       .skip_unhandled_events = true
@@ -139,7 +139,7 @@ extern "C" void app_main(void) {
 
   lvgl_init(board);
 
-  initLowBatteryTask();
+  initLowBatteryTask(board);
 
   vTaskDelay(1000 / portTICK_PERIOD_MS); //Let USB Settle
 
