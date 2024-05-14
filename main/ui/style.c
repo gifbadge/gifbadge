@@ -1,3 +1,4 @@
+#include <esp_log.h>
 #include "ui/style.h"
 
 #ifdef __cplusplus
@@ -5,81 +6,100 @@ extern "C"
 {
 #endif
 
-lv_style_t battery_style_normal;
-lv_style_t battery_style_empty;
-lv_style_t container_style;
 lv_style_t icon_style;
-lv_style_t file_select_style;
 lv_style_t menu_font_style;
-lv_style_t style_battery_indicator;
-lv_style_t style_battery_main;
-lv_style_t style_battery_icon;
 
+const lv_style_const_prop_t file_select_style_props[] = {
+    LV_STYLE_CONST_BG_COLOR(LV_COLOR_MAKE(40, 43, 48)),
+    LV_STYLE_CONST_BG_OPA(255),
+    LV_STYLE_CONST_BORDER_COLOR(LV_COLOR_MAKE(47, 50, 55)),
+    LV_STYLE_CONST_BORDER_SIDE(LV_BORDER_SIDE_FULL),
+    LV_STYLE_CONST_RADIUS(7),
+    LV_STYLE_CONST_PAD_BOTTOM(10),
+    LV_STYLE_CONST_PAD_TOP(10),
+    LV_STYLE_CONST_PAD_LEFT(10),
+    LV_STYLE_CONST_PAD_RIGHT(10),
+    LV_STYLE_CONST_PROPS_END
+};
+
+LV_STYLE_CONST_INIT(file_select_style, file_select_style_props);
+
+const lv_style_const_prop_t style_battery_bar_props[] = {
+    LV_STYLE_CONST_BG_OPA(LV_OPA_COVER),
+    LV_STYLE_CONST_BG_COLOR(LV_COLOR_MAKE(0,0,0)),
+    LV_STYLE_CONST_PAD_BOTTOM(5),
+    LV_STYLE_CONST_PAD_TOP(5),
+    LV_STYLE_CONST_PAD_LEFT(5),
+    LV_STYLE_CONST_PAD_RIGHT(5),
+    LV_STYLE_CONST_PROPS_END
+};
+
+LV_STYLE_CONST_INIT(style_battery_bar, style_battery_bar_props);
+
+const lv_style_const_prop_t style_battery_indicator_props[] = {
+    LV_STYLE_CONST_BG_OPA(LV_OPA_COVER),
+    LV_STYLE_CONST_BG_COLOR(LV_COLOR_MAKE(0,0,0)),
+    LV_STYLE_CONST_PROPS_END
+};
+
+LV_STYLE_CONST_INIT(style_battery_indicator, style_battery_indicator_props);
+
+const lv_style_const_prop_t style_battery_main_props[] = {
+    LV_STYLE_CONST_BG_OPA(LV_OPA_COVER),
+    LV_STYLE_CONST_BG_COLOR(LV_COLOR_MAKE(255,255,255)),
+    LV_STYLE_CONST_PAD_BOTTOM(5),
+    LV_STYLE_CONST_PAD_TOP(5),
+    LV_STYLE_CONST_PAD_LEFT(5),
+    LV_STYLE_CONST_PAD_RIGHT(5),
+    LV_STYLE_CONST_PROPS_END
+};
+
+LV_STYLE_CONST_INIT(style_battery_main, style_battery_main_props);
+
+const lv_style_const_prop_t style_battery_icon_props[] = {
+    LV_STYLE_CONST_TEXT_FONT(&battery_symbols_14),
+    LV_STYLE_CONST_TEXT_ALIGN(LV_TEXT_ALIGN_CENTER),
+    LV_STYLE_CONST_PROPS_END
+};
+
+LV_STYLE_CONST_INIT(style_battery_icon, style_battery_icon_props);
+
+const lv_style_const_prop_t style_battery_icon_container_props[] = {
+    LV_STYLE_CONST_BG_OPA(LV_OPA_COVER),
+    LV_STYLE_CONST_BG_COLOR(LV_COLOR_MAKE(0,0,0)),
+    LV_STYLE_CONST_RADIUS(LV_RADIUS_CIRCLE),
+    LV_STYLE_CONST_PROPS_END
+};
+
+LV_STYLE_CONST_INIT(style_battery_icon_container, style_battery_icon_container_props);
+
+const lv_style_const_prop_t container_style_props[] = {
+    LV_STYLE_CONST_BG_OPA(LV_OPA_TRANSP),
+    LV_STYLE_CONST_PAD_BOTTOM(0),
+    LV_STYLE_CONST_PAD_TOP(0),
+    LV_STYLE_CONST_PAD_LEFT(0),
+    LV_STYLE_CONST_PAD_RIGHT(0),
+    LV_STYLE_CONST_BORDER_SIDE(LV_BORDER_SIDE_NONE),
+    LV_STYLE_CONST_PROPS_END
+};
+
+LV_STYLE_CONST_INIT(container_style, container_style_props);
 
 
 
 void style_init() {
-  lv_obj_t *btn = lv_btn_create(lv_scr_act());
-  lv_color_t btn_text_colour = lv_obj_get_style_text_color(btn, LV_PART_MAIN);
-  lv_obj_delete(btn);
   lv_style_init(&icon_style);
   lv_style_init(&menu_font_style);
 
-  lv_style_init(&battery_style_normal);
-  lv_style_set_text_color(&battery_style_normal, btn_text_colour);
-  lv_style_set_text_align(&battery_style_normal, LV_TEXT_ALIGN_CENTER);
 
-  lv_style_init(&battery_style_empty);
-  lv_style_set_text_color(&battery_style_empty, lv_color_hex(0xFF0000));
-  lv_style_set_text_align(&battery_style_empty, LV_TEXT_ALIGN_CENTER);
-
-  lv_style_set_text_color(&icon_style, btn_text_colour);
+  lv_style_set_text_color(&icon_style, lv_color_white());
   if (lv_disp_get_hor_res(NULL) > 240) {
     lv_style_set_text_font(&icon_style, &material_icons_56);
     lv_style_set_text_font(&menu_font_style, &lv_font_montserrat_28);
-    lv_style_set_text_font(&battery_style_normal, &material_icons_56);
-    lv_style_set_text_font(&battery_style_empty, &material_icons_56);
   } else {
     lv_style_set_text_font(&icon_style, &material_icons);
     lv_style_set_text_font(&menu_font_style, &lv_font_montserrat_14);
-    lv_style_set_text_font(&battery_style_normal, &material_icons);
-    lv_style_set_text_font(&battery_style_empty, &material_icons);
   }
-
-  lv_obj_t *drop = lv_dropdown_create(lv_scr_act());
-  lv_style_init(&file_select_style);
-  lv_style_set_bg_color(&file_select_style, lv_obj_get_style_bg_color(drop, LV_PART_MAIN));
-  lv_style_set_bg_opa(&file_select_style, lv_obj_get_style_bg_opa(drop, LV_PART_MAIN));
-  lv_style_set_border_color(&file_select_style, lv_obj_get_style_border_color(drop, LV_PART_MAIN));
-  lv_style_set_border_side(&file_select_style, LV_BORDER_SIDE_FULL);
-  lv_style_set_radius(&file_select_style, lv_obj_get_style_radius(drop, LV_PART_MAIN));
-  lv_style_set_pad_all(&file_select_style, lv_obj_get_style_pad_bottom(drop, LV_PART_MAIN));
-  lv_obj_del(drop);
-
-
-
-  lv_style_init(&container_style);
-  lv_style_set_pad_all(&container_style, 0);
-  lv_style_set_border_side(&container_style, LV_BORDER_SIDE_NONE);
-  lv_style_set_bg_opa(&container_style, 0);
-
-  lv_style_init(&style_battery_indicator);
-  lv_style_set_bg_opa(&style_battery_indicator, LV_OPA_COVER);
-  lv_style_set_bg_color(&style_battery_indicator, lv_obj_get_style_bg_color(lv_scr_act(), LV_PART_MAIN));
-
-  lv_style_init(&style_battery_main);
-  lv_style_set_bg_opa(&style_battery_main, LV_OPA_COVER);
-  lv_style_set_bg_color(&style_battery_main, btn_text_colour);
-  lv_style_set_pad_hor(&style_battery_main, 5);
-  lv_style_set_pad_ver(&style_battery_main, 5);
-
-  lv_style_init(&style_battery_icon);
-  lv_style_set_bg_opa(&style_battery_icon, LV_OPA_COVER);
-  lv_style_set_bg_color(&style_battery_icon, lv_obj_get_style_bg_color(lv_scr_act(), LV_PART_MAIN));
-
-//    lv_style_init(&icon_style);
-//    lv_style_set_text_color(&icon_style, lv_color_black());
-//    lv_style_set_text_font(&icon_style, &material_icons_56);
 }
 
 #ifdef __cplusplus

@@ -19,15 +19,16 @@ LV_FONT_DECLARE(battery_symbols_14)
 
 #define ICON_USB "\ue1e0"
 
-extern lv_style_t battery_style_normal;
-extern lv_style_t battery_style_empty;
-extern lv_style_t container_style;
 extern lv_style_t icon_style;
-extern lv_style_t file_select_style;
 extern lv_style_t menu_font_style;
-extern lv_style_t style_battery_indicator;
-extern lv_style_t style_battery_main;
-extern lv_style_t style_battery_icon;
+extern const lv_style_t container_style;
+extern const lv_style_t file_select_style;
+extern const lv_style_t style_battery_bar;
+extern const lv_style_t style_battery_indicator;
+extern const lv_style_t style_battery_main;
+extern const lv_style_t style_battery_icon;
+extern const lv_style_t style_battery_icon_container;
+
 
 void style_init();
 

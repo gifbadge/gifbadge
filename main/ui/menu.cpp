@@ -258,9 +258,7 @@ void battery_symbol_update(lv_obj_t *cont) {
 static void battery_widget(lv_obj_t *scr) {
   lv_obj_t *battery_bar = lv_obj_create(scr);
   lv_obj_set_size(battery_bar, lv_pct(100), LV_SIZE_CONTENT);
-  lv_obj_set_style_bg_color(battery_bar, lv_obj_get_style_bg_color(lv_scr_act(), LV_PART_MAIN), LV_PART_MAIN);
-  lv_obj_set_style_border_side(battery_bar, LV_BORDER_SIDE_NONE, LV_PART_MAIN);
-  lv_obj_set_style_pad_all(battery_bar, 5, LV_PART_MAIN);
+  lv_obj_add_style(battery_bar, &style_battery_bar, LV_PART_MAIN);
 
   lv_obj_t *bar = lv_battery_create(battery_bar);
   lv_obj_add_style(bar, &style_battery_indicator, LV_PART_INDICATOR);
@@ -287,16 +285,13 @@ static void battery_widget(lv_obj_t *scr) {
 
   lv_obj_t *battery_symbol_cont = lv_obj_create(battery_bar);
   lv_obj_remove_style_all(battery_symbol_cont);
+  lv_obj_add_style(battery_symbol_cont, &style_battery_icon_container, LV_PART_MAIN);
   lv_obj_set_size(battery_symbol_cont, 24, 24);
-  lv_obj_set_style_bg_color(battery_symbol_cont, lv_obj_get_style_bg_color(lv_scr_act(), LV_PART_MAIN), LV_PART_MAIN);
-  lv_obj_set_style_bg_opa(battery_symbol_cont, LV_OPA_COVER, LV_PART_MAIN);
   lv_obj_align_to(battery_symbol_cont, bar, LV_ALIGN_BOTTOM_RIGHT, 18, 12);
-  lv_obj_set_style_radius(battery_symbol_cont, LV_RADIUS_CIRCLE, LV_PART_MAIN);
 
   lv_obj_t *battery_symbol = lv_img_create(battery_symbol_cont);
+  lv_obj_add_style(battery_symbol, &style_battery_icon, LV_PART_MAIN);
   lv_obj_align(battery_symbol, LV_ALIGN_CENTER, 0, 0);
-  lv_obj_set_style_text_font(battery_symbol, &battery_symbols_14, LV_PART_MAIN);
-  lv_obj_set_style_text_align(battery_symbol, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
 
   lv_obj_set_user_data(battery_symbol_cont, global_board->getBattery());
 
