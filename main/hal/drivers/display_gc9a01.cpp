@@ -40,7 +40,9 @@ display_gc9a01::display_gc9a01(int mosi, int sck, int cs, int dc, int reset) {
       .lcd_cmd_bits = 8,
       .lcd_param_bits = 8,
       .flags = {
+          .dc_high_on_cmd = 0,
           .dc_low_on_data = 0,
+          .dc_low_on_param = 0,
           .octal_mode = 0,
           .quad_mode = 0,
           .sio_mode = 0,
