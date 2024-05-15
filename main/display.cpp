@@ -77,8 +77,8 @@ static void display_image_batt(Display *display, uint8_t *buf) {
   clear_screen(display, buf);
   PNGImage png;
   png.open((uint8_t *)low_batt_png, sizeof(low_batt_png));
-  int16_t xOffset = (display->size.first / 2) - (png.size().first / 2);
-  int16_t yOffset = (display->size.second / 2) - ((png.size().second + 1) / 2);
+  int16_t xOffset = static_cast<int16_t>((display->size.first / 2) - (png.size().first / 2));
+  int16_t yOffset = static_cast<int16_t>((display->size.second / 2) - ((png.size().second + 1) / 2));
   png.loop(buf, xOffset, yOffset, display->size.first);
   display->write(0, 0, display->size.first, display->size.second, buf);
 }
@@ -96,8 +96,8 @@ static int displayFile(Image *in, uint8_t *pGIFBuf, Display *display) {
     if(lastSize > in->size()) {
       clear_screen(display, pGIFBuf); //Only need to clear the screen if the image won't fill it, and the last image was bigger
     }
-    xOffset = (display->size.first / 2) - (in->size().first / 2);
-    yOffset = (display->size.second / 2) - ((in->size().second + 1) / 2);
+    xOffset = static_cast<int16_t>((display->size.first / 2) - (in->size().first / 2));
+    yOffset = static_cast<int16_t>((display->size.second / 2) - ((in->size().second + 1) / 2));
   }
   delay = in->loop(pGIFBuf, xOffset, yOffset, display->size.first);
   if (delay < 0) {
