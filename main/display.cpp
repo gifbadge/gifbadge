@@ -19,6 +19,7 @@
 
 #include "directory.h"
 #include "dirname.h"
+#include "hw_init.h"
 
 static const char *TAG = "DISPLAY";
 
@@ -26,85 +27,87 @@ static DIR_SORTED dir;
 
 static int file_position;
 
-static void clear_screen(Display *display, uint8_t *pBuf) {
-  if (pBuf != nullptr) {
-    memset(pBuf, 255, display->size.first * display->size.second * 2);
-    display->write(0, 0, display->size.first, display->size.second, pBuf);
+#define MAX_FILE_LEN 128
+
+static void clear_screen(Display *display) {
+  for(int x = 0; x <=1; x++) {
+    memset(display->buffer, 255, display->size.first * display->size.second * 2);
+    display->write(0, 0, display->size.first, display->size.second, display->buffer);
   }
 }
 
-static void display_no_image(Display *display, uint8_t *pGIFBuf) {
+static void display_no_image(Display *display) {
   ESP_LOGI(TAG, "Displaying No Image");
-  clear_screen(display, pGIFBuf);
-  render_text_centered(display->size.first, display->size.second, 10, "No Image", pGIFBuf);
-  display->write(0, 0, display->size.first, display->size.second, pGIFBuf);
+  clear_screen(display);
+  render_text_centered(display->size.first, display->size.second, 10, "No Image", display->buffer);
+  display->write(0, 0, display->size.first, display->size.second, display->buffer);
 }
 
-static void display_image_too_large(Display *display, uint8_t *pGIFBuf, const char *path) {
+static void display_image_too_large(Display *display, const char *path) {
   ESP_LOGI(TAG, "Displaying Image To Large");
-  clear_screen(display, pGIFBuf);
+  clear_screen(display);
   char tmp[255];
   sprintf(tmp, "Image too Large\n%s", path);
-  render_text_centered(display->size.first, display->size.second, 10, tmp, pGIFBuf);
-  display->write(0, 0, display->size.first, display->size.second, pGIFBuf);
+  render_text_centered(display->size.first, display->size.second, 10, tmp, display->buffer);
+  display->write(0, 0, display->size.first, display->size.second, display->buffer);
 }
 
-static void display_err(Display *display, uint8_t *pGIFBuf, const char *err) {
+static void display_err(Display *display, const char *err) {
   ESP_LOGI(TAG, "Displaying Error");
-  clear_screen(display, pGIFBuf);
-  render_text_centered(display->size.first, display->size.second, 10, err, pGIFBuf);
-  display->write(0, 0, display->size.first, display->size.second, pGIFBuf);
+  clear_screen(display);
+  render_text_centered(display->size.first, display->size.second, 10, err, display->buffer);
+  display->write(0, 0, display->size.first, display->size.second, display->buffer);
 }
 
-static void display_ota(Display *display, uint8_t *pGIFBuf, uint32_t percent) {
+static void display_ota(Display *display, uint32_t percent) {
   ESP_LOGI(TAG, "Displaying OTA Status");
-  clear_screen(display, pGIFBuf);
+  clear_screen(display);
   char tmp[50];
   sprintf(tmp, "Update In Progress\n%lu%%", percent);
-  render_text_centered(display->size.first, display->size.second, 10, tmp, pGIFBuf);
-  display->write(0, 0, display->size.first, display->size.second, pGIFBuf);
+  render_text_centered(display->size.first, display->size.second, 10, tmp, display->buffer);
+  display->write(0, 0, display->size.first, display->size.second, display->buffer);
 }
 
-static void display_no_storage(Display *display, uint8_t *pGIFBuf) {
+static void display_no_storage(Display *display) {
   ESP_LOGI(TAG, "Displaying No Storage");
-  clear_screen(display, pGIFBuf);
-  render_text_centered(display->size.first, display->size.second, 10, "No SDCARD", pGIFBuf);
-  display->write(0, 0, display->size.first, display->size.second, pGIFBuf);
+  clear_screen(display);
+  render_text_centered(display->size.first, display->size.second, 10, "No SDCARD", display->buffer);
+  display->write(0, 0, display->size.first, display->size.second, display->buffer);
 }
 
-static void display_image_batt(Display *display, uint8_t *buf) {
+static void display_image_batt(Display *display) {
   ESP_LOGI(TAG, "Displaying Low Battery");
-  clear_screen(display, buf);
+  clear_screen(display);
   PNGImage png;
   png.open((uint8_t *)low_batt_png, sizeof(low_batt_png));
   int16_t xOffset = static_cast<int16_t>((display->size.first / 2) - (png.size().first / 2));
   int16_t yOffset = static_cast<int16_t>((display->size.second / 2) - ((png.size().second + 1) / 2));
-  png.loop(buf, xOffset, yOffset, display->size.first);
-  display->write(0, 0, display->size.first, display->size.second, buf);
+  png.loop(display->buffer, xOffset, yOffset, display->size.first);
+  display->write(0, 0, display->size.first, display->size.second, display->buffer);
 }
 
 static std::pair<int16_t, int16_t> lastSize = {0,0};
 
 //#define FRAMETIME
 
-static int displayFile(Image *in, uint8_t *pGIFBuf, Display *display) {
+static int displayFile(Image *in, Display *display) {
   int64_t start = esp_timer_get_time();
   int delay;
   int16_t xOffset = 0;
   int16_t yOffset = 0;
   if (in->size() != display->size) {
     if(lastSize > in->size()) {
-      clear_screen(display, pGIFBuf); //Only need to clear the screen if the image won't fill it, and the last image was bigger
+      clear_screen(display); //Only need to clear the screen if the image won't fill it, and the last image was bigger
     }
     xOffset = static_cast<int16_t>((display->size.first / 2) - (in->size().first / 2));
     yOffset = static_cast<int16_t>((display->size.second / 2) - ((in->size().second + 1) / 2));
   }
-  delay = in->loop(pGIFBuf, xOffset, yOffset, display->size.first);
+  delay = in->loop(display->buffer, xOffset, yOffset, display->size.first);
   if (delay < 0) {
     ESP_LOGI(TAG, "Image loop error");
     return -1;
   } else {
-    display->write(0, 0, display->size.first, display->size.second, pGIFBuf);
+    display->write(0, 0, display->size.first, display->size.second, display->buffer);
   }
   int calc_delay = delay - static_cast<int>((esp_timer_get_time() - start) / 1000);
 #ifdef FRAMETIME
@@ -121,7 +124,7 @@ static int displayFile(Image *in, uint8_t *pGIFBuf, Display *display) {
 
 static int validator(const char *path, const char *file) {
   char inPath[128];
-  snprintf(inPath, sizeof(inPath) - 1, "%s/%s", path, file);
+  JOIN_PATH(inPath, path, file);
   if (!valid_file(inPath)) {
     return 0;
   }
@@ -129,13 +132,13 @@ static int validator(const char *path, const char *file) {
   return 1;
 }
 
-static int get_file(const char *path, char *outPath, size_t outLen) {
-  char inPath[128];
+static int get_file(const char *path, char *outPath) {
+  char inPath[MAX_FILE_LEN];
   strncpy(inPath, path, sizeof(inPath)-1);
 
   //Check if we are starting with a valid file, and just return it if we are
   if (valid_file(path)) {
-    strncpy(outPath, inPath, outLen - 1);
+    memcpy(outPath, inPath, MAX_FILE_LEN);
     if(!dir.dirptr){
       opendir_sorted(&dir, dirname(inPath), validator);
     }
@@ -158,7 +161,7 @@ static int get_file(const char *path, char *outPath, size_t outLen) {
   }
 
   while ((de = readdir_sorted(&dir)) != nullptr) {
-    if (snprintf(outPath, outLen, "%s/%s", base, de->d_name) < 0) {
+    if (JOIN_PATH(outPath, base, de->d_name) < 0) {
       return -1;
     }
     if (valid_file(outPath)) {
@@ -172,13 +175,13 @@ static int get_file(const char *path, char *outPath, size_t outLen) {
   return -1;
 }
 
-Image *openFile(const char *path, uint8_t *pGIFBuf, Display *display) {
+static Image *openFile(const char *path, Display *display) {
   Image *in = ImageFactory(path);
   if (in) {
-    if (in->open(path, nullptr) != 0) {
+    if (in->open(path, get_board()->turboBuffer()) != 0) {
       char errorString[255];
       snprintf(errorString, sizeof(errorString), "Error Displaying File\n%s\n%s", path, in->getLastError());
-      display_err(display, pGIFBuf, errorString);
+      display_err(display, errorString);
       delete in;
       return nullptr;
     }
@@ -186,23 +189,23 @@ Image *openFile(const char *path, uint8_t *pGIFBuf, Display *display) {
     auto size = in->size();
     if (size > display->size) {
       delete in;
-      display_image_too_large(display, pGIFBuf, path);
+      display_image_too_large(display, path);
       return nullptr;
     }
   } else {
     char errMsg[255];
     snprintf(errMsg, sizeof(errMsg), "Could not Display\n%s", path);
-    display_err(display, pGIFBuf, errMsg);
+    display_err(display, errMsg);
   }
   return in;
 }
 
-Image *openFileUpdatePath(char *path, size_t pathLen, uint8_t *pGIFBuf, Display *display){
-  if (get_file(path, path, pathLen) != 0) {
-    display_no_image(display, pGIFBuf);
+static Image *openFileUpdatePath(char *path, Display *display) {
+  if (get_file(path, path) != 0) {
+    display_no_image(display);
     return nullptr;
   }
-  return openFile(path, pGIFBuf, display);
+  return openFile(path, display);
 }
 
 static int64_t last_change;
@@ -212,16 +215,21 @@ static bool slideshowChange(DISPLAY_OPTIONS last_mode, ImageConfig &config){
   return last_mode == DISPLAY_FILE && config.getSlideShow() &&  lastChange > config.getSlideShowTime();
 }
 
+static Image *next_prev(Image *in, char *current_file, ImageConfig *config, Display *display, int increment){
+  if (config->getLocked()) {
+    return in;
+  }
+  JOIN_PATH(current_file, dirname(current_file), directory_get_increment(&dir, file_position, increment));
+  delete in;
+  return openFileUpdatePath(current_file, display);
+}
+
 void display_task(void *params) {
-  // TODO: Check image size before trying to display it
   auto *board = (Board *) params;
 
   auto config = ImageConfig();
 
   auto display = board->getDisplay();
-
-  // user can flush pre-defined pattern to the screen before we turn on the screen or backlight
-
 
   memset(display->buffer, 255, display->size.first * display->size.second * 2);
   display->write(0, 0, display->size.first, display->size.second, display->buffer);
@@ -239,7 +247,7 @@ void display_task(void *params) {
 
   Image *in = nullptr;
 
-  char current_file[128];
+  char current_file[MAX_FILE_LEN+1];
 
   DISPLAY_OPTIONS last_mode = DISPLAY_NONE;
 
@@ -248,66 +256,58 @@ void display_task(void *params) {
   ESP_LOGI(TAG, "Display Resolution %ix%i", display->size.first, display->size.second);
 
   int delay = 1000;
-  uint8_t *pGIFBuf;
   vTaskDelay(1000/portTICK_PERIOD_MS);
   bool redraw = false;
   while (true) {
     uint32_t option;
     xTaskNotifyWaitIndexed(0, 0, 0xffffffff, &option, delay / portTICK_PERIOD_MS);
-    pGIFBuf = display->buffer;
     if (option != DISPLAY_NONE) {
       last_change = esp_timer_get_time();
       config.reload();
-      delete in;
-      in = nullptr;
+      if(static_cast<DISPLAY_OPTIONS>(option) != DISPLAY_NEXT || static_cast<DISPLAY_OPTIONS>(option) != DISPLAY_PREVIOUS){
+        delete in;
+        in = nullptr;
+      }
       switch (option) {
         case DISPLAY_FILE:
           ESP_LOGI(TAG, "DISPLAY_FILE");
           if(!valid_file(current_file)) {
             strncpy(current_file, config.getPath(), sizeof(current_file) - 1);
           }
-          in = openFileUpdatePath(current_file, sizeof(current_file), pGIFBuf, display);
+          in = openFileUpdatePath(current_file, display);
           last_mode = static_cast<DISPLAY_OPTIONS>(option);
           break;
         case DISPLAY_NEXT:
-          if (config.getLocked()) {
-            break;
-          }
-          snprintf(current_file,  sizeof(current_file)-1, "%s/%s", dirname(current_file), directory_get_increment(&dir, file_position, 1));
-          in = openFileUpdatePath(current_file, sizeof(current_file), pGIFBuf, display);
+          in = next_prev(in, current_file, &config, display, 1);
           break;
         case DISPLAY_PREVIOUS:
-          if (config.getLocked()) {
-            break;
-          }
-          snprintf(current_file,  sizeof(current_file)-1, "%s/%s", dirname(current_file), directory_get_increment(&dir, file_position, -1));
-            in = openFileUpdatePath(current_file, sizeof(current_file), pGIFBuf, display);
+          in = next_prev(in, current_file, &config, display, -1);
           break;
         case DISPLAY_BATT:
           if (last_mode != DISPLAY_BATT) {
-            display_image_batt(board->getDisplay(), pGIFBuf);
+            display_image_batt(board->getDisplay());
           }
           last_mode = static_cast<DISPLAY_OPTIONS>(option);
           break;
         case DISPLAY_OTA:
-          display_ota(board->getDisplay(), pGIFBuf, 0);
+          display_ota(board->getDisplay(), 0);
           last_mode = static_cast<DISPLAY_OPTIONS>(option);
           break;
         case DISPLAY_NO_STORAGE:
           last_mode = static_cast<DISPLAY_OPTIONS>(option);
-          display_no_storage(board->getDisplay(), pGIFBuf);
+          display_no_storage(board->getDisplay());
           break;
         case DISPLAY_SPECIAL_1:
           ESP_LOGI(TAG, "DISPLAY_SPECIAL_1");
           if (valid_file("/data/cards/up.png")) {
-            in = openFile("/data/cards/up.png", pGIFBuf, display);
+            in = openFile("/data/cards/up.png", display);
             last_mode = static_cast<DISPLAY_OPTIONS>(option);
           }
           break;
         case DISPLAY_SPECIAL_2:
           ESP_LOGI(TAG, "DISPLAY_SPECIAL_2");
           if (valid_file("/data/cards/down.png")) {
-            in = openFile("/data/cards/down.png", pGIFBuf, display);
+            in = openFile("/data/cards/down.png", display);
             last_mode = static_cast<DISPLAY_OPTIONS>(option);
           }
           break;
@@ -325,21 +325,21 @@ void display_task(void *params) {
       } else if (last_mode == DISPLAY_OTA) {
         int percent = OTA::ota_status();
         if (percent != 0) {
-          display_ota(display, pGIFBuf, percent);
+          display_ota(display, percent);
         }
         delay = 1000;
       } else {
         if(redraw){
           strncpy(current_file, config.getPath(), sizeof(current_file) - 1);
-          in = openFileUpdatePath(current_file, sizeof(current_file), pGIFBuf, display);
+          in = openFileUpdatePath(current_file, display);
           redraw = false;
         }
         if(in) {
-          delay = displayFile(in, pGIFBuf, display);
+          delay = displayFile(in, display);
           if (delay < 0) {
             char errMsg[255];
             snprintf(errMsg, sizeof(errMsg), "Error Displaying File\n%s\n%s",  current_file, in->getLastError());
-            display_err(board->getDisplay(), pGIFBuf, errMsg);
+            display_err(board->getDisplay(), errMsg);
             delete in;
             in = nullptr;
           }
