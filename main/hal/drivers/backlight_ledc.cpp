@@ -17,7 +17,8 @@ backlight_ledc::backlight_ledc(gpio_num_t gpio, int level) : lastLevel(level) {
       .duty_resolution  = LEDC_TIMER_8_BIT,
       .timer_num        = LEDC_TIMER_0,
       .freq_hz          = 4000,  // Set output frequency at 4 kHz
-      .clk_cfg          = LEDC_USE_RC_FAST_CLK
+      .clk_cfg          = LEDC_USE_RC_FAST_CLK,
+      .deconfigure      = false
   };
   ESP_ERROR_CHECK(ledc_timer_config(&ledc_timer));
 
