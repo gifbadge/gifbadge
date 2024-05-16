@@ -33,7 +33,7 @@ class board_2_1_v0_4 : public Board {
   esp_err_t StorageFormat() override { return ESP_OK; };
   const char * name() override;
   bool powerConnected() override;
-  void * turboBuffer() override {return nullptr;};
+  void * turboBuffer() override {return buffer;};
 
 
 

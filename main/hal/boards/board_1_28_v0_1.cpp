@@ -28,6 +28,7 @@ static void IRAM_ATTR usb_connected(void *) {
 }
 
 board_1_28_v0_1::board_1_28_v0_1() {
+  buffer = heap_caps_malloc(240*240+0x6100, MALLOC_CAP_INTERNAL);
   _i2c = new I2C(I2C_NUM_0, 17, 18);
   _battery = new battery_max17048(_i2c, GPIO_VBUS_DETECT);
   _battery->inserted(); //Battery not removable. So set this
