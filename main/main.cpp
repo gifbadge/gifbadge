@@ -1,14 +1,9 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-#include "esp_pm.h"
-
-#include "esp_err.h"
-#include "esp_log.h"
-
 #include "log.h"
 
-#include <cstring>
+#include <esp_pm.h>
 
 #include "ui/menu.h"
 #include "hal/esp32/hal_usb.h"
@@ -22,12 +17,10 @@
 
 static const char *TAG = "MAIN";
 
-void dumpDebugFunc(void *arg) {
-  auto *args = (Board *) arg;
-//  esp_pm_lock_handle_t pm_lock;
-//  esp_pm_lock_create(ESP_PM_NO_LIGHT_SLEEP, 0, "output_lock", &pm_lock);
+void dumpDebugFunc(TimerHandle_t) {
+  auto *args = get_board();
+  args->pmLock();
 
-//    esp_pm_lock_acquire(pm_lock);
 //        vTaskDelay(1000/portTICK_PERIOD_MS);
   if (true) {
     esp_pm_dump_locks(stdout);
@@ -46,28 +39,13 @@ void dumpDebugFunc(void *arg) {
   for (unsigned int i = 0; i < count; i++) {
     LOGI(TAG, "%s Highwater: %lu", tasks[i].pcTaskName, tasks[i].usStackHighWaterMark);
   }
-
   heap_caps_print_heap_info(MALLOC_CAP_SPIRAM);
+  args->pmRelease();
 
-//    char task_name[] = "timer_task";
-//  TaskHandle_t handle = xTaskGetHandle(task_name);
-//  LOGI(TAG, "%s Highwater: %d", task_name, uxTaskGetStackHighWaterMark(handle));
-
-
-//  esp_pm_lock_release(pm_lock);
 }
 
-static void dumpDebugTimerInit(void *args) {
-  const esp_timer_create_args_t dumpDebugTimerArgs = {
-      .callback = &dumpDebugFunc,
-      .arg = args,
-      .dispatch_method = ESP_TIMER_TASK,
-      .name = "dumpDebugTimer",
-      .skip_unhandled_events = true
-  };
-  esp_timer_handle_t dumpDebugTimer = nullptr;
-  ESP_ERROR_CHECK(esp_timer_create(&dumpDebugTimerArgs, &dumpDebugTimer));
-  ESP_ERROR_CHECK(esp_timer_start_periodic(dumpDebugTimer, 10000 * 1000));
+static void dumpDebugTimerInit() {
+  xTimerStart(xTimerCreate("dumpDebugTimer", 10000/portTICK_PERIOD_MS, pdTRUE, nullptr, dumpDebugFunc), 0);
 }
 
 MAIN_STATES currentState = MAIN_NONE;
@@ -76,8 +54,8 @@ MAIN_STATES currentState = MAIN_NONE;
  * Task to check battery status, and update device
  * @param args
  */
-static void lowBatteryTask(void *args) {
-  auto *board = static_cast<Board *>(args);
+static void lowBatteryTask(TimerHandle_t) {
+  auto *board = get_board();
   TaskHandle_t lvglHandle;
   TaskHandle_t display_task_handle;
 
@@ -103,26 +81,13 @@ static void lowBatteryTask(void *args) {
   }
 }
 
-static void initLowBatteryTask(Board *board) {
-  const esp_timer_create_args_t lowBatteryArgs = {
-      .callback = &lowBatteryTask,
-      .arg = board,
-      .dispatch_method = ESP_TIMER_TASK,
-      .name = "low_battery_handler",
-      .skip_unhandled_events = true
-  };
-  esp_timer_handle_t lowBatteryTimer = nullptr;
-  ESP_ERROR_CHECK(esp_timer_create(&lowBatteryArgs, &lowBatteryTimer));
-  ESP_ERROR_CHECK(esp_timer_start_periodic(lowBatteryTimer, 1000 * 1000));
+static void initLowBatteryTask() {
+  xTimerStart(xTimerCreate("low_battery_handler", 1000/portTICK_PERIOD_MS, pdTRUE, nullptr, lowBatteryTask),0);
 }
 
 
 extern "C" void app_main(void) {
-  esp_err_t err;
-//  heap_caps_print_heap_info(MALLOC_CAP_INTERNAL);
   Board *board = get_board();
-//  heap_caps_print_heap_info(MALLOC_CAP_INTERNAL);
-
 
   storage_callback([](bool state) {
     LOGI(TAG, "state %u", state);
@@ -134,17 +99,16 @@ extern "C" void app_main(void) {
       currentState = MAIN_USB;
     }
   });
-//  heap_caps_print_heap_info(MALLOC_CAP_INTERNAL);
 
   TaskHandle_t display_task_handle = nullptr;
 
-  dumpDebugTimerInit(board);
+  dumpDebugTimerInit();
 
   OTA::bootInfo();
 
   lvgl_init(board);
 
-  initLowBatteryTask(board);
+  initLowBatteryTask();
 
   vTaskDelay(1000 / portTICK_PERIOD_MS); //Let USB Settle
 
