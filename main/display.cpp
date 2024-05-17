@@ -1,5 +1,6 @@
 #include "freertos/FreeRTOS.h"
 
+#include "portable_time.h"
 #include "log.h"
 
 #include "display.h"
@@ -7,7 +8,6 @@
 #include "png.h"
 #include "images/low_batt_png.h"
 
-#include <esp_timer.h>
 
 #include "font_render.h"
 #include "file_util.h"
@@ -87,7 +87,7 @@ static std::pair<int16_t, int16_t> lastSize = {0,0};
 //#define FRAMETIME
 
 static int displayFile(Image *in, Display *display) {
-  int64_t start = esp_timer_get_time();
+  int64_t start = millis();
   int delay;
   int16_t xOffset = 0;
   int16_t yOffset = 0;
@@ -105,7 +105,7 @@ static int displayFile(Image *in, Display *display) {
   } else {
     display->write(0, 0, display->size.first, display->size.second, display->buffer);
   }
-  int calc_delay = delay - static_cast<int>((esp_timer_get_time() - start) / 1000);
+  int calc_delay = delay - static_cast<int>(millis() - start);
 #ifdef FRAMETIME
   LOGI(TAG, "Frame Delay: %i, calculated delay %i", delay, calc_delay);
 #endif
@@ -207,7 +207,7 @@ static Image *openFileUpdatePath(char *path, Display *display) {
 static int64_t last_change;
 
 static bool slideshowChange(DISPLAY_OPTIONS last_mode, Config *config){
-  int64_t lastChange = ((esp_timer_get_time() / 1000000) - (last_change / 1000000));
+  int64_t lastChange = millis() - last_change;
   return last_mode == DISPLAY_FILE && config->getSlideShow() &&  lastChange > config->getSlideShowTime();
 }
 
@@ -238,7 +238,7 @@ void display_task(void *params) {
 
   DISPLAY_OPTIONS last_mode = DISPLAY_NONE;
 
-  last_change = esp_timer_get_time();
+  last_change = millis();
 
   LOGI(TAG, "Display Resolution %ix%i", display->size.first, display->size.second);
 
@@ -249,7 +249,7 @@ void display_task(void *params) {
     uint32_t option;
     xTaskNotifyWaitIndexed(0, 0, 0xffffffff, &option, delay / portTICK_PERIOD_MS);
     if (option != DISPLAY_NONE) {
-      last_change = esp_timer_get_time();
+      last_change = millis();
       config->reload();
       if(static_cast<DISPLAY_OPTIONS>(option) != DISPLAY_NEXT || static_cast<DISPLAY_OPTIONS>(option) != DISPLAY_PREVIOUS){
         delete in;
