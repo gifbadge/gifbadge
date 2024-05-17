@@ -25,7 +25,7 @@ class board_1_28_v0_1 : public Board {
 
   Battery * getBattery() override;
   Touch * getTouch() override;
-  I2C * getI2c() override;
+  I2C * getI2c();
   Keys * getKeys() override;
   Display * getDisplay() override;
   Backlight * getBacklight() override;
@@ -37,7 +37,7 @@ class board_1_28_v0_1 : public Board {
   BOARD_POWER powerState() override;
   bool storageReady() override;
   StorageInfo storageInfo() override;
-  esp_err_t StorageFormat() override;
+  int StorageFormat() override;
   const char * name() override;
   bool powerConnected() override;
   void * turboBuffer() override {return buffer;};

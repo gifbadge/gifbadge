@@ -3,9 +3,6 @@
 #include <string>
 #include <mutex>
 
-#include <nvs_flash.h>
-#include <nvs_handle.hpp>
-
 class Config {
  public:
   Config() = default;

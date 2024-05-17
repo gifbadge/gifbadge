@@ -2,11 +2,8 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include <esp_timer.h>
 #include <freertos/semphr.h>
 #include "log.h"
-#include <esp_lcd_panel_ops.h>
-#include "esp_lcd_panel_io.h"
 #include <lvgl.h>
 #include "hal/config.h"
 #include "hal/board.h"

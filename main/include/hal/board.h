@@ -3,7 +3,6 @@
 #include <memory>
 #include "hal/battery.h"
 #include "hal/touch.h"
-#include "hal/esp32/i2c.h"
 #include "keys.h"
 #include "display.h"
 #include "hal/backlight.h"
@@ -24,7 +23,6 @@ class Board {
 
   virtual Battery * getBattery() = 0;
   virtual Touch * getTouch() = 0;
-  virtual I2C * getI2c() = 0;
   virtual Keys * getKeys() = 0;
   virtual Display * getDisplay() = 0;
   virtual Backlight * getBacklight() = 0;
@@ -34,7 +32,7 @@ class Board {
   virtual void pmRelease() = 0;
   virtual bool storageReady() = 0;
   virtual StorageInfo storageInfo() = 0;
-  virtual esp_err_t StorageFormat() = 0;
+  virtual int StorageFormat() = 0;
   virtual const char * name() = 0;
   virtual bool powerConnected() = 0;
   virtual void *turboBuffer() = 0;

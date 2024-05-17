@@ -9,6 +9,7 @@
 #include "hal/esp32/drivers/keys_gpio.h"
 #include "hal/esp32/drivers/display_gc9a01.h"
 #include "hal/esp32/drivers/config_nvs.h"
+#include "hal/esp32/i2c.h"
 
 class board_v0 : public Board {
  public:
@@ -17,7 +18,7 @@ class board_v0 : public Board {
 
   Battery * getBattery() override;
   Touch * getTouch() override;
-  I2C * getI2c() override;
+  I2C * getI2c();
   Keys * getKeys() override;
   Display * getDisplay() override;
   Backlight * getBacklight() override;
@@ -28,7 +29,7 @@ class board_v0 : public Board {
   BOARD_POWER powerState() override;
   bool storageReady() override { return true; };
   StorageInfo storageInfo() override;
-  esp_err_t StorageFormat() override { return ESP_OK; };
+  int StorageFormat() override { return ESP_OK; };
   const char *name() override;
   bool powerConnected() override;
   void * turboBuffer() override {return nullptr;};

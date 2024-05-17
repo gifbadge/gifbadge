@@ -1,3 +1,4 @@
+#include <nvs_flash.h>
 #include "log.h"
 #include "hal/esp32/drivers/config_nvs.h"
 

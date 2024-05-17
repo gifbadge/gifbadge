@@ -14,8 +14,7 @@ class display_st7701s : public Display {
                   std::array<int, 16> &rgb);
   ~display_st7701s() override = default;
 
-  esp_lcd_panel_handle_t getPanelHandle() override;
-  bool onColorTransDone(esp_lcd_panel_io_color_trans_done_cb_t, void *) override;
+  bool onColorTransDone(flushCallback_t) override;
   void write(int x_start, int y_start, int x_end, int y_end, const void *color_data) override;
  private:
   size_t fb_number = 2;
@@ -24,6 +23,6 @@ class display_st7701s : public Display {
   void *_fb1 = nullptr;
   esp_timer_handle_t flushTimerHandle = nullptr;
 
-  esp_lcd_panel_io_color_trans_done_cb_t flushCallback = nullptr;
+  flushCallback_t flushCallback = nullptr;
 
 };

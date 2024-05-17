@@ -101,14 +101,7 @@ void main_menu() {
     lv_group_add_obj(slider_group, slider);
     lv_obj_add_event_cb(slider, BacklightSliderChangedCallback, LV_EVENT_VALUE_CHANGED, backlight_button);
     lv_obj_add_event_cb(slider, BacklightSliderExitCallback, LV_EVENT_RELEASED, backlight_button);
-    esp_err_t err;
-    int backlight_level;
-    auto handle = nvs::open_nvs_handle("settings", NVS_READWRITE, &err);
-    err = handle->get_item("backlight", backlight_level);
-    if (err == ESP_ERR_NVS_NOT_FOUND) {
-      backlight_level = 10;
-    }
-    lv_slider_set_value(slider, backlight_level, LV_ANIM_OFF);
+    lv_slider_set_value(slider, get_board()->getConfig()->getBacklight(), LV_ANIM_OFF);
 
     subMenu(main_menu, "File Select", &FileOptions);
     subMenu(main_menu, "Storage", &storage_menu);

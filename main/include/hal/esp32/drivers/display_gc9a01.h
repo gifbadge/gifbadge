@@ -8,8 +8,7 @@ class display_gc9a01 : public Display {
   display_gc9a01(int mosi, int sck, int cs, int dc, int reset);
   ~display_gc9a01() override = default;
 
-  esp_lcd_panel_handle_t getPanelHandle() override;
-  bool onColorTransDone(esp_lcd_panel_io_color_trans_done_cb_t, void *) override;
+  bool onColorTransDone(flushCallback_t) override;
   void write(int x_start, int y_start, int x_end, int y_end, const void *color_data) override;
  private:
   esp_lcd_panel_handle_t panel_handle = nullptr;

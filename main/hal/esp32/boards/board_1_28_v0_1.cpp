@@ -165,7 +165,7 @@ void board_1_28_v0_1::pmRelease() {
   esp_pm_lock_release(pmLockHandle);
 }
 
-esp_err_t board_1_28_v0_1::StorageFormat() {
+int board_1_28_v0_1::StorageFormat() {
   LOGI(TAG, "Format Start");
   esp_err_t ret;
   esp_task_wdt_config_t wdtConfig = {

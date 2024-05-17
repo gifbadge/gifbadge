@@ -51,7 +51,7 @@ void destroy_screens(){
   screens.clear();
 }
 
-static bool IRAM_ATTR flush_ready(esp_lcd_panel_io_handle_t, esp_lcd_panel_io_event_data_t *, void *) {
+static bool IRAM_ATTR flush_ready() {
   xSemaphoreGive(flushSem);
   return false;
 }
@@ -85,7 +85,7 @@ void lvgl_unlock() {
 
 void lvgl_close() {
   LOGI(TAG, "Close");
-  get_board()->getDisplay()->onColorTransDone(nullptr, nullptr);
+  get_board()->getDisplay()->onColorTransDone(nullptr);
 
   if (lvgl_lock(-1)) {
     destroy_screens();
@@ -317,7 +317,7 @@ void lvgl_wake_up() {
 
     cbData.display = get_board()->getDisplay();
 
-    cbData.callbackEnabled = cbData.display->onColorTransDone(flush_ready, &disp);
+    cbData.callbackEnabled = cbData.display->onColorTransDone(flush_ready);
 
     xSemaphoreGive(flushSem);
     vTaskResume(lvgl_task);

@@ -5,6 +5,7 @@
 #include <task.h>
 #include <esp_lcd_panel_rgb.h>
 #include <esp_timer.h>
+#include <esp_lcd_panel_io.h>
 #include "hal/esp32/drivers/display_st7701s.h"
 #include "esp_lcd_panel_io_additions.h"
 
@@ -190,10 +191,6 @@ display_st7701s::display_st7701s(spi_line_config_t line_cfg,
   ESP_ERROR_CHECK(esp_timer_create(&flushTimerArgs, &flushTimerHandle));
 }
 
-esp_lcd_panel_handle_t display_st7701s::getPanelHandle() {
-  return panel_handle;
-}
-
 void display_st7701s::write(int x_start, int y_start, int x_end, int y_end, const void *color_data) {
   buffer = static_cast<uint8_t *>(color_data == _fb0 ? _fb1 : _fb0);
   esp_lcd_panel_draw_bitmap(panel_handle, x_start, y_start, x_end, y_end, color_data);
@@ -201,7 +198,7 @@ void display_st7701s::write(int x_start, int y_start, int x_end, int y_end, cons
 
 }
 
-bool display_st7701s::onColorTransDone(esp_lcd_panel_io_color_trans_done_cb_t callback, void *ctx) {
+bool display_st7701s::onColorTransDone(flushCallback_t callback) {
   flushCallback = callback;
   return true;
 }

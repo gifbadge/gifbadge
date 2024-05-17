@@ -4,8 +4,6 @@
 #include "display.h"
 #include "ui/menu.h"
 
-static esp_timer_handle_t inputTimer = nullptr;
-
 extern MAIN_STATES currentState;
 
 static void openMenu() {
@@ -44,6 +42,9 @@ static int lastKey;
 static long long lastKeyPress;
 
 #ifdef ESP_PLATFORM
+#include <esp_timer.h>
+static esp_timer_handle_t inputTimer = nullptr;
+
 static void inputTimerHandler(void *args) {
   auto board = (Board *) args;
   if (currentState == MAIN_NORMAL) {

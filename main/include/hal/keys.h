@@ -1,10 +1,8 @@
 #pragma once
 
-#include <map>
-#include <hal/gpio_types.h>
 #include <cstdint>
 
-//#define 	BIT(n)   (1UL << (n))
+#define 	BIT(n)   (1UL << (n))
 #define    BIT_MASK(n)   (BIT(n) - 1UL)
 
 #define DEBOUNCE_COUNTER_BITS 14

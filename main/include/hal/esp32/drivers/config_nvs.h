@@ -1,5 +1,8 @@
 #pragma once
+#include <memory>
+#include <nvs_handle.hpp>
 #include "hal/config.h"
+
 
 class Config_NVS: public Config {
  public:
