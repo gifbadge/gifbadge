@@ -10,7 +10,7 @@
 #include <nvs_flash.h>
 
 #include "ui/menu.h"
-#include "hal/hal_usb.h"
+#include "hal/esp32/hal_usb.h"
 #include "display.h"
 
 #include "ota.h"
@@ -23,16 +23,16 @@ static const char *TAG = "MAIN";
 
 void dumpDebugFunc(void *arg) {
   auto *args = (Board *) arg;
-  esp_pm_lock_handle_t pm_lock;
-  esp_pm_lock_create(ESP_PM_NO_LIGHT_SLEEP, 0, "output_lock", &pm_lock);
+//  esp_pm_lock_handle_t pm_lock;
+//  esp_pm_lock_create(ESP_PM_NO_LIGHT_SLEEP, 0, "output_lock", &pm_lock);
 
-    esp_pm_lock_acquire(pm_lock);
+//    esp_pm_lock_acquire(pm_lock);
 //        vTaskDelay(1000/portTICK_PERIOD_MS);
-    if (false) {
+    if (true) {
       esp_pm_dump_locks(stdout);
-      char out[1000];
-      vTaskGetRunTimeStats(out);
-      printf("%s", out);
+//      char out[1000];
+//      vTaskGetRunTimeStats(out);
+//      printf("%s", out);
     }
     ESP_LOGI(TAG, "SOC: %i", args->getBattery()->getSoc());
     ESP_LOGI(TAG, "Voltage: %f", args->getBattery()->getVoltage());
@@ -40,9 +40,20 @@ void dumpDebugFunc(void *arg) {
 //    ESP_LOGI(TAG, "State: %d", static_cast<int>(args->getBattery()->status()));
     heap_caps_print_heap_info(MALLOC_CAP_INTERNAL);
 
+  TaskStatus_t tasks[20];
+  unsigned int count = uxTaskGetSystemState(tasks,20, nullptr );
+  for(unsigned int i = 0; i<count; i++){
+    ESP_LOGI(TAG, "%s Highwater: %lu", tasks[i].pcTaskName, tasks[i].usStackHighWaterMark);
+  }
+
     heap_caps_print_heap_info(MALLOC_CAP_SPIRAM);
 
-    esp_pm_lock_release(pm_lock);
+//    char task_name[] = "timer_task";
+//  TaskHandle_t handle = xTaskGetHandle(task_name);
+//  ESP_LOGI(TAG, "%s Highwater: %d", task_name, uxTaskGetStackHighWaterMark(handle));
+
+
+//  esp_pm_lock_release(pm_lock);
 }
 
 static void dumpDebugTimerInit(void *args) {
@@ -107,6 +118,9 @@ static void initLowBatteryTask(Board *board) {
 
 extern "C" void app_main(void) {
   esp_err_t err;
+//  heap_caps_print_heap_info(MALLOC_CAP_INTERNAL);
+  Board *board = get_board();
+
 
   err = nvs_flash_init();
   if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
@@ -116,6 +130,8 @@ extern "C" void app_main(void) {
     err = nvs_flash_init();
   }
   ESP_ERROR_CHECK(err);
+//  heap_caps_print_heap_info(MALLOC_CAP_INTERNAL);
+
 
   storage_callback([](bool state) {
     ESP_LOGI(TAG, "state %u", state);
@@ -127,8 +143,7 @@ extern "C" void app_main(void) {
       currentState = MAIN_USB;
     }
   });
-
-  Board *board = get_board();
+//  heap_caps_print_heap_info(MALLOC_CAP_INTERNAL);
 
   TaskHandle_t display_task_handle = nullptr;
 
@@ -142,12 +157,14 @@ extern "C" void app_main(void) {
 
   vTaskDelay(1000 / portTICK_PERIOD_MS); //Let USB Settle
 
+  xTaskCreatePinnedToCore(display_task, "display_task", 5000, board, 2, &display_task_handle, 1);
+
+
   if (!board->storageReady()) {
     xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_NO_STORAGE, eSetValueWithOverwrite);
     while (true);
   }
 
-  xTaskCreatePinnedToCore(display_task, "display_task", 5000, board, 2, &display_task_handle, 1);
 
   MAIN_STATES oldState = MAIN_NONE;
   TaskHandle_t lvglHandle = xTaskGetHandle("LVGL");

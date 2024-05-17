@@ -3,7 +3,7 @@
 #include <memory>
 #include "hal/battery.h"
 #include "hal/touch.h"
-#include "i2c.h"
+#include "hal/esp32/i2c.h"
 #include "keys.h"
 #include "display.h"
 #include "hal/backlight.h"
