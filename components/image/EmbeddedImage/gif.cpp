@@ -5,7 +5,9 @@
 #include <cstdio>
 #include <sys/stat.h>
 #include <cstring>
+#ifdef ESP_PLATFORM
 #include <esp_heap_caps.h>
+#endif
 
 struct mem_buf {
   uint8_t *buf;
@@ -25,8 +27,8 @@ static void *OpenFile(const char *fname, int32_t *pSize) {
   }
 
   *pSize = stats.st_size;
-
   auto *mem = static_cast<mem_buf *>(malloc(sizeof(mem_buf)));
+#ifdef ESP_PLATFORM
   if (stats.st_size <= heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM)) {
     mem->buf = static_cast<uint8_t *>(heap_caps_malloc(stats.st_size, MALLOC_CAP_SPIRAM));
   } else {
@@ -35,6 +37,9 @@ static void *OpenFile(const char *fname, int32_t *pSize) {
   }
   if (mem->buf == nullptr) {
   }
+#else
+  mem->buf = nullptr;
+#endif
   mem->fp = infile;
   mem->pos = mem->buf;
   mem->read = mem->buf;
@@ -137,7 +142,11 @@ Image *GIF::create() {
 }
 
 static void *GIFAlloc(uint32_t u32Size) {
+#ifdef ESP_PLATFORM
   return heap_caps_malloc(u32Size, MALLOC_CAP_SPIRAM);
+#else
+  return malloc(u32Size);
+#endif
 } /* GIFAlloc() */
 
 int GIF::open(const char *path, void *buffer) {

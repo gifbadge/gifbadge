@@ -2,10 +2,12 @@
 #include "fonts.h"
 
 #include <mcufont.h>
-#include <cstdio>
 #include <cstring>
-#include <esp_log.h>
 #include <endian.h>
+
+#ifndef __bswap16
+#define __bswap16 __bswap_16
+#endif
 
 /********************************************
  * Callbacks to specify rendering behaviour *

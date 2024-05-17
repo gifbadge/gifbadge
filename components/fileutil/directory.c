@@ -6,7 +6,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <sys/stat.h>
-#include <esp_log.h>
 #include "include/directory.h"
 
 static int cmpfunc (const void * a, const void * b, void *arg) {
@@ -21,7 +20,6 @@ static int cmpfunc (const void * a, const void * b, void *arg) {
   seekdir(dir, *(long *)b);
   de = readdir(dir);
   strncpy(file_name_b, de->d_name, sizeof(file_name_b));
-//  ESP_LOGI("directory.c", "cmpfunc: %s %s\n", file_name_a, file_name_b);
   return strcmp(file_name_a, file_name_b);
 }
 
@@ -118,11 +116,14 @@ const char * directory_get_increment(DIR_SORTED *dirp, int pos, int increment){
 }
 
 void directory_print(DIR_SORTED *dirp){
+#ifdef ESP_PLATFORM
+#include <esp_log.h>
   rewinddir_sorted(dirp);
   struct dirent *de;
   while((de = readdir_sorted(dirp))){
     ESP_LOGI("directory.c", "%s", de->d_name);
   }
+#endif
 }
 
 int is_directory(const char* path){
