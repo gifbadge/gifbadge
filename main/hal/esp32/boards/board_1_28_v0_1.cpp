@@ -1,5 +1,5 @@
 #include <esp_pm.h>
-#include <esp_log.h>
+#include "log.h"
 #include <driver/sdmmc_defs.h>
 #include <esp_vfs_fat.h>
 #include <esp_task_wdt.h>
@@ -120,7 +120,7 @@ Backlight * board_1_28_v0_1::getBacklight() {
 }
 
 void board_1_28_v0_1::powerOff() {
-  ESP_LOGI(TAG, "Poweroff");
+  LOGI(TAG, "Poweroff");
   vTaskDelay(100 / portTICK_PERIOD_MS);
   gpio_set_level(GPIO_SHUTDOWN, 1);
   gpio_hold_en(GPIO_SHUTDOWN);
@@ -166,7 +166,7 @@ void board_1_28_v0_1::pmRelease() {
 }
 
 esp_err_t board_1_28_v0_1::StorageFormat() {
-  ESP_LOGI(TAG, "Format Start");
+  LOGI(TAG, "Format Start");
   esp_err_t ret;
   esp_task_wdt_config_t wdtConfig = {
       .timeout_ms = 30 * 1000,
@@ -183,7 +183,7 @@ esp_err_t board_1_28_v0_1::StorageFormat() {
   ret = esp_vfs_fat_sdcard_format("/data", card);
   wdtConfig.timeout_ms = CONFIG_ESP_TASK_WDT_TIMEOUT_S * 1000;
   esp_task_wdt_reconfigure(&wdtConfig);
-  ESP_LOGI(TAG, "Format Done");
+  LOGI(TAG, "Format Done");
   return ret;
 }
 

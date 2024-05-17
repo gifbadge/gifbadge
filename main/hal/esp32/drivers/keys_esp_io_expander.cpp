@@ -1,5 +1,5 @@
 #include <esp_timer.h>
-#include <esp_log.h>
+#include "log.h"
 #include "hal/esp32/drivers/keys_esp_io_expander.h"
 
 static const char *TAG = "keys_esp_io_expander";
@@ -61,7 +61,7 @@ void keys_esp_io_expander::poll() {
         bool state = levels & (1 << buttonConfig[b]);
         key_debounce_update(&_debounce_states[b], state == 0, static_cast<int>(time - last), &_debounce_config);
         if (key_debounce_get_changed(&_debounce_states[b])) {
-          ESP_LOGI(TAG, "%i changed", b);
+          LOGI(TAG, "%i changed", b);
         }
       }
     }

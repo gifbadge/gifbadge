@@ -1,6 +1,6 @@
 #include "freertos/FreeRTOS.h"
 
-#include <esp_log.h>
+#include "log.h"
 
 #include "display.h"
 #include "image.h"
@@ -33,14 +33,14 @@ static void clear_screen(Display *display) {
 }
 
 static void display_no_image(Display *display) {
-  ESP_LOGI(TAG, "Displaying No Image");
+  LOGI(TAG, "Displaying No Image");
   clear_screen(display);
   render_text_centered(display->size.first, display->size.second, 10, "No Image", display->buffer);
   display->write(0, 0, display->size.first, display->size.second, display->buffer);
 }
 
 static void display_image_too_large(Display *display, const char *path) {
-  ESP_LOGI(TAG, "Displaying Image To Large");
+  LOGI(TAG, "Displaying Image To Large");
   clear_screen(display);
   char tmp[255];
   sprintf(tmp, "Image too Large\n%s", path);
@@ -49,14 +49,14 @@ static void display_image_too_large(Display *display, const char *path) {
 }
 
 static void display_err(Display *display, const char *err) {
-  ESP_LOGI(TAG, "Displaying Error");
+  LOGI(TAG, "Displaying Error");
   clear_screen(display);
   render_text_centered(display->size.first, display->size.second, 10, err, display->buffer);
   display->write(0, 0, display->size.first, display->size.second, display->buffer);
 }
 
 static void display_ota(Display *display, uint32_t percent) {
-  ESP_LOGI(TAG, "Displaying OTA Status");
+  LOGI(TAG, "Displaying OTA Status");
   clear_screen(display);
   char tmp[50];
   sprintf(tmp, "Update In Progress\n%lu%%", percent);
@@ -65,14 +65,14 @@ static void display_ota(Display *display, uint32_t percent) {
 }
 
 static void display_no_storage(Display *display) {
-  ESP_LOGI(TAG, "Displaying No Storage");
+  LOGI(TAG, "Displaying No Storage");
   clear_screen(display);
   render_text_centered(display->size.first, display->size.second, 10, "No SDCARD", display->buffer);
   display->write(0, 0, display->size.first, display->size.second, display->buffer);
 }
 
 static void display_image_batt(Display *display) {
-  ESP_LOGI(TAG, "Displaying Low Battery");
+  LOGI(TAG, "Displaying Low Battery");
   clear_screen(display);
   PNGImage png;
   png.open((uint8_t *)low_batt_png, sizeof(low_batt_png));
@@ -100,14 +100,14 @@ static int displayFile(Image *in, Display *display) {
   }
   delay = in->loop(display->buffer, xOffset, yOffset, display->size.first);
   if (delay < 0) {
-    ESP_LOGI(TAG, "Image loop error");
+    LOGI(TAG, "Image loop error");
     return -1;
   } else {
     display->write(0, 0, display->size.first, display->size.second, display->buffer);
   }
   int calc_delay = delay - static_cast<int>((esp_timer_get_time() - start) / 1000);
 #ifdef FRAMETIME
-  ESP_LOGI(TAG, "Frame Delay: %i, calculated delay %i", delay, calc_delay);
+  LOGI(TAG, "Frame Delay: %i, calculated delay %i", delay, calc_delay);
 #endif
   lastSize = in->size();
   if(in->animated()) {
@@ -124,7 +124,7 @@ static int validator(const char *path, const char *file) {
   if (!valid_file(inPath)) {
     return 0;
   }
-//  ESP_LOGI(TAG, "%s", inPath);
+//  LOGI(TAG, "%s", inPath);
   return 1;
 }
 
@@ -139,7 +139,7 @@ static int get_file(const char *path, char *outPath) {
       opendir_sorted(&dir, dirname(inPath), validator);
     }
     file_position = directory_get_position(&dir, basename(outPath));
-    ESP_LOGI(TAG, "%i", file_position);
+    LOGI(TAG, "%i", file_position);
     return 0;
   }
   char *base = inPath;
@@ -162,8 +162,8 @@ static int get_file(const char *path, char *outPath) {
     }
     if (valid_file(outPath)) {
       file_position = directory_get_position(&dir, basename(outPath));
-      ESP_LOGI(TAG, "%i", file_position);
-      ESP_LOGI(TAG, "%s", outPath);
+      LOGI(TAG, "%i", file_position);
+      LOGI(TAG, "%s", outPath);
       return 0;
     }
   }
@@ -240,7 +240,7 @@ void display_task(void *params) {
 
   last_change = esp_timer_get_time();
 
-  ESP_LOGI(TAG, "Display Resolution %ix%i", display->size.first, display->size.second);
+  LOGI(TAG, "Display Resolution %ix%i", display->size.first, display->size.second);
 
   int delay = 1000;
   vTaskDelay(1000/portTICK_PERIOD_MS);
@@ -257,7 +257,7 @@ void display_task(void *params) {
       }
       switch (option) {
         case DISPLAY_FILE:
-          ESP_LOGI(TAG, "DISPLAY_FILE");
+          LOGI(TAG, "DISPLAY_FILE");
           if(!valid_file(current_file)) {
             config->getPath(current_file);
           }
@@ -285,14 +285,14 @@ void display_task(void *params) {
           display_no_storage(board->getDisplay());
           break;
         case DISPLAY_SPECIAL_1:
-          ESP_LOGI(TAG, "DISPLAY_SPECIAL_1");
+          LOGI(TAG, "DISPLAY_SPECIAL_1");
           if (valid_file("/data/cards/up.png")) {
             in = openFile("/data/cards/up.png", display);
             last_mode = static_cast<DISPLAY_OPTIONS>(option);
           }
           break;
         case DISPLAY_SPECIAL_2:
-          ESP_LOGI(TAG, "DISPLAY_SPECIAL_2");
+          LOGI(TAG, "DISPLAY_SPECIAL_2");
           if (valid_file("/data/cards/down.png")) {
             in = openFile("/data/cards/down.png", display);
             last_mode = static_cast<DISPLAY_OPTIONS>(option);

@@ -1,6 +1,6 @@
 
 #include <driver/gpio.h>
-#include <esp_log.h>
+#include "log.h"
 #include "hal/esp32/drivers/keys_gpio.h"
 
 static const char *TAG = "keys_gpio.cpp";
@@ -17,7 +17,7 @@ keys_gpio::keys_gpio(gpio_num_t up, gpio_num_t down, gpio_num_t enter) {
 
   for (auto &input : buttonConfig) {
     if (input >= 0) {
-      ESP_LOGI(TAG, "Setting up GPIO %u\n", input);
+      LOGI(TAG, "Setting up GPIO %u\n", input);
       ESP_ERROR_CHECK(gpio_reset_pin(input));
       ESP_ERROR_CHECK(gpio_set_direction(input, GPIO_MODE_INPUT));
       ESP_ERROR_CHECK(gpio_set_pull_mode(input, GPIO_PULLUP_ONLY));
@@ -67,7 +67,7 @@ void keys_gpio::poll() {
         bool state = gpio_get_level(buttonConfig[b]);
         key_debounce_update(&_debounce_states[b], state == 0, static_cast<int>(time - last), &_debounce_config);
         if (key_debounce_get_changed(&_debounce_states[b])) {
-          ESP_LOGI(TAG, "%i changed", b);
+          LOGI(TAG, "%i changed", b);
         }
       }
     }

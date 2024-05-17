@@ -1,5 +1,5 @@
 #include <esp_lcd_panel_ops.h>
-#include <esp_log.h>
+#include "log.h"
 #include <driver/spi_master.h>
 #include <esp_lcd_panel_commands.h>
 #include <task.h>
@@ -85,7 +85,7 @@ display_st7701s::display_st7701s(spi_line_config_t line_cfg,
                                  int pclk,
                                  std::array<int, 16> &rgb) {
 
-  ESP_LOGI(TAG, "Install 3-wire SPI panel IO");
+  LOGI(TAG, "Install 3-wire SPI panel IO");
   esp_lcd_panel_io_3wire_spi_config_t io_config = {
       .line_config = line_cfg,
       .expect_clk_speed = 100 * 1000,
@@ -125,7 +125,7 @@ display_st7701s::display_st7701s(spi_line_config_t line_cfg,
 
   esp_lcd_panel_io_del(io);
 
-  ESP_LOGI(TAG, "Install ST7701S panel driver");
+  LOGI(TAG, "Install ST7701S panel driver");
   esp_lcd_rgb_panel_config_t rgb_config = {
 //            .clk_src = LCD_CLK_SRC_XTAL,
       .clk_src = LCD_CLK_SRC_DEFAULT,

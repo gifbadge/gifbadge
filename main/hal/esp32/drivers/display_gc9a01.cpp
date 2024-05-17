@@ -2,7 +2,7 @@
 #include <esp_lcd_panel_vendor.h>
 #include <esp_lcd_panel_ops.h>
 #include <driver/gpio.h>
-#include <esp_log.h>
+#include "log.h"
 #include "esp_lcd_gc9a01.h"
 
 #include "hal/esp32/drivers/display_gc9a01.h"
@@ -10,7 +10,7 @@
 static const char *TAG = "display_gc9a01.cpp";
 
 display_gc9a01::display_gc9a01(int mosi, int sck, int cs, int dc, int reset) {
-  ESP_LOGI(TAG, "Initialize SPI bus");
+  LOGI(TAG, "Initialize SPI bus");
   spi_bus_config_t buscfg = {
       .mosi_io_num = mosi,//21,
       .miso_io_num = -1,
@@ -28,7 +28,7 @@ display_gc9a01::display_gc9a01(int mosi, int sck, int cs, int dc, int reset) {
   };
   ESP_ERROR_CHECK(spi_bus_initialize(SPI2_HOST, &buscfg, SPI_DMA_CH_AUTO));
 
-  ESP_LOGI(TAG, "Install panel IO");
+  LOGI(TAG, "Install panel IO");
   esp_lcd_panel_io_spi_config_t io_config = {
       .cs_gpio_num = cs, //47,
       .dc_gpio_num = dc,//45,
@@ -64,7 +64,7 @@ display_gc9a01::display_gc9a01(int mosi, int sck, int cs, int dc, int reset) {
       .vendor_config = nullptr,
   };
 
-  ESP_LOGI(TAG, "Install GC9A01 panel driver");
+  LOGI(TAG, "Install GC9A01 panel driver");
   ESP_ERROR_CHECK(esp_lcd_new_panel_gc9a01(io_handle, &panel_config, &panel_handle));
   ESP_ERROR_CHECK(esp_lcd_panel_reset(panel_handle));
   ESP_ERROR_CHECK(esp_lcd_panel_init(panel_handle));

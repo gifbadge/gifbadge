@@ -92,7 +92,7 @@ static void inputTimerHandler(void *args) {
 //              imagePrevious();
 //            }
 //          }
-//          ESP_LOGI(TAG, "x: %d y: %d", e.first, e.second);
+//          LOGI(TAG, "x: %d y: %d", e.first, e.second);
 //        }
 //      }
     }

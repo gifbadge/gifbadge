@@ -8,6 +8,7 @@
 #include "tinyusb.h"
 #include "tusb_msc_storage.h"
 #include "tusb_console.h"
+#include "log.h"
 
 static const char *TAG = "USB";
 
@@ -24,14 +25,14 @@ void storage_callback(mount_callback _callback) {
 
 // callback that is delivered when storage is mounted/unmounted by application.
 static void storage_mount_changed_cb(tinyusb_msc_event_t *event) {
-  ESP_LOGI(TAG, "Storage mounted to application: %s", event->mount_changed_data.is_mounted ? "Yes" : "No");
+  LOGI(TAG, "Storage mounted to application: %s", event->mount_changed_data.is_mounted ? "Yes" : "No");
   if (callback != nullptr) {
     callback(event->mount_changed_data.is_mounted);
   }
 }
 
 esp_err_t init_int_flash(wl_handle_t *wl_handle) {
-  ESP_LOGI(TAG, "Initializing wear levelling");
+  LOGI(TAG, "Initializing wear levelling");
 
   const esp_partition_t
       *data_partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_FAT, "data");
@@ -51,16 +52,16 @@ static const esp_partition_t* int_ext_flash_hw(int mosi, int miso, int sclk, int
   const esp_flash_spi_device_config_t
       device_config = {.host_id = SPI3_HOST, .cs_io_num = cs, .io_mode = SPI_FLASH_DIO, .cs_id = 0, .freq_mhz = 40,};
 
-  ESP_LOGI(TAG, "Initializing external SPI Flash");
-  ESP_LOGI(TAG, "Pin assignments:");
-  ESP_LOGI(TAG,
+  LOGI(TAG, "Initializing external SPI Flash");
+  LOGI(TAG, "Pin assignments:");
+  LOGI(TAG,
            "MOSI: %2d   MISO: %2d   SCLK: %2d   CS: %2d",
            bus_config.mosi_io_num,
            bus_config.miso_io_num,
            bus_config.sclk_io_num,
            device_config.cs_io_num);
   // Initialize the SPI bus
-  ESP_LOGI(TAG, "DMA CHANNEL: %d", SPI_DMA_CH_AUTO);
+  LOGI(TAG, "DMA CHANNEL: %d", SPI_DMA_CH_AUTO);
   ESP_ERROR_CHECK(spi_bus_initialize(SPI3_HOST, &bus_config, SPI_DMA_CH_AUTO));
 
   // Add device to the SPI bus
@@ -76,12 +77,12 @@ static const esp_partition_t* int_ext_flash_hw(int mosi, int miso, int sclk, int
   // Print out the ID and size
   uint32_t id;
   ESP_ERROR_CHECK(esp_flash_read_id(ext_flash, &id));
-  ESP_LOGI(TAG, "Initialized external Flash, size=%" PRIu32 " KB, ID=0x%" PRIx32, ext_flash->size / 1024, id);
+  LOGI(TAG, "Initialized external Flash, size=%" PRIu32 " KB, ID=0x%" PRIx32, ext_flash->size / 1024, id);
   uint32_t size;
   esp_flash_get_physical_size(ext_flash, &size);
-  ESP_LOGI(TAG, "Flash Size %" PRIu32 " KB", size);
+  LOGI(TAG, "Flash Size %" PRIu32 " KB", size);
 
-  ESP_LOGI(TAG,
+  LOGI(TAG,
            "Adding external Flash as a partition, label=\"%s\", size=%" PRIu32 " KB",
            "ext_data",
            ext_flash->size / 1024);
@@ -116,7 +117,7 @@ esp_err_t init_sdmmc_slot(gpio_num_t clk,
   bool host_init = false;
   sdmmc_card_t *sd_card;
 
-  ESP_LOGI(TAG, "Initializing SDCard");
+  LOGI(TAG, "Initializing SDCard");
 
   sdmmc_host_t host = SDMMC_HOST_DEFAULT();
   host.max_freq_khz = SDMMC_FREQ_HIGHSPEED;
@@ -183,7 +184,7 @@ esp_err_t mount_sdmmc_slot(gpio_num_t clk,
                            int width) {
   esp_err_t ret = ESP_OK;
 
-  ESP_LOGI(TAG, "Initializing SDCard");
+  LOGI(TAG, "Initializing SDCard");
 
   sdmmc_host_t host = SDMMC_HOST_DEFAULT();
   host.max_freq_khz = SDMMC_FREQ_HIGHSPEED;

@@ -3,13 +3,13 @@
 //
 
 #include <driver/ledc.h>
-#include <esp_log.h>
+#include "log.h"
 #include "hal/esp32/drivers/backlight_ledc.h"
 
 static const char *TAG = "backlight_gpio.cpp";
 
 backlight_ledc::backlight_ledc(gpio_num_t gpio, int level) : lastLevel(level) {
-  ESP_LOGI(TAG, "Turn on LCD backlight");
+  LOGI(TAG, "Turn on LCD backlight");
 
   // Prepare and then apply the LEDC PWM timer configuration
   ledc_timer_config_t ledc_timer = {
@@ -52,7 +52,7 @@ void backlight_ledc::state(bool state) {
 void backlight_ledc::setLevel(int level) {
   lastLevel = level;
   uint32_t duty = (level*256)/100;
-  ESP_LOGI(TAG, "backlight level: %lu\n", duty);
+  LOGI(TAG, "backlight level: %lu\n", duty);
   ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, duty);
   ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0);
 }

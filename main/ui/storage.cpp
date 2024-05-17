@@ -39,7 +39,7 @@ static void StorageCheckDone(lv_timer_t *timer) {
   auto *fields = static_cast<StorageFormatTimerData *>(lv_timer_get_user_data(timer));
   esp_err_t ret;
   if (xQueueReceive(fields->format_queue, &ret, 0)) {
-    ESP_LOGI(TAG, "Format finished with %i", ret);
+    LOGI(TAG, "Format finished with %i", ret);
     lv_obj_delete(fields->format_wait);
     lv_obj_send_event(fields->storage_menu, LV_EVENT_REFRESH, nullptr);
     vQueueDelete(fields->format_queue);

@@ -14,7 +14,7 @@ Board *get_board() {
 //    return new board_v0();
   uint8_t board;
   esp_efuse_read_field_blob(ESP_EFUSE_USER_DATA_BOARD, &board, 8);
-//    ESP_LOGI(TAG, "Board %u", board);
+//    LOGI(TAG, "Board %u", board);
   if (!global_board) {
     switch (board) {
       case BOARD_1_28_V0:

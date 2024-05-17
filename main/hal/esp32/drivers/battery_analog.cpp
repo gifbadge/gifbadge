@@ -1,5 +1,5 @@
 #include <esp_adc/adc_oneshot.h>
-#include <esp_log.h>
+#include "log.h"
 #include <esp_timer.h>
 #include <valarray>
 #include "hal/esp32/drivers/battery_analog.h"
@@ -19,7 +19,7 @@ battery_analog::battery_analog(adc_channel_t) {
   ESP_ERROR_CHECK(adc_oneshot_new_unit(&init_config1, &adc_handle));
   adc_oneshot_chan_cfg_t config = {.atten = ADC_ATTEN_DB_11, .bitwidth = ADC_BITWIDTH_DEFAULT,};
   ESP_ERROR_CHECK(adc_oneshot_config_channel(adc_handle, ADC_CHANNEL_9, &config));
-  ESP_LOGI(TAG, "calibration scheme version is %s", "Curve Fitting");
+  LOGI(TAG, "calibration scheme version is %s", "Curve Fitting");
   adc_cali_curve_fitting_config_t cali_config =
       {.unit_id = ADC_UNIT_1, .chan = ADC_CHANNEL_9, .atten = ADC_ATTEN_DB_11, .bitwidth = ADC_BITWIDTH_DEFAULT,};
   ESP_ERROR_CHECK(adc_cali_create_scheme_curve_fitting(&cali_config, &calibration_scheme));
@@ -28,7 +28,7 @@ battery_analog::battery_analog(adc_channel_t) {
   adc_oneshot_read(adc_handle, ADC_CHANNEL_9, &reading);
   ESP_ERROR_CHECK(adc_cali_raw_to_voltage(calibration_scheme, reading, &voltage));
   smoothed_voltage = voltage / 1000.00;
-  ESP_LOGI(TAG, "Initial Voltage: %f", smoothed_voltage * 2);
+  LOGI(TAG, "Initial Voltage: %f", smoothed_voltage * 2);
   alpha = 0.05;
   const esp_timer_create_args_t battery_timer_args = {.callback = [](void *params) {
     auto bat = (battery_analog *) params;

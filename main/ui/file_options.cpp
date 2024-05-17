@@ -34,19 +34,19 @@ static void FileOptionsSave(lv_event_t *e) {
   auto config = get_board()->getConfig();
 
   char *path = lv_label_get_text(fields->file_select);
-  ESP_LOGI(TAG, "File: %s", path);
+  LOGI(TAG, "File: %s", path);
   config->setPath(path);
 
   bool locked = (lv_obj_get_state(fields->lock_state) & LV_STATE_CHECKED);
-  ESP_LOGI(TAG, "Locked: %s", locked ? "True" : "False");
+  LOGI(TAG, "Locked: %s", locked ? "True" : "False");
   config->setLocked(locked);
 
   bool slideshow = lv_obj_get_state(fields->slideshow_state) & LV_STATE_CHECKED;
-  ESP_LOGI(TAG, "Slideshow: %s", slideshow ? "True" : "False");
+  LOGI(TAG, "Slideshow: %s", slideshow ? "True" : "False");
   config->setSlideShow(slideshow);
 
   int slideshow_time = static_cast<int>((lv_slider_get_value(fields->slideshow_time)) * SLIDESHOW_TIME_INCREMENT);
-  ESP_LOGI(TAG, "Slideshow Time: %ds", slideshow_time);
+  LOGI(TAG, "Slideshow Time: %ds", slideshow_time);
   config->setSlideShowTime(slideshow_time);
 
   config->save();

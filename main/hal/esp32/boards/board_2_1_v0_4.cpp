@@ -1,5 +1,5 @@
 #include <esp_pm.h>
-#include <esp_log.h>
+#include "log.h"
 #include <driver/sdmmc_defs.h>
 #include <esp_vfs_fat.h>
 #include "hal/esp32/boards/board_2_1_v0_4.h"
@@ -192,7 +192,7 @@ Backlight * board_2_1_v0_4::getBacklight() {
 }
 
 void board_2_1_v0_4::powerOff() {
-  ESP_LOGI(TAG, "Poweroff");
+  LOGI(TAG, "Poweroff");
   vTaskDelay(100 / portTICK_PERIOD_MS);
   esp_io_expander_set_level(_io_expander, IO_EXPANDER_PIN_NUM_3, 1);
 

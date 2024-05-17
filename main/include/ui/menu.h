@@ -4,7 +4,7 @@
 #include "freertos/task.h"
 #include <esp_timer.h>
 #include <freertos/semphr.h>
-#include <esp_log.h>
+#include "log.h"
 #include <esp_lcd_panel_ops.h>
 #include "esp_lcd_panel_io.h"
 #include <lvgl.h>

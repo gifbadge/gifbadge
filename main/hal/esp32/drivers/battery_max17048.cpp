@@ -1,6 +1,6 @@
 #include "hal/esp32/drivers/battery_max17048.h"
 
-#include <esp_log.h>
+#include "log.h"
 #include <esp_timer.h>
 
 static const char *TAG = "battery_max17048";
@@ -9,7 +9,7 @@ battery_max17048::battery_max17048(I2C *i2c, gpio_num_t vbus_pin)
     : _i2c(i2c), _vbus_pin(vbus_pin) {
   uint8_t data[2];
   _i2c->read_reg(0x36, 0x08, data, 2);
-  ESP_LOGI(TAG, "MAX17048 Version %u %u", data[0], data[1]);
+  LOGI(TAG, "MAX17048 Version %u %u", data[0], data[1]);
   const esp_timer_create_args_t battery_timer_args = {
       .callback = [](void *params) {
         auto bat = (battery_max17048 *) params;

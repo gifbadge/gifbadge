@@ -1,7 +1,7 @@
 #include <hal/i2c_types.h>
 #include <driver/i2c.h>
 #include <cstring>
-#include <esp_log.h>
+#include "log.h"
 #include "hal/esp32/i2c.h"
 
 I2C::I2C(i2c_port_t port, int sda, int scl) : _port(port) {

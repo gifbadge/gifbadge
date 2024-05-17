@@ -6,6 +6,8 @@
 #include "esp_err.h"
 #include "esp_log.h"
 
+#include "log.h"
+
 #include <cstring>
 
 #include "ui/menu.h"
@@ -27,29 +29,29 @@ void dumpDebugFunc(void *arg) {
 
 //    esp_pm_lock_acquire(pm_lock);
 //        vTaskDelay(1000/portTICK_PERIOD_MS);
-    if (true) {
-      esp_pm_dump_locks(stdout);
+  if (true) {
+    esp_pm_dump_locks(stdout);
 //      char out[1000];
 //      vTaskGetRunTimeStats(out);
 //      printf("%s", out);
-    }
-    ESP_LOGI(TAG, "SOC: %i", args->getBattery()->getSoc());
-    ESP_LOGI(TAG, "Voltage: %f", args->getBattery()->getVoltage());
-//    ESP_LOGI(TAG, "Rate: %f", args->getBattery()->getRate());
-//    ESP_LOGI(TAG, "State: %d", static_cast<int>(args->getBattery()->status()));
-    heap_caps_print_heap_info(MALLOC_CAP_INTERNAL);
+  }
+  LOGI(TAG, "SOC: %i", args->getBattery()->getSoc());
+  LOGI(TAG, "Voltage: %f", args->getBattery()->getVoltage());
+//    LOGI(TAG, "Rate: %f", args->getBattery()->getRate());
+//    LOGI(TAG, "State: %d", static_cast<int>(args->getBattery()->status()));
+  heap_caps_print_heap_info(MALLOC_CAP_INTERNAL);
 
   TaskStatus_t tasks[20];
-  unsigned int count = uxTaskGetSystemState(tasks,20, nullptr );
-  for(unsigned int i = 0; i<count; i++){
-    ESP_LOGI(TAG, "%s Highwater: %lu", tasks[i].pcTaskName, tasks[i].usStackHighWaterMark);
+  unsigned int count = uxTaskGetSystemState(tasks, 20, nullptr);
+  for (unsigned int i = 0; i < count; i++) {
+    LOGI(TAG, "%s Highwater: %lu", tasks[i].pcTaskName, tasks[i].usStackHighWaterMark);
   }
 
-    heap_caps_print_heap_info(MALLOC_CAP_SPIRAM);
+  heap_caps_print_heap_info(MALLOC_CAP_SPIRAM);
 
 //    char task_name[] = "timer_task";
 //  TaskHandle_t handle = xTaskGetHandle(task_name);
-//  ESP_LOGI(TAG, "%s Highwater: %d", task_name, uxTaskGetStackHighWaterMark(handle));
+//  LOGI(TAG, "%s Highwater: %d", task_name, uxTaskGetStackHighWaterMark(handle));
 
 
 //  esp_pm_lock_release(pm_lock);
@@ -123,7 +125,7 @@ extern "C" void app_main(void) {
 
 
   storage_callback([](bool state) {
-    ESP_LOGI(TAG, "state %u", state);
+    LOGI(TAG, "state %u", state);
     if (state) {
       if (currentState == MAIN_USB) {
         currentState = MAIN_NORMAL;
@@ -165,7 +167,7 @@ extern "C" void app_main(void) {
     }
     if (oldState != currentState) {
       //Handle state transitions
-      ESP_LOGI(TAG, "State %d", currentState);
+      LOGI(TAG, "State %d", currentState);
       switch (currentState) {
         case MAIN_NONE:
           break;

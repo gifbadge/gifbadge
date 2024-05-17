@@ -2,7 +2,7 @@
 #include "freertos/task.h"
 #include <esp_timer.h>
 #include <freertos/semphr.h>
-#include <esp_log.h>
+#include "log.h"
 #include "esp_lcd_panel_io.h"
 #include <lvgl.h>
 
@@ -84,7 +84,7 @@ void lvgl_unlock() {
 }
 
 void lvgl_close() {
-  ESP_LOGI(TAG, "Close");
+  LOGI(TAG, "Close");
   get_board()->getDisplay()->onColorTransDone(nullptr, nullptr);
 
   if (lvgl_lock(-1)) {
@@ -98,13 +98,13 @@ void lvgl_close() {
 
   ESP_ERROR_CHECK(esp_timer_stop(lvgl_tick_timer));
   menu_state = false;
-  ESP_LOGI(TAG, "Close Done");
+  LOGI(TAG, "Close Done");
   get_board()->pmRelease();
 }
 
 void task(void *) {
   bool running = true;
-  ESP_LOGI(TAG, "Starting LVGL task");
+  LOGI(TAG, "Starting LVGL task");
   uint32_t task_delay_ms = 0;
   vTaskSuspend(nullptr); //Wait until we are actually needed
   TaskHandle_t display_task_handle = xTaskGetHandle("display_task");
@@ -138,7 +138,7 @@ void task(void *) {
 }
 
 void keyboard_read(lv_indev_t *indev, lv_indev_data_t *data) {
-//    ESP_LOGI(TAG, "keyboard_read");
+//    LOGI(TAG, "keyboard_read");
   auto g = lv_indev_get_group(indev);
   bool editing = lv_group_get_editing(g);
   Keys *device = static_cast<Keys *>(lv_indev_get_user_data(indev));
@@ -311,7 +311,7 @@ static void battery_widget(lv_obj_t *scr) {
 
 void lvgl_wake_up() {
   if(!menu_state) {
-    ESP_LOGI(TAG, "Wakeup");
+    LOGI(TAG, "Wakeup");
     get_board()->pmLock();
     menu_state = true;
 
@@ -334,7 +334,7 @@ void lvgl_wake_up() {
       battery_widget(lv_layer_top());
       lvgl_unlock();
     }
-    ESP_LOGI(TAG, "Wakeup Done");
+    LOGI(TAG, "Wakeup Done");
   }
 }
 
