@@ -27,7 +27,7 @@ idf_component_register(SRCS
         ${CMAKE_CURRENT_BINARY_DIR}/material_icons_56.c
         ${CMAKE_CURRENT_BINARY_DIR}/material_icons_special.c
         ${CMAKE_CURRENT_BINARY_DIR}/battery_symbols_14.c
-        "esp_efuse_custom_table.c"
+        "hal/esp32/esp_efuse_custom_table.c"
         "ui/menu.cpp"
         "ui/device_group.c"
         "ui/file_select.cpp"

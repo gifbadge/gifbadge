@@ -7,7 +7,7 @@
 #include "sdkconfig.h"
 #include "esp_efuse.h"
 #include <assert.h>
-#include "esp_efuse_custom_table.h"
+#include "hal/esp32/esp_efuse_custom_table.h"
 
 // md5_digest_table 4a1734a4aed931971168b0384ae86118
 // This file was generated from the file esp_efuse_custom_table.csv. DO NOT CHANGE THIS FILE MANUALLY.

@@ -7,7 +7,7 @@
 #include "log.h"
 
 #include "ota.h"
-#include "esp_efuse_custom_table.h"
+#include "hal/esp32/esp_efuse_custom_table.h"
 
 static const char *TAG = "OTA";
 
