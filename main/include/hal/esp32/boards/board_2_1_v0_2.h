@@ -11,6 +11,7 @@
 #include "hal/esp32/drivers/touch_ft5x06.h"
 #include "hal/esp32/drivers/keys_esp_io_expander.h"
 #include "../../../../../../esp/esp-idf/components/driver/sdmmc/include/driver/sdmmc_host.h"
+#include "hal/esp32/drivers/config_nvs.h"
 
 class board_2_1_v0_2 : public Board {
  public:
@@ -34,6 +35,7 @@ class board_2_1_v0_2 : public Board {
   const char * name() override;
   bool powerConnected() override;
   void * turboBuffer() override {return nullptr;};
+  Config *getConfig() override;
 
 
  private:
@@ -45,4 +47,5 @@ class board_2_1_v0_2 : public Board {
   touch_ft5x06 * _touch;
   sdmmc_card_t *card = nullptr;
   esp_io_expander_handle_t _io_expander = nullptr;
+  Config_NVS *_config;
 };

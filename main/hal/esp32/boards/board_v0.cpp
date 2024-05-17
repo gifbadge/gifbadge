@@ -13,6 +13,7 @@
 static const char *TAG = "board_v0";
 
 board_v0::board_v0() {
+  _config = new Config_NVS();
   _i2c = new I2C(I2C_NUM_0, 21, 18);
   _battery = new battery_analog(ADC_CHANNEL_9);
   _keys = new keys_gpio(GPIO_NUM_43, GPIO_NUM_44, GPIO_NUM_0);
@@ -74,5 +75,8 @@ const char *board_v0::name() {
 bool board_v0::powerConnected() {
   // No provisions in design to monitor this
   return false;
+}
+Config *board_v0::getConfig() {
+  return _config;
 }
 

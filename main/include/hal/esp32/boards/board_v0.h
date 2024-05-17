@@ -8,6 +8,7 @@
 #include "../../../../../../esp/esp-idf/components/esp_lcd/include/esp_lcd_panel_ops.h"
 #include "hal/esp32/drivers/keys_gpio.h"
 #include "hal/esp32/drivers/display_gc9a01.h"
+#include "hal/esp32/drivers/config_nvs.h"
 
 class board_v0 : public Board {
  public:
@@ -31,6 +32,7 @@ class board_v0 : public Board {
   const char *name() override;
   bool powerConnected() override;
   void * turboBuffer() override {return nullptr;};
+  Config *getConfig() override;
 
 
  private:
@@ -39,4 +41,5 @@ class board_v0 : public Board {
   keys_gpio * _keys;
   display_gc9a01 * _display;
   Backlight * _backlight;
+  Config_NVS *_config;
 };

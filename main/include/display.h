@@ -11,7 +11,7 @@
 #include "esp_lcd_panel_vendor.h"
 #include "esp_lcd_panel_ops.h"
 
-#include "config.h"
+#include "hal/config.h"
 #include "hal/backlight.h"
 #include "hal/display.h"
 

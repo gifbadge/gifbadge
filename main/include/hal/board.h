@@ -9,6 +9,7 @@
 #include "hal/backlight.h"
 #include "hal/storage.h"
 #include "ota.h"
+#include "config.h"
 
 enum BOARD_POWER {
   BOARD_POWER_NORMAL,
@@ -37,5 +38,6 @@ class Board {
   virtual const char * name() = 0;
   virtual bool powerConnected() = 0;
   virtual void *turboBuffer() = 0;
+  virtual Config *getConfig() = 0;
 };
 

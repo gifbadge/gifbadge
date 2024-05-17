@@ -8,7 +8,7 @@
 #include <esp_lcd_panel_ops.h>
 #include "esp_lcd_panel_io.h"
 #include <lvgl.h>
-#include "config.h"
+#include "hal/config.h"
 #include "hal/board.h"
 
 #define LVGL_TICK_PERIOD_MS    5

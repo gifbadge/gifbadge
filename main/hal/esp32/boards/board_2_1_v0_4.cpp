@@ -50,6 +50,7 @@ void board_2_1_v0_4::batteryTimer(void *args){
 
 board_2_1_v0_4::board_2_1_v0_4() {
   buffer = heap_caps_malloc(480*480+0x6100, MALLOC_CAP_INTERNAL);
+  _config = new Config_NVS();
   _i2c = new I2C(I2C_NUM_0, 47, 48);
   _battery = new battery_max17048(_i2c, GPIO_NUM_0);
   /*G3, G4, G5, R1, R2, R3, R4, R5, B1, B2, B3, B4, B5, G0, G1, G2 */
@@ -87,7 +88,7 @@ board_2_1_v0_4::board_2_1_v0_4() {
   _keys = new keys_esp_io_expander(_io_expander, 14, 12, 13);
 
   _backlight = new backlight_ledc(GPIO_NUM_21, 0);
-  _backlight->setLevel(100);
+  _backlight->setLevel(_config->getBacklight()*10);
   _touch = new touch_ft5x06(_i2c);
 
   //TODO: Check if we can use DFS with the RGB LCD
@@ -230,4 +231,7 @@ const char * board_2_1_v0_4::name() {
 
 bool board_2_1_v0_4::powerConnected() {
   return gpio_get_level(GPIO_NUM_0);
+}
+Config *board_2_1_v0_4::getConfig() {
+  return _config;
 }

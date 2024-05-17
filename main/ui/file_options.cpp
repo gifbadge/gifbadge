@@ -7,6 +7,7 @@
 #include "ui/menu.h"
 #include "ui/style.h"
 #include "display.h"
+#include "hw_init.h"
 
 static const char *TAG = "file_options";
 
@@ -30,25 +31,25 @@ struct FileOptionFields {
 
 static void FileOptionsSave(lv_event_t *e) {
   auto fields = static_cast<FileOptionFields *>(lv_event_get_user_data(e));
-  auto config = ImageConfig();
+  auto config = get_board()->getConfig();
 
   char *path = lv_label_get_text(fields->file_select);
   ESP_LOGI(TAG, "File: %s", path);
-  config.setPath(path);
+  config->setPath(path);
 
   bool locked = (lv_obj_get_state(fields->lock_state) & LV_STATE_CHECKED);
   ESP_LOGI(TAG, "Locked: %s", locked ? "True" : "False");
-  config.setLocked(locked);
+  config->setLocked(locked);
 
   bool slideshow = lv_obj_get_state(fields->slideshow_state) & LV_STATE_CHECKED;
   ESP_LOGI(TAG, "Slideshow: %s", slideshow ? "True" : "False");
-  config.setSlideShow(slideshow);
+  config->setSlideShow(slideshow);
 
   int slideshow_time = static_cast<int>((lv_slider_get_value(fields->slideshow_time)) * SLIDESHOW_TIME_INCREMENT);
   ESP_LOGI(TAG, "Slideshow Time: %ds", slideshow_time);
-  config.setSlideShowTime(slideshow_time);
+  config->setSlideShowTime(slideshow_time);
 
-  config.save();
+  config->save();
 
   TaskHandle_t handle = xTaskGetHandle("display_task");
   xTaskNotifyIndexed(handle, 0, DISPLAY_NOTIFY_CHANGE, eSetValueWithOverwrite);
@@ -115,7 +116,7 @@ lv_obj_t *FileOptions() {
   if (lvgl_lock(-1)) {
     LV_LOG_USER("FileOptions");
 
-    auto config = ImageConfig();
+    auto config = get_board()->getConfig();
 
     new_group();
     lv_obj_t *cont_flex = lv_file_list_create(lv_scr_act());
@@ -126,7 +127,9 @@ lv_obj_t *FileOptions() {
 
     lv_obj_t *file_label = lv_label_create(file_select);
     lv_obj_add_style(file_label, &menu_font_style, LV_PART_MAIN);
-    lv_label_set_text(file_label, config.getPath());
+    char path[128];
+    config->getPath(path);
+    lv_label_set_text(file_label, path);
     lv_label_set_long_mode(file_label, LV_LABEL_LONG_SCROLL_CIRCULAR);
     lv_obj_set_flex_grow(file_label, 1);
     lv_obj_add_style(file_label, &file_select_style, LV_PART_MAIN);
@@ -134,7 +137,7 @@ lv_obj_t *FileOptions() {
     //Lock
     lv_obj_t *lock_button = lv_file_list_add(cont_flex, "\ue897");
     lv_obj_t *lock_switch = lv_switch_create(lock_button);
-    if (config.getLocked()) {
+    if (config->getLocked()) {
       lv_obj_add_state(lock_switch, LV_STATE_CHECKED);
     }
     lv_obj_set_size(lock_switch, (2 * lv_disp_get_hor_res(nullptr)) / 10, (2 * lv_disp_get_hor_res(nullptr)) / 17);
@@ -145,7 +148,7 @@ lv_obj_t *FileOptions() {
     //Slideshow
     lv_obj_t *slideshow_button = lv_file_list_add(cont_flex, "\ue41b");
     lv_obj_t *slideshow_switch = lv_switch_create(slideshow_button);
-    if (config.getSlideShow()) {
+    if (config->getSlideShow()) {
       lv_obj_add_state(slideshow_switch, LV_STATE_CHECKED);
     }
     lv_obj_align(slideshow_switch, LV_ALIGN_RIGHT_MID, 0, 0);
@@ -168,13 +171,13 @@ lv_obj_t *FileOptions() {
     lv_slider_set_range(slideshow_time, 1, 12);
     lv_group_t *slider_group = lv_group_create();
     lv_group_add_obj(slider_group, slideshow_time);
-    lv_slider_set_value(slideshow_time, config.getSlideShowTime() / 15, LV_ANIM_OFF);
+    lv_slider_set_value(slideshow_time, config->getSlideShowTime() / 15, LV_ANIM_OFF);
     lv_obj_t *slideshow_time_label = lv_label_create(slideshow_time_button);
     lv_obj_add_flag(slideshow_time_label, LV_OBJ_FLAG_FLEX_IN_NEW_TRACK);
     lv_label_set_text_fmt(slideshow_time_label,
                           "%d:%02d",
-                          config.getSlideShowTime() / 60,
-                          (config.getSlideShowTime() % 60));
+                          config->getSlideShowTime() / 60,
+                          (config->getSlideShowTime() % 60));
 
     //Save
     lv_obj_t *save_button = lv_file_list_add(cont_flex, "\ue161");

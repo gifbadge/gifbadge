@@ -1,16 +1,12 @@
 #include "freertos/FreeRTOS.h"
 
 #include <esp_log.h>
-#include <cstring>
-#include <vector>
-#include <algorithm>
 
 #include "display.h"
 #include "image.h"
 #include "png.h"
 #include "images/low_batt_png.h"
 
-#include <nvs_handle.hpp>
 #include <esp_timer.h>
 
 #include "font_render.h"
@@ -210,12 +206,12 @@ static Image *openFileUpdatePath(char *path, Display *display) {
 
 static int64_t last_change;
 
-static bool slideshowChange(DISPLAY_OPTIONS last_mode, ImageConfig &config){
+static bool slideshowChange(DISPLAY_OPTIONS last_mode, Config *config){
   int64_t lastChange = ((esp_timer_get_time() / 1000000) - (last_change / 1000000));
-  return last_mode == DISPLAY_FILE && config.getSlideShow() &&  lastChange > config.getSlideShowTime();
+  return last_mode == DISPLAY_FILE && config->getSlideShow() &&  lastChange > config->getSlideShowTime();
 }
 
-static Image *next_prev(Image *in, char *current_file, ImageConfig *config, Display *display, int increment){
+static Image *next_prev(Image *in, char *current_file, Config *config, Display *display, int increment){
   if (config->getLocked()) {
     return in;
   }
@@ -227,23 +223,14 @@ static Image *next_prev(Image *in, char *current_file, ImageConfig *config, Disp
 void display_task(void *params) {
   auto *board = (Board *) params;
 
-  auto config = ImageConfig();
+  auto config = board->getConfig();
 
   auto display = board->getDisplay();
 
   memset(display->buffer, 255, display->size.first * display->size.second * 2);
   display->write(0, 0, display->size.first, display->size.second, display->buffer);
 
-  esp_err_t err;
-  int backlight_level;
-  auto handle = nvs::open_nvs_handle("settings", NVS_READWRITE, &err);
-  err = handle->get_item("backlight", backlight_level);
-  if (err == ESP_ERR_NVS_NOT_FOUND) {
-    backlight_level = 10;
-  }
-  handle.reset();
-
-  board->getBacklight()->setLevel(backlight_level * 10);
+  board->getBacklight()->setLevel(board->getConfig()->getBacklight() * 10);
 
   Image *in = nullptr;
 
@@ -263,7 +250,7 @@ void display_task(void *params) {
     xTaskNotifyWaitIndexed(0, 0, 0xffffffff, &option, delay / portTICK_PERIOD_MS);
     if (option != DISPLAY_NONE) {
       last_change = esp_timer_get_time();
-      config.reload();
+      config->reload();
       if(static_cast<DISPLAY_OPTIONS>(option) != DISPLAY_NEXT || static_cast<DISPLAY_OPTIONS>(option) != DISPLAY_PREVIOUS){
         delete in;
         in = nullptr;
@@ -272,16 +259,16 @@ void display_task(void *params) {
         case DISPLAY_FILE:
           ESP_LOGI(TAG, "DISPLAY_FILE");
           if(!valid_file(current_file)) {
-            strncpy(current_file, config.getPath(), sizeof(current_file) - 1);
+            config->getPath(current_file);
           }
           in = openFileUpdatePath(current_file, display);
           last_mode = static_cast<DISPLAY_OPTIONS>(option);
           break;
         case DISPLAY_NEXT:
-          in = next_prev(in, current_file, &config, display, 1);
+          in = next_prev(in, current_file, config, display, 1);
           break;
         case DISPLAY_PREVIOUS:
-          in = next_prev(in, current_file, &config, display, -1);
+          in = next_prev(in, current_file, config, display, -1);
           break;
         case DISPLAY_BATT:
           if (last_mode != DISPLAY_BATT) {
@@ -330,7 +317,7 @@ void display_task(void *params) {
         delay = 1000;
       } else {
         if(redraw){
-          strncpy(current_file, config.getPath(), sizeof(current_file) - 1);
+          config->getPath(current_file);
           in = openFileUpdatePath(current_file, display);
           redraw = false;
         }

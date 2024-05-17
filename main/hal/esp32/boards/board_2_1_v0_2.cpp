@@ -30,6 +30,7 @@ static void checkSDTimer(void *arg) {
 }
 
 board_2_1_v0_2::board_2_1_v0_2() {
+  _config = new Config_NVS();
   _i2c = new I2C(I2C_NUM_0, 47, 48);
   _battery = new battery_max17048(_i2c, GPIO_NUM_0);
   _battery->inserted(); //Set battery inserted, as we can't detect status on this revision
@@ -184,4 +185,7 @@ const char * board_2_1_v0_2::name() {
 }
 bool board_2_1_v0_2::powerConnected() {
   return gpio_get_level(GPIO_NUM_0);
+}
+Config *board_2_1_v0_2::getConfig() {
+  return _config;
 }

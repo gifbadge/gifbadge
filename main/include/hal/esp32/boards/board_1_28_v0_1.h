@@ -12,6 +12,7 @@
 #include "hal/esp32/drivers/display_gc9a01.h"
 #include "../../../../../../esp/esp-idf/components/driver/sdmmc/include/driver/sdmmc_host.h"
 #include "../../../../../../esp/esp-idf/components/esp_pm/include/esp_pm.h"
+#include "hal/esp32/drivers/config_nvs.h"
 
 #define GPIO_CARD_DETECT GPIO_NUM_21
 #define GPIO_VBUS_DETECT GPIO_NUM_6
@@ -40,6 +41,8 @@ class board_1_28_v0_1 : public Board {
   const char * name() override;
   bool powerConnected() override;
   void * turboBuffer() override {return buffer;};
+  Config *getConfig() override;
+
 
  private:
   battery_max17048 *_battery;
@@ -51,4 +54,5 @@ class board_1_28_v0_1 : public Board {
   sdmmc_card_t *card = nullptr;
   esp_pm_lock_handle_t pmLockHandle = nullptr;
   void *buffer;
+  Config_NVS *_config;
 };

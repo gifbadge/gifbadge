@@ -1,4 +1,3 @@
-
 #include <lvgl.h>
 
 #include "ui/main_menu.h"
@@ -20,10 +19,7 @@ static lv_obj_t * exit_callback() {
 
 static void BacklightSliderExitCallback(lv_event_t *e) {
   lv_obj_t *obj = lv_event_get_target_obj(e);
-  esp_err_t err;
-  auto handle = nvs::open_nvs_handle("settings", NVS_READWRITE, &err);
-  handle->set_item("backlight", lv_slider_get_value(obj));
-  handle->commit();
+  get_board()->getConfig()->setBacklight(lv_slider_get_value(obj));
   restore_group(static_cast<lv_obj_t *>(lv_event_get_user_data(e)));
 }
 

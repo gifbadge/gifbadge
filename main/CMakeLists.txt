@@ -2,7 +2,6 @@ idf_component_register(SRCS
         "main.cpp"
         "ui/menu.cpp"
         "display.cpp"
-        "config.cpp"
         "file_util.cpp"
         "ota.cpp"
         "input.cpp"
@@ -23,6 +22,7 @@ idf_component_register(SRCS
         "hal/esp32/drivers/display_gc9a01.cpp"
         "hal/esp32/drivers/display_st7701s.cpp"
         "hal/esp32/drivers/backlight_ledc.cpp"
+        "hal/esp32/drivers/config_nvs.cpp"
         ${CMAKE_CURRENT_BINARY_DIR}/material_icons.c
         ${CMAKE_CURRENT_BINARY_DIR}/material_icons_56.c
         ${CMAKE_CURRENT_BINARY_DIR}/material_icons_special.c
