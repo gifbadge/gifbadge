@@ -7,10 +7,6 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-#include "esp_lcd_panel_io.h"
-#include "esp_lcd_panel_vendor.h"
-#include "esp_lcd_panel_ops.h"
-
 #include "hal/config.h"
 #include "hal/backlight.h"
 #include "hal/display.h"

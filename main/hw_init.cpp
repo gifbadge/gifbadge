@@ -1,14 +1,16 @@
 #include "hw_init.h"
+
+static const char *TAG = "HW_INIT";
+
+static Board *global_board;
+
+#ifdef ESP_PLATFORM
 #include "hal/esp32/boards/board_v0.h"
 #include "hal/esp32/boards/board_2_1_v0_2.h"
 #include "hal/esp32/boards/board_1_28_v0_1.h"
 #include "hal/esp32/esp_efuse_custom_table.h"
 #include "hal/esp32/boards/boards.h"
 #include "hal/esp32/boards/board_2_1_v0_4.h"
-
-static const char *TAG = "HW_INIT";
-
-static Board *global_board;
 
 Board *get_board() {
 //    return new board_v0();
@@ -35,3 +37,8 @@ Board *get_board() {
   }
   return global_board;
 }
+#else
+Board *get_board() {
+  return nullptr;
+}
+#endif

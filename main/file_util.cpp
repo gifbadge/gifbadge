@@ -3,6 +3,13 @@
 #include "file_util.h"
 #include "image.h"
 
+#ifdef ESP_PLATFORM
+#include <ff.h>
+#else
+#include <sys/stat.h>
+#endif
+
+
 static const char *TAG = "FILE_UTIL";
 
 /*!
@@ -28,6 +35,7 @@ bool valid_file(const char *path){
     return false;
   }
   //strip the leading /data/ for fat fs
+#ifdef ESP_PLATFORM
 
   FILINFO info;
   if (f_stat(&path[5], &info) == 0) {
@@ -38,5 +46,13 @@ bool valid_file(const char *path){
       }
     }
   }
+#else
+  struct stat info;
+  if (stat(&path[5], &info) == 0) {
+      if (basename(path)[0] != '.' && basename(path)[0] != '~') {
+        return true;
+      }
+  }
+#endif
   return false;
 }
