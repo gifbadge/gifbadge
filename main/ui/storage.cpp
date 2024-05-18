@@ -5,6 +5,7 @@
 #include "ui/widgets/file_list/file_list.h"
 #include "ui/style.h"
 #include "hw_init.h"
+#ifdef ESP_PLATFORM
 
 static const char *TAG = "storage.cpp";
 
@@ -200,3 +201,9 @@ lv_obj_t *storage_menu() {
   }
   return nullptr;
 }
+
+#else
+lv_obj_t *storage_menu() {
+  return nullptr;
+}
+#endif

@@ -7,6 +7,11 @@
 extern "C" {
 #endif
 
+#define MAX_FILE_LEN 128
+
+
+#define JOIN_PATH(a, b, c) snprintf(a,  MAX_FILE_LEN, "%s/%s", b, c)
+
 typedef struct {
   long file_index[255];
   DIR *dirptr;

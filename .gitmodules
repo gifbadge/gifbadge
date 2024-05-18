@@ -14,3 +14,9 @@
 	path = lv_font_conv
 	url = https://github.com/lvgl/lv_font_conv.git
 
+[submodule "FreeRTOS"]
+	path = FreeRTOS
+	url = https://github.com/FreeRTOS/FreeRTOS.git
+[submodule "FreeRTOS-Kernel"]
+	path = FreeRTOS-Kernel
+	url = https://github.com/FreeRTOS/FreeRTOS-Kernel/

@@ -1,5 +1,5 @@
 #pragma once
-
+#include <stdint.h>
 #include <utility>
 typedef bool (*flushCallback_t)();
 

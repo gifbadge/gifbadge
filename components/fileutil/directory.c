@@ -7,12 +7,15 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include "include/directory.h"
+#include "../../main/include/log.h"
 
 static int cmpfunc (const void * a, const void * b, void *arg) {
   DIR* dir = (DIR *)arg;
   struct dirent *de;
   char file_name_a[256];
   char file_name_b[256];
+
+  LOGI("", "a: %p b:%p arg: %p", a, b, arg);
 
   seekdir(dir, *(long *)a);
   de = readdir(dir);
@@ -39,6 +42,7 @@ int opendir_sorted(DIR_SORTED *dirp, const char *dirname, int(*validator)(const 
       break;
     }
     if(validator){
+      LOGI("", "index %li\n", tmp_ptr);
       if(validator(dirp->path, de->d_name)){
         dirp->file_index[dirp->count] = tmp_ptr;
       } else {

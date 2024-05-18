@@ -38,7 +38,12 @@ Board *get_board() {
   return global_board;
 }
 #else
+#include "hal/linux/boards/board_linux.h"
+
 Board *get_board() {
-  return nullptr;
+  if (!global_board) {
+   global_board = new board_linux();
+  }
+  return global_board;
 }
 #endif

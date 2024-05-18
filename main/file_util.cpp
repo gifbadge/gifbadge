@@ -21,7 +21,7 @@ static const char *TAG = "FILE_UTIL";
 bool valid_file(const char *path){
   LOGI(TAG, "%s", path);
 
-  const char *ext = strrchr(path, '.');
+  const char *ext = strrchr(&path[strlen(path)-4], '.');
   bool matched = false;
   if(ext != nullptr) {
     for (auto & extension : extensions) {
@@ -48,7 +48,7 @@ bool valid_file(const char *path){
   }
 #else
   struct stat info;
-  if (stat(&path[5], &info) == 0) {
+  if (stat(path, &info) == 0) {
       if (basename(path)[0] != '.' && basename(path)[0] != '~') {
         return true;
       }

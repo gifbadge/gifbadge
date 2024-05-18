@@ -1,4 +1,5 @@
 SET(SRC "main.cpp"
+        "portable_time.c"
         "ui/menu.cpp"
         "display.cpp"
         "file_util.cpp"
@@ -50,9 +51,9 @@ if (ESP_PLATFORM)
     target_link_libraries(${COMPONENT_TARGET} "-u custom_app_desc")
     else ()
     cmake_minimum_required(VERSION 3.1...3.29)
-    project(Main VERSION 1.0 LANGUAGES CXX)
-    add_executable(GifBadge ${SRC})
-    target_include_directories(GifBadge PRIVATE "include")
+    project(Main VERSION 1.0 LANGUAGES C CXX)
+    add_executable(GifBadge ${SRC} hal/linux/boards/board_linux.cpp hal/linux/drivers/backlight_dummy.cpp hal/linux/drivers/battery_dummy.cpp hal/linux/drivers/display_sdl.cpp hal/linux/drivers/console.c hal/linux/drivers/config_mem.cpp)
+    target_include_directories(GifBadge PUBLIC "include")
 endif ()
 
 set(font_symbols "0xe3f4,0xe897,0xe41b,0xe41b,0xe425,0xe161,0xe5c9,0xe3ab,0xe2c7,0xe2c8,0xe623,0xf80e,0xf568,0xe5d8")

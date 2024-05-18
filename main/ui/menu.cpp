@@ -1,9 +1,8 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include <esp_timer.h>
 #include <freertos/semphr.h>
 #include "log.h"
-#include "esp_lcd_panel_io.h"
+
 #include <lvgl.h>
 
 #include "ui/menu.h"
@@ -20,7 +19,10 @@ static const char *TAG = "MENU";
 static lv_disp_t *disp;
 static TaskHandle_t lvgl_task;
 static flushCbData cbData;
+#ifdef ESP_PLATFORM
+#include <esp_timer.h>
 static esp_timer_handle_t lvgl_tick_timer;
+#endif
 static bool menu_state;
 static SemaphoreHandle_t lvgl_mux = nullptr;
 static SemaphoreHandle_t flushSem;
@@ -51,7 +53,7 @@ void destroy_screens(){
   screens.clear();
 }
 
-static bool IRAM_ATTR flush_ready() {
+static bool flush_ready() {
   xSemaphoreGive(flushSem);
   return false;
 }
@@ -67,10 +69,12 @@ static void flush_cb(lv_disp_t *, const lv_area_t *area, uint8_t *color_map) {
   lv_display_set_buffers(disp, cbData.display->buffer, nullptr, cbData.display->size.first * cbData.display->size.second * 2,
                          LV_DISPLAY_RENDER_MODE_FULL);
 }
+#ifdef ESP_PLATFORM
 
 static void tick([[maybe_unused]] void *arg) {
   lv_tick_inc(LVGL_TICK_PERIOD_MS);
 }
+#endif
 
 bool lvgl_lock(int timeout_ms) {
   // Convert timeout in milliseconds to FreeRTOS ticks
@@ -95,8 +99,9 @@ void lvgl_close() {
   }
 
   vTaskDelay(100 / portTICK_PERIOD_MS); //Wait some time so the task can finish
-
+#ifdef ESP_PLATFORM
   ESP_ERROR_CHECK(esp_timer_stop(lvgl_tick_timer));
+#endif
   menu_state = false;
   LOGI(TAG, "Close Done");
   get_board()->pmRelease();
@@ -142,7 +147,6 @@ void keyboard_read(lv_indev_t *indev, lv_indev_data_t *data) {
   auto g = lv_indev_get_group(indev);
   bool editing = lv_group_get_editing(g);
   Keys *device = static_cast<Keys *>(lv_indev_get_user_data(indev));
-  assert(device != nullptr);
   EVENT_STATE *keys = device->read();
   if (keys[KEY_UP] == STATE_PRESSED) {
     data->enc_diff += editing ? +1 : -1;
@@ -184,7 +188,7 @@ void lvgl_init(Board *board) {
 
   lvgl_mux = xSemaphoreCreateRecursiveMutex();
   flushSem = xSemaphoreCreateBinary();
-
+#ifdef ESP_PLATFORM
   const esp_timer_create_args_t lvgl_tick_timer_args = {
       .callback = &tick,
       .arg = nullptr,
@@ -194,6 +198,7 @@ void lvgl_init(Board *board) {
   };
   lvgl_tick_timer = nullptr;
   ESP_ERROR_CHECK(esp_timer_create(&lvgl_tick_timer_args, &lvgl_tick_timer));
+#endif
 
   xTaskCreate(task, "LVGL", 7*1024, nullptr, LVGL_TASK_PRIORITY, &lvgl_task);
 
@@ -323,8 +328,9 @@ void lvgl_wake_up() {
     vTaskResume(lvgl_task);
 
 
-
+#ifdef ESP_PLATFORM
     ESP_ERROR_CHECK(esp_timer_start_periodic(lvgl_tick_timer, LVGL_TICK_PERIOD_MS * 1000));
+#endif
     if (lvgl_lock(-1)) {
       lv_group_t *g = lv_group_create();
       lv_group_set_default(g);

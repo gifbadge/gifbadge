@@ -1,3 +1,5 @@
+#ifdef ESP_PLATFORM
+
 #include <esp_partition.h>
 #include <esp_ota_ops.h>
 #include <sys/stat.h>
@@ -227,3 +229,15 @@ void install() {
   }
 }
 }
+#else
+namespace OTA {
+void bootInfo() {}
+bool check() {
+  return false;
+}
+void install() {}
+int ota_status(){
+  return 0;
+}
+}
+#endif

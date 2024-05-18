@@ -17,7 +17,7 @@ else ()
     cmake_minimum_required(VERSION 3.1...3.29)
     project(GifBadge VERSION 1.0 LANGUAGES C CXX)
 
-    add_compile_options( -D_WINDOWS_ )
+    add_compile_options( -D__linux__)
 
 #    if( TRACE_ON_ENTER )
 #        add_compile_options( -DTRACE_ON_ENTER=1 )
@@ -78,10 +78,16 @@ else ()
             $<IF:${NO_TRACING},,-Wno-pointer-to-int-cast>
     )
 
+
+    find_package(SDL2 REQUIRED)
+    include_directories(${SDL2_INCLUDE_DIRS})
+
     add_subdirectory(main)
     add_subdirectory(components/fileutil)
     add_subdirectory(components/font_render)
     add_subdirectory(components/image)
     add_subdirectory(components/lvgl__lvgl)
-    target_link_libraries(GifBadge freertos_kernel image FileUtil FontRender lvgl)
+    target_compile_options(lvgl PUBLIC -DLV_CONF_PATH=${CMAKE_SOURCE_DIR}/main/include/lv_conf_linux.h)
+    target_link_libraries(GifBadge freertos_kernel image FileUtil FontRender lvgl ${SDL2_LIBRARIES})
+    set_property(TARGET GifBadge PROPERTY CXX_STANDARD 23)
 endif ()

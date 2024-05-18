@@ -1,5 +1,6 @@
-
+#ifdef ESP_PLATFORM
 #include <esp_app_desc.h>
+#endif
 #include "ui/device_info.h"
 #include "ui/menu.h"
 #include "ui/device_group.h"
@@ -28,13 +29,14 @@ lv_obj_t *device_info() {
     lv_obj_t *serial_number_label = lv_label_create(serial_number);
     lv_obj_add_style(serial_number_label, &menu_font_style, LV_PART_MAIN);
     lv_label_set_text(serial_number_label, "Serial: ");
-
+#ifdef ESP_PLATFORM
     const esp_app_desc_t *description = esp_app_get_description();
     lv_obj_t *version = lv_file_list_add(cont_flex, nullptr);
     lv_obj_t *version_label = lv_label_create(version);
     lv_obj_add_style(version_label, &menu_font_style, LV_PART_MAIN);
     snprintf(tmpStr, sizeof(tmpStr), "SW Version: %s", description->version);
     lv_label_set_text(version_label, tmpStr);
+#endif
 
     lv_obj_t *exit_btn = lv_file_list_add(cont_flex, nullptr);
     lv_obj_t *exit_label = lv_label_create(exit_btn);

@@ -150,7 +150,11 @@ static void *GIFAlloc(uint32_t u32Size) {
 } /* GIFAlloc() */
 
 int GIF::open(const char *path, void *buffer) {
+#ifdef ESP_PLATFORM
   gif.begin(BIG_ENDIAN_PIXELS);
+#else
+  gif.begin(LITTLE_ENDIAN_PIXELS);
+#endif
   if (gif.open(path, OpenFile, CloseFile, ReadFile, SeekFile, GIFDraw)) {
     if (buffer) {
       gif.setTurboBuf(buffer);

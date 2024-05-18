@@ -8,6 +8,9 @@
 #include "ui/style.h"
 #include "display.h"
 #include "hw_init.h"
+#ifndef ESP_PLATFORM
+#include <unistd.h>
+#endif
 
 static const char *TAG = "file_options";
 
@@ -61,7 +64,13 @@ static void FileOptionsSave(lv_event_t *e) {
 
 static void FileOptionsFileSelect(lv_event_t *e) {
   char *current = lv_label_get_text(static_cast<lv_obj_t *>(lv_event_get_target(e)));
+#ifdef ESP_PLATFORM
   lv_obj_t *file_window = file_select("/data/", current);
+#else
+  char path[129];
+  getcwd(path, sizeof(path));
+  lv_obj_t *file_window = file_select("/data/", current);
+#endif
   lv_obj_add_event_cb(file_window, FileWindowClose, LV_EVENT_DELETE, lv_event_get_target(e));
 }
 
