@@ -9,5 +9,5 @@
 #define LOGV( tag, format, ... ) ESP_LOGV( tag, format, ##__VA_ARGS__ )
 #else
 #include "hal/linux/drivers/console.h"
-#define LOGI(tag, format, ...) console_print(format, ##__VA_ARGS__)
+#define LOGI(tag, format, ...) console_print(tag, format, ##__VA_ARGS__)
 #endif

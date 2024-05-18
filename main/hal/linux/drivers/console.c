@@ -52,7 +52,7 @@ void console_init( void )
 #endif /* if( configSUPPORT_STATIC_ALLOCATION == 1 ) */
 }
 
-void console_print( const char * fmt,
+void console_print(const char * tag, const char * fmt,
                     ... )
 {
   va_list vargs;
@@ -60,8 +60,8 @@ void console_print( const char * fmt,
   va_start( vargs, fmt );
 
   xSemaphoreTake( xStdioMutex, portMAX_DELAY );
-  char *fmt_tmp = malloc(strlen(fmt)+2);
-  sprintf(fmt_tmp, "%s\n", fmt);
+  char *fmt_tmp = malloc(strlen(fmt)+strlen(tag)+2);
+  sprintf(fmt_tmp, "%s %s\n",tag, fmt);
 
   vprintf( fmt_tmp, vargs );
   free(fmt_tmp);
