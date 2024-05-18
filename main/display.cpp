@@ -128,25 +128,23 @@ static int validator(const char *path, const char *file) {
   return 1;
 }
 
-static int get_file(const char *path, char *outPath) {
-  char inPath[MAX_FILE_LEN];
-  strncpy(inPath, path, sizeof(inPath)-1);
-
+static int get_file(char *path) {
   //Check if we are starting with a valid file, and just return it if we are
   if (valid_file(path)) {
-    memcpy(outPath, inPath, MAX_FILE_LEN);
     if(!dir.dirptr){
+      char inPath[MAX_FILE_LEN];
+      strncpy(inPath, path, sizeof(inPath)-1);
       opendir_sorted(&dir, dirname(inPath), validator);
     }
-    file_position = directory_get_position(&dir, basename(outPath));
+    file_position = directory_get_position(&dir, basename(path));
     LOGI(TAG, "%i", file_position);
     return 0;
   }
-  char *base = inPath;
+  char *base = path;
   //Check if it's a directory
   if (!is_directory(path)) {
     //It's not a directory. Get the directory
-    base = dirname(inPath);
+    base = dirname(path);
   }
   struct dirent *de;  // Pointer for directory entry
 
@@ -157,17 +155,19 @@ static int get_file(const char *path, char *outPath) {
   }
 
   while ((de = readdir_sorted(&dir)) != nullptr) {
-    if (JOIN_PATH(outPath, base, de->d_name) < 0) {
-      return -1;
+    size_t len = strlen(path);
+    if(path[len-1] != '/'){
+      path[len] = '/';
+      path[len+1] = '\0';
     }
-    if (valid_file(outPath)) {
-      file_position = directory_get_position(&dir, basename(outPath));
-      LOGI(TAG, "%i", file_position);
-      LOGI(TAG, "%s", outPath);
-      return 0;
-    }
+    LOGI(TAG, "%s", path);
+    strcpy(&path[strlen(path)], de->d_name);
+    file_position = directory_get_position(&dir, de->d_name);
+    LOGI(TAG, "%i", file_position);
+    LOGI(TAG, "%s", path);
+    return 0;
   }
-  outPath[0] = '\0';
+  path[0] = '\0';
   return -1;
 }
 
@@ -197,7 +197,7 @@ static Image *openFile(const char *path, Display *display) {
 }
 
 static Image *openFileUpdatePath(char *path, Display *display) {
-  if (get_file(path, path) != 0) {
+  if (get_file(path) != 0) {
     display_no_image(display);
     return nullptr;
   }
