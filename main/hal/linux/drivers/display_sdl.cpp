@@ -30,7 +30,8 @@ display_sdl::display_sdl() {
 
 
 }
-bool display_sdl::onColorTransDone(flushCallback_t) {
+bool display_sdl::onColorTransDone(flushCallback_t callback) {
+  _callback = callback;
   return false;
 }
 void display_sdl::write(int x_start, int y_start, int x_end, int y_end, const void *color_data) {
@@ -70,4 +71,7 @@ void display_sdl::update() {
   // copy to window
   SDL_RenderCopy(renderer, pixels, NULL, NULL);
   SDL_RenderPresent(renderer);
+  if(_callback){
+    _callback();
+  }
 }

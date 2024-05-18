@@ -24,6 +24,7 @@ class display_sdl : public Display {
   SDL_GLContext context;
 
   sem_t mutex;
+  flushCallback_t _callback = nullptr;
 };
 
 extern display_sdl *displaySdl;

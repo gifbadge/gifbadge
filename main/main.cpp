@@ -21,29 +21,29 @@
 static const char *TAG = "MAIN";
 
 void dumpDebugFunc(TimerHandle_t) {
-//  auto *args = get_board();
-//  args->pmLock();
-//
-////        vTaskDelay(1000/portTICK_PERIOD_MS);
-//  if (true) {
-////    esp_pm_dump_locks(stdout);
-////      char out[1000];
-////      vTaskGetRunTimeStats(out);
-////      printf("%s", out);
-//  }
-//  LOGI(TAG, "SOC: %i", args->getBattery()->getSoc());
-//  LOGI(TAG, "Voltage: %f", args->getBattery()->getVoltage());
-////    LOGI(TAG, "Rate: %f", args->getBattery()->getRate());
-////    LOGI(TAG, "State: %d", static_cast<int>(args->getBattery()->status()));
+  auto *args = get_board();
+  args->pmLock();
+
+//        vTaskDelay(1000/portTICK_PERIOD_MS);
+  if (true) {
+//    esp_pm_dump_locks(stdout);
+//      char out[1000];
+//      vTaskGetRunTimeStats(out);
+//      printf("%s", out);
+  }
+  LOGI(TAG, "SOC: %i", args->getBattery()->getSoc());
+  LOGI(TAG, "Voltage: %f", args->getBattery()->getVoltage());
+//    LOGI(TAG, "Rate: %f", args->getBattery()->getRate());
+//    LOGI(TAG, "State: %d", static_cast<int>(args->getBattery()->status()));
 //  heap_caps_print_heap_info(MALLOC_CAP_INTERNAL);
-//
-//  TaskStatus_t tasks[20];
-//  unsigned int count = uxTaskGetSystemState(tasks, 20, nullptr);
-//  for (unsigned int i = 0; i < count; i++) {
-//    LOGI(TAG, "%s Highwater: %lu", tasks[i].pcTaskName, tasks[i].usStackHighWaterMark);
-//  }
+
+  TaskStatus_t tasks[20];
+  unsigned int count = uxTaskGetSystemState(tasks, 20, nullptr);
+  for (unsigned int i = 0; i < count; i++) {
+    LOGI(TAG, "%s Highwater: %lu", tasks[i].pcTaskName, tasks[i].usStackHighWaterMark);
+  }
 //  heap_caps_print_heap_info(MALLOC_CAP_SPIRAM);
-//  args->pmRelease();
+  args->pmRelease();
 
 }
 
@@ -126,7 +126,6 @@ extern "C" void app_main(void) {
 #else
   xTaskCreate(display_task, "display_task", 5000, board, 2, &display_task_handle);
 #endif
-
 
   if (!board->storageReady()) {
     xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_NO_STORAGE, eSetValueWithOverwrite);
