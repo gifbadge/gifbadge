@@ -19,7 +19,7 @@ static const char *TAG = "FILE_UTIL";
  * @return
  */
 bool valid_file(const char *path){
-  LOGI(TAG, "%s", path);
+//  LOGI(TAG, "%s", path);
 
   const char *ext = strrchr(basename(path), '.');
   bool matched = false;
@@ -39,7 +39,7 @@ bool valid_file(const char *path){
 
   FILINFO info;
   if (f_stat(&path[5], &info) == 0) {
-    LOGI(TAG, "%s %i %i", path, info.fattrib & AM_DIR, info.fattrib & AM_HID);
+//    LOGI(TAG, "%s %i %i", path, info.fattrib & AM_DIR, info.fattrib & AM_HID);
     if (!((info.fattrib & AM_DIR) || (info.fattrib & AM_HID))) {
       if (basename(path)[0] != '.' && basename(path)[0] != '~') {
         return true;
