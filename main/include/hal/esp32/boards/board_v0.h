@@ -34,7 +34,7 @@ class board_v0 : public Board {
   bool powerConnected() override;
   void * turboBuffer() override {return nullptr;};
   Config *getConfig() override;
-
+  void debugInfo() override;
 
  private:
   battery_analog * _battery;

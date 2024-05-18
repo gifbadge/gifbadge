@@ -37,5 +37,6 @@ class Board {
   virtual bool powerConnected() = 0;
   virtual void *turboBuffer() = 0;
   virtual Config *getConfig() = 0;
+  virtual void debugInfo() = 0;
 };
 

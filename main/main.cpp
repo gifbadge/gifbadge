@@ -1,13 +1,8 @@
-#include <csignal>
-#include <thread>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/timers.h"
 
 #include "log.h"
-
-//#include <esp_pm.h>
-
 #include "ui/menu.h"
 //#include "hal/esp32/hal_usb.h"
 #include "display.h"
@@ -23,26 +18,18 @@ static const char *TAG = "MAIN";
 void dumpDebugFunc(TimerHandle_t) {
   auto *args = get_board();
   args->pmLock();
+  args->debugInfo();
 
-//        vTaskDelay(1000/portTICK_PERIOD_MS);
-  if (true) {
-//    esp_pm_dump_locks(stdout);
-//      char out[1000];
-//      vTaskGetRunTimeStats(out);
-//      printf("%s", out);
-  }
   LOGI(TAG, "SOC: %i", args->getBattery()->getSoc());
   LOGI(TAG, "Voltage: %f", args->getBattery()->getVoltage());
 //    LOGI(TAG, "Rate: %f", args->getBattery()->getRate());
 //    LOGI(TAG, "State: %d", static_cast<int>(args->getBattery()->status()));
-//  heap_caps_print_heap_info(MALLOC_CAP_INTERNAL);
 
   TaskStatus_t tasks[20];
   unsigned int count = uxTaskGetSystemState(tasks, 20, nullptr);
   for (unsigned int i = 0; i < count; i++) {
     LOGI(TAG, "%s Highwater: %lu", tasks[i].pcTaskName, tasks[i].usStackHighWaterMark);
   }
-//  heap_caps_print_heap_info(MALLOC_CAP_SPIRAM);
   args->pmRelease();
 
 }
@@ -282,6 +269,7 @@ void vApplicationStackOverflowHook( TaskHandle_t pxTask,
   vAssertCalled( __FILE__, __LINE__ );
 }
 
+#include <thread>
 #include "hal/linux/drivers/display_sdl.h"
 #include "hal/linux/drivers/key_sdl.h"
 #include <SDL_events.h>

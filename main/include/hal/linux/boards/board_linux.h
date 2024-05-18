@@ -30,8 +30,7 @@ class board_linux : public Board {
   bool powerConnected() override;
   void * turboBuffer() override {return nullptr;};
   Config *getConfig() override;
-
-
+  void debugInfo() override;
 
  private:
   backlight_dummy *_backlight;

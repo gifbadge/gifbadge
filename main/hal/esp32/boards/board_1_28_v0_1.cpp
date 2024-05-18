@@ -197,3 +197,6 @@ bool board_1_28_v0_1::powerConnected() {
 Config *board_1_28_v0_1::getConfig() {
   return _config;
 }
+void board_1_28_v0_1::debugInfo() {
+
+}

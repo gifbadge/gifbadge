@@ -45,3 +45,6 @@ bool board_linux::powerConnected() {
 Config *board_linux::getConfig() {
   return _config;
 }
+void board_linux::debugInfo() {
+
+}
