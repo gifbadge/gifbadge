@@ -21,7 +21,7 @@ static const char *TAG = "FILE_UTIL";
 bool valid_file(const char *path){
   LOGI(TAG, "%s", path);
 
-  const char *ext = strrchr(&path[strlen(path)-4], '.');
+  const char *ext = strrchr(basename(path), '.');
   bool matched = false;
   if(ext != nullptr) {
     for (auto & extension : extensions) {

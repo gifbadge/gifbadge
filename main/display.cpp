@@ -215,7 +215,7 @@ static Image *next_prev(Image *in, char *current_file, Config *config, Display *
   if (config->getLocked()) {
     return in;
   }
-  JOIN_PATH(current_file, dirname(current_file), directory_get_increment(&dir, file_position, increment));
+  strcpy(basename(current_file), directory_get_increment(&dir, file_position, increment));
   delete in;
   return openFileUpdatePath(current_file, display);
 }
