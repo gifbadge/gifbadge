@@ -17,7 +17,6 @@ typedef struct {
   DIR *dirptr;
   int count;
   int index;
-  const char * path;
 } DIR_SORTED;
 
 int opendir_sorted(DIR_SORTED *, const char *dirname, int(*validator)(const char *, const char *));

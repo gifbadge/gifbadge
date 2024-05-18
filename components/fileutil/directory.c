@@ -27,7 +27,6 @@ static int cmpfunc (const void * a, const void * b, void *arg) {
 }
 
 int opendir_sorted(DIR_SORTED *dirp, const char *dirname, int(*validator)(const char *, const char *)) {
-  dirp->path = dirname;
   dirp->dirptr = opendir(dirname);
   if(!dirp->dirptr){
     return 0;
@@ -43,7 +42,7 @@ int opendir_sorted(DIR_SORTED *dirp, const char *dirname, int(*validator)(const 
     }
     if(validator){
       LOGI("", "index %li\n", tmp_ptr);
-      if(validator(dirp->path, de->d_name)){
+      if(validator(dirname, de->d_name)){
         dirp->file_index[dirp->count] = tmp_ptr;
       } else {
         continue;
