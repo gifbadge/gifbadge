@@ -285,8 +285,17 @@ void vApplicationStackOverflowHook( TaskHandle_t pxTask,
 #include "hal/linux/drivers/display_sdl.h"
 #include "hal/linux/drivers/key_sdl.h"
 #include <SDL_events.h>
+#include <unistd.h>
 
 extern "C" int main(void) {
+  //chroot the process, so it's closer to being on the device for paths, etc
+  char path[255];
+  getcwd(path, sizeof(path));
+  printf("Chrooting to %s\n", path);
+  unshare(CLONE_FS|CLONE_NEWUSER);
+  chroot(path);
+  chdir("/");
+
   displaySdl = new display_sdl();
   console_init();
   console_print("test\n");
