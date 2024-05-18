@@ -5,6 +5,8 @@ board_linux::board_linux() {
   _battery = new battery_dummy();
   _display = displaySdl;
   _config = new Config_Mem();
+  _keys = new keys_sdl();
+
 
 }
 Battery *board_linux::getBattery() {
@@ -14,7 +16,7 @@ Touch *board_linux::getTouch() {
   return nullptr;
 }
 Keys *board_linux::getKeys() {
-  return nullptr;
+  return _keys;
 }
 Display *board_linux::getDisplay() {
   return _display;

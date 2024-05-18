@@ -283,6 +283,8 @@ void vApplicationStackOverflowHook( TaskHandle_t pxTask,
 }
 
 #include "hal/linux/drivers/display_sdl.h"
+#include "hal/linux/drivers/key_sdl.h"
+#include <SDL_events.h>
 
 extern "C" int main(void) {
   displaySdl = new display_sdl();
@@ -296,6 +298,9 @@ extern "C" int main(void) {
 
   while(1){
     displaySdl->update();
+    if(get_board()->getKeys()) {
+      dynamic_cast<keys_sdl *>(get_board()->getKeys())->poll();
+    }
     usleep(1000);
   }
 

@@ -3,6 +3,9 @@
 #include "input.h"
 #include "display.h"
 #include "ui/menu.h"
+#include "freertos/timers.h"
+#include "hw_init.h"
+#include "portable_time.h"
 
 extern MAIN_STATES currentState;
 
@@ -115,6 +118,64 @@ void initInputTimer(Board *board) {
   ESP_ERROR_CHECK(esp_timer_start_periodic(inputTimer, 50 * 1000));
 }
 #else
+static void inputTimerHandler(TimerHandle_t) {
+  auto board = get_board();
+  if (currentState == MAIN_NORMAL) {
+    if (!lvgl_menu_state()) {
+      EVENT_STATE *key_state = board->getKeys()->read();
+
+      switch (inputState) {
+        case STATE_RELEASED:
+          for (int b = 0; b < KEY_MAX; b++) {
+            if (key_state[b] == STATE_PRESSED) {
+              lastKey = b;
+              inputState = STATE_PRESSED;
+              lastKeyPress = millis();
+            }
+          }
+          break;
+        case STATE_PRESSED:
+          if (key_state[lastKey] == STATE_RELEASED) {
+            keyOptions[lastKey].press();
+            inputState = STATE_RELEASED;
+          } else if (millis() - lastKeyPress > 300 * 1000) {
+            if (key_state[lastKey] == STATE_HELD) {
+              keyOptions[lastKey].hold();
+              inputState = STATE_HELD;
+            }
+          }
+          break;
+        case STATE_HELD:
+          if (key_state[lastKey] == STATE_RELEASED) {
+            imageCurrent();
+            inputState = STATE_RELEASED;
+          }
+          break;
+      }
+//TODO: Fix touch
+//      if (board->getTouch()) {
+//        auto e = board->getTouch()->read();
+//        if (e.first > 0 && e.second > 0) {
+//          if (((esp_timer_get_time() / 1000) - (last_change / 1000)) > 1000) {
+//            last_change = esp_timer_get_time();
+//            if (e.second < 50) {
+//              openMenu();
+//            }
+//            if (e.first < 50) {
+//              imageNext();
+//            }
+//            if (e.first > 430) {
+//              imagePrevious();
+//            }
+//          }
+//          LOGI(TAG, "x: %d y: %d", e.first, e.second);
+//        }
+//      }
+    }
+  }
+}
+
 void initInputTimer(Board *board) {
+  xTimerStart(xTimerCreate("input", 5/portTICK_PERIOD_MS, pdTRUE, nullptr, inputTimerHandler),0);
 }
 #endif

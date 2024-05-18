@@ -52,7 +52,7 @@ if (ESP_PLATFORM)
     else ()
     cmake_minimum_required(VERSION 3.1...3.29)
     project(Main VERSION 1.0 LANGUAGES C CXX)
-    add_executable(GifBadge ${SRC} hal/linux/boards/board_linux.cpp hal/linux/drivers/backlight_dummy.cpp hal/linux/drivers/battery_dummy.cpp hal/linux/drivers/display_sdl.cpp hal/linux/drivers/console.c hal/linux/drivers/config_mem.cpp)
+    add_executable(GifBadge ${SRC} hal/linux/boards/board_linux.cpp hal/linux/drivers/backlight_dummy.cpp hal/linux/drivers/battery_dummy.cpp hal/linux/drivers/display_sdl.cpp hal/linux/drivers/console.c hal/linux/drivers/config_mem.cpp hal/linux/drivers/key_sdl.cpp)
     target_include_directories(GifBadge PUBLIC "include")
 endif ()
 

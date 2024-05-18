@@ -10,7 +10,7 @@ display_sdl::display_sdl() {
   buffer = static_cast<uint8_t *>(malloc(480*480*2));
 
   // returns zero on success else non-zero
-  if (SDL_Init(SDL_INIT_VIDEO) != 0) {
+  if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_EVENTS) != 0) {
     printf("error initializing SDL: %s\n", SDL_GetError());
   }
 

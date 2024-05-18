@@ -6,6 +6,7 @@
 #include "hal/linux/drivers/battery_dummy.h"
 #include "hal/linux/drivers/display_sdl.h"
 #include "hal/linux/drivers/config_mem.h"
+#include "hal/linux/drivers/key_sdl.h"
 
 class board_linux : public Board {
  public:
@@ -37,5 +38,6 @@ class board_linux : public Board {
   battery_dummy *_battery;
   display_sdl *_display;
   Config_Mem *_config;
+  keys_sdl *_keys;
 
 };
