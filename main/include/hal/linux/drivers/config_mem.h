@@ -26,6 +26,6 @@ class Config_Mem: public Config {
   bool _slideshow = false;
   int _slideshow_time = 30;
   int _backlight = 10;
-  char _path[128] = "";
+  char _path[128] = "/data";
 
 };

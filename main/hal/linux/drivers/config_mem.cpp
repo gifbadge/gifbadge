@@ -38,5 +38,5 @@ void Config_Mem::save() {
 
 }
 Config_Mem::Config_Mem() {
-  getcwd(_path, sizeof(_path));
+//  getcwd(_path, sizeof(_path));
 }
