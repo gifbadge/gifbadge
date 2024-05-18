@@ -132,9 +132,10 @@ static int get_file(char *path) {
   //Check if we are starting with a valid file, and just return it if we are
   if (valid_file(path)) {
     if(!dir.dirptr){
-      char inPath[MAX_FILE_LEN];
-      strncpy(inPath, path, sizeof(inPath)-1);
-      opendir_sorted(&dir, dirname(inPath), validator);
+      char *base = basename(path);
+      *(base-1) = '\0'; //Replace the slash with a null, so we can pretend the string is shorter
+      opendir_sorted(&dir, path, validator);
+      *(base-1) = '/'; //return the slash, fix the string
     }
     file_position = directory_get_position(&dir, basename(path));
     LOGI(TAG, "%i", file_position);
