@@ -133,9 +133,9 @@ static int get_file(char *path) {
   if (valid_file(path)) {
     if(!dir.dirptr){
       char *base = basename(path);
-      *(base-1) = '\0'; //Replace the slash with a null, so we can pretend the string is shorter
+      base[-1] = '\0'; //Replace the slash with a null, so we can pretend the string is shorter
       opendir_sorted(&dir, path, validator);
-      *(base-1) = '/'; //return the slash, fix the string
+      base[-1] = '/'; //return the slash, fix the string
     }
     file_position = directory_get_position(&dir, basename(path));
     LOGI(TAG, "%i", file_position);
