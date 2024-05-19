@@ -9,6 +9,7 @@
 #include "hal/esp32/drivers/display_gc9a01.h"
 #include "driver/gpio.h"
 #include "hal/esp32/drivers/config_nvs.h"
+#include "tusb_msc_storage.h"
 
 static const char *TAG = "board_1_28_v0_1";
 
@@ -199,4 +200,7 @@ Config *board_1_28_v0_1::getConfig() {
 }
 void board_1_28_v0_1::debugInfo() {
 
+}
+bool board_1_28_v0_1::usbConnected() {
+  return tinyusb_msc_storage_in_use_by_usb_host();
 }

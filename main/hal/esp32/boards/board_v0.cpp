@@ -9,6 +9,7 @@
 #include "hal/esp32/boards/board_v0.h"
 #include "hal/esp32/drivers/backlight_ledc.h"
 #include "hal/esp32/hal_usb.h"
+#include "tusb_msc_storage.h"
 
 static const char *TAG = "board_v0";
 
@@ -81,5 +82,8 @@ Config *board_v0::getConfig() {
 }
 void board_v0::debugInfo() {
 
+}
+bool board_v0::usbConnected() {
+  return tinyusb_msc_storage_in_use_by_usb_host();
 }
 

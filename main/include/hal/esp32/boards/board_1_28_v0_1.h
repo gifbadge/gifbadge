@@ -43,6 +43,7 @@ class board_1_28_v0_1 : public Board {
   void * turboBuffer() override {return buffer;};
   Config *getConfig() override;
   void debugInfo() override;
+  bool usbConnected() override;
 
  private:
   battery_max17048 *_battery;

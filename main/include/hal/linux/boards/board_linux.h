@@ -31,6 +31,7 @@ class board_linux : public Board {
   void * turboBuffer() override {return nullptr;};
   Config *getConfig() override;
   void debugInfo() override;
+  bool usbConnected() override;
 
  private:
   backlight_dummy *_backlight;

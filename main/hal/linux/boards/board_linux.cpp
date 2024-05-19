@@ -48,3 +48,6 @@ Config *board_linux::getConfig() {
 void board_linux::debugInfo() {
 
 }
+bool board_linux::usbConnected() {
+  return false;
+}

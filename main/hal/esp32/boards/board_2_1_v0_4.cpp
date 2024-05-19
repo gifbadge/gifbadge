@@ -8,6 +8,7 @@
 #include "esp_io_expander_cat9532.h"
 #include "hal/esp32/drivers/keys_esp_io_expander.h"
 #include "esp_io_expander_tca95xx_16bit.h"
+#include "tusb_msc_storage.h"
 
 static const char *TAG = "board_2_1_v0_4";
 
@@ -106,29 +107,29 @@ board_2_1_v0_4::board_2_1_v0_4() {
 
 
 //    gpio_pullup_en(GPIO_NUM_40);
-//  if (checkSdState(_io_expander)) {
-//    if (init_sdmmc_slot(GPIO_NUM_40,
-//                        GPIO_NUM_41,
-//                        GPIO_NUM_39,
-//                        GPIO_NUM_38,
-//                        GPIO_NUM_44,
-//                        GPIO_NUM_42,
-//                        GPIO_NUM_NC,
-//                        &card,
-//                        4) == ESP_OK) {
-//      usb_init_mmc(0, &card);
-//    }
-//  }
+  if (checkSdState(_io_expander)) {
+    if (init_sdmmc_slot(GPIO_NUM_40,
+                        GPIO_NUM_41,
+                        GPIO_NUM_39,
+                        GPIO_NUM_38,
+                        GPIO_NUM_44,
+                        GPIO_NUM_42,
+                        GPIO_NUM_NC,
+                        &card,
+                        4) == ESP_OK) {
+      usb_init_mmc(0, &card);
+    }
+  }
 
-  mount_sdmmc_slot(GPIO_NUM_40,
-                  GPIO_NUM_41,
-                  GPIO_NUM_39,
-                  GPIO_NUM_38,
-                  GPIO_NUM_44,
-                  GPIO_NUM_42,
-                  GPIO_NUM_NC,
-                  &card,
-                  4);
+//  mount_sdmmc_slot(GPIO_NUM_40,
+//                  GPIO_NUM_41,
+//                  GPIO_NUM_39,
+//                  GPIO_NUM_38,
+//                  GPIO_NUM_44,
+//                  GPIO_NUM_42,
+//                  GPIO_NUM_NC,
+//                  &card,
+//                  4);
 
   sdState = checkSdState(_io_expander);
   const esp_timer_create_args_t checkSdTimerArgs = {
@@ -157,6 +158,8 @@ board_2_1_v0_4::board_2_1_v0_4() {
   esp_timer_handle_t batteryTimerHandle = nullptr;
   ESP_ERROR_CHECK(esp_timer_create(&batteryTimerSettings, &batteryTimerHandle));
   ESP_ERROR_CHECK(esp_timer_start_periodic(batteryTimerHandle, 500 * 1000));
+
+
 
 
 //  mount_sdmmc_slot(GPIO_NUM_40, GPIO_NUM_41, GPIO_NUM_39, GPIO_NUM_38, GPIO_NUM_44, GPIO_NUM_42, GPIO_NUM_NC, &card,
@@ -239,4 +242,7 @@ void board_2_1_v0_4::debugInfo() {
   esp_pm_dump_locks(stdout);
   heap_caps_print_heap_info(MALLOC_CAP_INTERNAL);
   heap_caps_print_heap_info(MALLOC_CAP_SPIRAM);
+}
+bool board_2_1_v0_4::usbConnected() {
+  return tinyusb_msc_storage_in_use_by_usb_host();
 }

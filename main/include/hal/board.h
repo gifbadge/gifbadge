@@ -38,5 +38,7 @@ class Board {
   virtual void *turboBuffer() = 0;
   virtual Config *getConfig() = 0;
   virtual void debugInfo() = 0;
+  virtual bool usbConnected() = 0;
+
 };
 

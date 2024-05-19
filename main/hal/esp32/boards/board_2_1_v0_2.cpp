@@ -8,6 +8,7 @@
 #include "esp_io_expander_cat9532.h"
 #include "hal/esp32/drivers/keys_esp_io_expander.h"
 #include "esp_io_expander_tca95xx_16bit.h"
+#include "tusb_msc_storage.h"
 
 static const char *TAG = "board_2_1_v0_2";
 
@@ -191,4 +192,7 @@ Config *board_2_1_v0_2::getConfig() {
 }
 void board_2_1_v0_2::debugInfo() {
 
+}
+bool board_2_1_v0_2::usbConnected() {
+  return tinyusb_msc_storage_in_use_by_usb_host();
 }

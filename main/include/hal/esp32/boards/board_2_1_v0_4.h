@@ -37,6 +37,7 @@ class board_2_1_v0_4 : public Board {
   void * turboBuffer() override {return buffer;};
   Config *getConfig() override;
   void debugInfo() override;
+  bool usbConnected() override;
 
  private:
   battery_max17048 * _battery;
@@ -47,6 +48,7 @@ class board_2_1_v0_4 : public Board {
   touch_ft5x06 * _touch;
   sdmmc_card_t *card = nullptr;
   esp_io_expander_handle_t _io_expander = nullptr;
+  bool _usbConnected = false;
 
   typedef struct {
     battery_max17048 * battery;

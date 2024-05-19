@@ -4,7 +4,6 @@
 
 #include "log.h"
 #include "ui/menu.h"
-//#include "hal/esp32/hal_usb.h"
 #include "display.h"
 
 #include "ota.h"
@@ -75,26 +74,8 @@ static void initLowBatteryTask() {
   xTimerStart(xTimerCreate("low_battery_handler", 1000/portTICK_PERIOD_MS, pdTRUE, nullptr, lowBatteryTask),0);
 }
 
-#ifdef ESP_PLATFORM
-#include "hal/esp32/hal_usb.h"
-#endif
-
 extern "C" void app_main(void) {
   Board *board = get_board();
-
-#ifdef ESP_PLATFORM
-
-  storage_callback([](bool state) {
-    LOGI(TAG, "state %u", state);
-    if (state) {
-      if (currentState == MAIN_USB) {
-        currentState = MAIN_NORMAL;
-      }
-    } else {
-      currentState = MAIN_USB;
-    }
-  });
-#endif
 
   TaskHandle_t display_task_handle = nullptr;
 
@@ -119,11 +100,15 @@ extern "C" void app_main(void) {
     while (true);
   }
 
-
   MAIN_STATES oldState = MAIN_NONE;
   TaskHandle_t lvglHandle = xTaskGetHandle("LVGL");
   initInputTimer(board);
   while (true) {
+    if(board->usbConnected() && currentState == MAIN_NORMAL){
+      currentState = MAIN_USB;
+    } else if(!board->usbConnected() && currentState == MAIN_USB){
+      currentState = MAIN_NORMAL;
+    }
     if(currentState == MAIN_NONE){
       currentState = MAIN_NORMAL;
       xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_FILE, eSetValueWithOverwrite);
