@@ -127,7 +127,7 @@ void task(void *) {
       case LVGL_STOP:
         lvgl_close();
         display_task_handle = xTaskGetHandle("display_task");
-        xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_NOTIFY_CHANGE, eSetValueWithOverwrite); //Notify the display task to redraw
+        xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_NONE, eSetValueWithOverwrite); //Notify the display task to redraw
         vTaskSuspend(nullptr);
         break;
       case LVGL_EXIT:

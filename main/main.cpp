@@ -106,6 +106,7 @@ extern "C" void app_main(void) {
   while (true) {
     if(board->usbConnected() && currentState == MAIN_NORMAL){
       currentState = MAIN_USB;
+      xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_NOTIFY_USB, eSetValueWithOverwrite);
     } else if(!board->usbConnected() && currentState == MAIN_USB){
       currentState = MAIN_NORMAL;
     }
@@ -121,8 +122,8 @@ extern "C" void app_main(void) {
           break;
         case MAIN_NORMAL:
           if (oldState == MAIN_USB) {
+            vTaskDelay(200 / portTICK_PERIOD_MS);
             xTaskNotifyIndexed(lvglHandle, 0, LVGL_STOP, eSetValueWithOverwrite);
-            vTaskDelay(100 / portTICK_PERIOD_MS);
             //Check for OTA File
             if (OTA::check()) {
               xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_OTA, eSetValueWithOverwrite);

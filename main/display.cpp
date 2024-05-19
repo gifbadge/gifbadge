@@ -86,7 +86,7 @@ static std::pair<int16_t, int16_t> lastSize = {0,0};
 
 //#define FRAMETIME
 
-static int displayFile(Image *in, Display *display) {
+static int displayFile(std::unique_ptr<Image> &in, Display *display) {
   int64_t start = millis();
   int delay;
   int16_t xOffset = 0;
@@ -212,13 +212,12 @@ static bool slideshowChange(DISPLAY_OPTIONS last_mode, Config *config){
   return last_mode == DISPLAY_FILE && config->getSlideShow() &&  lastChange > config->getSlideShowTime();
 }
 
-static Image *next_prev(Image *in, char *current_file, Config *config, Display *display, int increment){
+static void next_prev(std::unique_ptr<Image> &in, char *current_file, Config *config, Display *display, int increment){
   if (config->getLocked()) {
-    return in;
+    return;
   }
   strcpy(basename(current_file), directory_get_increment(&dir, file_position, increment));
-  delete in;
-  return openFileUpdatePath(current_file, display);
+  in.reset(openFileUpdatePath(current_file, display));
 }
 
 void display_task(void *params) {
@@ -233,7 +232,7 @@ void display_task(void *params) {
 
   board->getBacklight()->setLevel(board->getConfig()->getBacklight() * 10);
 
-  Image *in = nullptr;
+  std::unique_ptr<Image> in = nullptr;
 
   char current_file[MAX_FILE_LEN+1];
 
@@ -253,8 +252,7 @@ void display_task(void *params) {
       last_change = millis();
       config->reload();
       if(static_cast<DISPLAY_OPTIONS>(option) != DISPLAY_NEXT || static_cast<DISPLAY_OPTIONS>(option) != DISPLAY_PREVIOUS){
-        delete in;
-        in = nullptr;
+        in.reset();
       }
       switch (option) {
         case DISPLAY_FILE:
@@ -262,14 +260,14 @@ void display_task(void *params) {
           if(!valid_file(current_file)) {
             config->getPath(current_file);
           }
-          in = openFileUpdatePath(current_file, display);
+          in.reset(openFileUpdatePath(current_file, display));
           last_mode = static_cast<DISPLAY_OPTIONS>(option);
           break;
         case DISPLAY_NEXT:
-          in = next_prev(in, current_file, config, display, 1);
+          next_prev(in, current_file, config, display, 1);
           break;
         case DISPLAY_PREVIOUS:
-          in = next_prev(in, current_file, config, display, -1);
+          next_prev(in, current_file, config, display, -1);
           break;
         case DISPLAY_BATT:
           if (last_mode != DISPLAY_BATT) {
@@ -288,21 +286,24 @@ void display_task(void *params) {
         case DISPLAY_SPECIAL_1:
           LOGI(TAG, "DISPLAY_SPECIAL_1");
           if (valid_file("/data/cards/up.png")) {
-            in = openFile("/data/cards/up.png", display);
+            in.reset(openFile("/data/cards/up.png", display));
             last_mode = static_cast<DISPLAY_OPTIONS>(option);
           }
           break;
         case DISPLAY_SPECIAL_2:
           LOGI(TAG, "DISPLAY_SPECIAL_2");
           if (valid_file("/data/cards/down.png")) {
-            in = openFile("/data/cards/down.png", display);
+            in.reset(openFile("/data/cards/down.png", display));
             last_mode = static_cast<DISPLAY_OPTIONS>(option);
           }
           break;
         case DISPLAY_NOTIFY_CHANGE:
           redraw = true;
-          vTaskDelay(200/portTICK_PERIOD_MS);
           break;
+        case DISPLAY_NOTIFY_USB:
+          in.reset();
+          closedir_sorted(&dir);
+          dir.dirptr = nullptr;
         default:
           break;
       }
@@ -320,7 +321,7 @@ void display_task(void *params) {
       } else {
         if(redraw){
           config->getPath(current_file);
-          in = openFileUpdatePath(current_file, display);
+          in.reset(openFileUpdatePath(current_file, display));
           redraw = false;
         }
         if(in) {
@@ -329,8 +330,7 @@ void display_task(void *params) {
             char errMsg[255];
             snprintf(errMsg, sizeof(errMsg), "Error Displaying File\n%s\n%s",  current_file, in->getLastError());
             display_err(board->getDisplay(), errMsg);
-            delete in;
-            in = nullptr;
+            in.reset();
           }
         }
       }
