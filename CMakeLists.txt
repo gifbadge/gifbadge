@@ -4,6 +4,11 @@
 # CMakeLists in this exact order for cmake to work correctly
 cmake_minimum_required(VERSION 3.5)
 
+add_subdirectory(non-idf-components/gifbadge_hal)
+add_subdirectory(non-idf-components/fileutil)
+add_subdirectory(non-idf-components/font_render)
+
+
 if (ESP_PLATFORM)
     set(COMPONENTS "esp32" "esp_gdbstub" "esptool_py" "main")
     include($ENV{IDF_PATH}/tools/cmake/project.cmake)
@@ -11,6 +16,7 @@ if (ESP_PLATFORM)
 
     #idf_build_set_property(COMPILE_OPTIONS "-DLV_CONF_INCLUDE_SIMPLE=1" APPEND)
     idf_build_set_property(COMPILE_OPTIONS "-DLV_CONF_PATH=${CMAKE_SOURCE_DIR}/main/include/lv_conf.h" APPEND)
+
     #include(cmake_utilities)
 
 else ()
@@ -83,11 +89,11 @@ else ()
     include_directories(${SDL2_INCLUDE_DIRS})
 
     add_subdirectory(main)
-    add_subdirectory(components/fileutil)
-    add_subdirectory(components/font_render)
     add_subdirectory(components/image)
+    add_subdirectory(non-idf-components/gifbadge_hal_linux)
     add_subdirectory(components/lvgl__lvgl)
     target_compile_options(lvgl PUBLIC -DLV_CONF_PATH=${CMAKE_SOURCE_DIR}/main/include/lv_conf_linux.h)
-    target_link_libraries(GifBadge freertos_kernel image FileUtil FontRender lvgl ${SDL2_LIBRARIES})
+    target_link_libraries(GifBadge gifbadge_hal gifbadge_hal_linux freertos_kernel image FileUtil FontRender lvgl ${SDL2_LIBRARIES})
     set_property(TARGET GifBadge PROPERTY CXX_STANDARD 23)
+    target_compile_options(GifBadge PRIVATE -fanalyzer)
 endif ()

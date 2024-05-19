@@ -3,6 +3,8 @@
 #include "portable_time.h"
 #include "log.h"
 
+#include "ota.h"
+
 #include "display.h"
 #include "image.h"
 #include "png.h"
@@ -313,11 +315,13 @@ void display_task(void *params) {
       if (slideshowChange(last_mode, config)) {
         xTaskNotifyIndexed(xTaskGetCurrentTaskHandle(), 0, DISPLAY_NEXT, eSetValueWithOverwrite);
       } else if (last_mode == DISPLAY_OTA) {
+#ifdef ESP_PLATFORM
         int percent = OTA::ota_status();
         if (percent != 0) {
           display_ota(display, percent);
         }
         delay = 1000;
+#endif
       } else {
         if(redraw){
           config->getPath(current_file);

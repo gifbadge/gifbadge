@@ -80,8 +80,9 @@ extern "C" void app_main(void) {
   TaskHandle_t display_task_handle = nullptr;
 
   dumpDebugTimerInit();
-
+#ifdef ESP_PLATFORM
   OTA::bootInfo();
+#endif
 
   lvgl_init(board);
 
@@ -125,6 +126,7 @@ extern "C" void app_main(void) {
             vTaskDelay(200 / portTICK_PERIOD_MS);
             xTaskNotifyIndexed(lvglHandle, 0, LVGL_STOP, eSetValueWithOverwrite);
             //Check for OTA File
+#ifdef ESP_PLATFORM
             if (OTA::check()) {
               xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_OTA, eSetValueWithOverwrite);
               vTaskDelay(100 / portTICK_PERIOD_MS);
@@ -135,6 +137,9 @@ extern "C" void app_main(void) {
             else {
               xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_FILE, eSetValueWithOverwrite);
             }
+#else
+            xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_FILE, eSetValueWithOverwrite);
+#endif
           }
           break;
         case MAIN_USB:
@@ -256,8 +261,8 @@ void vApplicationStackOverflowHook( TaskHandle_t pxTask,
 }
 
 #include <thread>
-#include "hal/linux/drivers/display_sdl.h"
-#include "hal/linux/drivers/key_sdl.h"
+#include "drivers/display_sdl.h"
+#include "drivers/key_sdl.h"
 #include <SDL_events.h>
 #include <unistd.h>
 
