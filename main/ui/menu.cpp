@@ -29,6 +29,7 @@ static TimerHandle_t tickHandle;
 static bool menu_state;
 static SemaphoreHandle_t lvgl_mux = nullptr;
 static SemaphoreHandle_t flushSem;
+static SemaphoreHandle_t lvgl_open = nullptr;
 
 
 
@@ -107,9 +108,9 @@ void lvgl_close() {
 #else
   xTimerStop(tickHandle, 0);
 #endif
-  menu_state = false;
-  LOGI(TAG, "Close Done");
+  xSemaphoreGive(lvgl_open);
   get_board()->pmRelease();
+  LOGI(TAG, "Close Done");
 }
 
 void task(void *) {
@@ -117,7 +118,7 @@ void task(void *) {
   LOGI(TAG, "Starting LVGL task");
   uint32_t task_delay_ms = 0;
   vTaskSuspend(nullptr); //Wait until we are actually needed
-  TaskHandle_t display_task_handle = xTaskGetHandle("display_task");
+  TaskHandle_t display_task_handle = nullptr;
 
   while (running) {
     uint32_t option;
@@ -125,7 +126,8 @@ void task(void *) {
     switch (option) {
       case LVGL_STOP:
         lvgl_close();
-        xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_NONE, eSetValueWithOverwrite); //Notify the display task to redraw
+        display_task_handle = xTaskGetHandle("display_task");
+        xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_NOTIFY_CHANGE, eSetValueWithOverwrite); //Notify the display task to redraw
         vTaskSuspend(nullptr);
         break;
       case LVGL_EXIT:
@@ -168,7 +170,11 @@ void keyboard_read(lv_indev_t *indev, lv_indev_data_t *data) {
 }
 
 bool lvgl_menu_state() {
-  return menu_state;
+  bool state = xSemaphoreTake(lvgl_open, 0);
+  if(state){
+    xSemaphoreGive(lvgl_open);
+  }
+  return !state;
 }
 
 void touch_read(lv_indev_t *drv, lv_indev_data_t *data) {
@@ -189,12 +195,12 @@ static void flushWaitCb(lv_display_t *){
 }
 
 void lvgl_init(Board *board) {
-  menu_state = false;
 
   lv_init();
 
   lvgl_mux = xSemaphoreCreateRecursiveMutex();
   flushSem = xSemaphoreCreateBinary();
+  lvgl_open = xSemaphoreCreateRecursiveMutex();
 
 #ifdef ESP_PLATFORM
   const esp_timer_create_args_t lvgl_tick_timer_args = {
@@ -325,10 +331,9 @@ static void battery_widget(lv_obj_t *scr) {
 }
 
 void lvgl_wake_up() {
-  if(!menu_state) {
+  if(xSemaphoreTake(lvgl_open, 10)) {
     LOGI(TAG, "Wakeup");
     get_board()->pmLock();
-    menu_state = true;
 
     cbData.display = get_board()->getDisplay();
 

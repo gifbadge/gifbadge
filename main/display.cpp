@@ -244,7 +244,7 @@ void display_task(void *params) {
   LOGI(TAG, "Display Resolution %ix%i", display->size.first, display->size.second);
 
   int delay = 1000;
-  vTaskDelay(1000/portTICK_PERIOD_MS);
+//  vTaskDelay(1000/portTICK_PERIOD_MS);
   bool redraw = false;
   while (true) {
     uint32_t option;
@@ -301,6 +301,7 @@ void display_task(void *params) {
           break;
         case DISPLAY_NOTIFY_CHANGE:
           redraw = true;
+          vTaskDelay(200/portTICK_PERIOD_MS);
           break;
         default:
           break;
