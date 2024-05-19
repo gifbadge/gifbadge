@@ -26,7 +26,6 @@ static esp_timer_handle_t lvgl_tick_timer;
 #else
 static TimerHandle_t tickHandle;
 #endif
-static bool menu_state;
 static SemaphoreHandle_t lvgl_mux = nullptr;
 static SemaphoreHandle_t flushSem;
 static SemaphoreHandle_t lvgl_open = nullptr;

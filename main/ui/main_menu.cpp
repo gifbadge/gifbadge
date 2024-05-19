@@ -1,4 +1,5 @@
 #include <lvgl.h>
+#include <cassert>
 
 #include "ui/main_menu.h"
 #include "ui/file_options.h"
@@ -63,6 +64,7 @@ static void openSubMenu(lv_event_t *e){
   auto *data = static_cast<subMenuData *>(lv_event_get_user_data(e));
   LV_LOG_USER("%s", lv_label_get_text(obj));
   lv_screen_load(create_screen());
+  assert(data->callback != nullptr);
   lv_obj_t *window = data->callback();
   if(window) {
     lv_obj_add_event_cb(window, closeSubMenu, LV_EVENT_DELETE, obj);
@@ -70,12 +72,14 @@ static void openSubMenu(lv_event_t *e){
 }
 
 static lv_obj_t *subMenu(lv_obj_t *parent, const char *name, MenuType menu){
+  assert(menu != nullptr);
   lv_obj_t *button = lv_file_list_add(parent, nullptr);
   lv_obj_t *label = lv_label_create(button);
   lv_obj_add_style(label, &menu_font_style, LV_PART_MAIN);
   lv_label_set_text(label, name);
 
   auto *data = static_cast<subMenuData *>(malloc(sizeof(subMenuData)));
+  assert(data != nullptr);
   data->callback = menu;
 
   lv_obj_add_event_cb(label, openSubMenu, LV_EVENT_CLICKED, data);

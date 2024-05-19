@@ -202,6 +202,7 @@ lv_obj_t *FileOptions() {
 
     //Fields
     auto *fields = static_cast<FileOptionFields *>(malloc(sizeof(FileOptionFields)));
+    assert(fields != nullptr);
     fields->container = cont_flex;
     fields->file_select = file_label;
     fields->lock_state = lock_switch;

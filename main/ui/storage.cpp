@@ -150,6 +150,7 @@ lv_obj_t *storage_menu() {
     StorageInfo info = get_board()->storageInfo();
 
     auto *fields = static_cast<StorageFields *>(malloc(sizeof(StorageFields)));
+    assert(fields != nullptr);
     fields->container = cont_flex;
 
     lv_obj_t *size_btn;
