@@ -58,8 +58,10 @@ OTA::validation_err validate() {
   fseek(ota_file,
         sizeof(esp_image_header_t) + sizeof(esp_image_segment_header_t) + sizeof(esp_app_desc_t) + 1,
         SEEK_SET);
-  auto *supported_boards = static_cast<uint8_t *>(malloc(new_custom_app_desc.num_supported_boards));
-  fread(supported_boards, 1, new_custom_app_desc.num_supported_boards, ota_file);
+  uint8_t supported_boards[255];
+  if(new_custom_app_desc.num_supported_boards >= sizeof(supported_boards)) {
+    fread(supported_boards, 1, new_custom_app_desc.num_supported_boards, ota_file);
+  }
   fclose(ota_file);
 
   LOGI(TAG, "New Firmware");
