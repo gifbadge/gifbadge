@@ -4,8 +4,8 @@
 [submodule "components/image/EmbeddedImage/PNGdec"]
 	path = components/image/EmbeddedImage/PNGdec
 	url = https://github.com/bitbank2/PNGdec.git
-[submodule "components/font_render/mcufont"]
-	path = components/font_render/mcufont
+[submodule "non-idf-components/font_render/mcufont"]
+	path = non-idf-components//font_render/mcufont
 	url = https://github.com/mcufont/mcufont.git
 [submodule "components/lvgl__lvgl"]
 	path = components/lvgl__lvgl
@@ -13,10 +13,3 @@
 [submodule "lv_font_conv"]
 	path = lv_font_conv
 	url = https://github.com/lvgl/lv_font_conv.git
-
-[submodule "FreeRTOS"]
-	path = FreeRTOS
-	url = https://github.com/FreeRTOS/FreeRTOS.git
-[submodule "FreeRTOS-Kernel"]
-	path = FreeRTOS-Kernel
-	url = https://github.com/FreeRTOS/FreeRTOS-Kernel/
