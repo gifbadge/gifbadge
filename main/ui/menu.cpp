@@ -1,6 +1,6 @@
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include <freertos/semphr.h>
+#include "FreeRTOS.h"
+#include "task.h"
+#include <semphr.h>
 #include "log.h"
 
 #include <lvgl.h>
@@ -12,7 +12,7 @@
 #include "hw_init.h"
 #include "display.h"
 #include "ui/widgets/battery/lv_battery.h"
-#include "freertos/timers.h"
+#include "timers.h"
 
 static const char *TAG = "MENU";
 

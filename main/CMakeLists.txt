@@ -21,18 +21,17 @@ SET(SRC "main.cpp"
 )
 
 if (ESP_PLATFORM)
-
+    idf_component_get_property(freertos_lib freertos ORIG_INCLUDE_PATH)
     idf_component_register(SRCS
             ${SRC}
 
-            INCLUDE_DIRS "include"
+            INCLUDE_DIRS "include" ${freertos_lib}
             REQUIRES esp_psram app_update image lvgl esp_timer hal_esp32)
     target_compile_options(${COMPONENT_LIB} PRIVATE -D__LINUX__)
     target_link_libraries(${COMPONENT_TARGET} "-u custom_app_desc" FileUtil FontRender)
 
+    #
 else ()
-    cmake_minimum_required(VERSION 3.1...3.29)
-    project(Main VERSION 1.0 LANGUAGES C CXX)
     add_executable(GifBadge ${SRC})
     target_include_directories(GifBadge PRIVATE include)
 endif ()

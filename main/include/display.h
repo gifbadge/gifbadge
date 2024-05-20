@@ -4,8 +4,8 @@
 #include <string>
 #include <vector>
 
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
+#include "FreeRTOS.h"
+#include "task.h"
 
 #include "hal/config.h"
 #include "hal/backlight.h"

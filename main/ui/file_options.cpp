@@ -10,6 +10,7 @@
 #include "hw_init.h"
 #ifndef ESP_PLATFORM
 #include <unistd.h>
+#include <cassert>
 #endif
 
 static const char *TAG = "file_options";

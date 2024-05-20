@@ -1,9 +1,9 @@
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
+#include "FreeRTOS.h"
+#include "task.h"
 #include "input.h"
 #include "display.h"
 #include "ui/menu.h"
-#include "freertos/timers.h"
+#include "timers.h"
 #include "hw_init.h"
 #include "portable_time.h"
 

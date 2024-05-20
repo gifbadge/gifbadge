@@ -5,7 +5,7 @@
 	path = components/image/EmbeddedImage/PNGdec
 	url = https://github.com/bitbank2/PNGdec.git
 [submodule "non-idf-components/font_render/mcufont"]
-	path = non-idf-components//font_render/mcufont
+	path = non-idf-components/font_render/mcufont
 	url = https://github.com/mcufont/mcufont.git
 [submodule "components/lvgl__lvgl"]
 	path = components/lvgl__lvgl

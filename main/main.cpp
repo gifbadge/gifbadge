@@ -1,6 +1,6 @@
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "freertos/timers.h"
+#include "FreeRTOS.h"
+#include "task.h"
+#include "timers.h"
 
 #include "log.h"
 #include "ui/menu.h"

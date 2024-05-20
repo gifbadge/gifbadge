@@ -1,4 +1,4 @@
-#include "freertos/FreeRTOS.h"
+#include "FreeRTOS.h"
 
 #include "portable_time.h"
 #include "log.h"
