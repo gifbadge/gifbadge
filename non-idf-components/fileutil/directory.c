@@ -18,8 +18,6 @@ static int cmpfunc (void *arg, const void * a, const void * b) {
   char file_name_a[256];
   char file_name_b[256];
 
-//  LOGI("", "a: %p b:%p arg: %p", a, b, arg);
-
   seekdir(dir, *(long *)a);
   de = readdir(dir);
   strncpy(file_name_a, de->d_name, sizeof(file_name_a));
@@ -38,27 +36,26 @@ int opendir_sorted(DIR_SORTED *dirp, const char *dirname, int(*validator)(const 
   long tmp_ptr;
   struct dirent *de;
   while (1) {
-    tmp_ptr = telldir(dirp->dirptr);
+    dirp->file_index[dirp->count] = telldir(dirp->dirptr);
     de = readdir(dirp->dirptr);
     if(!de){
       break;
     }
+    if (strcmp(".", de->d_name) == 0 || strcmp("..", de->d_name) == 0) {
+      // Throw away . and ..
+      continue;
+    }
     if(validator){
-//      LOGI("", "index %li\n", tmp_ptr);
-      if(validator(dirname, de->d_name)){
-        dirp->file_index[dirp->count] = tmp_ptr;
-      } else {
+      if (!validator(dirname, de->d_name)) {
         continue;
       }
-    } else {
-      dirp->file_index[dirp->count] = tmp_ptr;
     }
     dirp->count++;
   }
-  dirp->count = dirp->count-1;
+  dirp->count = dirp->count - 1;
   dirp->index = 0;
 #if defined(__GLIBC__) || (defined (__FreeBSD__) && defined(qsort_r))
-  qsort_r(dirp->file_index, dirp->count, sizeof(long), cmpfunc, dirp->dirptr);
+  qsort_r(dirp->file_index, dirp->count + 1, sizeof(long), cmpfunc, dirp->dirptr);
 #else
   qsort_r(dirp->file_index, dirp->count, sizeof(long), dirp->dirptr, cmpfunc);
 #endif
@@ -67,7 +64,7 @@ int opendir_sorted(DIR_SORTED *dirp, const char *dirname, int(*validator)(const 
 }
 
 struct dirent *readdir_sorted(DIR_SORTED *dirp) {
-  if(dirp->index > dirp->count){
+  if (dirp->index > dirp->count || dirp->count < 0) {
     return NULL;
   }
   seekdir(dirp->dirptr, dirp->file_index[dirp->index]);
@@ -109,6 +106,9 @@ int directory_get_position(DIR_SORTED *dirp, const char *file){
 
 const char * directory_get_increment(DIR_SORTED *dirp, int pos, int increment){
   struct dirent *de;
+  if (dirp->count < 0) {
+    return NULL;
+  }
   while(1){
     if(pos+(increment) > dirp->count){
       pos = 0;
@@ -125,38 +125,41 @@ const char * directory_get_increment(DIR_SORTED *dirp, int pos, int increment){
   }
 }
 
-void directory_print(DIR_SORTED *dirp){
-#ifdef ESP_PLATFORM
-#include <esp_log.h>
-  rewinddir_sorted(dirp);
-  struct dirent *de;
-  while((de = readdir_sorted(dirp))){
-    ESP_LOGI("directory.c", "%s", de->d_name);
-  }
-#endif
-}
+//void directory_print(DIR_SORTED *dirp){
+//#ifdef ESP_PLATFORM
+//#include <esp_log.h>
+//  rewinddir_sorted(dirp);
+//  struct dirent *de;
+//  while((de = readdir_sorted(dirp))){
+//    ESP_LOGI("directory.c", "%s", de->d_name);
+//  }
+//#else
+//  rewinddir_sorted(dirp);
+//  struct dirent *de;
+//  while((de = readdir_sorted(dirp))){
+//    printf("%s\n", de->d_name);
+//  }
+//#endif
+//}
 
 int is_directory(const char* path){
   struct stat buffer;
   stat(path, &buffer);
-  return (buffer.st_mode & S_IFDIR);
+  return (buffer.st_mode & S_IFDIR) > 0;
 }
 
 int is_file(const char* path){
   struct stat buffer;
   stat(path, &buffer);
-  return (buffer.st_mode & S_IFREG);
+  return (buffer.st_mode & S_IFREG) > 0;
 }
 
 int compare_path(char *a, char *b){
   if(a[strlen(a)-1] == '/'){
-    printf("a\n");
     a[strlen(a)-1] = '\0';
   }
   if(b[strlen(b)-1] == '/'){
-    printf("b\n");
     b[strlen(b)-1] = '\0';
   }
-  printf("a: %s b: %s\n", a, b);
   return strcmp(a, b);
 }
