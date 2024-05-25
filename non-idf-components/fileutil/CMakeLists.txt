@@ -9,8 +9,10 @@ set_property(TARGET FileUtil PROPERTY CXX_EXTENSIONS ON)
 
 if(ESP_PLATFORM)
     target_link_libraries(FileUtil PRIVATE idf::newlib)
+else ()
+    include(CTest)
+    add_subdirectory(test)
+    target_compile_options(FileUtil PUBLIC -g -fprofile-arcs -ftest-coverage)
 endif()
 
-#include(CTest)
-#add_subdirectory(test)
-#target_compile_options(FileUtil PUBLIC -g -fprofile-arcs -ftest-coverage)
+
