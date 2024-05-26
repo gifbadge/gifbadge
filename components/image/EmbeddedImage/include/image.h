@@ -6,6 +6,7 @@
 #include <memory>
 #include <map>
 #include <array>
+#include <span>
 
 
 
@@ -25,6 +26,6 @@ public:
     virtual const char * getLastError() = 0;
 };
 
-extern std::array<const char*, 4> extensions;
-
+extern std::array<const char *, 4> extensionArray;
+extern std::span<const char *> extensions;
 Image *ImageFactory(const char *path);

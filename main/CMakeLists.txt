@@ -1,7 +1,6 @@
 SET(SRC "main.cpp"
         "ui/menu.cpp"
         "display.cpp"
-        "file_util.cpp"
         "input.cpp"
         ${CMAKE_CURRENT_BINARY_DIR}/material_icons.c
         ${CMAKE_CURRENT_BINARY_DIR}/material_icons_56.c

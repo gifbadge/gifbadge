@@ -12,10 +12,10 @@
 
 
 #include "font_render.h"
-#include "file_util.h"
 #include "ui/menu.h"
 
 #include "directory.h"
+#include "file.h"
 #include "dirname.h"
 #include "hw_init.h"
 
@@ -123,16 +123,12 @@ static int displayFile(std::unique_ptr<Image> &in, Display *display) {
 static int validator(const char *path, const char *file) {
   char inPath[128];
   JOIN_PATH(inPath, path, file);
-  if (!valid_file(inPath)) {
-    return 0;
-  }
-//  LOGI(TAG, "%s", inPath);
-  return 1;
+  return valid_image_file(inPath, extensions);
 }
 
 static int get_file(char *path) {
   //Check if we are starting with a valid file, and just return it if we are
-  if (valid_file(path)) {
+  if (valid_image_file(path, extensions)) {
     if(!dir.dirptr){
       char *base = basename(path);
       base[-1] = '\0'; //Replace the slash with a null, so we can pretend the string is shorter
@@ -259,7 +255,7 @@ void display_task(void *params) {
       switch (option) {
         case DISPLAY_FILE:
           LOGI(TAG, "DISPLAY_FILE");
-          if(!valid_file(current_file)) {
+          if (!valid_image_file(current_file, extensions)) {
             config->getPath(current_file);
           }
           in.reset(openFileUpdatePath(current_file, display));
@@ -287,14 +283,14 @@ void display_task(void *params) {
           break;
         case DISPLAY_SPECIAL_1:
           LOGI(TAG, "DISPLAY_SPECIAL_1");
-          if (valid_file("/data/cards/up.png")) {
+          if (is_file("/data/cards/up.png")) {
             in.reset(openFile("/data/cards/up.png", display));
             last_mode = static_cast<DISPLAY_OPTIONS>(option);
           }
           break;
         case DISPLAY_SPECIAL_2:
           LOGI(TAG, "DISPLAY_SPECIAL_2");
-          if (valid_file("/data/cards/down.png")) {
+          if (is_file("/data/cards/down.png")) {
             in.reset(openFile("/data/cards/down.png", display));
             last_mode = static_cast<DISPLAY_OPTIONS>(option);
           }

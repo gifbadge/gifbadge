@@ -9,8 +9,8 @@
 #include "ui/style.h"
 #include "ui/menu.h"
 #include "directory.h"
-#include "file_util.h"
 #include "dirname.h"
+#include "file.h"
 
 extern "C" {
 
