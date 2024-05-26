@@ -57,11 +57,12 @@ static void display_err(Display *display, const char *err) {
   display->write(0, 0, display->size.first, display->size.second, display->buffer);
 }
 
-static void display_ota(Display *display, uint32_t percent) {
+static void display_ota(Display *display) {
   LOGI(TAG, "Displaying OTA Status");
-  clear_screen(display);
+  clear_screen(display, false);
   char tmp[50];
-  sprintf(tmp, "Update In Progress\n%lu%%", percent);
+  int percent = OTA::ota_status();
+  sprintf(tmp, "Update In Progress\n%d%%", percent);
   render_text_centered(display->size.first, display->size.second, 10, tmp, display->buffer);
   display->write(0, 0, display->size.first, display->size.second, display->buffer);
 }
@@ -274,7 +275,6 @@ void display_task(void *params) {
           last_mode = static_cast<DISPLAY_OPTIONS>(option);
           break;
         case DISPLAY_OTA:
-          display_ota(board->getDisplay(), 0);
           last_mode = static_cast<DISPLAY_OPTIONS>(option);
           break;
         case DISPLAY_NO_STORAGE:
@@ -312,11 +312,9 @@ void display_task(void *params) {
         xTaskNotifyIndexed(xTaskGetCurrentTaskHandle(), 0, DISPLAY_NEXT, eSetValueWithOverwrite);
       } else if (last_mode == DISPLAY_OTA) {
 #ifdef ESP_PLATFORM
-        int percent = OTA::ota_status();
-        if (percent != 0) {
-          display_ota(display, percent);
-        }
-        delay = 1000;
+      display_ota(display);
+      delay = 500;
+      continue;
 #endif
       } else {
         if(redraw){
