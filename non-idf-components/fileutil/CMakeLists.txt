@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.1...3.29)
-project(FileUtil VERSION 1.0 LANGUAGES C)
-add_library(FileUtil "dirname.c" "directory.c" "path.c")
+project(FileUtil VERSION 1.0 LANGUAGES C CXX)
+add_library(FileUtil "dirname.c" "directory.c" "path.c" "file.cpp")
 target_include_directories(FileUtil PUBLIC "include")
 set_property(TARGET FileUtil PROPERTY C_STANDARD 11)
 set_property(TARGET FileUtil PROPERTY C_EXTENSIONS ON)

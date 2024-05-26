@@ -148,12 +148,6 @@ int is_directory(const char* path){
   return (buffer.st_mode & S_IFDIR) > 0;
 }
 
-int is_file(const char* path){
-  struct stat buffer;
-  stat(path, &buffer);
-  return (buffer.st_mode & S_IFREG) > 0;
-}
-
 int compare_path(char *a, char *b){
   if(a[strlen(a)-1] == '/'){
     a[strlen(a)-1] = '\0';

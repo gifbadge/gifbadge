@@ -160,11 +160,6 @@ void test_compare_path_with_mixed_trailing_slash_not_equal(void) {
 
 }
 
-void test_is_file(void) {
-  TEST_ASSERT_TRUE(is_file("./test_data/test2/a.gif"));
-  TEST_ASSERT_FALSE(is_file("./test_data/test2/a"));
-}
-
 void test_is_directory(void) {
   TEST_ASSERT_TRUE(is_directory("./test_data/test2/a"));
   TEST_ASSERT_FALSE(is_directory("./test_data/test2/a.gif"));
@@ -215,7 +210,6 @@ int main(void) {
   RUN_TEST(test_compare_path_without_trailing_slash_equal);
   RUN_TEST(test_compare_path_with_mixed_trailing_slash_equal);
   RUN_TEST(test_compare_path_with_mixed_trailing_slash_not_equal);
-  RUN_TEST(test_is_file);
   RUN_TEST(test_is_directory);
 
   return UNITY_END();

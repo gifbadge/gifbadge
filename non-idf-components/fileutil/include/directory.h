@@ -37,8 +37,6 @@ void directory_print(DIR_SORTED *dirp);
 
 int is_directory(const char* path);
 
-int is_file(const char* path);
-
 int compare_path(char *a, char *b);
 
 #ifdef __cplusplus
