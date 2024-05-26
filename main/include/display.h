@@ -11,11 +11,13 @@
 #include "hal/backlight.h"
 #include "hal/display.h"
 
+#define noResetBit (1<<5)
+
 enum DISPLAY_OPTIONS {
-  DISPLAY_NONE,
+  DISPLAY_NONE = 0,
   DISPLAY_FILE,
-  DISPLAY_NEXT,
-  DISPLAY_PREVIOUS,
+  DISPLAY_NEXT = 2 | noResetBit,
+  DISPLAY_PREVIOUS = 3 | noResetBit,
   DISPLAY_BATT,
   DISPLAY_OTA,
   DISPLAY_NO_STORAGE,

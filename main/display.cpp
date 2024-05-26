@@ -249,7 +249,7 @@ void display_task(void *params) {
     if (option != DISPLAY_NONE) {
       last_change = millis();
       config->reload();
-      if(static_cast<DISPLAY_OPTIONS>(option) != DISPLAY_NEXT || static_cast<DISPLAY_OPTIONS>(option) != DISPLAY_PREVIOUS){
+      if (!(option & noResetBit)) {
         in.reset();
       }
       switch (option) {
