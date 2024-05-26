@@ -311,30 +311,43 @@ void display_task(void *params) {
       }
     }
     delay = 1000;
-    if (!lvgl_menu_state()) {
-      if (slideshowChange(last_mode, config)) {
-        xTaskNotifyIndexed(xTaskGetCurrentTaskHandle(), 0, DISPLAY_NEXT, eSetValueWithOverwrite);
-      } else if (last_mode == DISPLAY_OTA) {
+
+    if (lvgl_menu_state()) {
+      //Go back to the top if the menu is open
+      continue;
+    }
+
+    if (slideshowChange(last_mode, config)) {
+      //Send the signal to advance the slideshow, then go back to the top
+      xTaskNotifyIndexed(xTaskGetCurrentTaskHandle(), 0, DISPLAY_NEXT, eSetValueWithOverwrite);
+      delay = 0;
+      continue;
+    }
+
+    if (last_mode == DISPLAY_OTA) {
+      //Update the OTA status on the display, and return to the top of the loop
 #ifdef ESP_PLATFORM
       display_ota(display);
       delay = 500;
       continue;
 #endif
-      } else {
-        if(redraw){
-          config->getPath(current_file);
-          in.reset(openFileUpdatePath(current_file, display));
-          redraw = false;
-        }
-        if(in) {
-          delay = displayFile(in, display);
-          if (delay < 0) {
-            char errMsg[255];
-            snprintf(errMsg, sizeof(errMsg), "Error Displaying File\n%s\n%s",  current_file, in->getLastError());
-            display_err(board->getDisplay(), errMsg);
-            in.reset();
-          }
-        }
+    }
+
+    if (redraw) {
+      // Something has changed in the configuration, reopen the configured file.
+      config->getPath(current_file);
+      in.reset(openFileUpdatePath(current_file, display));
+      redraw = false;
+    }
+
+    if (in) {
+      // If there is an open file, display the next frame
+      delay = displayFile(in, display);
+      if (delay < 0) {
+        char errMsg[255];
+        snprintf(errMsg, sizeof(errMsg), "Error Displaying File\n%s\n%s", current_file, in->getLastError());
+        display_err(board->getDisplay(), errMsg);
+        in.reset();
       }
     }
   }
