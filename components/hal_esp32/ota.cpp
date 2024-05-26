@@ -55,13 +55,6 @@ OTA::validation_err validate() {
   fseek(ota_file, sizeof(esp_image_segment_header_t), SEEK_CUR);
   fread(&new_app_info, 1, sizeof(esp_app_desc_t), ota_file);
   fread(&new_custom_app_desc, 1, sizeof(new_custom_app_desc), ota_file);
-  fseek(ota_file,
-        sizeof(esp_image_header_t) + sizeof(esp_image_segment_header_t) + sizeof(esp_app_desc_t) + 1,
-        SEEK_SET);
-  uint8_t supported_boards[255];
-  if(new_custom_app_desc.num_supported_boards >= sizeof(supported_boards)) {
-    fread(supported_boards, 1, new_custom_app_desc.num_supported_boards, ota_file);
-  }
   fclose(ota_file);
 
   LOGI(TAG, "New Firmware");
@@ -69,7 +62,7 @@ OTA::validation_err validate() {
   LOGI(TAG, "Version: %s", new_app_info.version);
   LOGI(TAG, "Supports Boards:");
   for (int x = 0; x < new_custom_app_desc.num_supported_boards; x++) {
-    LOGI(TAG, "%" PRIu8 "", supported_boards[x]);
+    LOGI(TAG, "%" PRIu8 "", new_custom_app_desc.supported_boards[x]);
   }
 
   if (new_header_info.chip_id != ESP_CHIP_ID_ESP32S3) {
@@ -80,7 +73,7 @@ OTA::validation_err validate() {
   esp_efuse_read_field_blob(ESP_EFUSE_USER_DATA_BOARD, &board, 8);
   bool supported_board = false;
   for (int x = 0; x < new_custom_app_desc.num_supported_boards; x++) {
-    if (board == supported_boards[x]) {
+    if (board == new_custom_app_desc.supported_boards[x]) {
       supported_board = true;
       break;
     }
