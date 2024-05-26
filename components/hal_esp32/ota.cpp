@@ -58,11 +58,11 @@ OTA::validation_err validate() {
   fclose(ota_file);
 
   LOGI(TAG, "New Firmware");
-  LOGI(TAG, "CHIPID: %" PRIu16 "", new_header_info.chip_id);
+  LOGI(TAG, "CHIPID: %i", new_header_info.chip_id);
   LOGI(TAG, "Version: %s", new_app_info.version);
   LOGI(TAG, "Supports Boards:");
   for (int x = 0; x < new_custom_app_desc.num_supported_boards; x++) {
-    LOGI(TAG, "%" PRIu8 "", new_custom_app_desc.supported_boards[x]);
+    LOGI(TAG, "%u", new_custom_app_desc.supported_boards[x]);
   }
 
   if (new_header_info.chip_id != ESP_CHIP_ID_ESP32S3) {
