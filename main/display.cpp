@@ -63,9 +63,9 @@ class ErrorImage : public Image {
     return nullptr;
   }
  protected:
-  char _error[255];
   int16_t _width;
   int16_t _height;
+  char _error[255];
   int _delay = 1000;
 };
 
