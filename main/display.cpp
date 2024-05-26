@@ -6,10 +6,10 @@
 #include "ota.h"
 
 #include "display.h"
+#include <memory>
 #include "image.h"
 #include "png.h"
 #include "images/low_batt_png.h"
-
 
 #include "font_render.h"
 #include "ui/menu.h"
@@ -28,7 +28,7 @@ static int file_position;
 #define MAX_FILE_LEN 128
 
 static void clear_screen(Display *display, bool flush = true) {
-  for(int x = 0; x <=1; x++) {
+  for (int x = 0; x <= 1; x++) {
     memset(display->buffer, 255, display->size.first * display->size.second * 2);
     if (flush) {
       display->write(0, 0, display->size.first, display->size.second, display->buffer);
@@ -36,45 +36,74 @@ static void clear_screen(Display *display, bool flush = true) {
   }
 }
 
-static void display_no_image(Display *display) {
-  LOGI(TAG, "Displaying No Image");
-  clear_screen(display);
-  render_text_centered(display->size.first, display->size.second, 10, "No Image", display->buffer);
-  display->write(0, 0, display->size.first, display->size.second, display->buffer);
-}
+class ErrorImage : public Image {
+ public:
+  ErrorImage(std::pair<int16_t, int16_t> size, const char *error)
+      : _width(size.first), _height(size.second), _error("") {
+    if (error != nullptr) {
+      strcpy(_error, error);
+    }
+  }
 
-static void display_image_too_large(Display *display, const char *path) {
-  LOGI(TAG, "Displaying Image To Large");
-  clear_screen(display);
-  char tmp[255];
-  sprintf(tmp, "Image too Large\n%s", path);
-  render_text_centered(display->size.first, display->size.second, 10, tmp, display->buffer);
-  display->write(0, 0, display->size.first, display->size.second, display->buffer);
-}
+  template<typename ... Args>
+  ErrorImage(std::pair<int16_t, int16_t> size, const char *fmt, Args &&... args)
+      : _width(size.first), _height(size.second), _error("") {
+    snprintf(_error, sizeof(_error) - 1, fmt, std::forward<Args>(args) ...);
+  };
 
-static void display_err(Display *display, const char *err) {
-  LOGI(TAG, "Displaying Error");
-  clear_screen(display);
-  render_text_centered(display->size.first, display->size.second, 10, err, display->buffer);
-  display->write(0, 0, display->size.first, display->size.second, display->buffer);
-}
+  int loop(uint8_t *outBuf, int16_t x, int16_t y, int16_t width) override {
+    memset(outBuf, 255, _width * _height * 2);
+    render_text_centered(_width, _height, 10, _error, outBuf);
+    return _delay;
+  }
+  std::pair<int16_t, int16_t> size() override {
+    return {_width, _height};
+  }
+  const char *getLastError() override {
+    return nullptr;
+  }
+ protected:
+  char _error[255];
+  int16_t _width;
+  int16_t _height;
+  int _delay = 1000;
+};
 
-static void display_ota(Display *display) {
-  LOGI(TAG, "Displaying OTA Status");
-  clear_screen(display, false);
-  char tmp[50];
-  int percent = OTA::ota_status();
-  sprintf(tmp, "Update In Progress\n%d%%", percent);
-  render_text_centered(display->size.first, display->size.second, 10, tmp, display->buffer);
-  display->write(0, 0, display->size.first, display->size.second, display->buffer);
-}
+class NoImage : public ErrorImage {
+ public:
+  explicit NoImage(std::pair<int16_t, int16_t> size) : ErrorImage(size, nullptr) {
+    strcpy(_error, "No Image");
+  }
+};
 
-static void display_no_storage(Display *display) {
-  LOGI(TAG, "Displaying No Storage");
-  clear_screen(display);
-  render_text_centered(display->size.first, display->size.second, 10, "No SDCARD", display->buffer);
-  display->write(0, 0, display->size.first, display->size.second, display->buffer);
-}
+class TooLargeImage : public ErrorImage {
+ public:
+  TooLargeImage(std::pair<int16_t, int16_t> size, const char *path) : ErrorImage(size, nullptr) {
+    sprintf(_error, "Image too Large\n%s", path);
+  }
+};
+
+class OTAImage : public ErrorImage {
+ public:
+  explicit OTAImage(std::pair<int16_t, int16_t> size) : ErrorImage(size, nullptr) {
+    strcpy(_error, "Update In Progress\n");
+    _delay = 500;
+  }
+  int loop(uint8_t *outBuf, int16_t x, int16_t y, int16_t width) override {
+#ifdef ESP_PLATFORM
+    int percent = OTA::ota_status();
+    sprintf(_error, "Update In Progress\n%d%%", percent);
+#endif
+    return ErrorImage::loop(outBuf, x, y, width);
+  }
+};
+
+class NoStorageImage : public ErrorImage {
+ public:
+  explicit NoStorageImage(std::pair<int16_t, int16_t> size) : ErrorImage(size, nullptr) {
+    strcpy(_error, "No SDCARD");
+  }
+};
 
 static void display_image_batt(Display *display) {
   LOGI(TAG, "Displaying Low Battery");
@@ -170,7 +199,7 @@ static int get_file(char *path) {
     LOGI(TAG, "%s", path);
     return 0;
   }
-  path[0] = '\0';
+//  path[0] = '\0';
   return -1;
 }
 
@@ -178,48 +207,40 @@ static Image *openFile(const char *path, Display *display) {
   Image *in = ImageFactory(path);
   if (in) {
     if (in->open(path, get_board()->turboBuffer()) != 0) {
-      char errorString[255];
-      snprintf(errorString, sizeof(errorString), "Error Displaying File\n%s\n%s", path, in->getLastError());
-      display_err(display, errorString);
+      const char *lastError = in->getLastError();
       delete in;
-      return nullptr;
+      return new ErrorImage(display->size, "Error Displaying File\n%s\n%s", path, lastError);
     }
     printf("%s x: %i y: %i\n", path, in->size().first, in->size().second);
     auto size = in->size();
     if (size > display->size) {
       delete in;
-      display_image_too_large(display, path);
-      return nullptr;
+      return new TooLargeImage(display->size, path);
     }
   } else {
-    char errMsg[255];
-    snprintf(errMsg, sizeof(errMsg), "Could not Display\n%s", path);
-    display_err(display, errMsg);
+    return new ErrorImage(display->size, "Could not Display\n%s", path);
   }
   return in;
 }
 
 static Image *openFileUpdatePath(char *path, Display *display) {
   if (get_file(path) != 0) {
-    display_no_image(display);
-    return nullptr;
+    file_position = -1;
+    return new NoImage(display->size);
   }
   return openFile(path, display);
 }
 
-static int64_t last_change;
-
-static bool slideshowChange(DISPLAY_OPTIONS last_mode, Config *config){
-  int64_t lastChange = millis() - last_change;
-  return last_mode == DISPLAY_FILE && config->getSlideShow() &&  lastChange > config->getSlideShowTime();
-}
 
 static void next_prev(std::unique_ptr<Image> &in, char *current_file, Config *config, Display *display, int increment){
   if (config->getLocked()) {
     return;
   }
-  strcpy(basename(current_file), directory_get_increment(&dir, file_position, increment));
-  in.reset(openFileUpdatePath(current_file, display));
+  const char *next = directory_get_increment(&dir, file_position, increment);
+  if (next != nullptr) {
+    strcpy(basename(current_file), next);
+    in.reset(openFileUpdatePath(current_file, display));
+  }
 }
 
 void display_task(void *params) {
@@ -234,20 +255,16 @@ void display_task(void *params) {
 
   board->getBacklight()->setLevel(board->getConfig()->getBacklight() * 10);
 
-  std::unique_ptr<Image> in = nullptr;
-
-  char current_file[MAX_FILE_LEN+1];
-  config->getPath(current_file);
-
   DISPLAY_OPTIONS last_mode = DISPLAY_NONE;
-
-  last_change = millis();
 
   LOGI(TAG, "Display Resolution %ix%i", display->size.first, display->size.second);
 
-  int delay = 1000;
-//  vTaskDelay(1000/portTICK_PERIOD_MS);
-  bool redraw = false;
+  int delay = 1000; //Delay for display loop. Is adjusted by the results of the loop method of the image being displayed
+  bool redraw = false; //Reload from configuration next time we go to display an image
+  int64_t last_change = millis(); //Last time the option has changed, used for slideshow
+  std::unique_ptr<Image> in = nullptr; //The image we are displaying
+  char current_file[MAX_FILE_LEN + 1]; //The current file path that has been selected
+  config->getPath(current_file);
   while (true) {
     uint32_t option;
     xTaskNotifyWaitIndexed(0, 0, 0xffffffff, &option, delay / portTICK_PERIOD_MS);
@@ -276,14 +293,18 @@ void display_task(void *params) {
           if (last_mode != DISPLAY_BATT) {
             display_image_batt(board->getDisplay());
           }
+          file_position = -1;
           last_mode = static_cast<DISPLAY_OPTIONS>(option);
           break;
         case DISPLAY_OTA:
+          in = std::make_unique<OTAImage>(display->size);
+          file_position = -1;
           last_mode = static_cast<DISPLAY_OPTIONS>(option);
           break;
         case DISPLAY_NO_STORAGE:
           last_mode = static_cast<DISPLAY_OPTIONS>(option);
-          display_no_storage(board->getDisplay());
+          in = std::make_unique<NoStorageImage>(display->size);
+          file_position = -1;
           break;
         case DISPLAY_SPECIAL_1:
           LOGI(TAG, "DISPLAY_SPECIAL_1");
@@ -303,7 +324,6 @@ void display_task(void *params) {
           redraw = true;
           break;
         case DISPLAY_NOTIFY_USB:
-          in.reset();
           closedir_sorted(&dir);
           dir.dirptr = nullptr;
         default:
@@ -317,20 +337,11 @@ void display_task(void *params) {
       continue;
     }
 
-    if (slideshowChange(last_mode, config)) {
+    if (config->getSlideShow() && (millis() - last_change) > config->getSlideShowTime()) {
       //Send the signal to advance the slideshow, then go back to the top
       xTaskNotifyIndexed(xTaskGetCurrentTaskHandle(), 0, DISPLAY_NEXT, eSetValueWithOverwrite);
       delay = 0;
       continue;
-    }
-
-    if (last_mode == DISPLAY_OTA) {
-      //Update the OTA status on the display, and return to the top of the loop
-#ifdef ESP_PLATFORM
-      display_ota(display);
-      delay = 500;
-      continue;
-#endif
     }
 
     if (redraw) {
@@ -344,10 +355,10 @@ void display_task(void *params) {
       // If there is an open file, display the next frame
       delay = displayFile(in, display);
       if (delay < 0) {
-        char errMsg[255];
-        snprintf(errMsg, sizeof(errMsg), "Error Displaying File\n%s\n%s", current_file, in->getLastError());
-        display_err(board->getDisplay(), errMsg);
-        in.reset();
+        in = std::make_unique<ErrorImage>(display->size,
+                                          "Error Displaying File\n%s\n%s",
+                                          current_file,
+                                          in->getLastError());
       }
     }
   }
