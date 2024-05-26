@@ -27,10 +27,12 @@ static int file_position;
 
 #define MAX_FILE_LEN 128
 
-static void clear_screen(Display *display) {
+static void clear_screen(Display *display, bool flush = true) {
   for(int x = 0; x <=1; x++) {
     memset(display->buffer, 255, display->size.first * display->size.second * 2);
-    display->write(0, 0, display->size.first, display->size.second, display->buffer);
+    if (flush) {
+      display->write(0, 0, display->size.first, display->size.second, display->buffer);
+    }
   }
 }
 
@@ -96,7 +98,8 @@ static int displayFile(std::unique_ptr<Image> &in, Display *display) {
   int16_t yOffset = 0;
   if (in->size() != display->size) {
     if(lastSize > in->size()) {
-      clear_screen(display); //Only need to clear the screen if the image won't fill it, and the last image was bigger
+      clear_screen(display,
+                   false); //Only need to clear the screen if the image won't fill it, and the last image was bigger
     }
     xOffset = static_cast<int16_t>((display->size.first / 2) - (in->size().first / 2));
     yOffset = static_cast<int16_t>((display->size.second / 2) - ((in->size().second + 1) / 2));
