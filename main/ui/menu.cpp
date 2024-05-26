@@ -107,7 +107,6 @@ void lvgl_close() {
 #else
   xTimerStop(tickHandle, 0);
 #endif
-  xSemaphoreGive(lvgl_open);
   get_board()->pmRelease();
   LOGI(TAG, "Close Done");
 }
@@ -125,12 +124,16 @@ void task(void *) {
     switch (option) {
       case LVGL_STOP:
         lvgl_close();
+        xSemaphoreGive(lvgl_open);
         display_task_handle = xTaskGetHandle("display_task");
         xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_NONE, eSetValueWithOverwrite); //Notify the display task to redraw
         vTaskSuspend(nullptr);
         break;
       case LVGL_EXIT:
         running = false;
+        break;
+      case LVGL_RESUME:
+        xSemaphoreTake(lvgl_open, 10);
         break;
       default:
         if (lvgl_lock(-1)) {
@@ -169,11 +172,11 @@ void keyboard_read(lv_indev_t *indev, lv_indev_data_t *data) {
 }
 
 bool lvgl_menu_state() {
-  bool state = xSemaphoreTake(lvgl_open, 0);
-  if(state){
+  if (xSemaphoreTake(lvgl_open, 0)) {
     xSemaphoreGive(lvgl_open);
+    return false;
   }
-  return !state;
+  return true;
 }
 
 void touch_read(lv_indev_t *drv, lv_indev_data_t *data) {
@@ -331,6 +334,7 @@ static void battery_widget(lv_obj_t *scr) {
 
 void lvgl_wake_up() {
   if(xSemaphoreTake(lvgl_open, 10)) {
+    xSemaphoreGive(lvgl_open);
     LOGI(TAG, "Wakeup");
     get_board()->pmLock();
 
@@ -340,6 +344,7 @@ void lvgl_wake_up() {
 
     xSemaphoreGive(flushSem);
     vTaskResume(lvgl_task);
+    xTaskNotifyIndexed(lvgl_task, 0, LVGL_RESUME, eSetValueWithOverwrite);
 
 #ifdef ESP_PLATFORM
     ESP_ERROR_CHECK(esp_timer_start_periodic(lvgl_tick_timer, LVGL_TICK_PERIOD_MS * 1000));

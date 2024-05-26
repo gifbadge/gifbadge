@@ -28,7 +28,8 @@ extern lv_indev_t *lvgl_touch;
 enum LVGL_TASK_SIGNALS {
   LVGL_NONE,
   LVGL_STOP,
-  LVGL_EXIT
+  LVGL_EXIT,
+  LVGL_RESUME
 };
 
 bool lvgl_lock(int timeout_ms);
