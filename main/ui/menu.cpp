@@ -123,6 +123,7 @@ void task(void *) {
     xTaskNotifyWaitIndexed(0, 0, 0xffffffff, &option, task_delay_ms / portTICK_PERIOD_MS);
     switch (option) {
       case LVGL_STOP:
+        LOGI(TAG, "LVGL_STOP");
         lvgl_close();
         xSemaphoreGive(lvgl_open);
         display_task_handle = xTaskGetHandle("display_task");
@@ -134,6 +135,7 @@ void task(void *) {
         break;
       case LVGL_RESUME:
         xSemaphoreTake(lvgl_open, 100);
+        LOGI(TAG, "LVGL_RESUME");
         break;
       default:
         if (lvgl_lock(-1)) {
