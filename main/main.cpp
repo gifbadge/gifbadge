@@ -88,7 +88,7 @@ extern "C" void app_main(void) {
 
   initLowBatteryTask();
 
-//  vTaskDelay(1000 / portTICK_PERIOD_MS); //Let USB Settle
+  vTaskDelay(500 / portTICK_PERIOD_MS); //Let USB Settle
 
 #ifdef ESP_PLATFORM
   xTaskCreatePinnedToCore(display_task, "display_task", 5000, board, 2, &display_task_handle, 1);
