@@ -355,6 +355,7 @@ void display_task(void *params) {
       // If there is an open file, display the next frame
       delay = displayFile(in, display);
       if (delay < 0) {
+        //-1 signifies an error. Display it
         in = std::make_unique<ErrorImage>(display->size,
                                           "Error Displaying File\n%s\n%s",
                                           current_file,
