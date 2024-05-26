@@ -237,6 +237,7 @@ void display_task(void *params) {
   std::unique_ptr<Image> in = nullptr;
 
   char current_file[MAX_FILE_LEN+1];
+  config->getPath(current_file);
 
   DISPLAY_OPTIONS last_mode = DISPLAY_NONE;
 
