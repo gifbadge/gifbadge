@@ -96,6 +96,9 @@ class OTAImage : public ErrorImage {
 #endif
     return ErrorImage::loop(outBuf, x, y, width);
   }
+  bool animated() override {
+    return true;
+  }
 };
 
 class NoStorageImage : public ErrorImage {
