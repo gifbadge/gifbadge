@@ -17,6 +17,7 @@ add_subdirectory(non-idf-components/font_render)
 
 if (ESP_PLATFORM)
     idf_build_set_property(COMPILE_OPTIONS "-DLV_CONF_PATH=${CMAKE_SOURCE_DIR}/main/include/lv_conf.h" APPEND)
+    target_compile_options(mbedcrypto PRIVATE "-Wno-maybe-uninitialized")
 else()
 
     add_compile_options( -D__linux__)
