@@ -133,7 +133,7 @@ void task(void *) {
         running = false;
         break;
       case LVGL_RESUME:
-        xSemaphoreTake(lvgl_open, 10);
+        xSemaphoreTake(lvgl_open, 100);
         break;
       default:
         if (lvgl_lock(-1)) {
@@ -333,7 +333,7 @@ static void battery_widget(lv_obj_t *scr) {
 }
 
 void lvgl_wake_up() {
-  if(xSemaphoreTake(lvgl_open, 10)) {
+  if (xSemaphoreTake(lvgl_open, 100)) {
     xSemaphoreGive(lvgl_open);
     LOGI(TAG, "Wakeup");
     get_board()->pmLock();
