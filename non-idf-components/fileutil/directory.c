@@ -8,11 +8,7 @@
 #include <sys/stat.h>
 #include "include/directory.h"
 
-#if defined(__GLIBC__) || (defined (__FreeBSD__) && defined(qsort_r))
 static int cmpfunc (const void * a, const void * b, void *arg) {
-#else
-static int cmpfunc (void *arg, const void * a, const void * b) {
-#endif
   DIR* dir = (DIR *)arg;
   struct dirent *de;
   char file_name_a[256];
@@ -54,11 +50,7 @@ int opendir_sorted(DIR_SORTED *dirp, const char *dirname, int(*validator)(const 
   }
   dirp->count = dirp->count - 1;
   dirp->index = 0;
-#if defined(__GLIBC__) || (defined (__FreeBSD__) && defined(qsort_r))
   qsort_r(dirp->file_index, dirp->count + 1, sizeof(long), cmpfunc, dirp->dirptr);
-#else
-  qsort_r(dirp->file_index, dirp->count, sizeof(long), dirp->dirptr, cmpfunc);
-#endif
   rewinddir_sorted(dirp);
   return 1;
 }

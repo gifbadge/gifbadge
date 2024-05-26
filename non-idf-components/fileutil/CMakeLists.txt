@@ -6,6 +6,7 @@ set_property(TARGET FileUtil PROPERTY C_STANDARD 11)
 set_property(TARGET FileUtil PROPERTY C_EXTENSIONS ON)
 set_property(TARGET FileUtil PROPERTY CXX_STANDARD 23)
 set_property(TARGET FileUtil PROPERTY CXX_EXTENSIONS ON)
+target_compile_options(FileUtil PUBLIC -D_GNU_SOURCE)
 
 if(ESP_PLATFORM)
     target_link_libraries(FileUtil PRIVATE idf::newlib)
