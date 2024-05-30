@@ -152,7 +152,7 @@ static int displayFile(std::unique_ptr<Image> &in, Display *display) {
     return calc_delay > 0 ? calc_delay : 0;
   }
   else{
-    return 60*1000;
+    return 15 * 1000;
   }
 }
 
