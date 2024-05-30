@@ -242,6 +242,7 @@ static void next_prev(std::unique_ptr<Image> &in, char *current_file, Config *co
   const char *next = directory_get_increment(&dir, file_position, increment);
   if (next != nullptr) {
     strcpy(basename(current_file), next);
+    in.reset(); //Free the memory before trying to open the next image
     in.reset(openFileUpdatePath(current_file, display));
   }
 }
