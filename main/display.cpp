@@ -291,6 +291,12 @@ void display_task(void *params) {
   while (true) {
     uint32_t option;
     xTaskNotifyWaitIndexed(0, 0, 0xffffffff, &option, delay / portTICK_PERIOD_MS);
+    while (board->usbConnected()) {
+      //If USB connected, clear any open files. Block until USB disconnected
+      in.reset();
+      closedir_sorted(&dir);
+      vTaskDelay(100 / portTICK_PERIOD_MS);
+    }
     if (option != DISPLAY_NONE) {
       config->reload();
       if (!(option & noResetBit)) {
