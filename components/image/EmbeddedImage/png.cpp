@@ -7,10 +7,10 @@ PNGImage::~PNGImage() {
     png.close();
 }
 
-int PNGImage::loop(uint8_t *outBuf, int16_t x, int16_t y, int16_t width) {
+frameReturn PNGImage::loop(uint8_t *outBuf, int16_t x, int16_t y, int16_t width) {
     pnguser config = {.png = &png, .buffer = outBuf, .x = x, .y = y, .width = width};
     png.decode((void *) &config, 0);
-    return 0;
+  return {frameStatus::END, 0};
 }
 
 std::pair<int16_t, int16_t> PNGImage::size() {

@@ -51,10 +51,10 @@ class ErrorImage : public Image {
     snprintf(_error, sizeof(_error) - 1, fmt, std::forward<Args>(args) ...);
   };
 
-  int loop(uint8_t *outBuf, int16_t x, int16_t y, int16_t width) override {
+  frameReturn loop(uint8_t *outBuf, int16_t x, int16_t y, int16_t width) override {
     memset(outBuf, 255, _width * _height * 2);
     render_text_centered(_width, _height, 10, _error, outBuf);
-    return _delay;
+    return {frameStatus::OK, _delay};
   }
   std::pair<int16_t, int16_t> size() override {
     return {_width, _height};
@@ -89,7 +89,7 @@ class OTAImage : public ErrorImage {
     strcpy(_error, "Update In Progress\n");
     _delay = 500;
   }
-  int loop(uint8_t *outBuf, int16_t x, int16_t y, int16_t width) override {
+  frameReturn loop(uint8_t *outBuf, int16_t x, int16_t y, int16_t width) override {
 #ifdef ESP_PLATFORM
     int percent = OTA::ota_status();
     sprintf(_error, "Update In Progress\n%d%%", percent);
@@ -123,9 +123,9 @@ static std::pair<int16_t, int16_t> lastSize = {0,0};
 
 //#define FRAMETIME
 
-static int displayFile(std::unique_ptr<Image> &in, Display *display) {
+static frameReturn displayFile(std::unique_ptr<Image> &in, Display *display) {
   int64_t start = millis();
-  int delay;
+  frameReturn status;
   int16_t xOffset = 0;
   int16_t yOffset = 0;
   if (in->size() != display->size) {
@@ -136,23 +136,23 @@ static int displayFile(std::unique_ptr<Image> &in, Display *display) {
     xOffset = static_cast<int16_t>((display->size.first / 2) - (in->size().first / 2));
     yOffset = static_cast<int16_t>((display->size.second / 2) - ((in->size().second + 1) / 2));
   }
-  delay = in->loop(display->buffer, xOffset, yOffset, display->size.first);
-  if (delay < 0) {
+  status = in->loop(display->buffer, xOffset, yOffset, display->size.first);
+  if (status.first == frameStatus::ERROR) {
     LOGI(TAG, "Image loop error");
-    return -1;
+    return {frameStatus::ERROR, 0};
   } else {
     display->write(0, 0, display->size.first, display->size.second, display->buffer);
   }
-  int calc_delay = delay - static_cast<int>(millis() - start);
+  int calc_delay = status.second - static_cast<int>(millis() - start);
 #ifdef FRAMETIME
   LOGI(TAG, "Frame Delay: %i, calculated delay %i", delay, calc_delay);
 #endif
   lastSize = in->size();
   if(in->animated()) {
-    return calc_delay > 0 ? calc_delay : 0;
+    return {status.first, calc_delay > 0 ? calc_delay : 0};
   }
   else{
-    return 15 * 1000;
+    return {frameStatus::END, 15 * 1000};
   }
 }
 
@@ -247,12 +247,30 @@ static void next_prev(std::unique_ptr<Image> &in, char *current_file, Config *co
   }
 }
 
+TimerHandle_t slideShowTimer = nullptr;
+
+static void slideShowHandler(TimerHandle_t) {
+  TaskHandle_t displayHandle = xTaskGetHandle("display_task");
+  xTaskNotifyIndexed(displayHandle, 0, DISPLAY_ADVANCE, eSetValueWithOverwrite);
+}
+
+static void slideShowStart(Config *config) {
+  if (config->getSlideShow()) {
+    xTimerChangePeriod(slideShowTimer, (config->getSlideShowTime() * 1000) / portTICK_PERIOD_MS, 0);
+    xTimerStart(slideShowTimer, 0);
+  } else {
+    xTimerStop(slideShowTimer, 0);
+  }
+}
+
 void display_task(void *params) {
   auto *board = (Board *) params;
 
   auto config = board->getConfig();
 
   auto display = board->getDisplay();
+
+  slideShowTimer = xTimerCreate("slideshow", 100 / portTICK_PERIOD_MS, pdTRUE, nullptr, slideShowHandler);
 
   memset(display->buffer, 255, display->size.first * display->size.second * 2);
   display->write(0, 0, display->size.first, display->size.second, display->buffer);
@@ -265,7 +283,8 @@ void display_task(void *params) {
 
   int delay = 1000; //Delay for display loop. Is adjusted by the results of the loop method of the image being displayed
   bool redraw = false; //Reload from configuration next time we go to display an image
-  int64_t last_change = millis(); //Last time the option has changed, used for slideshow
+  bool advance = false; //Advance the slideshow
+  bool endOfFrame = false; //Last frame of animation
   std::unique_ptr<Image> in = nullptr; //The image we are displaying
   char current_file[MAX_FILE_LEN + 1]; //The current file path that has been selected
   config->getPath(current_file);
@@ -273,7 +292,6 @@ void display_task(void *params) {
     uint32_t option;
     xTaskNotifyWaitIndexed(0, 0, 0xffffffff, &option, delay / portTICK_PERIOD_MS);
     if (option != DISPLAY_NONE) {
-      last_change = millis();
       config->reload();
       if (!(option & noResetBit)) {
         in.reset();
@@ -285,6 +303,7 @@ void display_task(void *params) {
             config->getPath(current_file);
           }
           in.reset(openFileUpdatePath(current_file, display));
+          slideShowStart(config);
           last_mode = static_cast<DISPLAY_OPTIONS>(option);
           break;
         case DISPLAY_NEXT:
@@ -330,6 +349,10 @@ void display_task(void *params) {
         case DISPLAY_NOTIFY_USB:
           closedir_sorted(&dir);
           dir.dirptr = nullptr;
+          break;
+        case DISPLAY_ADVANCE:
+          advance = true;
+          break;
         default:
           break;
       }
@@ -341,29 +364,38 @@ void display_task(void *params) {
       continue;
     }
 
-    if (config->getSlideShow() && (millis() - last_change) > config->getSlideShowTime()) {
-      //Send the signal to advance the slideshow, then go back to the top
-      xTaskNotifyIndexed(xTaskGetCurrentTaskHandle(), 0, DISPLAY_NEXT, eSetValueWithOverwrite);
-      delay = 0;
-      continue;
-    }
-
     if (redraw) {
       // Something has changed in the configuration, reopen the configured file.
       config->getPath(current_file);
       in.reset(openFileUpdatePath(current_file, display));
+      slideShowStart(config);
       redraw = false;
+      advance = false;
+      endOfFrame = false;
+    }
+
+    if (advance && endOfFrame) {
+      next_prev(in, current_file, config, display, 1);
+      advance = false;
+      endOfFrame = false;
     }
 
     if (in) {
       // If there is an open file, display the next frame
-      delay = displayFile(in, display);
-      if (delay < 0) {
-        //-1 signifies an error. Display it
+      frameReturn status = displayFile(in, display);
+      delay = status.second;
+      if (status.first == frameStatus::ERROR) {
+        if (config->getSlideShow()) {
+          //Skip the error, and head to the next file in slideshow mode
+          next_prev(in, current_file, config, display, 1);
+          continue;
+        }
         in = std::make_unique<ErrorImage>(display->size,
                                           "Error Displaying File\n%s\n%s",
                                           current_file,
                                           in->getLastError());
+      } else if (status.first == frameStatus::END) {
+        endOfFrame = true;
       }
     }
   }

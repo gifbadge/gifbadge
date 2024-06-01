@@ -25,6 +25,7 @@ enum DISPLAY_OPTIONS {
   DISPLAY_SPECIAL_2,
   DISPLAY_NOTIFY_CHANGE,
   DISPLAY_NOTIFY_USB,
+  DISPLAY_ADVANCE,
 };
 
 void display_task(void *params);

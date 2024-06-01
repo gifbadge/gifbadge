@@ -8,7 +8,13 @@
 #include <array>
 #include <span>
 
+enum class frameStatus {
+  OK,
+  END,
+  ERROR
+};
 
+typedef std::pair<frameStatus, int> frameReturn;
 
 class Image {
 
@@ -17,7 +23,7 @@ public:
 
     virtual ~Image() = default;
 
-    virtual int loop(uint8_t *outBuf, int16_t x, int16_t y, int16_t width) {return 0;};
+  virtual frameReturn loop(uint8_t *outBuf, int16_t x, int16_t y, int16_t width) { return {frameStatus::OK, 0}; };
 
     virtual std::pair<int16_t, int16_t> size() {return{0, 0};};
 

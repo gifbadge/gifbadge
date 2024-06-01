@@ -111,14 +111,17 @@ GIF::~GIF() {
   gif.close();
 }
 
-int GIF::loop(uint8_t *outBuf, int16_t x, int16_t y, int16_t width) {
+frameReturn GIF::loop(uint8_t *outBuf, int16_t x, int16_t y, int16_t width) {
   GIFUser gifuser = {outBuf, x, y, width};
   int frameDelay;
-  if (gif.playFrame(false, &frameDelay, (void *) &gifuser) == -1) {
+  int ret = gif.playFrame(false, &frameDelay, (void *) &gifuser);
+  if (ret == -1) {
     printf("GIF Error: %i\n", gif.getLastError());
-    return -1;
+    return {frameStatus::ERROR, 0};
+  } else if (ret == 0) {
+    return {frameStatus::END, frameDelay};
   }
-  return frameDelay;
+  return {frameStatus::OK, frameDelay};
 }
 
 std::pair<int16_t, int16_t> GIF::size() {

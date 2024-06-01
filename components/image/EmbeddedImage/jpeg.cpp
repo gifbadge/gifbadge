@@ -36,14 +36,14 @@ static const char *jresult_to_str(JRESULT ret){
     return "";
 }
 
-int JPEG::loop(uint8_t *outBuf, int16_t x, int16_t y, int16_t width) {
+frameReturn JPEG::loop(uint8_t *outBuf, int16_t x, int16_t y, int16_t width) {
     jpguser.outBuf = outBuf;
     JRESULT ret = jd_decomp(&_dec, jpeg_decode_out_cb, 0);
     if(ret != 0){
         lastErr = jresult_to_str(ret);
-        return -1;
+      return {frameStatus::ERROR, 0};
     }
-    return 0;
+  return {frameStatus::END, 0};
 }
 
 std::pair<int16_t, int16_t> JPEG::size() {
