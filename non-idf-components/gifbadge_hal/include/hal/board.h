@@ -39,6 +39,7 @@ class Board {
   virtual Config *getConfig() = 0;
   virtual void debugInfo() = 0;
   virtual bool usbConnected() = 0;
+  virtual const char *swVersion() = 0;
 
 };
 
