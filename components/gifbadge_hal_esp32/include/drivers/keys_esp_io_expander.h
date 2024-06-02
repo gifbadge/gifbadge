@@ -3,6 +3,7 @@
 #include <memory>
 #include <hal/keys.h>
 #include "esp_io_expander.h"
+#include <esp_timer.h>
 
 class keys_esp_io_expander : public Keys {
  public:

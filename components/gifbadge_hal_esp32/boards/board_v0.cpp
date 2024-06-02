@@ -1,5 +1,4 @@
 #include <esp_pm.h>
-#include "log.h"
 #include <esp_sleep.h>
 #include <driver/rtc_io.h>
 #include <wear_levelling.h>
@@ -14,7 +13,6 @@
 static const char *TAG = "board_v0";
 
 board_v0::board_v0() {
-  _config = new Config_NVS();
   _i2c = new I2C(I2C_NUM_0, 21, 18);
   _battery = new battery_analog(ADC_CHANNEL_9);
   _keys = new keys_gpio(GPIO_NUM_43, GPIO_NUM_44, GPIO_NUM_0);
@@ -35,10 +33,6 @@ Battery * board_v0::getBattery() {
 
 Touch * board_v0::getTouch() {
   return nullptr;
-}
-
-I2C * board_v0::getI2c() {
-  return _i2c;
 }
 
 Keys * board_v0::getKeys() {
@@ -77,13 +71,7 @@ bool board_v0::powerConnected() {
   // No provisions in design to monitor this
   return false;
 }
-Config *board_v0::getConfig() {
-  return _config;
-}
-void board_v0::debugInfo() {
 
-}
 bool board_v0::usbConnected() {
   return tinyusb_msc_storage_in_use_by_usb_host();
 }
-

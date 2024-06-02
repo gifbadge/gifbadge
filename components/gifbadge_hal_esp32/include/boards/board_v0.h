@@ -10,22 +10,20 @@
 #include "drivers/display_gc9a01.h"
 #include "drivers/config_nvs.h"
 #include "i2c.h"
+#include "boards_esp32s3.h"
 
-class board_v0 : public Board {
+class board_v0 : public board_esp32s3 {
  public:
   board_v0();
   ~board_v0() override = default;
 
   Battery * getBattery() override;
   Touch * getTouch() override;
-  I2C * getI2c();
   Keys * getKeys() override;
   Display * getDisplay() override;
   Backlight * getBacklight() override;
 
   void powerOff() override;
-  void pmLock() override {};
-  void pmRelease() override {};
   BOARD_POWER powerState() override;
   bool storageReady() override { return true; };
   StorageInfo storageInfo() override;
@@ -33,8 +31,6 @@ class board_v0 : public Board {
   const char *name() override;
   bool powerConnected() override;
   void * turboBuffer() override {return nullptr;};
-  Config *getConfig() override;
-  void debugInfo() override;
   bool usbConnected() override;
 
  private:
@@ -43,5 +39,4 @@ class board_v0 : public Board {
   keys_gpio * _keys;
   display_gc9a01 * _display;
   Backlight * _backlight;
-  Config_NVS *_config;
 };

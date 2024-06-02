@@ -1,15 +1,12 @@
 #include <esp_pm.h>
 #include "log.h"
 #include <driver/sdmmc_defs.h>
-#include <esp_vfs_fat.h>
 #include <esp_task_wdt.h>
 #include <esp_sleep.h>
 #include "boards/board_1_28_v0_1.h"
-#include "hal_usb.h"
 #include "drivers/display_gc9a01.h"
 #include "driver/gpio.h"
 #include "drivers/config_nvs.h"
-#include "tusb_msc_storage.h"
 
 static const char *TAG = "board_1_28_v0_1";
 
@@ -31,7 +28,6 @@ static void IRAM_ATTR usb_connected(void *) {
 
 board_1_28_v0_1::board_1_28_v0_1() {
   buffer = heap_caps_malloc(240*240+0x6100, MALLOC_CAP_INTERNAL);
-  _config = new Config_NVS();
   _i2c = new I2C(I2C_NUM_0, 17, 18);
   _battery = new battery_max17048(_i2c, GPIO_VBUS_DETECT);
   _battery->inserted(); //Battery not removable. So set this
@@ -49,20 +45,7 @@ board_1_28_v0_1::board_1_28_v0_1() {
 
   gpio_pullup_en(GPIO_CARD_DETECT);
   if (!gpio_get_level(GPIO_CARD_DETECT)) {
-//    if (init_sdmmc_slot(GPIO_NUM_40,
-//                        GPIO_NUM_39,
-//                        GPIO_NUM_41,
-//                        GPIO_NUM_42,
-//                        GPIO_NUM_33,
-//                        GPIO_NUM_47,
-//                        GPIO_CARD_DETECT,
-//                        &card,
-//                        1) == ESP_OK) {
-//      usb_init_mmc(GPIO_NUM_NC, &card);
-//    }
-            mount_sdmmc_slot(GPIO_NUM_40, GPIO_NUM_39, GPIO_NUM_41, GPIO_NUM_42, GPIO_NUM_33, GPIO_NUM_47, GPIO_CARD_DETECT,
-                             &card,
-                             1);
+    mount(GPIO_NUM_40, GPIO_NUM_39, GPIO_NUM_41, GPIO_NUM_42, GPIO_NUM_33, GPIO_NUM_47, GPIO_CARD_DETECT, 1);
   }
   gpio_install_isr_service(0);
   gpio_isr_handler_add(GPIO_CARD_DETECT, sdcard_removed, nullptr);
@@ -80,8 +63,6 @@ board_1_28_v0_1::board_1_28_v0_1() {
   gpio_isr_handler_add(GPIO_VBUS_DETECT, usb_connected, nullptr);
   usb_connected(nullptr); //Trigger usb detection
 
-
-
   //Shutdown pin
   gpio_config_t io_conf = {};
 
@@ -92,8 +73,6 @@ board_1_28_v0_1::board_1_28_v0_1() {
   io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
   gpio_config(&io_conf);
   gpio_set_drive_capability(GPIO_SHUTDOWN, GPIO_DRIVE_CAP_MAX);
-
-  esp_pm_lock_create(ESP_PM_CPU_FREQ_MAX, 0, "Board Lock", &pmLockHandle);
 }
 
 Battery * board_1_28_v0_1::getBattery() {
@@ -102,10 +81,6 @@ Battery * board_1_28_v0_1::getBattery() {
 
 Touch * board_1_28_v0_1::getTouch() {
   return _touch;
-}
-
-I2C * board_1_28_v0_1::getI2c() {
-  return _i2c;
 }
 
 Keys * board_1_28_v0_1::getKeys() {
@@ -149,58 +124,10 @@ bool board_1_28_v0_1::storageReady() {
   return false;
 }
 
-StorageInfo board_1_28_v0_1::storageInfo() {
-  StorageType type = (card->ocr & SD_OCR_SDHC_CAP) ? StorageType_SDHC : StorageType_SD;
-  double speed = card->real_freq_khz / 1000.00;
-  uint64_t total_bytes;
-  uint64_t free_bytes;
-  esp_vfs_fat_info("/data", &total_bytes, &free_bytes);
-  return {card->cid.name, type, speed, total_bytes, free_bytes};
-}
-
-void board_1_28_v0_1::pmLock() {
-  esp_pm_lock_acquire(pmLockHandle);
-}
-
-void board_1_28_v0_1::pmRelease() {
-  esp_pm_lock_release(pmLockHandle);
-}
-
-int board_1_28_v0_1::StorageFormat() {
-  LOGI(TAG, "Format Start");
-  esp_err_t ret;
-  esp_task_wdt_config_t wdtConfig = {
-      .timeout_ms = 30 * 1000,
-      .idle_core_mask = (1 << portNUM_PROCESSORS) - 1,    // Bitmask of all cores
-      .trigger_panic = false,
-  };
-#if CONFIG_ESP_TASK_WDT_CHECK_IDLE_TASK_CPU0
-  wdtConfig.idle_core_mask |= (1 << 0);
-#endif
-#if CONFIG_ESP_TASK_WDT_CHECK_IDLE_TASK_CPU1
-  wdtConfig.idle_core_mask |= (1 << 1);
-#endif
-  esp_task_wdt_reconfigure(&wdtConfig);
-  ret = esp_vfs_fat_sdcard_format("/data", card);
-  wdtConfig.timeout_ms = CONFIG_ESP_TASK_WDT_TIMEOUT_S * 1000;
-  esp_task_wdt_reconfigure(&wdtConfig);
-  LOGI(TAG, "Format Done");
-  return ret;
-}
-
 const char * board_1_28_v0_1::name() {
   return "1.28\" 0.1-0.2";
 }
 
 bool board_1_28_v0_1::powerConnected() {
   return gpio_get_level(GPIO_VBUS_DETECT);
-}
-Config *board_1_28_v0_1::getConfig() {
-  return _config;
-}
-void board_1_28_v0_1::debugInfo() {
-
-}
-bool board_1_28_v0_1::usbConnected() {
-  return tinyusb_msc_storage_in_use_by_usb_host();
 }
