@@ -23,11 +23,10 @@ if (ESP_PLATFORM)
     idf_component_get_property(freertos_lib freertos ORIG_INCLUDE_PATH)
     idf_component_register(SRCS
             ${SRC}
-
             INCLUDE_DIRS "include" ${freertos_lib}
             REQUIRES gifbadge_hal_esp32 image lvgl esp_timer)
     target_compile_options(${COMPONENT_LIB} PRIVATE -D__LINUX__)
-    target_link_libraries(${COMPONENT_TARGET} "-u custom_app_desc" FileUtil FontRender)
+    target_link_libraries(${COMPONENT_TARGET} FileUtil FontRender gifbadge_hal)
 
     #
 else ()
