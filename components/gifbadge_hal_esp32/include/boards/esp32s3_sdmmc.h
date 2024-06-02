@@ -2,10 +2,11 @@
 #include "driver/sdmmc_host.h"
 #include "boards_esp32s3.h"
 
-class board_esp32s3_sdmmc : public board_esp32s3 {
+namespace Boards {
+class esp32s3_sdmmc : public Boards::esp32s3 {
  public:
-  board_esp32s3_sdmmc() = default;
-  ~board_esp32s3_sdmmc() override = default;
+  esp32s3_sdmmc() = default;
+  ~esp32s3_sdmmc() override = default;
 
   bool usbConnected() override;
   StorageInfo storageInfo() override;
@@ -22,3 +23,4 @@ class board_esp32s3_sdmmc : public board_esp32s3 {
                   gpio_num_t cd,
                   int width);
 };
+}

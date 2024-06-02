@@ -5,14 +5,16 @@
 
 #include "hal/board.h"
 
-#include "boards/board_v0.h"
+#include "boards/v0.h"
 #include "drivers/backlight_ledc.h"
 #include "hal_usb.h"
 #include "tusb_msc_storage.h"
 
 static const char *TAG = "board_v0";
 
-board_v0::board_v0() {
+namespace Boards {
+
+v0::v0() {
   _i2c = new I2C(I2C_NUM_0, 21, 18);
   _battery = new battery_analog(ADC_CHANNEL_9);
   _keys = new keys_gpio(GPIO_NUM_43, GPIO_NUM_44, GPIO_NUM_0);
@@ -27,27 +29,27 @@ board_v0::board_v0() {
   esp_pm_configure(&pm_config);
 }
 
-Battery * board_v0::getBattery() {
+Battery *v0::getBattery() {
   return _battery;
 }
 
-Touch * board_v0::getTouch() {
+Touch *v0::getTouch() {
   return nullptr;
 }
 
-Keys * board_v0::getKeys() {
+Keys *v0::getKeys() {
   return _keys;
 }
 
-Display * board_v0::getDisplay() {
+Display *v0::getDisplay() {
   return _display;
 }
 
-Backlight * board_v0::getBacklight() {
+Backlight *v0::getBacklight() {
   return _backlight;
 }
 
-void board_v0::powerOff() {
+void v0::powerOff() {
   esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_ON);
   rtc_gpio_pullup_en(static_cast<gpio_num_t>(0));
   rtc_gpio_pulldown_dis(static_cast<gpio_num_t>(0));
@@ -55,23 +57,24 @@ void board_v0::powerOff() {
   esp_deep_sleep_start();
 }
 
-BOARD_POWER board_v0::powerState() {
+BOARD_POWER v0::powerState() {
   return BOARD_POWER_NORMAL;
 }
 
-StorageInfo board_v0::storageInfo() {
+StorageInfo v0::storageInfo() {
   return StorageInfo();
 }
 
-const char *board_v0::name() {
+const char *v0::name() {
   return "1.28\" 0.0";
 }
 
-bool board_v0::powerConnected() {
+bool v0::powerConnected() {
   // No provisions in design to monitor this
   return false;
 }
 
-bool board_v0::usbConnected() {
+bool v0::usbConnected() {
   return tinyusb_msc_storage_in_use_by_usb_host();
+}
 }

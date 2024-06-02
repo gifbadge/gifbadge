@@ -49,7 +49,7 @@ static long long lastKeyPress;
 static esp_timer_handle_t inputTimer = nullptr;
 
 static void inputTimerHandler(void *args) {
-  auto board = (Board *) args;
+  auto board = (Boards::Board *) args;
   if (currentState == MAIN_NORMAL) {
     if (!lvgl_menu_state()) {
       EVENT_STATE *key_state = board->getKeys()->read();
@@ -105,7 +105,7 @@ static void inputTimerHandler(void *args) {
   }
 }
 
-void initInputTimer(Board *board) {
+void initInputTimer(Boards::Board *board) {
   const esp_timer_create_args_t inputTimerArgs = {
       .callback = &inputTimerHandler,
       .arg = board,

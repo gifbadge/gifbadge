@@ -1,4 +1,4 @@
-#include "boards/board_esp32s3_2_1_0_2_0_4_common.h"
+#include "boards/b2_1_v0_2_v0_4_common.h"
 
 #include <esp_pm.h>
 #include "log.h"
@@ -30,7 +30,9 @@ static void checkSDTimer(void *arg) {
   }
 }
 
-board_2_1_v0_2v0_4::board_2_1_v0_2v0_4() {
+namespace Boards {
+
+b2_1_v0_2v0_4::b2_1_v0_2v0_4() {
   buffer = heap_caps_malloc(480 * 480 + 0x6100, MALLOC_CAP_INTERNAL);
   _config = new Config_NVS();
   _i2c = new I2C(I2C_NUM_0, 47, 48);
@@ -103,34 +105,34 @@ board_2_1_v0_2v0_4::board_2_1_v0_2v0_4() {
   ESP_ERROR_CHECK(esp_timer_start_periodic(sdTimer, 500 * 1000));
 }
 
-Battery *board_2_1_v0_2v0_4::getBattery() {
+Battery *b2_1_v0_2v0_4::getBattery() {
   return _battery;
 }
 
-Touch *board_2_1_v0_2v0_4::getTouch() {
+Touch *b2_1_v0_2v0_4::getTouch() {
   return _touch;
 }
 
-Keys *board_2_1_v0_2v0_4::getKeys() {
+Keys *b2_1_v0_2v0_4::getKeys() {
   return _keys;
 }
 
-Display *board_2_1_v0_2v0_4::getDisplay() {
+Display *b2_1_v0_2v0_4::getDisplay() {
   return _display;
 }
 
-Backlight *board_2_1_v0_2v0_4::getBacklight() {
+Backlight *b2_1_v0_2v0_4::getBacklight() {
   return _backlight;
 }
 
-void board_2_1_v0_2v0_4::powerOff() {
+void b2_1_v0_2v0_4::powerOff() {
   LOGI(TAG, "Poweroff");
   vTaskDelay(100 / portTICK_PERIOD_MS);
   esp_io_expander_set_level(_io_expander, IO_EXPANDER_PIN_NUM_3, 1);
 
 }
 
-BOARD_POWER board_2_1_v0_2v0_4::powerState() {
+BOARD_POWER b2_1_v0_2v0_4::powerState() {
   if (powerConnected()) {
     return BOARD_POWER_NORMAL;
   }
@@ -144,10 +146,11 @@ BOARD_POWER board_2_1_v0_2v0_4::powerState() {
   return BOARD_POWER_NORMAL;
 }
 
-bool board_2_1_v0_2v0_4::storageReady() {
+bool b2_1_v0_2v0_4::storageReady() {
   return checkSdState(_io_expander);
 }
 
-bool board_2_1_v0_2v0_4::powerConnected() {
+bool b2_1_v0_2v0_4::powerConnected() {
   return gpio_get_level(GPIO_NUM_0);
+}
 }

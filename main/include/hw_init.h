@@ -1,4 +1,4 @@
 #pragma once
 #include "hal/board.h"
 
-Board *get_board();
+Boards::Board *get_board();

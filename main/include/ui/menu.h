@@ -35,7 +35,7 @@ enum LVGL_TASK_SIGNALS {
 bool lvgl_lock(int timeout_ms);
 void lvgl_unlock();
 
-void lvgl_init(Board *);
+void lvgl_init(Boards::Board *);
 void lvgl_wake_up();
 void lvgl_menu_open();
 bool lvgl_menu_state();

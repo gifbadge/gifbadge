@@ -14,16 +14,16 @@
 #include "esp_pm.h"
 #include "drivers/config_nvs.h"
 #include "soc/gpio_num.h"
-#include "board_esp32s3_sdmmc.h"
+#include "esp32s3_sdmmc.h"
 
+namespace Boards {
 #define GPIO_CARD_DETECT GPIO_NUM_21
 #define GPIO_VBUS_DETECT GPIO_NUM_6
 #define GPIO_SHUTDOWN GPIO_NUM_7
-
-class board_1_28_v0_1 : public board_esp32s3_sdmmc {
+class b1_28_v0_1 : public Boards::esp32s3_sdmmc {
  public:
-  board_1_28_v0_1();
-  ~board_1_28_v0_1() override = default;
+  b1_28_v0_1();
+  ~b1_28_v0_1() override = default;
 
   Battery * getBattery() override;
   Touch * getTouch() override;
@@ -48,3 +48,5 @@ class board_1_28_v0_1 : public board_esp32s3_sdmmc {
   touch_ft5x06 * _touch;
   void *buffer;
 };
+}
+

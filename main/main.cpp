@@ -50,17 +50,17 @@ static void lowBatteryTask(TimerHandle_t) {
 
   if (currentState != MAIN_OTA) {
     switch (board->powerState()) {
-      case BOARD_POWER_NORMAL:
+      case Boards::BOARD_POWER_NORMAL:
         if (currentState == MAIN_LOW_BATT) {
           currentState = MAIN_NORMAL;
         }
         break;
-      case BOARD_POWER_LOW:
+      case Boards::BOARD_POWER_LOW:
         lvglHandle = xTaskGetHandle("LVGL");
         xTaskNotifyIndexed(lvglHandle, 0, LVGL_STOP, eSetValueWithOverwrite);
         currentState = MAIN_LOW_BATT;
         break;
-      case BOARD_POWER_CRITICAL:
+      case Boards::BOARD_POWER_CRITICAL:
         display_task_handle = xTaskGetHandle("display_task");
         xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_BATT, eSetValueWithOverwrite);
         vTaskDelay(15000 / portTICK_PERIOD_MS);
@@ -75,7 +75,7 @@ static void initLowBatteryTask() {
 }
 
 extern "C" void app_main(void) {
-  Board *board = get_board();
+  Boards::Board *board = get_board();
 
   TaskHandle_t display_task_handle = nullptr;
 

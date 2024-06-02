@@ -18,4 +18,4 @@ enum MAIN_STATES {
 };
 
 
-void initInputTimer(Board *board);
+void initInputTimer(Boards::Board *board);

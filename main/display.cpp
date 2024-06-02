@@ -264,7 +264,7 @@ static void slideShowStart(Config *config) {
 }
 
 void display_task(void *params) {
-  auto *board = (Board *) params;
+  auto *board = (Boards::Board *) params;
 
   auto config = board->getConfig();
 

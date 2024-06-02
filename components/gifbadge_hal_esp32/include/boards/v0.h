@@ -12,10 +12,11 @@
 #include "i2c.h"
 #include "boards_esp32s3.h"
 
-class board_v0 : public board_esp32s3 {
+namespace Boards {
+class v0 : public Boards::esp32s3 {
  public:
-  board_v0();
-  ~board_v0() override = default;
+  v0();
+  ~v0() override = default;
 
   Battery * getBattery() override;
   Touch * getTouch() override;
@@ -40,3 +41,4 @@ class board_v0 : public board_esp32s3 {
   display_gc9a01 * _display;
   Backlight * _backlight;
 };
+}

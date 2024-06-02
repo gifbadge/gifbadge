@@ -198,7 +198,7 @@ static void flushWaitCb(lv_display_t *){
   xSemaphoreTake(flushSem, portMAX_DELAY);
 }
 
-void lvgl_init(Board *board) {
+void lvgl_init(Boards::Board *board) {
 
   lv_init();
 

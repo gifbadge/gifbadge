@@ -1,13 +1,16 @@
 #include <esp_vfs_fat.h>
 #include <driver/sdmmc_defs.h>
 #include <esp_task_wdt.h>
-#include "boards/board_esp32s3_sdmmc.h"
+#include "boards/esp32s3_sdmmc.h"
 #include "hal_usb.h"
 #include "log.h"
+#include "tusb_msc_storage.h"
 
 static const char *TAG = "board_esp32s3_sdmmc";
 
-StorageInfo board_esp32s3_sdmmc::storageInfo() {
+namespace Boards {
+
+StorageInfo esp32s3_sdmmc::storageInfo() {
   StorageType type = (card->ocr & SD_OCR_SDHC_CAP) ? StorageType_SDHC : StorageType_SD;
   double speed = card->real_freq_khz / 1000.00;
   uint64_t total_bytes;
@@ -16,7 +19,7 @@ StorageInfo board_esp32s3_sdmmc::storageInfo() {
   return {card->cid.name, type, speed, total_bytes, free_bytes};
 }
 
-int board_esp32s3_sdmmc::StorageFormat() {
+int esp32s3_sdmmc::StorageFormat() {
   LOGI(TAG, "Format Start");
   esp_err_t ret;
   esp_task_wdt_config_t wdtConfig = {
@@ -37,29 +40,28 @@ int board_esp32s3_sdmmc::StorageFormat() {
   LOGI(TAG, "Format Done");
   return ret;
 }
-esp_err_t board_esp32s3_sdmmc::mount(gpio_num_t clk,
-                                     gpio_num_t cmd,
-                                     gpio_num_t d0,
-                                     gpio_num_t d1,
-                                     gpio_num_t d2,
-                                     gpio_num_t d3,
-                                     gpio_num_t cd,
-                                     int width) {
-#ifdef USB_ENABLE
-  if (checkSdState(_io_expander)) {
-    if (init_sdmmc_slot(clk,
-                   cmd,
-                   d0,
-                   d1,
-                   d2,
-                   d3,
-                   cd,
-                   &card,
-                   width) == ESP_OK) {
-      usb_init_mmc(0, &card);
-    } else {
-      return ESP_FAIL;
-    }
+esp_err_t esp32s3_sdmmc::mount(gpio_num_t clk,
+                               gpio_num_t cmd,
+                               gpio_num_t d0,
+                               gpio_num_t d1,
+                               gpio_num_t d2,
+                               gpio_num_t d3,
+                               gpio_num_t cd,
+                               int width) {
+#ifndef USB_DISABLED
+  if (init_sdmmc_slot(clk,
+                      cmd,
+                      d0,
+                      d1,
+                      d2,
+                      d3,
+                      cd,
+                      &card,
+                      width) == ESP_OK) {
+    usb_init_mmc(0, &card);
+    return ESP_OK;
+  } else {
+    return ESP_FAIL;
   }
 #else
   return mount_sdmmc_slot(clk,
@@ -74,10 +76,11 @@ esp_err_t board_esp32s3_sdmmc::mount(gpio_num_t clk,
 #endif
 }
 
-bool board_esp32s3_sdmmc::usbConnected() {
-#ifdef USB_ENABLE
+bool esp32s3_sdmmc::usbConnected() {
+#ifndef USB_DISABLED
   return tinyusb_msc_storage_in_use_by_usb_host();
 #else
   return false;
 #endif
+}
 }

@@ -12,12 +12,13 @@
 #include "driver/sdmmc_host.h"
 #include "drivers/config_nvs.h"
 
-#include "board_esp32s3_sdmmc.h"
+#include "esp32s3_sdmmc.h"
 
-class board_2_1_v0_2v0_4 : public board_esp32s3_sdmmc {
+namespace Boards {
+class b2_1_v0_2v0_4 : public Boards::esp32s3_sdmmc {
  public:
-  board_2_1_v0_2v0_4();
-  ~board_2_1_v0_2v0_4() override = default;
+  b2_1_v0_2v0_4();
+  ~b2_1_v0_2v0_4() override = default;
 
   Battery *getBattery() override;
   Touch *getTouch() override;
@@ -43,3 +44,4 @@ class board_2_1_v0_2v0_4 : public board_esp32s3_sdmmc {
   battery_max17048 *_battery;
   esp_io_expander_handle_t _io_expander = nullptr;
 };
+}

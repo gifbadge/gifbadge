@@ -3,7 +3,7 @@
 #include <driver/sdmmc_defs.h>
 #include <esp_task_wdt.h>
 #include <esp_sleep.h>
-#include "boards/board_1_28_v0_1.h"
+#include "boards/b1_28_v0_1.h"
 #include "drivers/display_gc9a01.h"
 #include "driver/gpio.h"
 #include "drivers/config_nvs.h"
@@ -26,8 +26,10 @@ static void IRAM_ATTR usb_connected(void *) {
   }
 }
 
-board_1_28_v0_1::board_1_28_v0_1() {
-  buffer = heap_caps_malloc(240*240+0x6100, MALLOC_CAP_INTERNAL);
+namespace Boards {
+
+b1_28_v0_1::b1_28_v0_1() {
+  buffer = heap_caps_malloc(240 * 240 + 0x6100, MALLOC_CAP_INTERNAL);
   _i2c = new I2C(I2C_NUM_0, 17, 18);
   _battery = new battery_max17048(_i2c, GPIO_VBUS_DETECT);
   _battery->inserted(); //Battery not removable. So set this
@@ -75,34 +77,34 @@ board_1_28_v0_1::board_1_28_v0_1() {
   gpio_set_drive_capability(GPIO_SHUTDOWN, GPIO_DRIVE_CAP_MAX);
 }
 
-Battery * board_1_28_v0_1::getBattery() {
+Battery *b1_28_v0_1::getBattery() {
   return _battery;
 }
 
-Touch * board_1_28_v0_1::getTouch() {
+Touch *b1_28_v0_1::getTouch() {
   return _touch;
 }
 
-Keys * board_1_28_v0_1::getKeys() {
+Keys *b1_28_v0_1::getKeys() {
   return _keys;
 }
 
-Display * board_1_28_v0_1::getDisplay() {
+Display *b1_28_v0_1::getDisplay() {
   return _display;
 }
 
-Backlight * board_1_28_v0_1::getBacklight() {
+Backlight *b1_28_v0_1::getBacklight() {
   return _backlight;
 }
 
-void board_1_28_v0_1::powerOff() {
+void b1_28_v0_1::powerOff() {
   LOGI(TAG, "Poweroff");
   vTaskDelay(100 / portTICK_PERIOD_MS);
   gpio_set_level(GPIO_SHUTDOWN, 1);
   gpio_hold_en(GPIO_SHUTDOWN);
 }
 
-BOARD_POWER board_1_28_v0_1::powerState() {
+BOARD_POWER b1_28_v0_1::powerState() {
   //TODO Detect USB power status, implement critical level
   if (powerConnected()) {
     return BOARD_POWER_NORMAL;
@@ -117,17 +119,18 @@ BOARD_POWER board_1_28_v0_1::powerState() {
   return BOARD_POWER_NORMAL;
 }
 
-bool board_1_28_v0_1::storageReady() {
+bool b1_28_v0_1::storageReady() {
   if (!gpio_get_level(GPIO_CARD_DETECT)) {
     return true;
   }
   return false;
 }
 
-const char * board_1_28_v0_1::name() {
+const char *b1_28_v0_1::name() {
   return "1.28\" 0.1-0.2";
 }
 
-bool board_1_28_v0_1::powerConnected() {
+bool b1_28_v0_1::powerConnected() {
   return gpio_get_level(GPIO_VBUS_DETECT);
+}
 }

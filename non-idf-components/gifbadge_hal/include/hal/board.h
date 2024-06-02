@@ -10,6 +10,8 @@
 //#include "ota.h"
 #include "config.h"
 
+namespace Boards {
+
 enum BOARD_POWER {
   BOARD_POWER_NORMAL,
   BOARD_POWER_LOW,
@@ -42,4 +44,6 @@ class Board {
   virtual const char *swVersion() = 0;
 
 };
+}
+
 
