@@ -25,7 +25,7 @@ if (ESP_PLATFORM)
             ${SRC}
 
             INCLUDE_DIRS "include" ${freertos_lib}
-            REQUIRES esp_psram app_update image lvgl esp_timer hal_esp32)
+            REQUIRES gifbadge_hal_esp32 image lvgl esp_timer)
     target_compile_options(${COMPONENT_LIB} PRIVATE -D__LINUX__)
     target_link_libraries(${COMPONENT_TARGET} "-u custom_app_desc" FileUtil FontRender)
 

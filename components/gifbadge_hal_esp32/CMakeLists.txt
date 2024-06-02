@@ -22,6 +22,7 @@ if (ESP_PLATFORM)
             INCLUDE_DIRS public_include
             PRIV_INCLUDE_DIRS include
             REQUIRES
+            esp_psram
             hal
             soc
             esp_timer
@@ -39,5 +40,6 @@ if (ESP_PLATFORM)
             app_update
             esp_lcd_gc9a01
             esp_lcd_panel_io_additions)
-    target_link_libraries(${COMPONENT_LIB} PUBLIC "-u custom_app_desc" gifbadge_hal)
+    target_link_libraries(${COMPONENT_LIB} PUBLIC "-u custom_app_desc")
+    target_link_libraries(${COMPONENT_LIB} PUBLIC gifbadge_hal)
 endif ()
