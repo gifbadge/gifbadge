@@ -16,3 +16,6 @@
 [submodule "non-idf-components/FreeRTOS-Kernel"]
 	path = non-idf-components/FreeRTOS-Kernel
 	url = https://github.com/FreeRTOS/FreeRTOS-Kernel/
+[submodule "non-idf-components/Unity"]
+	path = non-idf-components/Unity
+	url = https://github.com/ThrowTheSwitch/Unity.git
