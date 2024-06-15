@@ -28,6 +28,7 @@ void keys_sdl::poll() {
     if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
       for (auto keycode : keys) {
         if (event.key.keysym.scancode == keycode.first) {
+          LOGI("key_sdl", "key %i", keycode.first);
           key_debounce_update(&_debounce_states[keycode.second],
                               event.type == SDL_KEYDOWN,
                               static_cast<int>(time - last),

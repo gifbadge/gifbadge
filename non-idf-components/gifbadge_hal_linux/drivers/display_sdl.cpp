@@ -58,20 +58,21 @@ void display_sdl::write(int x_start, int y_start, int x_end, int y_end, const vo
 //  SDL_UpdateWindowSurface(win);
 }
 void display_sdl::update() {
-  sem_wait(&mutex);
-  void* data;
-  int pitch;
+  if(sem_trywait(&mutex) != -1) {
+    void *data;
+    int pitch;
 //  SDL_GL_MakeCurrent(win, context);
-  SDL_LockTexture(pixels, NULL, &data, &pitch);
+    SDL_LockTexture(pixels, NULL, &data, &pitch);
 
-  memcpy(data, buffer, 480*480*2);
+    memcpy(data, buffer, 480 * 480 * 2);
 //  SDL_memset(data, 0, pitch * 480);
-  SDL_UnlockTexture(pixels);
+    SDL_UnlockTexture(pixels);
 
-  // copy to window
-  SDL_RenderCopy(renderer, pixels, NULL, NULL);
-  SDL_RenderPresent(renderer);
-  if(_callback){
-    _callback();
+    // copy to window
+    SDL_RenderCopy(renderer, pixels, NULL, NULL);
+    SDL_RenderPresent(renderer);
+    if (_callback) {
+      _callback();
+    }
   }
 }
