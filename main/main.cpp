@@ -24,11 +24,11 @@ void dumpDebugFunc(TimerHandle_t) {
 //    LOGI(TAG, "Rate: %f", args->getBattery()->getRate());
 //    LOGI(TAG, "State: %d", static_cast<int>(args->getBattery()->status()));
 
-  TaskStatus_t tasks[20];
-  unsigned int count = uxTaskGetSystemState(tasks, 20, nullptr);
-  for (unsigned int i = 0; i < count; i++) {
-    LOGI(TAG, "%s Highwater: %lu", tasks[i].pcTaskName, tasks[i].usStackHighWaterMark);
-  }
+//  TaskStatus_t tasks[20];
+//  unsigned int count = uxTaskGetSystemState(tasks, 20, nullptr);
+//  for (unsigned int i = 0; i < count; i++) {
+//    LOGI(TAG, "%s Highwater: %lu", tasks[i].pcTaskName, tasks[i].usStackHighWaterMark);
+//  }
   args->pmRelease();
 
 }
@@ -79,7 +79,7 @@ extern "C" void app_main(void) {
 
   TaskHandle_t display_task_handle = nullptr;
 
-  dumpDebugTimerInit();
+//  dumpDebugTimerInit();
 #ifdef ESP_PLATFORM
   OTA::bootInfo();
 #endif
@@ -265,6 +265,7 @@ void vApplicationStackOverflowHook( TaskHandle_t pxTask,
 #include "drivers/key_sdl.h"
 #include <SDL_events.h>
 #include <unistd.h>
+#include <sys/stat.h>
 
 extern "C" int main(void) {
   //chroot the process, so it's closer to being on the device for paths, etc
@@ -274,6 +275,7 @@ extern "C" int main(void) {
   unshare(CLONE_FS|CLONE_NEWUSER);
   chroot(path);
   chdir("/");
+  mkdir("/data", 0700);
 
   displaySdl = new display_sdl();
   console_init();
