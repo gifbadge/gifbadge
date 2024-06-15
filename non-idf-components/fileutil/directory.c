@@ -72,7 +72,12 @@ void seekdir_sorted(DIR_SORTED *dirp, int index) {
 
 void closedir_sorted(DIR_SORTED *dirp) {
   if(dirp->dirptr) {
+#if defined(CONFIG_FATFS_FS_LOCK) || ! defined(CONFIG_IDF_TARGET_ARCH_XTENSA)
     closedir(dirp->dirptr);
+#else
+    free(dirp->dirptr);
+#endif
+    dirp->dirptr = NULL;
   }
 }
 
