@@ -7,7 +7,7 @@ target_include_directories(FontRender PUBLIC "mcufont/decoder" "include")
 if (NOT ESP_PLATFORM)
     include(CTest)
     add_subdirectory(test)
-    target_compile_options(FontRender PUBLIC -g -fprofile-arcs -ftest-coverage)
+#    target_compile_options(FontRender PUBLIC -g -fprofile-arcs -ftest-coverage)
 endif()
 
 
