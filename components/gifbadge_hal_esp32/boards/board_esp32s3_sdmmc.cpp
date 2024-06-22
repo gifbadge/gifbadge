@@ -59,6 +59,7 @@ esp_err_t esp32s3_sdmmc::mount(gpio_num_t clk,
                       &card,
                       width) == ESP_OK) {
     usb_init_mmc(0, &card);
+    storageAvailable = true;
     return ESP_OK;
   } else {
     return ESP_FAIL;
@@ -77,6 +78,9 @@ esp_err_t esp32s3_sdmmc::mount(gpio_num_t clk,
 }
 
 bool esp32s3_sdmmc::usbConnected() {
+  if(!storageAvailable){
+    return false;
+  }
 #ifndef USB_DISABLED
   return tinyusb_msc_storage_in_use_by_usb_host();
 #else

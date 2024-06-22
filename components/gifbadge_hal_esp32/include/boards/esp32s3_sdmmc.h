@@ -13,6 +13,7 @@ class esp32s3_sdmmc : public Boards::esp32s3 {
   int StorageFormat() override;
 
  protected:
+  bool storageAvailable = false;
   sdmmc_card_t *card = nullptr;
   esp_err_t mount(gpio_num_t clk,
                   gpio_num_t cmd,
