@@ -234,7 +234,6 @@ static Image *openFileUpdatePath(char *path, Display *display) {
   return openFile(path, display);
 }
 
-
 static void next_prev(std::unique_ptr<Image> &in, char *current_file, Config *config, Display *display, int increment){
   if (config->getLocked()) {
     return;
@@ -260,6 +259,12 @@ static void slideShowStart(Config *config) {
     xTimerStart(slideShowTimer, 0);
   } else {
     xTimerStop(slideShowTimer, 0);
+  }
+}
+
+static void slideShowRestart() {
+  if (xTimerIsTimerActive(slideShowTimer) != pdFALSE) {
+    xTimerReset(slideShowTimer, 50 / portTICK_PERIOD_MS);
   }
 }
 
@@ -314,9 +319,11 @@ void display_task(void *params) {
           break;
         case DISPLAY_NEXT:
           next_prev(in, current_file, config, display, 1);
+          slideShowRestart();
           break;
         case DISPLAY_PREVIOUS:
           next_prev(in, current_file, config, display, -1);
+          slideShowRestart();
           break;
         case DISPLAY_BATT:
           if (last_mode != DISPLAY_BATT) {
