@@ -262,6 +262,12 @@ static void slideShowRestart() {
   }
 }
 
+static void slideShowStop() {
+  if (xTimerIsTimerActive(slideShowTimer) != pdFALSE) {
+    xTimerStop(slideShowTimer, 50 / portTICK_PERIOD_MS);
+  }
+}
+
 void display_task(void *params) {
   auto *board = (Boards::Board *) params;
 
@@ -341,6 +347,7 @@ void display_task(void *params) {
           if (is_file("/data/cards/up.png")) {
             in.reset(openFile("/data/cards/up.png", display));
             last_mode = static_cast<DISPLAY_OPTIONS>(option);
+            slideShowStop();
           }
           break;
         case DISPLAY_SPECIAL_2:
@@ -348,6 +355,7 @@ void display_task(void *params) {
           if (is_file("/data/cards/down.png")) {
             in.reset(openFile("/data/cards/down.png", display));
             last_mode = static_cast<DISPLAY_OPTIONS>(option);
+            slideShowStop();
           }
           break;
         case DISPLAY_NOTIFY_CHANGE:
