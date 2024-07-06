@@ -16,6 +16,7 @@ class display_st7701s : public Display {
 
   bool onColorTransDone(flushCallback_t) override;
   void write(int x_start, int y_start, int x_end, int y_end, const void *color_data) override;
+  void clear();
  private:
   size_t fb_number = 2;
   esp_lcd_panel_handle_t panel_handle = nullptr;
@@ -24,5 +25,5 @@ class display_st7701s : public Display {
   esp_timer_handle_t flushTimerHandle = nullptr;
 
   flushCallback_t flushCallback = nullptr;
-
+  bool _clear = false;
 };

@@ -27,15 +27,6 @@ static int file_position;
 
 #define MAX_FILE_LEN 128
 
-static void clear_screen(Display *display, bool flush = true) {
-  for (int x = 0; x <= 1; x++) {
-    memset(display->buffer, 255, display->size.first * display->size.second * 2);
-    if (flush) {
-      display->write(0, 0, display->size.first, display->size.second, display->buffer);
-    }
-  }
-}
-
 class ErrorImage : public Image {
  public:
   ErrorImage(std::pair<int16_t, int16_t> size, const char *error)
@@ -110,7 +101,7 @@ class NoStorageImage : public ErrorImage {
 
 static void display_image_batt(Display *display) {
   LOGI(TAG, "Displaying Low Battery");
-  clear_screen(display);
+  display->clear();
   PNGImage png;
   png.open((uint8_t *)low_batt_png, sizeof(low_batt_png));
   int16_t xOffset = static_cast<int16_t>((display->size.first / 2) - (png.size().first / 2));
@@ -123,15 +114,17 @@ static std::pair<int16_t, int16_t> lastSize = {0,0};
 
 //#define FRAMETIME
 
+bool newImage = false;
+
 static frameReturn displayFile(std::unique_ptr<Image> &in, Display *display) {
   int64_t start = millis();
   frameReturn status;
   int16_t xOffset = 0;
   int16_t yOffset = 0;
   if (in->size() != display->size) {
-    if(lastSize > in->size()) {
-      clear_screen(display,
-                   false); //Only need to clear the screen if the image won't fill it, and the last image was bigger
+    if (newImage && (lastSize > in->size())) {
+      display->clear(); //Only need to clear the screen if the image won't fill it, and the last image was bigger
+      newImage = false;
     }
     xOffset = static_cast<int16_t>((display->size.first / 2) - (in->size().first / 2));
     yOffset = static_cast<int16_t>((display->size.second / 2) - ((in->size().second + 1) / 2));
@@ -223,6 +216,7 @@ static Image *openFile(const char *path, Display *display) {
   } else {
     return new ErrorImage(display->size, "Could not Display\n%s", path);
   }
+  newImage = true;
   return in;
 }
 

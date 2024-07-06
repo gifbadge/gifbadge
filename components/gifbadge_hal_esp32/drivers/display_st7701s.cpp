@@ -6,6 +6,7 @@
 #include <esp_lcd_panel_rgb.h>
 #include <esp_timer.h>
 #include <esp_lcd_panel_io.h>
+#include <cstring>
 #include "drivers/display_st7701s.h"
 #include "esp_lcd_panel_io_additions.h"
 
@@ -195,11 +196,20 @@ void display_st7701s::write(int x_start, int y_start, int x_end, int y_end, cons
   buffer = static_cast<uint8_t *>(color_data == _fb0 ? _fb1 : _fb0);
   esp_lcd_panel_draw_bitmap(panel_handle, x_start, y_start, x_end, y_end, color_data);
   esp_timer_start_once(flushTimerHandle, 30*1000);
+  if(_clear){
+    _clear = false;
+    memset(buffer, 0xFF, size.first * size.second * 2);
+  }
 }
 
 bool display_st7701s::onColorTransDone(flushCallback_t callback) {
   flushCallback = callback;
   return true;
+}
+
+void display_st7701s::clear() {
+  _clear = true;
+  memset(buffer, 0xFF, size.first * size.second * 2);
 }
 
 

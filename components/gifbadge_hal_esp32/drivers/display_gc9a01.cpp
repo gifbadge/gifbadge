@@ -3,6 +3,7 @@
 #include <esp_lcd_panel_ops.h>
 #include <driver/gpio.h>
 #include <esp_lcd_panel_io.h>
+#include <cstring>
 #include "log.h"
 #include "esp_lcd_gc9a01.h"
 
@@ -77,7 +78,6 @@ display_gc9a01::display_gc9a01(int mosi, int sck, int cs, int dc, int reset) {
   size = {240, 240};
 }
 
-
 static flushCallback_t pcallback = nullptr;
 
 bool flush_ready(esp_lcd_panel_io_handle_t, esp_lcd_panel_io_event_data_t *, void *){
@@ -95,4 +95,8 @@ bool display_gc9a01::onColorTransDone(flushCallback_t callback) {
 void display_gc9a01::write(int x_start, int y_start, int x_end, int y_end,
                            const void *color_data) {
   esp_lcd_panel_draw_bitmap(panel_handle, x_start, y_start, x_end, y_end, color_data);
+}
+
+void display_gc9a01::clear() {
+  memset(buffer, 0xFF, size.first * size.second * 2);
 }
