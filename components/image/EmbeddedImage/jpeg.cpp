@@ -38,12 +38,18 @@ static const char *jresult_to_str(JRESULT ret){
 
 frameReturn JPEG::loop(uint8_t *outBuf, int16_t x, int16_t y, int16_t width) {
     jpguser.outBuf = outBuf;
-    JRESULT ret = jd_decomp(&_dec, jpeg_decode_out_cb, 0);
+    rewind(jpguser.infile);
+    JRESULT ret = jd_prepare(&_dec, jpeg_decode_in_cb, workbuf, JPEG_WORK_BUF_SIZE, &jpguser);
+    if (ret != JDR_OK) {
+      lastErr = jresult_to_str(ret);
+      return {frameStatus::ERROR, 0};
+    }
+    ret = jd_decomp(&_dec, jpeg_decode_out_cb, 0);
     if(ret != 0){
         lastErr = jresult_to_str(ret);
       return {frameStatus::ERROR, 0};
     }
-  return {frameStatus::END, 0};
+  return {frameStatus::END, 60*60000}; //Only loop once an hour
 }
 
 std::pair<int16_t, int16_t> JPEG::size() {
@@ -71,6 +77,7 @@ size_t JPEG::jpeg_decode_in_cb(JDEC *dec, uint8_t *buff, size_t nbyte) {
 
 
 jpeg_decode_out_t JPEG::jpeg_decode_out_cb(JDEC *dec, void *bitmap, JRECT *rect) {
+    //TODO: Handle non-native sized jpegs
     assert(dec != nullptr);
 
     auto *cfg = (JPGuser *) dec->device;

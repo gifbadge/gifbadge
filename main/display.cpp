@@ -407,9 +407,8 @@ void display_task(void *params) {
                                           "Error Displaying File\n%s\n%s",
                                           current_file,
                                           in->getLastError());
-      } else if (status.first == frameStatus::END) {
-        endOfFrame = true;
       }
+      endOfFrame = status.first == frameStatus::END;
     }
   }
 }
