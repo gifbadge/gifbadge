@@ -8,6 +8,9 @@ esp32s3::esp32s3() {
   esp_pm_lock_create(ESP_PM_CPU_FREQ_MAX, 0, "Board Lock", &pmLockHandle);
   _config = new Config_NVS();
 }
+void esp32s3::reset() {
+  esp_restart();
+}
 
 void esp32s3::pmLock() {
   esp_pm_lock_acquire(pmLockHandle);

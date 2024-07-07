@@ -28,8 +28,9 @@ public:
  Config *getConfig() override;
  void debugInfo() override;
  const char *swVersion() override;
+  void reset() override;
 
-protected:
+ protected:
  esp_pm_lock_handle_t pmLockHandle = nullptr;
  Config_NVS *_config;
 

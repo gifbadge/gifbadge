@@ -29,6 +29,7 @@ class Board {
   virtual Display * getDisplay() = 0;
   virtual Backlight * getBacklight() = 0;
   virtual void powerOff() = 0;
+  virtual void reset() = 0;
   virtual BOARD_POWER powerState() = 0;
   virtual void pmLock() = 0;
   virtual void pmRelease() = 0;

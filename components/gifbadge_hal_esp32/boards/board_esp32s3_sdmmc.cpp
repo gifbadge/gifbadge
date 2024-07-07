@@ -19,6 +19,13 @@ StorageInfo esp32s3_sdmmc::storageInfo() {
   return {card->cid.name, type, speed, total_bytes, free_bytes};
 }
 
+void esp32s3_sdmmc::reset() {
+  if(tinyusb_msc_storage_unmount() != ESP_OK){
+    LOGI(TAG, "Failed to unmount");
+  }
+  esp32s3::reset();
+}
+
 int esp32s3_sdmmc::StorageFormat() {
   LOGI(TAG, "Format Start");
   esp_err_t ret;

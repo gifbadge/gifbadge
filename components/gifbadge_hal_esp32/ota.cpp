@@ -10,6 +10,7 @@
 
 #include "esp_ota.h"
 #include "esp_efuse_custom_table.h"
+#include "../../main/include/hw_init.h"
 
 static const char *TAG = "OTA";
 
@@ -210,7 +211,7 @@ void task(void *) {
     vTaskDelete(nullptr);
   }
   LOGI(TAG, "Prepare to restart system!");
-  esp_restart();
+  get_board()->reset();
 }
 
 TaskHandle_t ota_task_handle;

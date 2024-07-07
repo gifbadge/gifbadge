@@ -11,6 +11,7 @@ class esp32s3_sdmmc : public Boards::esp32s3 {
   bool usbConnected() override;
   StorageInfo storageInfo() override;
   int StorageFormat() override;
+  void reset() override;
 
  protected:
   bool storageAvailable = false;
