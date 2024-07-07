@@ -1,5 +1,7 @@
 
 file(GLOB PNGdec_src EmbeddedImage/PNGdec/src/*.c EmbeddedImage/PNGdec/src/*.cpp)
+file(GLOB JPEGDEC_src EmbeddedImage/JPEGDEC/src/*.c EmbeddedImage/JPEGDEC/src/*.cpp EmbeddedImage/JPEGDEC/src/*.S)
+
 
 SET(SRC "EmbeddedImage/image.cpp"
         "EmbeddedImage/bitbank2.cpp"
@@ -8,22 +10,24 @@ SET(SRC "EmbeddedImage/image.cpp"
         "EmbeddedImage/gif.cpp"
         "EmbeddedImage/AnimatedGIF/src/AnimatedGIF.cpp"
         ${PNGdec_src}
-        "EmbeddedImage/tjpgd/tjpgd.c")
+        ${JPEGDEC_src}
+)
 
 SET(INCLUDE "EmbeddedImage/include"
         "EmbeddedImage/AnimatedGIF/src"
         "EmbeddedImage/PNGdec/src"
-        "EmbeddedImage/tjpgd")
+        "EmbeddedImage/JPEGDEC/src"
+)
 
 if (ESP_PLATFORM)
     idf_component_register(SRCS ${SRC}
-            INCLUDE_DIRS ${INCLUDE})
+            INCLUDE_DIRS ${INCLUDE} REQUIRES esp-dsp)
 
 
-    target_compile_options(${COMPONENT_LIB} PRIVATE -D__LINUX__)
+    target_compile_options(${COMPONENT_LIB} PRIVATE -D__LINUX__ -DARDUINO_ARCH_ESP32=1)
 else()
     cmake_minimum_required(VERSION 3.1...3.29)
-    project(Image VERSION 1.0 LANGUAGES C CXX)
+    project(Image VERSION 1.0 LANGUAGES C CXX ASM)
     add_library(image ${SRC} ${INCLUDE})
     target_include_directories(image PUBLIC ${INCLUDE})
     target_compile_options(image PUBLIC -D__LINUX__)

@@ -19,3 +19,6 @@
 [submodule "non-idf-components/Unity"]
 	path = non-idf-components/Unity
 	url = https://github.com/ThrowTheSwitch/Unity.git
+[submodule "components/image/EmbeddedImage/JPEGDEC"]
+	path = components/image/EmbeddedImage/JPEGDEC
+	url = https://github.com/bitbank2/JPEGDEC.git
