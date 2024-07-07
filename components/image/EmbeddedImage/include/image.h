@@ -14,7 +14,7 @@ enum class frameStatus {
   ERROR
 };
 
-typedef std::pair<frameStatus, int> frameReturn;
+typedef std::pair<frameStatus, uint32_t> frameReturn;
 
 class Image {
 

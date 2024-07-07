@@ -142,10 +142,10 @@ static frameReturn displayFile(std::unique_ptr<Image> &in, Display *display) {
 #endif
   lastSize = in->size();
   if(in->animated()) {
-    return {status.first, calc_delay > 0 ? calc_delay : 0};
+    return {status.first, (calc_delay > 0 ? calc_delay : 0)/portTICK_PERIOD_MS};
   }
   else{
-    return {frameStatus::END, 15 * 1000};
+    return {frameStatus::END, portMAX_DELAY};
   }
 }
 
@@ -286,7 +286,7 @@ void display_task(void *params) {
 
   LOGI(TAG, "Display Resolution %ix%i", display->size.first, display->size.second);
 
-  int delay = 1000; //Delay for display loop. Is adjusted by the results of the loop method of the image being displayed
+  uint32_t delay = 1000/portTICK_PERIOD_MS; //Delay for display loop. Is adjusted by the results of the loop method of the image being displayed
   bool redraw = false; //Reload from configuration next time we go to display an image
   bool advance = false; //Advance the slideshow
   bool endOfFrame = false; //Last frame of animation
@@ -295,7 +295,7 @@ void display_task(void *params) {
   config->getPath(current_file);
   while (true) {
     uint32_t option;
-    xTaskNotifyWaitIndexed(0, 0, 0xffffffff, &option, delay / portTICK_PERIOD_MS);
+    xTaskNotifyWaitIndexed(0, 0, 0xffffffff, &option, delay);
     while (board->usbConnected()) {
       //If USB connected, clear any open files. Block until USB disconnected
       in.reset();
@@ -372,7 +372,7 @@ void display_task(void *params) {
           break;
       }
     }
-    delay = 1000;
+    delay = 1000/portTICK_PERIOD_MS;
 
     if (lvgl_menu_state()) {
       //Go back to the top if the menu is open
