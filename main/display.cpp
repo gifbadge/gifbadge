@@ -99,15 +99,11 @@ class NoStorageImage : public ErrorImage {
   }
 };
 
-static void display_image_batt(Display *display) {
+static PNGImage * display_image_batt() {
   LOGI(TAG, "Displaying Low Battery");
-  display->clear();
-  PNGImage png;
-  png.open((uint8_t *)low_batt_png, sizeof(low_batt_png));
-  int16_t xOffset = static_cast<int16_t>((display->size.first / 2) - (png.size().first / 2));
-  int16_t yOffset = static_cast<int16_t>((display->size.second / 2) - ((png.size().second + 1) / 2));
-  png.loop(display->buffer, xOffset, yOffset, display->size.first);
-  display->write(0, 0, display->size.first, display->size.second, display->buffer);
+  auto *png = new PNGImage;
+  png->open((uint8_t *)low_batt_png, sizeof(low_batt_png));
+  return png;
 }
 
 static std::pair<int16_t, int16_t> lastSize = {0,0};
@@ -229,7 +225,7 @@ static Image *openFileUpdatePath(char *path, Display *display) {
 }
 
 static void next_prev(std::unique_ptr<Image> &in, char *current_file, Config *config, Display *display, int increment){
-  if (config->getLocked()) {
+  if (config->getLocked() || file_position < 0) {
     return;
   }
   const char *next = directory_get_increment(&dir, file_position, increment);
@@ -327,7 +323,7 @@ void display_task(void *params) {
           break;
         case DISPLAY_BATT:
           if (last_mode != DISPLAY_BATT) {
-            display_image_batt(board->getDisplay());
+            in.reset(display_image_batt());
           }
           file_position = -1;
           last_mode = static_cast<DISPLAY_OPTIONS>(option);
