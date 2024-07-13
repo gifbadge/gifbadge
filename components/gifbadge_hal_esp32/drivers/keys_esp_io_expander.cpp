@@ -9,8 +9,8 @@ static void pollKeys(void *args) {
   keys->poll();
 }
 
-keys_esp_io_expander::keys_esp_io_expander(esp_io_expander_handle_t io_expander, int up, int down, int enter)
-    : _io_expander(io_expander) {
+keys_esp_io_expander::keys_esp_io_expander(esp_io_expander_handle_t io_expander, I2C *i2c, int up, int down, int enter)
+    : _io_expander(io_expander), _i2c(i2c) {
 
   buttonConfig[KEY_UP] = up;
   buttonConfig[KEY_DOWN] = down;
@@ -49,6 +49,7 @@ EVENT_STATE * keys_esp_io_expander::read() {
 }
 
 void keys_esp_io_expander::poll() {
+  const std::lock_guard<std::mutex> lock(_i2c->i2c_lock);
   uint32_t levels = lastLevels;
   if (esp_io_expander_get_level(_io_expander, 0xffff, &levels) == ESP_OK) {
     //only update when we have a good read
