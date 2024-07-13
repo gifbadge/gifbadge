@@ -1,7 +1,7 @@
 #pragma once
-#include "../../../../../esp/esp-idf/components/hal/include/hal/i2c_types.h"
-#include "../../../../../esp/esp-idf/components/driver/i2c/include/driver/i2c.h"
-#include "../../../../../.espressif/tools/xtensa-esp-elf/esp-13.2.0_20230928/xtensa-esp-elf/xtensa-esp-elf/include/c++/13.2.0/mutex"
+#include "hal/i2c_types.h"
+#include "driver/i2c.h"
+#include <mutex>
 
 class I2C {
  public:

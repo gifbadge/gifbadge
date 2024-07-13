@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../../../../../esp/esp-idf/components/esp_common/include/esp_err.h"
-#include "../../../../../esp/esp-idf/components/hal/include/hal/gpio_hal.h"
-#include "../../../../../esp/esp-idf/components/driver/sdmmc/include/driver/sdmmc_host.h"
-#include "../../../../../esp/esp-idf/components/wear_levelling/include/wear_levelling.h"
+#include "esp_err.h"
+#include "hal/gpio_hal.h"
+#include "driver/sdmmc_host.h"
+#include "wear_levelling.h"
 
 typedef void (*mount_callback)(bool);
 void storage_callback(mount_callback _callback);
