@@ -134,7 +134,7 @@ static frameReturn displayFile(std::unique_ptr<Image> &in, Display *display) {
   }
   int calc_delay = status.second - static_cast<int>(millis() - start);
 #ifdef FRAMETIME
-  LOGI(TAG, "Frame Delay: %i, calculated delay %i", delay, calc_delay);
+  LOGI(TAG, "Frame Delay: %lu, calculated delay %i", status.second, calc_delay);
 #endif
   lastSize = in->size();
   if(in->animated()) {
