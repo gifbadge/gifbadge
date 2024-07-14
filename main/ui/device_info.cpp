@@ -25,7 +25,9 @@ lv_obj_t *device_info() {
     lv_obj_t *serial_number = lv_file_list_add(cont_flex, nullptr);
     lv_obj_t *serial_number_label = lv_label_create(serial_number);
     lv_obj_add_style(serial_number_label, &menu_font_style, LV_PART_MAIN);
-    lv_label_set_text(serial_number_label, "Serial: ");
+    snprintf(tmpStr, sizeof(tmpStr), "Serial: %s", get_board()->serialNumber());
+    lv_label_set_text(serial_number_label, tmpStr);
+
     lv_obj_t *version = lv_file_list_add(cont_flex, nullptr);
     lv_obj_t *version_label = lv_label_create(version);
     lv_obj_add_style(version_label, &menu_font_style, LV_PART_MAIN);

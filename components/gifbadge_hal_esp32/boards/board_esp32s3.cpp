@@ -1,5 +1,6 @@
 #include <esp_app_desc.h>
 #include <esp_pm.h>
+#include <esp_mac.h>
 #include "boards/boards_esp32s3.h"
 
 namespace Boards{
@@ -32,5 +33,11 @@ void esp32s3::debugInfo() {
 
 const char *esp32s3::swVersion() {
   return esp_app_get_description()->version;
+}
+char *esp32s3::serialNumber() {
+  uint8_t mac[6] = {0};
+  esp_efuse_mac_get_default(mac);
+  sprintf(serial, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0],mac[1],mac[2],mac[3],mac[4],mac[5]);
+  return serial;
 }
 }

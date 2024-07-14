@@ -29,10 +29,12 @@ public:
  void debugInfo() override;
  const char *swVersion() override;
   void reset() override;
+  char *serialNumber() override;
 
  protected:
  esp_pm_lock_handle_t pmLockHandle = nullptr;
  Config_NVS *_config;
+ char serial[18];
 
 };
 }
