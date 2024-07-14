@@ -36,7 +36,7 @@ class b1_28_v0_1 : public Boards::esp32s3_sdmmc {
   BOARD_POWER powerState() override;
   bool storageReady() override;
   const char * name() override;
-  bool powerConnected() override;
+  CHARGE_POWER powerConnected() override;
   void * turboBuffer() override {return buffer;};
 
  private:

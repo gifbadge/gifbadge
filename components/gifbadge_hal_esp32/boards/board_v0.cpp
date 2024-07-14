@@ -69,9 +69,9 @@ const char *v0::name() {
   return "1.28\" 0.0";
 }
 
-bool v0::powerConnected() {
+CHARGE_POWER v0::powerConnected() {
   // No provisions in design to monitor this
-  return false;
+  return CHARGE_NONE;
 }
 
 bool v0::usbConnected() {

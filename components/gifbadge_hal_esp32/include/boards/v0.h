@@ -30,7 +30,7 @@ class v0 : public Boards::esp32s3 {
   StorageInfo storageInfo() override;
   int StorageFormat() override { return ESP_OK; };
   const char *name() override;
-  bool powerConnected() override;
+  CHARGE_POWER powerConnected() override;
   void * turboBuffer() override {return nullptr;};
   bool usbConnected() override;
 

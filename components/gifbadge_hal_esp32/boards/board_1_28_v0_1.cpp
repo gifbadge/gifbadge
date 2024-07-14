@@ -106,7 +106,7 @@ void b1_28_v0_1::powerOff() {
 
 BOARD_POWER b1_28_v0_1::powerState() {
   //TODO Detect USB power status, implement critical level
-  if (powerConnected()) {
+  if (powerConnected() != CHARGE_NONE) {
     return BOARD_POWER_NORMAL;
   }
   if (_battery->getSoc() < 12) {
@@ -130,7 +130,10 @@ const char *b1_28_v0_1::name() {
   return "1.28\" 0.1-0.2";
 }
 
-bool b1_28_v0_1::powerConnected() {
-  return gpio_get_level(GPIO_VBUS_DETECT);
+CHARGE_POWER b1_28_v0_1::powerConnected() {
+  if(gpio_get_level(GPIO_VBUS_DETECT)){
+    return CHARGE_LOW;
+  }
+  return CHARGE_NONE;
 }
 }

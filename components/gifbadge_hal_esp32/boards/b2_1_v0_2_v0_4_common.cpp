@@ -133,7 +133,7 @@ void b2_1_v0_2v0_4::powerOff() {
 }
 
 BOARD_POWER b2_1_v0_2v0_4::powerState() {
-  if (powerConnected()) {
+  if (powerConnected() != CHARGE_NONE) {
     return BOARD_POWER_NORMAL;
   }
   if (_battery->getSoc() < 12) {
@@ -150,7 +150,22 @@ bool b2_1_v0_2v0_4::storageReady() {
   return checkSdState(_io_expander);
 }
 
-bool b2_1_v0_2v0_4::powerConnected() {
-  return gpio_get_level(GPIO_NUM_0);
+CHARGE_POWER b2_1_v0_2v0_4::powerConnected() {
+  if(gpio_get_level(GPIO_NUM_0)){
+    const std::lock_guard<std::mutex> lock(_i2c->i2c_lock);
+    uint32_t levels;
+    if(esp_io_expander_get_level(_io_expander, 0xffff, &levels) == ESP_OK){
+      if(levels  & (1 << 8)){
+        return CHARGE_LOW;
+      }
+      else {
+        return CHARGE_HIGH;
+      }
+    }
+    else {
+      return CHARGE_LOW;
+    }
+  }
+  return CHARGE_NONE;
 }
 }

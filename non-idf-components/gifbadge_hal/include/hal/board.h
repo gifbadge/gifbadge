@@ -18,6 +18,12 @@ enum BOARD_POWER {
   BOARD_POWER_CRITICAL,
 };
 
+enum CHARGE_POWER{
+  CHARGE_NONE,
+  CHARGE_LOW,
+  CHARGE_HIGH,
+};
+
 class Board {
  public:
   Board() = default;
@@ -37,7 +43,7 @@ class Board {
   virtual StorageInfo storageInfo() = 0;
   virtual int StorageFormat() = 0;
   virtual const char * name() = 0;
-  virtual bool powerConnected() = 0;
+  virtual CHARGE_POWER powerConnected() = 0;
   virtual void *turboBuffer() = 0;
   virtual Config *getConfig() = 0;
   virtual void debugInfo() = 0;

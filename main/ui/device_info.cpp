@@ -32,6 +32,13 @@ lv_obj_t *device_info() {
     snprintf(tmpStr, sizeof(tmpStr), "SW Version: %s", get_board()->swVersion());
     lv_label_set_text(version_label, tmpStr);
 
+    lv_obj_t *charging = lv_file_list_add(cont_flex, nullptr);
+    lv_obj_t *charging_label = lv_label_create(charging);
+    lv_obj_add_style(charging_label, &menu_font_style, LV_PART_MAIN);
+    const char chargingStrings[3][5] = {"OFF", "LOW", "HIGH"};
+    snprintf(tmpStr, sizeof(tmpStr), "Charging: %s", chargingStrings[get_board()->powerConnected()]);
+    lv_label_set_text(charging_label, tmpStr);
+
     lv_obj_t *exit_btn = lv_file_list_add(cont_flex, nullptr);
     lv_obj_t *exit_label = lv_label_create(exit_btn);
     lv_obj_add_style(exit_label, &menu_font_style, LV_PART_MAIN);
