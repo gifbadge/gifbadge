@@ -82,7 +82,7 @@ Battery *b1_28_v0_1::getBattery() {
 }
 
 Touch *b1_28_v0_1::getTouch() {
-  return _touch;
+  return nullptr;
 }
 
 Keys *b1_28_v0_1::getKeys() {
