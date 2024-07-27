@@ -2,10 +2,10 @@ SET(SRC "main.cpp"
         "ui/menu.cpp"
         "display.cpp"
         "input.cpp"
-        ${CMAKE_CURRENT_BINARY_DIR}/material_icons.c
-        ${CMAKE_CURRENT_BINARY_DIR}/material_icons_56.c
-        ${CMAKE_CURRENT_BINARY_DIR}/material_icons_special.c
-        ${CMAKE_CURRENT_BINARY_DIR}/battery_symbols_14.c
+        ${CMAKE_SOURCE_DIR}/main/ui/fonts/material_icons.c
+        ${CMAKE_SOURCE_DIR}/main/ui/fonts/material_icons_56.c
+        ${CMAKE_SOURCE_DIR}/main/ui/fonts/material_icons_special.c
+        ${CMAKE_SOURCE_DIR}/main/ui/fonts/battery_symbols_14.c
         "ui/menu.cpp"
         "ui/device_group.c"
         "ui/file_select.cpp"
@@ -42,22 +42,26 @@ message(special_symbols="${special_symbols}")
 
 set(battery_symbols "0xea0b,0xf22f,0xe5cd") #Charging,!, X
 
-add_custom_command(
-        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/material_icons.c
-        COMMAND lv_font_conv --bpp 1 --size 28 --format lvgl --lv-include lvgl.h --font ${CMAKE_SOURCE_DIR}/MaterialSymbolsOutlined[FILL,GRAD,opsz,wght].ttf -r"${font_symbols}" --no-compress -o ${CMAKE_CURRENT_BINARY_DIR}/material_icons.c
-)
 
-add_custom_command(
-        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/material_icons_56.c
-        COMMAND lv_font_conv --bpp 1 --size 56 --format lvgl --lv-include lvgl.h --font ${CMAKE_SOURCE_DIR}/MaterialSymbolsOutlined[FILL,GRAD,opsz,wght].ttf -r"${font_symbols}" -o ${CMAKE_CURRENT_BINARY_DIR}/material_icons_56.c
-)
+find_program(LV_FONT_CONV "lv_font_conv")
+if (LV_FONT_CONV)
+    add_custom_command(
+            OUTPUT ${CMAKE_SOURCE_DIR}/main/ui/fonts/material_icons.c
+            COMMAND LV_FONT_CONV --bpp 1 --size 28 --format lvgl --lv-include lvgl.h --font ${CMAKE_SOURCE_DIR}/MaterialSymbolsOutlined[FILL,GRAD,opsz,wght].ttf -r"${font_symbols}" --no-compress -o ${CMAKE_SOURCE_DIR}/main/ui/fonts/material_icons.c
+    )
 
-add_custom_command(
-        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/battery_symbols_14.c
-        COMMAND lv_font_conv --bpp 1 --size 14 --format lvgl --lv-include lvgl.h --font ${CMAKE_SOURCE_DIR}/MaterialSymbolsOutlined[FILL,GRAD,opsz,wght]-Filled.ttf -r"${battery_symbols}" --no-compress -o ${CMAKE_CURRENT_BINARY_DIR}/battery_symbols_14.c
-)
+    add_custom_command(
+            OUTPUT ${CMAKE_SOURCE_DIR}/main/ui/fonts/material_icons_56.c
+            COMMAND LV_FONT_CONV --bpp 1 --size 56 --format lvgl --lv-include lvgl.h --font ${CMAKE_SOURCE_DIR}/MaterialSymbolsOutlined[FILL,GRAD,opsz,wght].ttf -r"${font_symbols}" -o ${CMAKE_SOURCE_DIR}/main/ui/fonts/material_icons_56.c
+    )
 
-add_custom_command(
-        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/material_icons_special.c
-        COMMAND lv_font_conv --bpp 1 --size 180 --format lvgl --lv-include lvgl.h --font ${CMAKE_SOURCE_DIR}/MaterialSymbolsOutlined[FILL,GRAD,opsz,wght].ttf -r"${special_symbols}" -o ${CMAKE_CURRENT_BINARY_DIR}/material_icons_special.c
-)
+    add_custom_command(
+            OUTPUT ${CMAKE_SOURCE_DIR}/main/ui/fonts/battery_symbols_14.c
+            COMMAND LV_FONT_CONV --bpp 1 --size 14 --format lvgl --lv-include lvgl.h --font ${CMAKE_SOURCE_DIR}/MaterialSymbolsOutlined[FILL,GRAD,opsz,wght]-Filled.ttf -r"${battery_symbols}" --no-compress -o ${CMAKE_SOURCE_DIR}/main/ui/fonts/battery_symbols_14.c
+    )
+
+    add_custom_command(
+            OUTPUT ${CMAKE_SOURCE_DIR}/main/ui/fonts/material_icons_special.c
+            COMMAND lv_font_conv --bpp 1 --size 180 --format lvgl --lv-include lvgl.h --font ${CMAKE_SOURCE_DIR}/MaterialSymbolsOutlined[FILL,GRAD,opsz,wght].ttf -r"${special_symbols}" -o ${CMAKE_SOURCE_DIR}/main/ui/fonts//material_icons_special.c
+    )
+endif ()

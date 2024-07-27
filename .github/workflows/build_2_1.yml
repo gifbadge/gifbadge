@@ -1,0 +1,31 @@
+name: Build
+
+on:
+  workflow_dispatch
+
+jobs:
+  build:
+    name: Build 2.1 Release
+    strategy:
+      fail-fast: false
+      matrix:
+        idf_ver: ["release-v5.2"]
+        idf_target: [{"target": "esp32s3", "config": "1_28"}, {"target": "esp32s3", "config": "2_1"}]
+    runs-on: ubuntu-20.04
+    container: espressif/idf:release-v5.2
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: 'true'
+      - name: Build 2.1 Release
+        env:
+          IDF_TARGET: esp32s3
+        shell: bash
+        run: |
+          . ${IDF_PATH}/export.sh
+          SDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.${{ matrix.idf_target.config }}" idf.py set-target ${{ matrix.idf_target.target }}
+          idf.py build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.idf_target.target }}-${{ matrix.idf_target.config }}.bin
+          path: build/GifBadge.bin
