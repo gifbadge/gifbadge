@@ -8,7 +8,6 @@ SET(SRC "EmbeddedImage/image.cpp"
         "EmbeddedImage/jpeg.cpp"
         "EmbeddedImage/png.cpp"
         "EmbeddedImage/gif.cpp"
-        "EmbeddedImage/AnimatedGIF/src/AnimatedGIF.cpp"
         ${PNGdec_src}
         ${JPEGDEC_src}
 )

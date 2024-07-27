@@ -32,8 +32,9 @@ public:
 
 
 private:
-    AnimatedGIF gif;
+    GIFIMAGE _gif;
+    int playFrame(bool bSync, int *delayMilliseconds, void *pUser);
 
-    static void GIFDraw(GIFDRAW *pDraw);
+  static void GIFDraw(GIFDRAW *pDraw);
     int32_t width = 0; //GIF width, needed for GIFDraw
 };

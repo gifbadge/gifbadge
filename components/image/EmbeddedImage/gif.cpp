@@ -9,6 +9,13 @@
 #include <esp_heap_caps.h>
 #endif
 
+#define PICO_BUILD
+#include <AnimatedGIF.h>
+#define ALLOWS_UNALIGNED
+#undef LZW_HIGHWATER_TURBO
+#define LZW_HIGHWATER_TURBO ((LZW_BUF_SIZE_TURBO * 13) / 16)
+#include <gif.inl>
+
 struct mem_buf {
   uint8_t *buf;
   FILE *fp;
@@ -107,16 +114,57 @@ GIF::GIF() = default;
 
 GIF::~GIF() {
   printf("GIF DELETED\n");
-  gif.freeFrameBuf(free);
-  gif.close();
+  free(_gif.pFrameBuffer);
+  _gif.pFrameBuffer = nullptr;
+  (*_gif.pfnClose)(_gif.GIFFile.fHandle);
 }
+
+int GIF::playFrame(bool bSync, int *delayMilliseconds, void *pUser)
+{
+  int rc;
+
+  if (_gif.GIFFile.iPos >= _gif.GIFFile.iSize-1) // no more data exists
+  {
+    (*_gif.pfnSeek)(&_gif.GIFFile, 0); // seek to start
+  }
+  if (GIFParseInfo(&_gif, 0))
+  {
+    _gif.pUser = pUser;
+    if (_gif.iError == GIF_EMPTY_FRAME) // don't try to decode it
+      return 0;
+    if (_gif.pTurboBuffer) {
+      rc = DecodeLZWTurbo(&_gif, 0);
+    } else {
+      rc = DecodeLZW(&_gif, 0);
+    }
+    if (rc != 0) // problem
+      return -1;
+  }
+  else
+  {
+    // The file is "malformed" in that there is a bunch of non-image data after
+    // the last frame. Return as if all is well, though if needed getLastError()
+    // can be used to see if a frame was actually processed:
+    // GIF_SUCCESS -> frame processed, GIF_EMPTY_FRAME -> no frame processed
+    if (_gif.iError == GIF_EMPTY_FRAME)
+    {
+      if (delayMilliseconds)
+        *delayMilliseconds = 0;
+      return 0;
+    }
+    return -1; // error parsing the frame info, we may be at the end of the file
+  }
+  if (delayMilliseconds) // if not NULL, return the frame delay time
+    *delayMilliseconds = _gif.iFrameDelay;
+  return (_gif.GIFFile.iPos < _gif.GIFFile.iSize-10);
+} /* playFrame() */
 
 frameReturn GIF::loop(uint8_t *outBuf, int16_t x, int16_t y, int16_t width) {
   GIFUser gifuser = {outBuf, x, y, width};
   int frameDelay;
-  int ret = gif.playFrame(false, &frameDelay, (void *) &gifuser);
+  int ret = playFrame(false, &frameDelay, (void *) &gifuser);
   if (ret == -1) {
-    printf("GIF Error: %i\n", gif.getLastError());
+    printf("GIF Error: %i\n", _gif.iError);
     return {frameStatus::ERROR, 0};
   } else if (ret == 0) {
     return {frameStatus::END, frameDelay};
@@ -125,7 +173,7 @@ frameReturn GIF::loop(uint8_t *outBuf, int16_t x, int16_t y, int16_t width) {
 }
 
 std::pair<int16_t, int16_t> GIF::size() {
-  return {gif.getCanvasWidth(), gif.getCanvasHeight()};
+  return {_gif.iCanvasWidth, _gif.iCanvasHeight};
 }
 
 void GIF::GIFDraw(GIFDRAW *pDraw) {
@@ -144,34 +192,57 @@ Image *GIF::create() {
   return new GIF();
 }
 
-static void *GIFAlloc(uint32_t u32Size) {
-#ifdef ESP_PLATFORM
-  return heap_caps_malloc(u32Size, MALLOC_CAP_SPIRAM);
-#else
-  return malloc(u32Size);
-#endif
-} /* GIFAlloc() */
-
 int GIF::open(const char *path, void *buffer) {
 #ifdef ESP_PLATFORM
-  gif.begin(BIG_ENDIAN_PIXELS);
+  unsigned char ucPaletteType = BIG_ENDIAN_PIXELS;
 #else
-  gif.begin(LITTLE_ENDIAN_PIXELS);
+  unsigned char ucPaletteType = LITTLE_ENDIAN_PIXELS;
 #endif
-  if (gif.open(path, OpenFile, CloseFile, ReadFile, SeekFile, GIFDraw)) {
+
+  memset(&_gif, 0, sizeof(_gif));
+  if (ucPaletteType != GIF_PALETTE_RGB565_LE && ucPaletteType != GIF_PALETTE_RGB565_BE
+      && ucPaletteType != GIF_PALETTE_RGB888)
+    _gif.iError = GIF_INVALID_PARAMETER;
+  _gif.ucPaletteType = ucPaletteType;
+  _gif.ucDrawType = GIF_DRAW_RAW; // assume RAW pixel handling
+  _gif.pFrameBuffer = nullptr;
+
+  _gif.iError = GIF_SUCCESS;
+  _gif.pfnRead = ReadFile;
+  _gif.pfnSeek = SeekFile;
+  _gif.pfnDraw = GIFDraw;
+  _gif.pfnOpen = OpenFile;
+  _gif.pfnClose = CloseFile;
+  _gif.GIFFile.fHandle = (*_gif.pfnOpen)(path, &_gif.GIFFile.iSize);
+  if (_gif.GIFFile.fHandle == nullptr) {
+    _gif.iError = GIF_FILE_NOT_OPEN;
+    return -1;
+  }
+
+  if (GIFInit(&_gif)) {
     if (buffer) {
-      gif.setTurboBuf(buffer);
+      _gif.pTurboBuffer = (uint8_t *) buffer;
     }
-    gif.allocFrameBuf(GIFAlloc);
-    gif.setDrawType(GIF_DRAW_COOKED);
-    width = gif.getCanvasWidth();
-    return 0;
+    // Allocate a little extra space for the current line
+    // as RGB565 or RGB888
+    int iCanvasSize = _gif.iCanvasWidth * (_gif.iCanvasHeight + 3);
+#ifdef ESP_PLATFORM
+    _gif.pFrameBuffer = (unsigned char *) heap_caps_malloc(iCanvasSize, MALLOC_CAP_SPIRAM);
+#else
+    _gif.pFrameBuffer = (unsigned char *)malloc(iCanvasSize);
+#endif
+    if (_gif.pFrameBuffer == nullptr) {
+      _gif.iError = GIF_ERROR_MEMORY;
+      return -1;
+    }
+    _gif.ucDrawType = GIF_DRAW_COOKED;
+    width = _gif.iCanvasWidth;
   }
   return -1;
 }
 
 const char *GIF::getLastError() {
-  switch (gif.getLastError()) {
+  switch (_gif.iError) {
     case GIF_SUCCESS:
       return "GIF_SUCCESS";
     case GIF_DECODE_ERROR:
