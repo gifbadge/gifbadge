@@ -3,7 +3,7 @@ name: Build
 on:
   workflow_dispatch:
   release:
-    types: [created]
+    types: [published]
 #  push:
 #    # Sequence of patterns matched against refs/tags
 #    tags:
