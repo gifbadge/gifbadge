@@ -2,10 +2,12 @@ name: Build
 
 on:
   workflow_dispatch:
-  push:
-    # Sequence of patterns matched against refs/tags
-    tags:
-      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+  release:
+    types: [created]
+#  push:
+#    # Sequence of patterns matched against refs/tags
+#    tags:
+#      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
 
 
 jobs:
@@ -22,9 +24,9 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: 'true'
-      - name: Build 2.1 Release
+      - name: esp-idf build
         env:
-          IDF_TARGET: esp32s3
+          IDF_TARGET: ${{ matrix.idf_target.target }}
         shell: bash
         run: |
           . ${IDF_PATH}/export.sh
@@ -34,3 +36,8 @@ jobs:
         with:
           name: ${{ matrix.idf_target.target }}-${{ matrix.idf_target.config }}.bin
           path: build/GifBadge.bin
+      - uses: svenstaro/upload-release-action@v2
+        with:
+            file: build/GifBadge.bin
+            asset_name: ${{ matrix.idf_target.target }}-${{ matrix.idf_target.config }}.bin
+            tag: ${{ github.ref }}
