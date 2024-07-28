@@ -10,7 +10,7 @@ on:
 
 jobs:
   build:
-    name: Build 2.1 Release
+    name: Build esp-idf releases
     strategy:
       fail-fast: false
       matrix:
