@@ -120,7 +120,10 @@ display_st7701s::display_st7701s(spi_line_config_t line_cfg,
   uint16_t init_cmds_size = sizeof(buyadisplaycom) / sizeof(st7701_lcd_init_cmd_t);
 
   for (int i = 0; i < init_cmds_size; i++) {
-    ESP_ERROR_CHECK(esp_lcd_panel_io_tx_param(io, init_cmds[i].cmd, init_cmds[i].data, init_cmds[i].data_bytes));
+    if(esp_lcd_panel_io_tx_param(io, init_cmds[i].cmd, init_cmds[i].data, init_cmds[i].data_bytes) != ESP_OK){
+      LOGI(TAG, "Error Writing LCD CMD %d", i);
+      break;
+    }
     vTaskDelay(pdMS_TO_TICKS(init_cmds[i].delay_ms));
   }
   ESP_LOGD(TAG, "send init commands success");
