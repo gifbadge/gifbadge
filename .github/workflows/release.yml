@@ -2,10 +2,12 @@ name: Build
 
 on:
   workflow_dispatch:
-  push:
-    # Sequence of patterns matched against refs/tags
-    tags:
-      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+  release:
+    types: [published]
+#  push:
+#    # Sequence of patterns matched against refs/tags
+#    tags:
+#      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
 
 
 jobs:
@@ -16,17 +18,18 @@ jobs:
       matrix:
         idf_ver: ["release-v5.2"]
         idf_target: [{"target": "esp32s3", "config": "1_28"}, {"target": "esp32s3", "config": "2_1"}]
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     container: espressif/idf:release-v5.2
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: 'true'
-      - name: Build 2.1 Release
+      - name: esp-idf build
         env:
-          IDF_TARGET: esp32s3
+          IDF_TARGET: ${{ matrix.idf_target.target }}
         shell: bash
         run: |
+          git config --global --add safe.directory /__w/gifbadge_software/gifbadge_software
           . ${IDF_PATH}/export.sh
           SDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.${{ matrix.idf_target.config }}" idf.py set-target ${{ matrix.idf_target.target }}
           idf.py build
@@ -34,3 +37,8 @@ jobs:
         with:
           name: ${{ matrix.idf_target.target }}-${{ matrix.idf_target.config }}.bin
           path: build/GifBadge.bin
+      - uses: svenstaro/upload-release-action@v2
+        with:
+            file: build/GifBadge.bin
+            asset_name: ${{ matrix.idf_target.target }}-${{ matrix.idf_target.config }}.bin
+            tag: ${{ github.ref }}
