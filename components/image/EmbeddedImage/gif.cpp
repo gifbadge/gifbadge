@@ -237,6 +237,7 @@ int GIF::open(const char *path, void *buffer) {
     }
     _gif.ucDrawType = GIF_DRAW_COOKED;
     width = _gif.iCanvasWidth;
+    return 0;
   }
   return -1;
 }
