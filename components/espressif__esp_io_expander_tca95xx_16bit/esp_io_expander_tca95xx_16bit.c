@@ -17,7 +17,7 @@
 #include "esp_io_expander_tca95xx_16bit.h"
 
 /* Timeout of each I2C communication */
-#define I2C_TIMEOUT_MS          (10)
+#define I2C_TIMEOUT_MS          (100)
 
 #define IO_COUNT                (16)
 
