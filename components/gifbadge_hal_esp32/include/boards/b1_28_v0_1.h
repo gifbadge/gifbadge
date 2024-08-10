@@ -17,9 +17,6 @@
 #include "esp32s3_sdmmc.h"
 
 namespace Boards {
-#define GPIO_CARD_DETECT GPIO_NUM_21
-#define GPIO_VBUS_DETECT GPIO_NUM_6
-#define GPIO_SHUTDOWN GPIO_NUM_7
 class b1_28_v0_1 : public Boards::esp32s3_sdmmc {
  public:
   b1_28_v0_1();

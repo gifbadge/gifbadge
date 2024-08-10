@@ -10,7 +10,11 @@
 
 static const char *TAG = "board_1_28_v0_1";
 
-esp_pm_lock_handle_t usb_pm;
+static esp_pm_lock_handle_t usb_pm;
+
+#define GPIO_CARD_DETECT GPIO_NUM_21
+#define GPIO_VBUS_DETECT GPIO_NUM_6
+#define GPIO_SHUTDOWN GPIO_NUM_7
 
 static void IRAM_ATTR sdcard_removed(void *) {
   esp_restart();
