@@ -99,7 +99,9 @@ extern "C" void app_main(void) {
 
   if (!board->storageReady()) {
     xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_NO_STORAGE, eSetValueWithOverwrite);
-    while (true);
+    while (true){
+      vTaskDelay(1000/portTICK_PERIOD_MS);
+    }
   }
 
   MAIN_STATES oldState = MAIN_NONE;
