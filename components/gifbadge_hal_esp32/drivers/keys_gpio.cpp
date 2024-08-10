@@ -17,7 +17,7 @@ keys_gpio::keys_gpio(gpio_num_t up, gpio_num_t down, gpio_num_t enter) {
 
   for (auto &input : buttonConfig) {
     if (input >= 0) {
-      LOGI(TAG, "Setting up GPIO %u\n", input);
+      LOGI(TAG, "Setting up GPIO %u", input);
       ESP_ERROR_CHECK(gpio_reset_pin(input));
       ESP_ERROR_CHECK(gpio_set_direction(input, GPIO_MODE_INPUT));
       ESP_ERROR_CHECK(gpio_set_pull_mode(input, GPIO_PULLUP_ONLY));
