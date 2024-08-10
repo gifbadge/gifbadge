@@ -15,7 +15,7 @@ static const char *TAG = "board_v0";
 namespace Boards {
 
 v0::v0() {
-  _i2c = new I2C(I2C_NUM_0, 21, 18);
+  _i2c = new I2C(I2C_NUM_0, 21, 18, 100 * 1000, false);
   _battery = new battery_analog(ADC_CHANNEL_9);
   _keys = new keys_gpio(GPIO_NUM_43, GPIO_NUM_44, GPIO_NUM_0);
   _display = new display_gc9a01(35, 36, 34, 37, 46);

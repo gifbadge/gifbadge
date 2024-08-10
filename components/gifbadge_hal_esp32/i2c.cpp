@@ -4,16 +4,16 @@
 #include "log.h"
 #include "i2c.h"
 
-I2C::I2C(i2c_port_t port, int sda, int scl) : _port(port) {
+I2C::I2C(i2c_port_t port, int sda, int scl, uint32_t clk, bool pullup) : _port(port) {
   const std::lock_guard<std::mutex> lock(i2c_lock);
 
   i2c_config_t conf = {
       .mode = I2C_MODE_MASTER,
       .sda_io_num = sda,
       .scl_io_num = scl,
-      .sda_pullup_en = GPIO_PULLUP_DISABLE,
-      .scl_pullup_en = GPIO_PULLUP_DISABLE,
-      .master = {.clk_speed = 100 * 1000},
+      .sda_pullup_en = pullup,
+      .scl_pullup_en = pullup,
+      .master = {.clk_speed = clk},
       .clk_flags = 0,
   };
   i2c_param_config(port, &conf);

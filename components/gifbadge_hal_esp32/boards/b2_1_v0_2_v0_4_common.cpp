@@ -35,7 +35,7 @@ namespace Boards {
 b2_1_v0_2v0_4::b2_1_v0_2v0_4() {
   buffer = heap_caps_malloc(480 * 480 + 0x6100, MALLOC_CAP_INTERNAL);
   _config = new Config_NVS();
-  _i2c = new I2C(I2C_NUM_0, 47, 48);
+  _i2c = new I2C(I2C_NUM_0, 47, 48, 100 * 1000, false);
   _battery = new battery_max17048(_i2c, GPIO_NUM_0);
   /*G3, G4, G5, R1, R2, R3, R4, R5, B1, B2, B3, B4, B5, G0, G1, G2 */
   std::array<int, 16> rgb = {11, 12, 13, 3, 4, 5, 6, 7, 14, 15, 16, 17, 18, 8, 9, 10};

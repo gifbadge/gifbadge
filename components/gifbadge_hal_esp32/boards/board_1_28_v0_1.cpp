@@ -34,7 +34,7 @@ namespace Boards {
 
 b1_28_v0_1::b1_28_v0_1() {
   buffer = heap_caps_malloc(240 * 240 + 0x6100, MALLOC_CAP_INTERNAL);
-  _i2c = new I2C(I2C_NUM_0, 17, 18);
+  _i2c = new I2C(I2C_NUM_0, 17, 18, 100 * 1000, false);
   _battery = new battery_max17048(_i2c, GPIO_VBUS_DETECT);
   _battery->inserted(); //Battery not removable. So set this
   _keys = new keys_gpio(GPIO_NUM_0, GPIO_NUM_2, GPIO_NUM_1);
