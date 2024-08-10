@@ -7,6 +7,7 @@ typedef void (*op)();
 typedef struct {
   op press;
   op hold;
+  uint32_t delay;
 } keyCommands;
 
 enum MAIN_STATES {
