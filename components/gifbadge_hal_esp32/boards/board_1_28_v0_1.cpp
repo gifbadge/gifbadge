@@ -37,6 +37,7 @@ b1_28_v0_1::b1_28_v0_1() {
   _i2c = new I2C(I2C_NUM_0, 17, 18, 100 * 1000, false);
   _battery = new battery_max17048(_i2c, GPIO_VBUS_DETECT);
   _battery->inserted(); //Battery not removable. So set this
+  gpio_install_isr_service(0);
   _keys = new keys_gpio(GPIO_NUM_0, GPIO_NUM_2, GPIO_NUM_1);
   _display = new display_gc9a01(35, 36, 34, 37, 38);
   _backlight = new backlight_ledc(GPIO_NUM_9, 0);
@@ -53,7 +54,7 @@ b1_28_v0_1::b1_28_v0_1() {
   if (!gpio_get_level(GPIO_CARD_DETECT)) {
     mount(GPIO_NUM_40, GPIO_NUM_39, GPIO_NUM_41, GPIO_NUM_42, GPIO_NUM_33, GPIO_NUM_47, GPIO_CARD_DETECT, 1);
   }
-  gpio_install_isr_service(0);
+
   gpio_isr_handler_add(GPIO_CARD_DETECT, sdcard_removed, nullptr);
   gpio_set_intr_type(GPIO_CARD_DETECT, GPIO_INTR_ANYEDGE);
 

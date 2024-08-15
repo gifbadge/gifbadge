@@ -1,5 +1,7 @@
 
 #include <driver/gpio.h>
+#include <esp_pm.h>
+#include <esp_attr.h>
 #include "log.h"
 #include "drivers/keys_gpio.h"
 
@@ -10,10 +12,39 @@ static void pollKeys(void *args) {
   keys->poll();
 }
 
+static esp_pm_lock_handle_t key_pm;
+static esp_timer_handle_t wakeTimer;
+
+static void IRAM_ATTR keyWake(void *arg) {
+  auto *buttonConfig = static_cast<gpio_num_t *>(arg);
+  for(int i = 0; i < KEY_MAX; i++){
+    gpio_intr_disable(buttonConfig[i]);
+  }
+  esp_pm_lock_acquire(key_pm);
+  if(esp_timer_is_active(wakeTimer)) {
+    esp_timer_restart(wakeTimer, 10 * 1000 * 1000);
+  } else {
+    esp_timer_start_once(wakeTimer, 10 * 1000 * 1000);
+  }
+}
+
+static void wakeTimerHandler(void *arg) {
+  LOGI(TAG, "Releasing keyWake lock");
+  auto *buttonConfig = static_cast<gpio_num_t *>(arg);
+  for(int i = 0; i < KEY_MAX; i++){
+    gpio_intr_enable(buttonConfig[i]);
+  }
+  esp_pm_lock_release(key_pm);
+}
+
+
+
 keys_gpio::keys_gpio(gpio_num_t up, gpio_num_t down, gpio_num_t enter) {
   buttonConfig[KEY_UP] = up;
   buttonConfig[KEY_DOWN] = down;
   buttonConfig[KEY_ENTER] = enter;
+
+  esp_pm_lock_create(ESP_PM_NO_LIGHT_SLEEP, 0, "keyWake", &key_pm);
 
   for (auto &input : buttonConfig) {
     if (input >= 0) {
@@ -22,6 +53,8 @@ keys_gpio::keys_gpio(gpio_num_t up, gpio_num_t down, gpio_num_t enter) {
       ESP_ERROR_CHECK(gpio_set_direction(input, GPIO_MODE_INPUT));
       ESP_ERROR_CHECK(gpio_set_pull_mode(input, GPIO_PULLUP_ONLY));
       ESP_ERROR_CHECK(gpio_pullup_en(input));
+      ESP_ERROR_CHECK(gpio_wakeup_enable(input, GPIO_INTR_LOW_LEVEL));
+      ESP_ERROR_CHECK(gpio_isr_handler_add(input, keyWake, buttonConfig));
     }
   }
 
@@ -39,6 +72,16 @@ keys_gpio::keys_gpio(gpio_num_t up, gpio_num_t down, gpio_num_t enter) {
 
   ESP_ERROR_CHECK(esp_timer_create(&keyTimerArgs, &keyTimer));
   ESP_ERROR_CHECK(esp_timer_start_periodic(keyTimer, 5 * 1000));
+
+  const esp_timer_create_args_t wakeTimerArgs = {
+      .callback = &wakeTimerHandler,
+      .arg = buttonConfig,
+      .dispatch_method = ESP_TIMER_TASK,
+      .name = "keyWakeTimer",
+      .skip_unhandled_events = true
+  };
+  ESP_ERROR_CHECK(esp_timer_create(&wakeTimerArgs, &wakeTimer));
+
   last = esp_timer_get_time() / 1000;
 
 }

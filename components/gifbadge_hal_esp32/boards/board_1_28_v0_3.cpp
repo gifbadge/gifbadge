@@ -48,6 +48,8 @@ b1_28_v0_3::b1_28_v0_3() {
   _i2c = new I2C(I2C_NUM_0, 6, 7, 100 * 1000, true);
   _battery = new battery_max17048(_i2c, GPIO_VBUS_DETECT);
   _battery->inserted(); //Battery not removable. So set this
+
+  gpio_install_isr_service(0);
   _keys = new keys_gpio(GPIO_KEY_UP, GPIO_KEY_DOWN, GPIO_KEY_ENTER);
 
 //  Power pin
@@ -70,7 +72,6 @@ b1_28_v0_3::b1_28_v0_3() {
   if (!gpio_get_level(GPIO_CARD_DETECT)) {
     mount(GPIO_NUM_33, GPIO_NUM_36, GPIO_NUM_35, GPIO_NUM_34, GPIO_NUM_37, GPIO_NUM_38, GPIO_CARD_DETECT, 4);
   }
-  gpio_install_isr_service(0);
   gpio_isr_handler_add(GPIO_CARD_DETECT, sdcard_removed, nullptr);
   gpio_set_intr_type(GPIO_CARD_DETECT, GPIO_INTR_ANYEDGE);
 
