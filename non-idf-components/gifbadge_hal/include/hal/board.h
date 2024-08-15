@@ -9,6 +9,7 @@
 #include "hal/storage.h"
 //#include "ota.h"
 #include "config.h"
+#include "tusb_msc_storage.h"
 
 namespace Boards {
 
@@ -48,6 +49,7 @@ class Board {
   virtual Config *getConfig() = 0;
   virtual void debugInfo() = 0;
   virtual bool usbConnected() = 0;
+  virtual int usbCallBack(tusb_msc_callback_t callback) = 0;
   virtual const char *swVersion() = 0;
   virtual char *serialNumber() = 0;
 

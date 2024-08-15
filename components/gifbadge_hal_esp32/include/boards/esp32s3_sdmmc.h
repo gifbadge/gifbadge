@@ -12,6 +12,7 @@ class esp32s3_sdmmc : public Boards::esp32s3 {
   StorageInfo storageInfo() override;
   int StorageFormat() override;
   void reset() override;
+  int usbCallBack(tusb_msc_callback_t callback) override;
 
  protected:
   bool storageAvailable = false;

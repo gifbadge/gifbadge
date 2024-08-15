@@ -94,4 +94,8 @@ bool esp32s3_sdmmc::usbConnected() {
   return false;
 #endif
 }
+int esp32s3_sdmmc::usbCallBack(tusb_msc_callback_t callback) {
+  tinyusb_msc_register_callback(TINYUSB_MSC_EVENT_MOUNT_CHANGED, callback);
+  return 0;
+}
 }
