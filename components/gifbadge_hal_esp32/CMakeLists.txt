@@ -13,6 +13,7 @@ if (ESP_PLATFORM)
             "boards/b2_1_v0_2.cpp"
             "boards/b2_1_v0_4.cpp"
             "boards/board_1_28_v0_1.cpp"
+            "boards/board_1_28_v0_3.cpp"
             "drivers/keys_gpio.cpp"
             "drivers/keys_esp_io_expander.cpp"
             "drivers/display_gc9a01.cpp"
