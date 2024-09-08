@@ -1,0 +1,20 @@
+cmake_minimum_required(VERSION 3.1...3.29)
+project(npmx VERSION 1.0 LANGUAGES C CXX)
+file(GLOB SRC_FILES npmx/drivers/src/*.c npmx/backends/*.c)
+add_library(npmx ${SRC_FILES})
+target_include_directories(npmx PUBLIC npmx npmx/drivers/include npmx/backends npmx/templates npmx/adk)
+set(C_STANDARD 11)
+set(CMAKE_CXX_STANDARD 23)
+set(C_EXTENSIONS ON)
+set(CXX_EXTENSIONS ON)
+target_compile_options(npmx PUBLIC -DNPM1300)
+
+if(ESP_PLATFORM)
+    target_link_libraries(npmx PRIVATE idf::newlib)
+else ()
+#    include(CTest)
+#    add_subdirectory(test)
+#    target_compile_options(FileUtil PUBLIC -g -fprofile-arcs -ftest-coverage)
+endif()
+
+

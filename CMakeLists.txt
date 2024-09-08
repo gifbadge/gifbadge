@@ -14,6 +14,7 @@ project(GifBadge VERSION 1.0 LANGUAGES C CXX)
 add_subdirectory(non-idf-components/gifbadge_hal)
 add_subdirectory(non-idf-components/fileutil)
 add_subdirectory(non-idf-components/font_render)
+add_subdirectory(non-idf-components/npmx)
 
 if (ESP_PLATFORM)
     if(EXISTS ${CMAKE_SOURCE_DIR}/config/esp32s3/lv_conf.h)

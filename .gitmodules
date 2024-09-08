@@ -22,3 +22,6 @@
 [submodule "components/image/EmbeddedImage/JPEGDEC"]
 	path = components/image/EmbeddedImage/JPEGDEC
 	url = https://github.com/bitbank2/JPEGDEC.git
+[submodule "non-idf-components/npmx/npmx"]
+	path = non-idf-components/npmx/npmx
+	url = https://github.com/NordicSemiconductor/npmx.git
