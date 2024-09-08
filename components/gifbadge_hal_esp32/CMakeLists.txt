@@ -20,6 +20,7 @@ if (ESP_PLATFORM)
             "drivers/display_st7701s.cpp"
             "drivers/backlight_ledc.cpp"
             "drivers/config_nvs.cpp"
+            "drivers/keys_generic.cpp"
             "drivers/esp_io_expander_gpio.cpp"
             "esp_efuse_custom_table.c"
             "hw_init.cpp"
