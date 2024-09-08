@@ -10,6 +10,7 @@ if (ESP_PLATFORM)
             "boards/board_esp32s3_sdmmc.cpp"
             "boards/board_v0.cpp"
             "boards/b2_1_v0_2_v0_4_common.cpp"
+            "boards/b2_1_v0_5.cpp"
             "boards/b2_1_v0_2.cpp"
             "boards/b2_1_v0_4.cpp"
             "boards/board_1_28_v0_1.cpp"
@@ -48,5 +49,5 @@ if (ESP_PLATFORM)
             esp_lcd_gc9a01
             esp_lcd_panel_io_additions)
     target_link_libraries(${COMPONENT_LIB} PUBLIC "-u custom_app_desc")
-    target_link_libraries(${COMPONENT_LIB} PUBLIC gifbadge_hal)
+    target_link_libraries(${COMPONENT_LIB} PUBLIC gifbadge_hal npmx)
 endif ()
