@@ -8,7 +8,7 @@
 
 static const char *TAG = "backlight_gpio.cpp";
 
-backlight_ledc::backlight_ledc(gpio_num_t gpio, int level) : lastLevel(level) {
+backlight_ledc::backlight_ledc(gpio_num_t gpio, bool invert, int level) : lastLevel(level) {
   LOGI(TAG, "Turn on LCD backlight");
 
   // Prepare and then apply the LEDC PWM timer configuration
@@ -31,7 +31,7 @@ backlight_ledc::backlight_ledc(gpio_num_t gpio, int level) : lastLevel(level) {
       .timer_sel      = LEDC_TIMER_0,
       .duty           = 0, // Set duty to 0%
       .hpoint         = 0,
-      .flags          = {.output_invert = 0}
+      .flags          = {.output_invert = invert}
   };
   ESP_ERROR_CHECK(ledc_channel_config(&ledc_channel));
   ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, static_cast<uint32_t>(256 / (level / 100.00)) - 1);

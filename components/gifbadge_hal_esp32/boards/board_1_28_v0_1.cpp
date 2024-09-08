@@ -40,7 +40,7 @@ b1_28_v0_1::b1_28_v0_1() {
   gpio_install_isr_service(0);
   _keys = new keys_gpio(GPIO_NUM_0, GPIO_NUM_2, GPIO_NUM_1);
   _display = new display_gc9a01(35, 36, 34, 37, 38);
-  _backlight = new backlight_ledc(GPIO_NUM_9, 0);
+  _backlight = new backlight_ledc(GPIO_NUM_9, false, 0);
   _backlight->setLevel(100);
 
   esp_pm_config_t pm_config = {.max_freq_mhz = 240, .min_freq_mhz = 40, .light_sleep_enable = true};

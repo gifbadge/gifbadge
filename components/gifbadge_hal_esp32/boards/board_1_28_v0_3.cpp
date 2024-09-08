@@ -66,7 +66,7 @@ b1_28_v0_3::b1_28_v0_3() {
   gpio_hold_en(GPIO_EXT_PWR);
 
   _display = new display_gc9a01(18, 17, 16, 15, 21);
-  _backlight = new backlight_ledc(GPIO_NUM_10, 0);
+  _backlight = new backlight_ledc(GPIO_NUM_10, false, 0);
 
   gpio_pullup_en(GPIO_CARD_DETECT);
   if (!gpio_get_level(GPIO_CARD_DETECT)) {

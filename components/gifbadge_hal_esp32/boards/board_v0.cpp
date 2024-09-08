@@ -20,7 +20,7 @@ v0::v0() {
   gpio_install_isr_service(0);
   _keys = new keys_gpio(GPIO_NUM_43, GPIO_NUM_44, GPIO_NUM_0);
   _display = new display_gc9a01(35, 36, 34, 37, 46);
-  _backlight = new backlight_ledc(GPIO_NUM_45, 0);
+  _backlight = new backlight_ledc(GPIO_NUM_45, false, 0);
 
   static wl_handle_t wl_handle = WL_INVALID_HANDLE;
   ESP_ERROR_CHECK(init_ext_flash(39, 41, 40, 42, &wl_handle));

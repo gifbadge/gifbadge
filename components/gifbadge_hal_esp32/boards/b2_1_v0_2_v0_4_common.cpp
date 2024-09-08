@@ -71,7 +71,7 @@ b2_1_v0_2v0_4::b2_1_v0_2v0_4() {
   esp_io_expander_print_state(_io_expander);
   _keys = new keys_esp_io_expander(_io_expander, _i2c, 14, 12, 13);
 
-  _backlight = new backlight_ledc(GPIO_NUM_21, 0);
+  _backlight = new backlight_ledc(GPIO_NUM_21, false, 0);
   _backlight->setLevel(_config->getBacklight() * 10);
   _touch = new touch_ft5x06(_i2c);
 
