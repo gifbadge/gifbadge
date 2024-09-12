@@ -93,6 +93,11 @@ static void usbCall(tinyusb_msc_event_t *e){
 
 extern "C" void app_main(void) {
   Boards::Board *board = get_board();
+  if(board->bootReason() != Boards::Board::WAKEUP_SOURCE::KEY){
+    board->powerOff();
+  }
+
+  board->lateInit();
 
   TaskHandle_t display_task_handle = nullptr;
 

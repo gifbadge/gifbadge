@@ -52,6 +52,15 @@ class Board {
   virtual int usbCallBack(tusb_msc_callback_t callback) = 0;
   virtual const char *swVersion() = 0;
   virtual char *serialNumber() = 0;
+  virtual void lateInit() = 0;
+
+  enum class WAKEUP_SOURCE {
+    NONE,
+    VBUS,
+    KEY,
+  };
+
+  virtual WAKEUP_SOURCE bootReason() {return WAKEUP_SOURCE::KEY;};
 
 };
 }

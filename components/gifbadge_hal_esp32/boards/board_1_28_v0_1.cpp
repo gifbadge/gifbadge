@@ -141,4 +141,7 @@ CHARGE_POWER b1_28_v0_1::powerConnected() {
   }
   return CHARGE_NONE;
 }
+void b1_28_v0_1::lateInit() {
+
+}
 }

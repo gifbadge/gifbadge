@@ -30,7 +30,8 @@ class b2_1_v0_2v0_4 : public Boards::esp32s3_sdmmc {
   BOARD_POWER powerState() override;
   bool storageReady() override;
   CHARGE_POWER powerConnected() override;
-  void *turboBuffer() override { return buffer; };
+  void *turboBuffer() override { return buffer; }
+  void lateInit() override;;
 
  protected:
   I2C *_i2c;

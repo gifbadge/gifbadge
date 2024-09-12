@@ -34,7 +34,8 @@ class b1_28_v0_1 : public Boards::esp32s3_sdmmc {
   bool storageReady() override;
   const char * name() override;
   CHARGE_POWER powerConnected() override;
-  void * turboBuffer() override {return buffer;};
+  void * turboBuffer() override {return buffer;}
+  void lateInit() override;;
 
  private:
   battery_max17048 *_battery;

@@ -78,4 +78,7 @@ CHARGE_POWER v0::powerConnected() {
 bool v0::usbConnected() {
   return tinyusb_msc_storage_in_use_by_usb_host();
 }
+void v0::lateInit() {
+
+}
 }

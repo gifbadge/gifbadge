@@ -33,6 +33,7 @@ class v0 : public Boards::esp32s3 {
   CHARGE_POWER powerConnected() override;
   void * turboBuffer() override {return nullptr;};
   bool usbConnected() override;
+  void lateInit() override;
 
  private:
   battery_analog * _battery;

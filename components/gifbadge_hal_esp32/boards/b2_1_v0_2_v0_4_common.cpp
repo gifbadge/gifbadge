@@ -168,4 +168,7 @@ CHARGE_POWER b2_1_v0_2v0_4::powerConnected() {
   }
   return CHARGE_NONE;
 }
+void b2_1_v0_2v0_4::lateInit() {
+
+}
 }
