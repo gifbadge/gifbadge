@@ -1,21 +1,21 @@
 #pragma once
 
-#include <stdint.h>
+#include <cstdint>
 
 class Gpio{
  public:
-  enum class gpio_pull_mode {
+  enum class GpioPullMode {
     NONE,
     UP,
     DOWN
   };
-  enum class gpio_direction {
+  enum class GpioDirection {
     IN,
     OUT
   };
 
   Gpio() = default;
-  virtual void config(gpio_direction direction, gpio_pull_mode pull) = 0;
-  virtual bool read() = 0;
-  virtual void write(bool) = 0;
+  virtual void GpioConfig(GpioDirection direction, GpioPullMode pull) = 0;
+  virtual bool GpioRead() = 0;
+  virtual void GpioWrite(bool b) = 0;
 };
