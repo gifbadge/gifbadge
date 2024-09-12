@@ -3,7 +3,8 @@
 #include <esp_pm.h>
 #include "log.h"
 #include <driver/sdmmc_defs.h>
-#include "esp_io_expander.h"
+#include <driver/rtc_io.h>
+#include <esp_sleep.h>
 #include "esp_io_expander_cat9532.h"
 #include "drivers/keys_esp_io_expander.h"
 #include "drivers/esp_io_expander_gpio.h"
@@ -13,7 +14,7 @@
 static const char *TAG = "board_2_1_v0_5";
 
 static bool checkSdState(Gpio *gpio) {
-  return !gpio->read();
+  return !gpio->GpioRead();
 }
 
 static bool sdState;
@@ -81,10 +82,14 @@ Backlight *b2_1_v0_5::getBacklight() {
 }
 
 void b2_1_v0_5::powerOff() {
-//  LOGI(TAG, "Poweroff");
-//  vTaskDelay(100 / portTICK_PERIOD_MS);
-//  esp_io_expander_set_level(_io_expander, IO_EXPANDER_PIN_NUM_3, 1);
-
+  LOGI(TAG, "Poweroff");
+  vTaskDelay(100 / portTICK_PERIOD_MS);
+  rtc_gpio_pullup_dis(GPIO_NUM_21);
+  rtc_gpio_pulldown_dis(GPIO_NUM_21);
+  esp_sleep_enable_ext0_wakeup(GPIO_NUM_21, 1);
+  _pmic->LoadSw1Disable();
+  _pmic->Buck1Disable();
+  esp_deep_sleep_start();
 }
 
 BOARD_POWER b2_1_v0_5::powerState() {

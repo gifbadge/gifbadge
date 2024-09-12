@@ -23,7 +23,7 @@ if (ESP_PLATFORM)
             "drivers/config_nvs.cpp"
             "drivers/keys_generic.cpp"
             "drivers/esp_io_expander_gpio.cpp"
-            "drivers/mfd_npm1300.cpp"
+            "drivers/PmicNpm1300.cpp"
             "esp_efuse_custom_table.c"
             "hw_init.cpp"
             "ota.cpp"

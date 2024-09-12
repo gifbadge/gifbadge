@@ -13,7 +13,7 @@
 #include "drivers/config_nvs.h"
 
 #include "esp32s3_sdmmc.h"
-#include "drivers/mfd_npm1300.h"
+#include "drivers/PmicNpm1300.h"
 #include "drivers/keys_generic.h"
 
 namespace Boards {
@@ -44,11 +44,13 @@ class b2_1_v0_5 : public Boards::esp32s3_sdmmc {
   backlight_ledc *_backlight;
   touch_ft5x06 *_touch;
   bool _usbConnected = false;
-  mfd_npm1300 *_pmic;
+  PmicNpm1300 *_pmic;
 
   void *buffer;
   battery_max17048 *_battery;
   esp_io_expander_handle_t _io_expander = nullptr;
   Gpio *_card_detect = nullptr;
+  PmicNpm1300Led *_vbus_led = nullptr;
+  PmicNpm1300Led *_charge_led = nullptr;
 };
 }
