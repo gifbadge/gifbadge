@@ -79,7 +79,7 @@ esp_err_t esp_io_expander_new_gpio(Gpio *gpio, esp_io_expander_handle_t *handle)
 static esp_err_t read_input_reg(esp_io_expander_handle_t handle, uint32_t *value)
 {
   auto *tca = (esp_io_expander_gpio_t *)__containerof(handle, esp_io_expander_gpio_t, base);
-  *value = tca->gpio->read();
+  *value = tca->gpio->GpioRead();
   return ESP_OK;
 }
 
@@ -87,7 +87,7 @@ static esp_err_t write_output_reg(esp_io_expander_handle_t handle, uint32_t valu
 {
   auto *tca = (esp_io_expander_gpio_t *)__containerof(handle, esp_io_expander_gpio_t, base);
   tca->regs.output = value;
-  tca->gpio->write(value);
+  tca->gpio->GpioWrite(value);
   return ESP_OK;
 }
 

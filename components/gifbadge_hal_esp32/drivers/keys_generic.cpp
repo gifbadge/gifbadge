@@ -48,7 +48,7 @@ KeysGeneric::KeysGeneric(Gpio *up, Gpio *down, Gpio *enter) {
   };
 
   ESP_ERROR_CHECK(esp_timer_create(&keyTimerArgs, &keyTimer));
-  ESP_ERROR_CHECK(esp_timer_start_periodic(keyTimer, 5 * 1000));
+//  ESP_ERROR_CHECK(esp_timer_start_periodic(keyTimer, 5 * 1000));
 
 }
 void KeysGeneric::poll() {
@@ -56,7 +56,7 @@ void KeysGeneric::poll() {
 
   for (int b = 0; b < KEY_MAX; b++) {
     if (_keys[b] != nullptr) {
-      bool state = _keys[b]->read();
+      bool state = _keys[b]->GpioRead();
       key_debounce_update(&_debounce_states[b], state == 0, static_cast<int>(time - last), &_debounce_config);
       if (key_debounce_get_changed(&_debounce_states[b])) {
         LOGI(TAG, "%i changed", b);
