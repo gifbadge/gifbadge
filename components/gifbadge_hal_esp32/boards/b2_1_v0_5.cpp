@@ -185,6 +185,9 @@ void b2_1_v0_5::lateInit() {
 
 }
 Board::WAKEUP_SOURCE b2_1_v0_5::bootReason() {
+  if(esp_reset_reason() != ESP_RST_POWERON){
+    return Board::WAKEUP_SOURCE::REBOOT;
+  }
   return _pmic->GetWakeup();
 }
 }
