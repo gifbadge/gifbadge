@@ -280,19 +280,6 @@ void PmicNpm1300::Init() {
 
   _wakeup_source = ::get_wakeup(&_npmx_instance);
 
-  switch(_wakeup_source){
-
-    case Boards::Board::WAKEUP_SOURCE::NONE:
-      LOGI(TAG, "Wakeup Reason: None");
-      break;
-    case Boards::Board::WAKEUP_SOURCE::VBUS:
-      LOGI(TAG, "Wakeup Reason: VBUS");
-      break;
-    case Boards::Board::WAKEUP_SOURCE::KEY:
-      LOGI(TAG, "Wakeup Reason: KEY");
-      break;
-  }
-
   gpio_config_t int_gpio = {};
 
   int_gpio.intr_type = GPIO_INTR_ANYEDGE;
