@@ -22,6 +22,7 @@ class PmicNpm1300Gpio final : public Gpio {
   bool GpioRead() override;
   void GpioWrite(bool b) override;
   void EnableIrq(bool b);
+  void GpioInt(GpioIntDirection dir, void (*callback)()) override;
 
  private:
   npmx_instance_t *_npmx_instance;
@@ -33,7 +34,8 @@ class PmicNpm1300Gpio final : public Gpio {
       .debounce = false,
   };
   uint8_t _index;
-
+  GpioIntDirection _int_direction = GpioIntDirection::NONE;
+  void (*_callback)() = nullptr;
 };
 
 class PmicNpm1300ShpHld : public Gpio {
@@ -115,6 +117,10 @@ class PmicNpm1300 final : public Battery, Charger {
 
   void PwrLedSet(Gpio *gpio);
 
+  void EnableGpioEvent(uint8_t index);
+  void DisableGpioEvent(uint8_t index);
+  void RegisterGpioCallback(uint8_t index, void (*callback)());
+
  private:
   I2C *_i2c;
   double _voltage = 0;
@@ -134,4 +140,10 @@ class PmicNpm1300 final : public Battery, Charger {
   esp_timer_handle_t _looptimer = nullptr;
 
   static void VbusVoltage(npmx_instance_t *pm, npmx_callback_type_t type, uint8_t mask);
+  static void GpioHandler(npmx_instance_t *pm, npmx_callback_type_t type, uint8_t mask);
+  void GpioCallback(uint8_t index);
+
+  uint8_t _gpio_event_mask;
+  void (*_gpio_callbacks[5])() = {nullptr, nullptr, nullptr, nullptr, nullptr};
+
 };

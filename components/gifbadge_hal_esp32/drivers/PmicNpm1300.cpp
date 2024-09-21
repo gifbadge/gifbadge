@@ -4,6 +4,7 @@
 #include "npmx_core.h"
 #include <esp_timer.h>
 #include <soc/gpio_sig_map.h>
+#include <cmath>
 
 static const char *TAG = "mfd_npm1300";
 
@@ -112,6 +113,9 @@ PmicNpm1300::PmicNpm1300(I2C *i2c, gpio_num_t gpio_int)
   }
 
   npmx_core_context_set(&_npmx_instance, this);
+
+  npmx_core_event_interrupt_disable(&_npmx_instance, NPMX_EVENT_GROUP_GPIO, NPMX_EVENT_GROUP_GPIO0_DETECTED_MASK|NPMX_EVENT_GROUP_GPIO1_DETECTED_MASK|NPMX_EVENT_GROUP_GPIO2_DETECTED_MASK|NPMX_EVENT_GROUP_GPIO3_DETECTED_MASK|NPMX_EVENT_GROUP_GPIO4_DETECTED_MASK);
+
 }
 
 void PmicNpm1300::poll() {
@@ -320,6 +324,39 @@ void PmicNpm1300::Init() {
   npmx_core_event_interrupt_enable(&_npmx_instance, NPMX_EVENT_GROUP_BAT_CHAR_STATUS,
                                    NPMX_EVENT_GROUP_CHARGER_COMPLETED_MASK |
                                        NPMX_EVENT_GROUP_CHARGER_ERROR_MASK);
+
+  npmx_core_register_cb(&_npmx_instance, GpioHandler, NPMX_CALLBACK_TYPE_EVENT_EVENTSGPIOSET);
+
+}
+
+void PmicNpm1300::EnableGpioEvent(uint8_t index) {
+  _gpio_event_mask |= (1 << index);
+  npmx_core_event_interrupt_enable(&_npmx_instance, NPMX_EVENT_GROUP_GPIO, _gpio_event_mask);
+}
+
+void PmicNpm1300::DisableGpioEvent(uint8_t index) {
+  _gpio_event_mask &= ~(1 << index);
+  npmx_core_event_interrupt_enable(&_npmx_instance, NPMX_EVENT_GROUP_GPIO, _gpio_event_mask);
+}
+
+
+void PmicNpm1300::GpioHandler(npmx_instance_t *pm, npmx_callback_type_t type, uint8_t mask) {
+  auto *pmic = static_cast<PmicNpm1300 *>(npmx_core_context_get(pm));
+  for(int x = 0; x< 5; x++){
+    if(mask & (1 << x)){
+      LOGI(TAG, "GPIO %u", x);
+      pmic->GpioCallback(x);
+    }
+  }
+
+}
+void PmicNpm1300::GpioCallback(uint8_t index) {
+  if(_gpio_callbacks[index] != nullptr){
+    _gpio_callbacks[index]();
+  }
+}
+void PmicNpm1300::RegisterGpioCallback(uint8_t index, void (*callback)()) {
+  _gpio_callbacks[index] = callback;
 }
 
 void PmicNpm1300Gpio::GpioConfig(GpioDirection direction, GpioPullMode pull) {
@@ -369,6 +406,31 @@ void PmicNpm1300Gpio::EnableIrq(bool b) {
   npmx_gpio_mode_set(npmx_gpio_get(_npmx_instance, _index),
                      b ? NPMX_GPIO_MODE_OUTPUT_IRQ : NPMX_GPIO_MODE_INPUT);
 
+}
+void PmicNpm1300Gpio::GpioInt(Gpio::GpioIntDirection dir, void (*callback)()) {
+  _callback = callback;
+  _int_direction = dir;
+  npmx_gpio_mode_t set_dir = NPMX_GPIO_MODE_INPUT;
+  switch(dir){
+    case GpioIntDirection::NONE:
+      set_dir = NPMX_GPIO_MODE_INPUT;
+      break;
+    case GpioIntDirection::RISING:
+      set_dir = NPMX_GPIO_MODE_INPUT_RISING_EDGE;
+      break;
+    case GpioIntDirection::FALLING:
+      set_dir = NPMX_GPIO_MODE_INPUT_FALLING_EDGE;
+      break;
+  }
+  npmx_gpio_mode_set(npmx_gpio_get(_npmx_instance, _index), set_dir);
+  auto pmic = static_cast<PmicNpm1300 *>(npmx_core_context_get(_npmx_instance));
+  if(dir != GpioIntDirection::NONE){
+    pmic->EnableGpioEvent(_index);
+  }
+  else{
+    pmic->DisableGpioEvent(_index);
+  }
+  pmic->RegisterGpioCallback(_index, callback);
 }
 
 void PmicNpm1300ShpHld::GpioConfig(GpioDirection direction, GpioPullMode pull) {
