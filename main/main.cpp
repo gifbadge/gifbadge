@@ -91,9 +91,26 @@ static void usbCall(tinyusb_msc_event_t *e){
   }
 }
 
+
+
 extern "C" void app_main(void) {
   Boards::Board *board = get_board();
-  if(board->bootReason() != Boards::Board::WAKEUP_SOURCE::KEY){
+  switch(board->bootReason()){
+
+    case Boards::Board::WAKEUP_SOURCE::NONE:
+      LOGI(TAG, "Wakeup Reason: None");
+      break;
+    case Boards::Board::WAKEUP_SOURCE::VBUS:
+      LOGI(TAG, "Wakeup Reason: VBUS");
+      break;
+    case Boards::Board::WAKEUP_SOURCE::KEY:
+      LOGI(TAG, "Wakeup Reason: KEY");
+      break;
+    case Boards::Board::WAKEUP_SOURCE::REBOOT:
+      LOGI(TAG, "Wakeup Reason: REBOOT");
+      break;
+  }
+  if(!(board->bootReason() == Boards::Board::WAKEUP_SOURCE::KEY || board->bootReason() == Boards::Board::WAKEUP_SOURCE::REBOOT)){
     board->powerOff();
   }
 

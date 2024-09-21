@@ -58,6 +58,7 @@ class Board {
     NONE,
     VBUS,
     KEY,
+    REBOOT,
   };
 
   virtual WAKEUP_SOURCE bootReason() {return WAKEUP_SOURCE::KEY;};
