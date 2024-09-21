@@ -170,8 +170,12 @@ void b2_1_v0_5::lateInit() {
   _card_detect = _pmic->GpioGet(0);
   _card_detect->GpioConfig(Gpio::GpioDirection::IN, Gpio::GpioPullMode::UP);
 
-  if (checkSdState(_card_detect)) {
+  if (storageReady()) {
+    _card_detect->GpioInt(Gpio::GpioIntDirection::RISING, esp_restart);
     mount(GPIO_NUM_40, GPIO_NUM_41, GPIO_NUM_39, GPIO_NUM_38, GPIO_NUM_44, GPIO_NUM_42, GPIO_NUM_NC, 4);
+  }
+  else {
+    _card_detect->GpioInt(Gpio::GpioIntDirection::FALLING, esp_restart);
   }
 
   /*G3, G4, G5, R1, R2, R3, R4, R5, B1, B2, B3, B4, B5, G0, G1, G2 */
