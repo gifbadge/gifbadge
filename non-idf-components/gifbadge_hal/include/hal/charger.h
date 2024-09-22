@@ -86,6 +86,34 @@ class Charger {
     TRICKLETIMEOUT,
   };
 
+  static const char * ChargeStatusString(ChargeStatus status) {
+    switch(status){
+
+      case ChargeStatus::NONE:
+        return "Off";
+      case ChargeStatus::BATTERYDETECTED:
+        return "Battery Detected";
+      case ChargeStatus::COMPLETED:
+        return "Complete";
+      case ChargeStatus::TRICKLECHARGE:
+        return "Trickle";
+      case ChargeStatus::CONSTANTCURRENT:
+        return "Constant Current";
+      case ChargeStatus::CONSTANTVOLTAGE:
+        return "Constant Voltage";
+      case ChargeStatus::RECHARGE:
+        return "Recharge";
+      case ChargeStatus::PAUSED:
+        return "Paused";
+      case ChargeStatus::SUPPLEMENTACTIVE:
+        return "Supplement Active";
+      case ChargeStatus::ERROR:
+        return "Error";
+      default:
+        return "N/A";
+    }
+  }
+
  /***
  * Gets the current error of the charger if any
  * @return charger error
