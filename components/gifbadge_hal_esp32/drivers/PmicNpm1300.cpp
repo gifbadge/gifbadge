@@ -121,8 +121,8 @@ PmicNpm1300::PmicNpm1300(I2C *i2c, gpio_num_t gpio_int)
 void PmicNpm1300::poll() {
 }
 
-double PmicNpm1300::getVoltage() {
-  return _voltage;
+double PmicNpm1300::BatteryVoltage() {
+  return _vbat/1000.00;
 }
 
 int PmicNpm1300::getSoc() {

@@ -14,7 +14,7 @@ class battery_analog final : public Battery {
 
   int pollInterval() override { return 250; };
 
-  double getVoltage() override;
+  double BatteryVoltage() override;
 
   int getSoc() override;
 

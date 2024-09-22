@@ -1,4 +1,5 @@
 #pragma once
+#include <cmath>
 class Battery {
  public:
 
@@ -18,7 +19,11 @@ class Battery {
 
   virtual int pollInterval() = 0;
 
-  virtual double getVoltage() = 0;
+  virtual double BatteryVoltage() = 0;
+
+  virtual double BatteryCurrent() { return NAN; }
+
+  virtual double BatteryTemperature() { return NAN;}
 
   virtual int getSoc() = 0;
 

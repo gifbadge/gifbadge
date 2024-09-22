@@ -36,7 +36,7 @@ void battery_max17048::poll() {
   _rate = (static_cast<int16_t>(d[0] << 8) | d[1]) * 0.208;
 }
 
-double battery_max17048::getVoltage() {
+double battery_max17048::BatteryVoltage() {
   return _voltage;
 }
 

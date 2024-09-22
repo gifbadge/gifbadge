@@ -3,7 +3,7 @@ battery_dummy::battery_dummy() = default;
 void battery_dummy::poll() {
 
 }
-double battery_dummy::getVoltage() {
+double battery_dummy::BatteryVoltage() {
   return 4.2;
 }
 int battery_dummy::getSoc() {

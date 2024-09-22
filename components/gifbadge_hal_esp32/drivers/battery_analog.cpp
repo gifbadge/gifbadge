@@ -48,7 +48,7 @@ void battery_analog::poll() {
   ESP_ERROR_CHECK(adc_cali_raw_to_voltage(calibration_scheme, reading, &voltage));
   smoothed_voltage = (voltage * scale_factor) * (alpha) + smoothed_voltage * (1.0f - alpha);
 }
-double battery_analog::getVoltage() {
+double battery_analog::BatteryVoltage() {
   return smoothed_voltage / 1000.00;
 }
 int battery_analog::getSoc() {
