@@ -24,6 +24,7 @@ if (ESP_PLATFORM)
             "drivers/keys_generic.cpp"
             "drivers/esp_io_expander_gpio.cpp"
             "drivers/PmicNpm1300.cpp"
+            "drivers/VbusGpio.cpp"
             "esp_efuse_custom_table.c"
             "hw_init.cpp"
             "ota.cpp"

@@ -20,8 +20,7 @@ void dumpDebugFunc(TimerHandle_t) {
   args->debugInfo();
 
   LOGI(TAG, "SOC: %i", args->getBattery()->getSoc());
-  LOGI(TAG, "Voltage: %f", args->getBattery()->getVoltage());
-  LOGI(TAG, "Charge Mode %d", args->powerConnected());
+  LOGI(TAG, "Voltage: %f", args->getBattery()->BatteryVoltage());
 //    LOGI(TAG, "Rate: %f", args->getBattery()->getRate());
 //    LOGI(TAG, "State: %d", static_cast<int>(args->getBattery()->status()));
 

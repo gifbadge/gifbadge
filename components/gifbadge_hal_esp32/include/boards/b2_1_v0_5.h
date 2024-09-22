@@ -31,11 +31,11 @@ class b2_1_v0_5 : public Boards::esp32s3_sdmmc {
   void powerOff() override;
   BOARD_POWER powerState() override;
   bool storageReady() override;
-  CHARGE_POWER powerConnected() override;
   void *turboBuffer() override { return buffer; };
   const char * name() override;
   void lateInit() override;
   WAKEUP_SOURCE bootReason() override;
+  Vbus *getVbus() override;
 
  protected:
   I2C *_i2c;

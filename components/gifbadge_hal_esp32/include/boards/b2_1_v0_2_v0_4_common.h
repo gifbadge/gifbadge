@@ -14,6 +14,19 @@
 
 #include "esp32s3_sdmmc.h"
 
+class b2_1_v0_2v0_4_vbus: public Vbus {
+ public:
+  b2_1_v0_2v0_4_vbus(gpio_num_t gpio, esp_io_expander_handle_t expander, uint8_t expander_pin);
+  uint16_t VbusMaxCurrentGet() override;
+  void VbusMaxCurrentSet(uint16_t mA) override;
+  bool VbusConnected() override;
+
+ private:
+  esp_io_expander_handle_t _io_expander = nullptr;
+  gpio_num_t _gpio;
+  uint8_t _expander_gpio;
+};
+
 namespace Boards {
 class b2_1_v0_2v0_4 : public Boards::esp32s3_sdmmc {
  public:
@@ -29,9 +42,9 @@ class b2_1_v0_2v0_4 : public Boards::esp32s3_sdmmc {
   void powerOff() override;
   BOARD_POWER powerState() override;
   bool storageReady() override;
-  CHARGE_POWER powerConnected() override;
   void *turboBuffer() override { return buffer; }
-  void lateInit() override;;
+  void lateInit() override;
+  Vbus *getVbus() override;;
 
  protected:
   I2C *_i2c;
@@ -39,6 +52,7 @@ class b2_1_v0_2v0_4 : public Boards::esp32s3_sdmmc {
   display_st7701s *_display;
   backlight_ledc *_backlight;
   touch_ft5x06 *_touch;
+  b2_1_v0_2v0_4_vbus *_vbus;
   bool _usbConnected = false;
 
   void *buffer;

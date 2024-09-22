@@ -11,6 +11,7 @@
 #include "hal/gpio.h"
 #include "hal/charger.h"
 #include "hal/board.h"
+#include "hal/vbus.h"
 
 class PmicNpm1300;
 
@@ -62,7 +63,7 @@ class PmicNpm1300Led : public Gpio {
   uint8_t _index;
 };
 
-class PmicNpm1300 final : public Battery, Charger {
+class PmicNpm1300 final : public Battery, public Charger, public Vbus {
  public:
   explicit PmicNpm1300(I2C *, gpio_num_t gpio_int);
   ~PmicNpm1300() final = default;
@@ -121,6 +122,9 @@ class PmicNpm1300 final : public Battery, Charger {
   void DisableGpioEvent(uint8_t index);
   void RegisterGpioCallback(uint8_t index, void (*callback)());
 
+  uint16_t VbusMaxCurrentGet() override;
+  void VbusMaxCurrentSet(uint16_t mA) override;
+  bool VbusConnected() override;
  private:
   I2C *_i2c;
   double _voltage = 0;

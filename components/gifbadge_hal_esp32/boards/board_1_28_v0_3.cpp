@@ -53,6 +53,7 @@ b1_28_v0_3::b1_28_v0_3() {
   esp_pm_config_t pm_config = {.max_freq_mhz = 240, .min_freq_mhz = 40, .light_sleep_enable = true};
   esp_pm_configure(&pm_config);
   esp_sleep_enable_gpio_wakeup();
+  _vbus = new VbusGpio(GPIO_VBUS_DETECT);
   }
 
 Battery *b1_28_v0_3::getBattery() {
@@ -88,7 +89,7 @@ void b1_28_v0_3::powerOff() {
 }
 
 BOARD_POWER b1_28_v0_3::powerState() {
-  if (powerConnected() != CHARGE_NONE) {
+  if (_vbus->VbusConnected()) {
     return BOARD_POWER_NORMAL;
   }
   if (_battery->getSoc() < 12) {
@@ -112,12 +113,6 @@ const char *b1_28_v0_3::name() {
   return "1.28\" 0.3";
 }
 
-CHARGE_POWER b1_28_v0_3::powerConnected() {
-  if (gpio_get_level(GPIO_VBUS_DETECT)) {
-    return CHARGE_LOW;
-  }
-  return CHARGE_NONE;
-}
 void b1_28_v0_3::lateInit() {
   buffer = heap_caps_malloc(240 * 240 + 0x6100, MALLOC_CAP_INTERNAL);
   _i2c = new I2C(I2C_NUM_0, 6, 7, 100 * 1000, true);

@@ -15,6 +15,7 @@
 #include "drivers/config_nvs.h"
 #include "soc/gpio_num.h"
 #include "esp32s3_sdmmc.h"
+#include "drivers/vbus_gpio.h"
 
 namespace Boards {
 
@@ -34,7 +35,6 @@ class b1_28_v0_3 : public Boards::esp32s3_sdmmc {
   BOARD_POWER powerState() override;
   bool storageReady() override;
   const char *name() override;
-  CHARGE_POWER powerConnected() override;
   void *turboBuffer() override { return buffer; }
   void lateInit() override;
   WAKEUP_SOURCE bootReason() override;;
@@ -46,6 +46,7 @@ class b1_28_v0_3 : public Boards::esp32s3_sdmmc {
   display_gc9a01 *_display;
   backlight_ledc *_backlight;
   void *buffer;
+  VbusGpio *_vbus;
 };
 }
 

@@ -70,11 +70,6 @@ const char *v0::name() {
   return "1.28\" 0.0";
 }
 
-CHARGE_POWER v0::powerConnected() {
-  // No provisions in design to monitor this
-  return CHARGE_NONE;
-}
-
 bool v0::usbConnected() {
   return tinyusb_msc_storage_in_use_by_usb_host();
 }

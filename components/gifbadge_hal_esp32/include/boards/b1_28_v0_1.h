@@ -15,6 +15,7 @@
 #include "drivers/config_nvs.h"
 #include "soc/gpio_num.h"
 #include "esp32s3_sdmmc.h"
+#include "drivers/vbus_gpio.h"
 
 namespace Boards {
 class b1_28_v0_1 : public Boards::esp32s3_sdmmc {
@@ -33,9 +34,9 @@ class b1_28_v0_1 : public Boards::esp32s3_sdmmc {
   BOARD_POWER powerState() override;
   bool storageReady() override;
   const char * name() override;
-  CHARGE_POWER powerConnected() override;
   void * turboBuffer() override {return buffer;}
-  void lateInit() override;;
+  void lateInit() override;
+  Vbus *getVbus() override;;
 
  private:
   battery_max17048 *_battery;
@@ -45,6 +46,7 @@ class b1_28_v0_1 : public Boards::esp32s3_sdmmc {
   backlight_ledc * _backlight;
   touch_ft5x06 * _touch;
   void *buffer;
+  VbusGpio *_vbus;
 };
 }
 

@@ -110,24 +110,6 @@ bool b2_1_v0_5::storageReady() {
   return checkSdState(_card_detect);
 }
 
-CHARGE_POWER b2_1_v0_5::powerConnected() {
-//  if(gpio_get_level(GPIO_NUM_0)){
-//    const std::lock_guard<std::mutex> lock(_i2c->i2c_lock);
-//    uint32_t levels;
-//    if(esp_io_expander_get_level(_io_expander, 0xffff, &levels) == ESP_OK){
-//      if(levels  & (1 << 8)){
-//        return CHARGE_LOW;
-//      }
-//      else {
-//        return CHARGE_HIGH;
-//      }
-//    }
-//    else {
-//      return CHARGE_LOW;
-//    }
-//  }
-  return CHARGE_NONE;
-}
 const char *b2_1_v0_5::name() {
   return "2.1\" 0.5";
 }
@@ -193,5 +175,8 @@ Board::WAKEUP_SOURCE b2_1_v0_5::bootReason() {
     return Board::WAKEUP_SOURCE::REBOOT;
   }
   return _pmic->GetWakeup();
+}
+Vbus *b2_1_v0_5::getVbus() {
+  return _pmic;
 }
 }

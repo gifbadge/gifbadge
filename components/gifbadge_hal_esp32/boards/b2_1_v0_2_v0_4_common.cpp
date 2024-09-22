@@ -103,6 +103,7 @@ b2_1_v0_2v0_4::b2_1_v0_2v0_4() {
   esp_timer_handle_t sdTimer = nullptr;
   ESP_ERROR_CHECK(esp_timer_create(&checkSdTimerArgs, &sdTimer));
   ESP_ERROR_CHECK(esp_timer_start_periodic(sdTimer, 500 * 1000));
+  _vbus = new b2_1_v0_2v0_4_vbus(GPIO_NUM_0, _io_expander, 8);
 }
 
 Battery *b2_1_v0_2v0_4::getBattery() {
@@ -133,7 +134,7 @@ void b2_1_v0_2v0_4::powerOff() {
 }
 
 BOARD_POWER b2_1_v0_2v0_4::powerState() {
-  if (powerConnected() != CHARGE_NONE) {
+  if (_vbus->VbusConnected()) {
     return BOARD_POWER_NORMAL;
   }
   if (_battery->getSoc() < 12) {
@@ -150,25 +151,40 @@ bool b2_1_v0_2v0_4::storageReady() {
   return checkSdState(_io_expander);
 }
 
-CHARGE_POWER b2_1_v0_2v0_4::powerConnected() {
-  if(gpio_get_level(GPIO_NUM_0)){
-    const std::lock_guard<std::mutex> lock(_i2c->i2c_lock);
-    uint32_t levels;
-    if(esp_io_expander_get_level(_io_expander, 0xffff, &levels) == ESP_OK){
-      if(levels  & (1 << 8)){
-        return CHARGE_LOW;
-      }
-      else {
-        return CHARGE_HIGH;
-      }
-    }
-    else {
-      return CHARGE_LOW;
-    }
-  }
-  return CHARGE_NONE;
-}
 void b2_1_v0_2v0_4::lateInit() {
 
 }
+Vbus *b2_1_v0_2v0_4::getVbus() {
+  return _vbus;
+}
+}
+uint16_t b2_1_v0_2v0_4_vbus::VbusMaxCurrentGet() {
+  if(gpio_get_level(_gpio)){
+    uint32_t levels;
+    if(esp_io_expander_get_level(_io_expander, 0xffff, &levels) == ESP_OK){
+      if(levels  & (1 << _expander_gpio)){
+        return 500;
+      }
+      else {
+        return 1500;
+      }
+    }
+    else {
+      return 500;
+    }
+  }
+  return 0;
+}
+
+void b2_1_v0_2v0_4_vbus::VbusMaxCurrentSet(uint16_t mA) {
+
+}
+
+bool b2_1_v0_2v0_4_vbus::VbusConnected() {
+  return gpio_get_level(_gpio);
+}
+
+b2_1_v0_2v0_4_vbus::b2_1_v0_2v0_4_vbus(gpio_num_t gpio, esp_io_expander_handle_t expander, uint8_t expander_pin): _io_expander(expander), _gpio(gpio), _expander_gpio(expander_pin) {
+
+
 }

@@ -358,6 +358,40 @@ void PmicNpm1300::GpioCallback(uint8_t index) {
 void PmicNpm1300::RegisterGpioCallback(uint8_t index, void (*callback)()) {
   _gpio_callbacks[index] = callback;
 }
+uint16_t PmicNpm1300::VbusMaxCurrentGet() {
+  npmx_vbusin_cc_t cc1;
+  npmx_vbusin_cc_t cc2;
+  npmx_vbusin_cc_t selected;
+  npmx_vbusin_cc_status_get(npmx_vbusin_get(&_npmx_instance, 0), &cc1, &cc2);
+  switch(cc1 >= cc2 ? cc1 : cc2){
+    case NPMX_VBUSIN_CC_NOT_CONNECTED:
+      return 0;
+      break;
+    case NPMX_VBUSIN_CC_DEFAULT:
+      return 500;
+      break;
+    case NPMX_VBUSIN_CC_HIGH_POWER_1A5:
+      return 1500;
+      break;
+    case NPMX_VBUSIN_CC_HIGH_POWER_3A0:
+      return 3000;
+      break;
+    default:
+      return 0;
+  }
+}
+
+void PmicNpm1300::VbusMaxCurrentSet(uint16_t mA) {
+  npmx_vbusin_current_t setting = npmx_vbusin_current_convert(((mA+ 499) / 500) * 500);
+  npmx_vbusin_current_limit_set(npmx_vbusin_get(&_npmx_instance, 0), setting);
+}
+
+bool PmicNpm1300::VbusConnected() {
+  uint8_t vbus_status;
+  npmx_vbusin_vbus_status_get(npmx_vbusin_get(&_npmx_instance, 0), &vbus_status);
+  return vbus_status&NPMX_VBUSIN_STATUS_CONNECTED_MASK;
+}
+
 
 void PmicNpm1300Gpio::GpioConfig(GpioDirection direction, GpioPullMode pull) {
   npmx_gpio_pull_t pull_mode = NPMX_GPIO_PULL_DOWN;

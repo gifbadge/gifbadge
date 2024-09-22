@@ -80,6 +80,7 @@ b1_28_v0_1::b1_28_v0_1() {
   io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
   gpio_config(&io_conf);
   gpio_set_drive_capability(GPIO_SHUTDOWN, GPIO_DRIVE_CAP_MAX);
+  _vbus = new VbusGpio(GPIO_VBUS_DETECT);
 }
 
 Battery *b1_28_v0_1::getBattery() {
@@ -111,7 +112,7 @@ void b1_28_v0_1::powerOff() {
 
 BOARD_POWER b1_28_v0_1::powerState() {
   //TODO Detect USB power status, implement critical level
-  if (powerConnected() != CHARGE_NONE) {
+  if (_vbus->VbusConnected()) {
     return BOARD_POWER_NORMAL;
   }
   if (_battery->getSoc() < 12) {
@@ -135,13 +136,10 @@ const char *b1_28_v0_1::name() {
   return "1.28\" 0.1-0.2";
 }
 
-CHARGE_POWER b1_28_v0_1::powerConnected() {
-  if(gpio_get_level(GPIO_VBUS_DETECT)){
-    return CHARGE_LOW;
-  }
-  return CHARGE_NONE;
-}
 void b1_28_v0_1::lateInit() {
 
+}
+Vbus *b1_28_v0_1::getVbus() {
+  return _vbus;
 }
 }

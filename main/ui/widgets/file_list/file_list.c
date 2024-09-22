@@ -203,6 +203,14 @@ static void scroll_event_cb(lv_event_t *e) {
   }
 }
 
+static void lv_file_list_pass_event(lv_event_t *e){
+  uint32_t child_count = lv_obj_get_child_count(lv_event_get_target_obj(e));
+  for(int i = 0; i < child_count; i++) {
+    lv_obj_t * child = lv_obj_get_child(lv_event_get_target_obj(e), i);
+    lv_obj_send_event(child, LV_EVENT_REFRESH, NULL);
+  }
+}
+
 static void lv_file_list_constructor(const lv_obj_class_t *class_p, lv_obj_t *obj) {
   LV_UNUSED(class_p);
   LV_TRACE_OBJ_CREATE("begin");
@@ -228,6 +236,9 @@ static void lv_file_list_constructor(const lv_obj_class_t *class_p, lv_obj_t *ob
   /*Initialize style*/
   init_style(obj);
   explorer->icon_style = NULL;
+
+  lv_obj_add_event_cb(explorer, lv_file_list_pass_event, LV_EVENT_REFRESH, NULL);
+  lv_obj_add_event_cb(explorer->cont, lv_file_list_pass_event, LV_EVENT_REFRESH, NULL);
 
   LV_TRACE_OBJ_CREATE("finished");
 }
