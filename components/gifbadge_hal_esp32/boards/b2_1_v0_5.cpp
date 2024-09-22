@@ -179,4 +179,7 @@ Board::WAKEUP_SOURCE b2_1_v0_5::bootReason() {
 Vbus *b2_1_v0_5::getVbus() {
   return _pmic;
 }
+Charger *b2_1_v0_5::getCharger() {
+  return _pmic;
+}
 }

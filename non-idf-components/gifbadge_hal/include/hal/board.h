@@ -11,6 +11,7 @@
 #include "config.h"
 #include "tusb_msc_storage.h"
 #include "vbus.h"
+#include "charger.h"
 
 namespace Boards {
 
@@ -37,6 +38,7 @@ class Board {
   virtual Display * getDisplay() = 0;
   virtual Backlight * getBacklight() = 0;
   virtual Vbus *getVbus() { return nullptr;};
+  virtual Charger *getCharger() {return nullptr;};
   virtual void powerOff() = 0;
   virtual void reset() = 0;
   virtual BOARD_POWER powerState() = 0;

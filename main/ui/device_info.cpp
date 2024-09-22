@@ -53,6 +53,68 @@ lv_obj_t *device_info() {
       });
     }
 
+    if(get_board()->getCharger() != nullptr){
+      refresh_widget(cont_flex, [](lv_event_t *e){
+        lv_obj_t *widget = lv_event_get_target_obj(e);
+        lv_obj_t *label = lv_obj_get_child(widget, 0);
+        char tmp_str[50];
+        snprintf(tmp_str, sizeof(tmpStr), "Battery Ichg Limit: %imA", get_board()->getCharger()->ChargeCurrentGet());
+        lv_label_set_text(label, tmp_str);
+      });
+
+      refresh_widget(cont_flex, [](lv_event_t *e){
+        lv_obj_t *widget = lv_event_get_target_obj(e);
+        lv_obj_t *label = lv_obj_get_child(widget, 0);
+        char tmp_str[50];
+        snprintf(tmp_str, sizeof(tmpStr), "Battery Idchg Limit: %imA", get_board()->getCharger()->DischargeCurrentGet());
+        lv_label_set_text(label, tmp_str);
+      });
+
+      refresh_widget(cont_flex, [](lv_event_t *e){
+        lv_obj_t *widget = lv_event_get_target_obj(e);
+        lv_obj_t *label = lv_obj_get_child(widget, 0);
+        char tmp_str[50];
+        snprintf(tmp_str, sizeof(tmpStr), "Battery Vterm: %imV", get_board()->getCharger()->ChargeVtermGet());
+        lv_label_set_text(label, tmp_str);
+      });
+
+      refresh_widget(cont_flex, [](lv_event_t *e){
+        lv_obj_t *widget = lv_event_get_target_obj(e);
+        lv_obj_t *label = lv_obj_get_child(widget, 0);
+        char tmp_str[50];
+        snprintf(tmp_str, sizeof(tmpStr), "Charge Status: %s", get_board()->getCharger()->ChargeStatusString(get_board()->getCharger()->ChargeStatusGet()));
+        lv_label_set_text(label, tmp_str);
+      });
+    }
+
+    refresh_widget(cont_flex, [](lv_event_t *e){
+      lv_obj_t *widget = lv_event_get_target_obj(e);
+      lv_obj_t *label = lv_obj_get_child(widget, 0);
+      char tmp_str[50];
+      snprintf(tmp_str, sizeof(tmpStr), "Battery Voltage: %.2fV", get_board()->getBattery()->BatteryVoltage());
+      lv_label_set_text(label, tmp_str);
+    });
+
+    if(get_board()->getBattery()->BatteryTemperature() != NAN){
+      refresh_widget(cont_flex, [](lv_event_t *e){
+        lv_obj_t *widget = lv_event_get_target_obj(e);
+        lv_obj_t *label = lv_obj_get_child(widget, 0);
+        char tmp_str[50];
+        snprintf(tmp_str, sizeof(tmpStr), "Battery Temperature: %.1f°C", get_board()->getBattery()->BatteryTemperature());
+        lv_label_set_text(label, tmp_str);
+      });
+    }
+
+    if(get_board()->getBattery()->BatteryCurrent() != NAN){
+      refresh_widget(cont_flex, [](lv_event_t *e){
+        lv_obj_t *widget = lv_event_get_target_obj(e);
+        lv_obj_t *label = lv_obj_get_child(widget, 0);
+        char tmp_str[50];
+        snprintf(tmp_str, sizeof(tmpStr), "Battery Current: %.3fA", get_board()->getBattery()->BatteryCurrent());
+        lv_label_set_text(label, tmp_str);
+      });
+    }
+
     lv_obj_t *exit_btn = lv_file_list_add(cont_flex, nullptr);
     lv_obj_t *exit_label = lv_label_create(exit_btn);
     lv_obj_add_style(exit_label, &menu_font_style, LV_PART_MAIN);

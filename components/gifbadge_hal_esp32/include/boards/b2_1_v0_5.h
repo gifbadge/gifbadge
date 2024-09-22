@@ -36,6 +36,7 @@ class b2_1_v0_5 : public Boards::esp32s3_sdmmc {
   void lateInit() override;
   WAKEUP_SOURCE bootReason() override;
   Vbus *getVbus() override;
+  Charger *getCharger() override;
 
  protected:
   I2C *_i2c;
