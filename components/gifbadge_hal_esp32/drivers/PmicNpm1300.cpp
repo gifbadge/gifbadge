@@ -70,6 +70,7 @@ static void cc_set_current(npmx_instance_t *pm) {
   } else {
     npmx_vbusin_current_limit_set(npmx_vbusin_get(pm, 0), NPMX_VBUSIN_CURRENT_500_MA);
   }
+  npmx_vbusin_task_trigger(npmx_vbusin_get(pm, 0), NPMX_VBUSIN_TASK_APPLY_CURRENT_LIMIT);
 }
 
 static void vbus_thermal(npmx_instance_t *pm, npmx_callback_type_t type, uint8_t mask) {
@@ -181,12 +182,14 @@ PmicNpm1300Led *PmicNpm1300::LedGet(uint8_t index) {
   return new PmicNpm1300Led(&_npmx_instance, index);
 }
 void PmicNpm1300::ChargeEnable() {
+  npmx_charger_task_trigger(npmx_charger_get(&_npmx_instance, 0),NPMX_CHARGER_TASK_CLEAR_ERROR);
+  npmx_charger_task_trigger(npmx_charger_get(&_npmx_instance, 0),NPMX_CHARGER_TASK_CLEAR_TIMERS);
   npmx_charger_module_enable_set(npmx_charger_get(&_npmx_instance, 0),
-                                 NPMX_CHARGER_MODULE_CHARGER_MASK | NPMX_CHARGER_MODULE_RECHARGE_MASK);
+                                 NPMX_CHARGER_MODULE_CHARGER_MASK);
 }
 void PmicNpm1300::ChargeDisable() {
   npmx_charger_module_disable_set(npmx_charger_get(&_npmx_instance, 0),
-                                  NPMX_CHARGER_MODULE_CHARGER_MASK | NPMX_CHARGER_MODULE_RECHARGE_MASK);
+                                  NPMX_CHARGER_MODULE_CHARGER_MASK);
 }
 void PmicNpm1300::ChargeCurrentSet(uint16_t iset) {
   uint16_t set = ((iset + 1) / 2) * 2;
@@ -209,6 +212,9 @@ uint16_t PmicNpm1300::DischargeCurrentGet() {
 void PmicNpm1300::ChargeVtermSet(uint16_t vterm) {
   npmx_charger_termination_normal_voltage_set(npmx_charger_get(&_npmx_instance, 0),
                                               npmx_charger_voltage_convert(vterm));
+  /* Set battery termination voltage in warm temperature. */
+  npmx_charger_termination_warm_voltage_set(npmx_charger_get(&_npmx_instance, 0),
+                                            npmx_charger_voltage_convert(vterm));
 }
 uint16_t PmicNpm1300::ChargeVtermGet() {
   npmx_charger_voltage_t voltage_enum;
@@ -224,9 +230,10 @@ Charger::ChargeStatus PmicNpm1300::ChargeStatusGet() {
   }
   uint8_t status_mask;
   npmx_charger_status_get(npmx_charger_get(&_npmx_instance, 0), &status_mask);
-  if (NPMX_CHARGER_STATUS_SUPPLEMENT_ACTIVE_MASK & status_mask) {
-    return Charger::ChargeStatus::SUPPLEMENTACTIVE;
-  }
+  LOGI(TAG, "Charger status mask %u", status_mask);
+//  if (NPMX_CHARGER_STATUS_SUPPLEMENT_ACTIVE_MASK & status_mask) {
+//    return Charger::ChargeStatus::SUPPLEMENTACTIVE;
+//  }
   if (NPMX_CHARGER_STATUS_TRICKLE_CHARGE_MASK & status_mask) {
     return Charger::ChargeStatus::TRICKLECHARGE;
   }
@@ -268,15 +275,15 @@ void PmicNpm1300::PwrLedSet(Gpio *gpio) {
   _power_led = gpio;
 }
 void PmicNpm1300::Init() {
-  uint8_t status;
-  npmx_vbusin_vbus_status_get(npmx_vbusin_get(&_npmx_instance, 0), &status);
-
-  if(status&NPMX_VBUSIN_STATUS_CONNECTED_MASK){
-    VbusVoltage(&_npmx_instance, NPMX_CALLBACK_TYPE_EVENT_VBUSIN_VOLTAGE, NPMX_EVENT_GROUP_VBUSIN_DETECTED_MASK);
-  }
-  else {
-    VbusVoltage(&_npmx_instance, NPMX_CALLBACK_TYPE_EVENT_VBUSIN_VOLTAGE, NPMX_EVENT_GROUP_VBUSIN_REMOVED_MASK);
-  }
+//  uint8_t status;
+//  npmx_vbusin_vbus_status_get(npmx_vbusin_get(&_npmx_instance, 0), &status);
+//
+//  if(status&NPMX_VBUSIN_STATUS_CONNECTED_MASK){
+//    VbusVoltage(&_npmx_instance, NPMX_CALLBACK_TYPE_EVENT_VBUSIN_VOLTAGE, NPMX_EVENT_GROUP_VBUSIN_DETECTED_MASK);
+//  }
+//  else {
+//    VbusVoltage(&_npmx_instance, NPMX_CALLBACK_TYPE_EVENT_VBUSIN_VOLTAGE, NPMX_EVENT_GROUP_VBUSIN_REMOVED_MASK);
+//  }
 
   npmx_vbusin_current_limit_set(npmx_vbusin_get(&_npmx_instance, 0), NPMX_VBUSIN_CURRENT_500_MA); //Always default to 500mA
   cc_set_current(&_npmx_instance);
@@ -305,7 +312,7 @@ void PmicNpm1300::Init() {
   };
 
   ESP_ERROR_CHECK(esp_timer_create(&npmx_loop_timer, &_looptimer));
-  ESP_ERROR_CHECK(esp_timer_start_periodic(_looptimer, 500));
+  ESP_ERROR_CHECK(esp_timer_start_periodic(_looptimer, 500*1000));
 
   npmx_core_event_interrupt_enable(&_npmx_instance, NPMX_EVENT_GROUP_VBUSIN_VOLTAGE,
                                    NPMX_EVENT_GROUP_VBUSIN_DETECTED_MASK |
@@ -392,6 +399,60 @@ bool PmicNpm1300::VbusConnected() {
   return vbus_status&NPMX_VBUSIN_STATUS_CONNECTED_MASK;
 }
 
+void PmicNpm1300::EnableADC() {
+  npmx_adc_ntc_config_t ntc_config = { .type = NPMX_ADC_NTC_TYPE_10_K, .beta = 3380 };
+
+  /* Set thermistor type and NTC beta value for ADC measurements. */
+  npmx_adc_ntc_config_set(npmx_adc_get(&_npmx_instance, 0), &ntc_config);
+
+  /* Enable auto measurement of the battery current after the battery voltage measurement. */
+  npmx_adc_ibat_meas_enable_set(npmx_adc_get(&_npmx_instance, 0), true);
+
+  const esp_timer_create_args_t kAdcTimer = {
+      .callback = &ADCTimerHandler,
+      .arg = this,
+      .dispatch_method = ESP_TIMER_TASK,
+      .name = "npmx adc",
+      .skip_unhandled_events = true
+  };
+
+  ESP_ERROR_CHECK(esp_timer_create(&kAdcTimer, &_adc_timer));
+  ESP_ERROR_CHECK(esp_timer_start_periodic(_adc_timer, 1000*1000));
+  if (npmx_adc_task_trigger(npmx_adc_get(&_npmx_instance, 0), NPMX_ADC_TASK_SINGLE_SHOT_VBAT) != NPMX_SUCCESS) {
+    LOGI(TAG, "Triggering VBAT measurement failed.");
+  }
+  if (npmx_adc_task_trigger(npmx_adc_get(&_npmx_instance, 0), NPMX_ADC_TASK_SINGLE_SHOT_NTC) != NPMX_SUCCESS) {
+    LOGI(TAG, "Triggering NTC measurement failed.");
+  }
+
+}
+
+void PmicNpm1300::ADCTimerHandler(void *arg) {
+  auto pmic = static_cast<PmicNpm1300 *>(arg);
+  npmx_adc_meas_all_t meas;
+  if (npmx_adc_meas_all_get(npmx_adc_get(&pmic->_npmx_instance, 0), &meas) != NPMX_SUCCESS) {
+    LOGI(TAG, "Reading ADC measurements failed.");
+  }
+  /* Convert voltage in millivolts to voltage in volts. */
+  pmic->_vbat = meas.values[NPMX_ADC_MEAS_VBAT];
+  /* Convert current in milliamperes to current in amperes. */
+  pmic->_ibat = meas.values[NPMX_ADC_MEAS_VBAT2_IBAT];
+  /* Convert temperature in millidegrees Celsius to temperature in Celsius */
+  pmic->_tbat = meas.values[NPMX_ADC_MEAS_BAT_TEMP];
+  if (npmx_adc_task_trigger(npmx_adc_get(&pmic->_npmx_instance, 0), NPMX_ADC_TASK_SINGLE_SHOT_VBAT) != NPMX_SUCCESS) {
+    LOGI(TAG, "Triggering VBAT measurement failed.");
+  }
+  if (npmx_adc_task_trigger(npmx_adc_get(&pmic->_npmx_instance, 0), NPMX_ADC_TASK_SINGLE_SHOT_NTC) != NPMX_SUCCESS) {
+    LOGI(TAG, "Triggering NTC measurement failed.");
+  }
+
+}
+double PmicNpm1300::BatteryCurrent() {
+  return _ibat/1000.00;
+}
+double PmicNpm1300::BatteryTemperature() {
+  return _tbat/1000.00;
+}
 
 void PmicNpm1300Gpio::GpioConfig(GpioDirection direction, GpioPullMode pull) {
   npmx_gpio_pull_t pull_mode = NPMX_GPIO_PULL_DOWN;

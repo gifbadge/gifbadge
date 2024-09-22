@@ -17,15 +17,6 @@ static bool checkSdState(Gpio *gpio) {
   return !gpio->GpioRead();
 }
 
-static bool sdState;
-
-//static void checkSDTimer(void *arg) {
-//  auto io_expander = (esp_io_expander_handle_t) arg;
-//  if (checkSdState(io_expander) != sdState) {
-//    esp_restart();
-//  }
-//}
-
 namespace Boards {
 
 b2_1_v0_5::b2_1_v0_5() {
@@ -37,6 +28,7 @@ b2_1_v0_5::b2_1_v0_5() {
   _pmic = new PmicNpm1300(_i2c, GPIO_NUM_21);
 
   //Enable Battery charging
+  _pmic->ChargeDisable();
   _pmic->ChargeCurrentSet(800);
   _pmic->ChargeVtermSet(4200);
   _pmic->ChargeEnable();
@@ -62,7 +54,7 @@ b2_1_v0_5::b2_1_v0_5() {
 }
 
 Battery *b2_1_v0_5::getBattery() {
-  return _battery;
+  return _pmic;
 }
 
 Touch *b2_1_v0_5::getTouch() {
@@ -168,6 +160,8 @@ void b2_1_v0_5::lateInit() {
   //TODO: Check if we can use DFS with the RGB LCD
   esp_pm_config_t pm_config = {.max_freq_mhz = 240, .min_freq_mhz = 80, .light_sleep_enable = false};
   esp_pm_configure(&pm_config);
+
+  _pmic->EnableADC();
 
 }
 Board::WAKEUP_SOURCE b2_1_v0_5::bootReason() {

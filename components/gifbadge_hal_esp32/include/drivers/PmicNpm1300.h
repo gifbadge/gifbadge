@@ -124,9 +124,12 @@ class PmicNpm1300 final : public Battery, public Charger, public Vbus {
   void DisableGpioEvent(uint8_t index);
   void RegisterGpioCallback(uint8_t index, void (*callback)());
 
+  void EnableADC();
+
   uint16_t VbusMaxCurrentGet() override;
   void VbusMaxCurrentSet(uint16_t mA) override;
   bool VbusConnected() override;
+
  private:
   I2C *_i2c;
   double _voltage = 0;
@@ -151,5 +154,12 @@ class PmicNpm1300 final : public Battery, public Charger, public Vbus {
 
   uint8_t _gpio_event_mask;
   void (*_gpio_callbacks[5])() = {nullptr, nullptr, nullptr, nullptr, nullptr};
+
+  esp_timer_handle_t _adc_timer = nullptr;
+  static void ADCTimerHandler(void *arg);
+  int32_t _vbat;
+  int32_t _ibat;
+  int32_t _tbat;
+
 
 };
