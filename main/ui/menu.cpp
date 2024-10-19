@@ -233,7 +233,7 @@ void lvgl_init(Boards::Board *board) {
   lv_indev_set_type(lvgl_encoder, LV_INDEV_TYPE_ENCODER);
   lv_indev_set_user_data(lvgl_encoder, board->getKeys());
   lv_indev_set_read_cb(lvgl_encoder, keyboard_read);
-  lv_timer_set_period(lv_indev_get_read_timer(lvgl_encoder), 50);
+  lv_timer_set_period(lv_indev_get_read_timer(lvgl_encoder), 20);
 //
 //
   if (board->getTouch()) {
