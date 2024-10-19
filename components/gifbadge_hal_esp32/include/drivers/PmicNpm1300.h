@@ -129,6 +129,7 @@ class PmicNpm1300 final : public Battery, public Charger, public Vbus {
   uint16_t VbusMaxCurrentGet() override;
   void VbusMaxCurrentSet(uint16_t mA) override;
   bool VbusConnected() override;
+  void VbusConnectedCallback(void (*callback)(bool));
 
  private:
   I2C *_i2c;
@@ -149,6 +150,7 @@ class PmicNpm1300 final : public Battery, public Charger, public Vbus {
   esp_timer_handle_t _looptimer = nullptr;
 
   static void VbusVoltage(npmx_instance_t *pm, npmx_callback_type_t type, uint8_t mask);
+  void (*_vbus_callback)(bool) = nullptr;
   static void GpioHandler(npmx_instance_t *pm, npmx_callback_type_t type, uint8_t mask);
   void GpioCallback(uint8_t index);
 

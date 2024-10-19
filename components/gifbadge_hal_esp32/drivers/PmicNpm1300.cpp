@@ -43,13 +43,17 @@ void PmicNpm1300::VbusVoltage(npmx_instance_t *pm, npmx_callback_type_t type, ui
     auto *pmic = static_cast<PmicNpm1300 *>(npmx_core_context_get(pm));
     if (mask & NPMX_EVENT_GROUP_VBUSIN_DETECTED_MASK) {
       LOGI(TAG, "VBUS CONNECTED");
-      esp_rom_gpio_connect_in_signal(GPIO_MATRIX_CONST_ONE_INPUT, USB_SRP_BVALID_IN_IDX, false);
+      if(pmic->_vbus_callback){
+        pmic->_vbus_callback(true);
+      }
       if(pmic->_power_led != nullptr){
         pmic->_power_led->GpioWrite(true);
       }
     } else {
       LOGI(TAG, "VBUS DISCONNECTED");
-      esp_rom_gpio_connect_in_signal(GPIO_MATRIX_CONST_ZERO_INPUT, USB_SRP_BVALID_IN_IDX, false);
+      if(pmic->_vbus_callback){
+        pmic->_vbus_callback(false);
+      }
       if(pmic->_power_led != nullptr) {
         pmic->_power_led->GpioWrite(false);
       }
@@ -452,6 +456,14 @@ double PmicNpm1300::BatteryCurrent() {
 }
 double PmicNpm1300::BatteryTemperature() {
   return _tbat/1000.00;
+}
+void PmicNpm1300::VbusConnectedCallback(void (*callback)(bool)) {
+  _vbus_callback = callback;
+  uint8_t status;
+  npmx_vbusin_vbus_status_get(npmx_vbusin_get(&_npmx_instance, 0), &status);
+  if(_vbus_callback){
+    _vbus_callback((status&NPMX_VBUSIN_STATUS_CONNECTED_MASK)==1);
+  }
 }
 
 void PmicNpm1300Gpio::GpioConfig(GpioDirection direction, GpioPullMode pull) {

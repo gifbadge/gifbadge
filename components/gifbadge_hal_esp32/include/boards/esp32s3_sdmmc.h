@@ -24,6 +24,7 @@ class esp32s3_sdmmc : public Boards::esp32s3 {
                   gpio_num_t d2,
                   gpio_num_t d3,
                   gpio_num_t cd,
-                  int width);
+                  int width,
+                  gpio_num_t usb_sense);
 };
 }

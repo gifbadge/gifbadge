@@ -89,7 +89,7 @@ b2_1_v0_2v0_4::b2_1_v0_2v0_4() {
   gpio_config(&vbus_config);
 
   if (checkSdState(_io_expander)) {
-    mount(GPIO_NUM_40, GPIO_NUM_41, GPIO_NUM_39, GPIO_NUM_38, GPIO_NUM_44, GPIO_NUM_42, GPIO_NUM_NC, 4);
+    mount(GPIO_NUM_40, GPIO_NUM_41, GPIO_NUM_39, GPIO_NUM_38, GPIO_NUM_44, GPIO_NUM_42, GPIO_NUM_NC, 4, GPIO_NUM_0);
   }
 
   sdState = checkSdState(_io_expander);

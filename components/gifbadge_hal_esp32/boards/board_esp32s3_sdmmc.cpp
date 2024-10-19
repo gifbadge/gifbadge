@@ -54,7 +54,8 @@ esp_err_t esp32s3_sdmmc::mount(gpio_num_t clk,
                                gpio_num_t d2,
                                gpio_num_t d3,
                                gpio_num_t cd,
-                               int width) {
+                               int width,
+                               gpio_num_t usb_sense) {
 #ifndef USB_DISABLED
   if (init_sdmmc_slot(clk,
                       cmd,
@@ -65,7 +66,7 @@ esp_err_t esp32s3_sdmmc::mount(gpio_num_t clk,
                       cd,
                       &card,
                       width) == ESP_OK) {
-    usb_init_mmc(0, &card);
+    usb_init_mmc(usb_sense, &card);
     storageAvailable = true;
     return ESP_OK;
   } else {

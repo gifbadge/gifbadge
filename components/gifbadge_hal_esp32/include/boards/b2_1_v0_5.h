@@ -53,5 +53,6 @@ class b2_1_v0_5 : public Boards::esp32s3_sdmmc {
   Gpio *_card_detect = nullptr;
   PmicNpm1300Led *_vbus_led = nullptr;
   PmicNpm1300Led *_charge_led = nullptr;
+  static void VbusCallback(bool state);
 };
 }

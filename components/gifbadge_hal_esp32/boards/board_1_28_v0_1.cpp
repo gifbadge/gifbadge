@@ -52,7 +52,7 @@ b1_28_v0_1::b1_28_v0_1() {
 
   gpio_pullup_en(GPIO_CARD_DETECT);
   if (!gpio_get_level(GPIO_CARD_DETECT)) {
-    mount(GPIO_NUM_40, GPIO_NUM_39, GPIO_NUM_41, GPIO_NUM_42, GPIO_NUM_33, GPIO_NUM_47, GPIO_CARD_DETECT, 1);
+    mount(GPIO_NUM_40, GPIO_NUM_39, GPIO_NUM_41, GPIO_NUM_42, GPIO_NUM_33, GPIO_NUM_47, GPIO_CARD_DETECT, 1, GPIO_NUM_0);
   }
 
   gpio_isr_handler_add(GPIO_CARD_DETECT, sdcard_removed, nullptr);

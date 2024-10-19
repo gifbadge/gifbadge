@@ -107,6 +107,7 @@ const char *b2_1_v0_5::name() {
 }
 void b2_1_v0_5::lateInit() {
   buffer = heap_caps_malloc(480 * 480 + 0x6100, MALLOC_CAP_INTERNAL);
+  esp_rom_gpio_connect_in_signal(GPIO_MATRIX_CONST_ZERO_INPUT, USB_SRP_BVALID_IN_IDX, false); //Start with USB Disconnected
 
   _pmic->Buck1Set(3300);
 
@@ -144,13 +145,7 @@ void b2_1_v0_5::lateInit() {
   _card_detect = _pmic->GpioGet(0);
   _card_detect->GpioConfig(Gpio::GpioDirection::IN, Gpio::GpioPullMode::UP);
 
-  if (storageReady()) {
-    _card_detect->GpioInt(Gpio::GpioIntDirection::RISING, esp_restart);
-    mount(GPIO_NUM_40, GPIO_NUM_41, GPIO_NUM_39, GPIO_NUM_38, GPIO_NUM_44, GPIO_NUM_42, GPIO_NUM_NC, 4);
-  }
-  else {
-    _card_detect->GpioInt(Gpio::GpioIntDirection::FALLING, esp_restart);
-  }
+  _pmic->VbusConnectedCallback(VbusCallback);
 
   /*G3, G4, G5, R1, R2, R3, R4, R5, B1, B2, B3, B4, B5, G0, G1, G2 */
   std::array<int, 16> rgb = {11, 12, 13, 3, 4, 5, 6, 7, 14, 15, 16, 17, 18, 8, 9, 10};
@@ -162,6 +157,14 @@ void b2_1_v0_5::lateInit() {
   esp_pm_configure(&pm_config);
 
   _pmic->EnableADC();
+
+  if (storageReady()) {
+    _card_detect->GpioInt(Gpio::GpioIntDirection::RISING, esp_restart);
+    mount(GPIO_NUM_40, GPIO_NUM_41, GPIO_NUM_39, GPIO_NUM_38, GPIO_NUM_44, GPIO_NUM_42, GPIO_NUM_NC, 4, GPIO_NUM_NC);
+  }
+  else {
+    _card_detect->GpioInt(Gpio::GpioIntDirection::FALLING, esp_restart);
+  }
 
 }
 Board::WAKEUP_SOURCE b2_1_v0_5::bootReason() {
@@ -175,5 +178,14 @@ Vbus *b2_1_v0_5::getVbus() {
 }
 Charger *b2_1_v0_5::getCharger() {
   return _pmic;
+}
+void b2_1_v0_5::debugInfo() {
+void b2_1_v0_5::VbusCallback(bool state) {
+  LOGI(TAG, "Vbus connected: %s", state?"True":"False");
+  if (state) {
+    esp_rom_gpio_connect_in_signal(GPIO_MATRIX_CONST_ONE_INPUT, USB_SRP_BVALID_IN_IDX, false);
+  } else {
+    esp_rom_gpio_connect_in_signal(GPIO_MATRIX_CONST_ZERO_INPUT, USB_SRP_BVALID_IN_IDX, false);
+  }
 }
 }
