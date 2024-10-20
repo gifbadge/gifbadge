@@ -1,5 +1,5 @@
 #pragma once
-#include <hal/board.h>
+#include "hal/board.h"
 #include "esp_lcd_panel_io.h"
 #include "esp_lcd_panel_vendor.h"
 #include "esp_lcd_panel_ops.h"
@@ -12,15 +12,15 @@
 #include "driver/sdmmc_host.h"
 #include "drivers/config_nvs.h"
 
-#include "esp32s3_sdmmc.h"
+#include "boards/esp32s3_sdmmc.h"
 #include "drivers/PmicNpm1300.h"
 #include "drivers/keys_generic.h"
 
-namespace Boards {
-class b2_1_v0_5 : public Boards::esp32s3_sdmmc {
+namespace Boards::esp32::s3::full {
+class v0_5 : public Boards::esp32::s3::esp32s3_sdmmc {
  public:
-  b2_1_v0_5();
-  ~b2_1_v0_5() override = default;
+  v0_5();
+  ~v0_5() override = default;
 
   Battery *getBattery() override;
   Touch *getTouch() override;
@@ -32,11 +32,12 @@ class b2_1_v0_5 : public Boards::esp32s3_sdmmc {
   BOARD_POWER powerState() override;
   bool storageReady() override;
   void *turboBuffer() override { return buffer; };
-  const char * name() override;
+  const char *name() override;
   void lateInit() override;
   WAKEUP_SOURCE bootReason() override;
   Vbus *getVbus() override;
   Charger *getCharger() override;
+  void debugInfo() override;
 
  protected:
   I2C *_i2c;

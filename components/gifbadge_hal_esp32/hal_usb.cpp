@@ -9,6 +9,7 @@
 #include "tusb_msc_storage.h"
 #include "tusb_console.h"
 #include "log.h"
+#include "hal/board.h"
 
 static const char *TAG = "USB";
 
@@ -224,16 +225,34 @@ bool storage_free() {
   return tinyusb_msc_storage_in_use_by_usb_host();
 }
 
+#define _PID_MAP(itf, n) ((CFG_TUD_##itf) << (n))
+#define USB_TUSB_PID (0x4000 | _PID_MAP(CDC, 0) | _PID_MAP(MSC, 1) | _PID_MAP(HID, 2) | \
+    _PID_MAP(MIDI, 3) ) //| _PID_MAP(AUDIO, 4) | _PID_MAP(VENDOR, 5) )
+
 void usb_init_mmc(int usb_sense, sdmmc_card_t **card) {
+  extern Boards::Board *get_board();
+
+  //------------- Array of String Descriptors -------------//
+  const char *descriptor_str_default[] = {
+      // array of pointer to string descriptors
+      "\x09\x04",                // 0: is supported language is English (0x0409)
+      "GifBadge", // 1: Manufacturer
+      "2.1",      // 2: Product
+      get_board()->serialNumber(),       // 3: Serials, should use chip ID
+      "", // 4: CDC Interface
+      "GifBadge MSC Device",          // 5: MSC Interface
+      nullptr                                     // NULL: Must be last. Indicates end of array
+  };
 
   const tinyusb_msc_sdmmc_config_t config_sdmmc =
       {.card = *card, .callback_mount_changed = storage_mount_changed_cb, .mount_config = {.max_files = 5},};
   ESP_ERROR_CHECK(tinyusb_msc_storage_init_sdmmc(&config_sdmmc));
 
+
   ESP_ERROR_CHECK(tinyusb_msc_storage_mount(BASE_PATH));
 
   const tinyusb_config_t tusb_cfg =
-      {.device_descriptor = nullptr, .string_descriptor = nullptr, .string_descriptor_count = 0, .external_phy = false, .configuration_descriptor = nullptr, .self_powered =
+      {.device_descriptor = nullptr, .string_descriptor = descriptor_str_default, .string_descriptor_count = 8, .external_phy = false, .configuration_descriptor = nullptr, .self_powered =
       usb_sense
           != GPIO_NUM_NC, //If usb_vbus is valid, set to self powered. Otherwise assume this is handled somewhere else
           .vbus_monitor_io = usb_sense,};

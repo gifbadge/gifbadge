@@ -1,4 +1,4 @@
-#include "boards/b2_1_v0_2_v0_4_common.h"
+#include "boards/full/v0_2_v0_4_common.h"
 
 #include <esp_pm.h>
 #include "log.h"
@@ -32,7 +32,7 @@ static void checkSDTimer(void *arg) {
 
 namespace Boards {
 
-b2_1_v0_2v0_4::b2_1_v0_2v0_4() {
+esp32::s3::full::v0_2v0_4::v0_2v0_4() {
   buffer = heap_caps_malloc(480 * 480 + 0x6100, MALLOC_CAP_INTERNAL);
   _config = new Config_NVS();
   _i2c = new I2C(I2C_NUM_0, 47, 48, 100 * 1000, false);
@@ -106,34 +106,34 @@ b2_1_v0_2v0_4::b2_1_v0_2v0_4() {
   _vbus = new b2_1_v0_2v0_4_vbus(GPIO_NUM_0, _io_expander, 8);
 }
 
-Battery *b2_1_v0_2v0_4::getBattery() {
+Battery *esp32::s3::full::v0_2v0_4::getBattery() {
   return _battery;
 }
 
-Touch *b2_1_v0_2v0_4::getTouch() {
+Touch *esp32::s3::full::v0_2v0_4::getTouch() {
   return _touch;
 }
 
-Keys *b2_1_v0_2v0_4::getKeys() {
+Keys *esp32::s3::full::v0_2v0_4::getKeys() {
   return _keys;
 }
 
-Display *b2_1_v0_2v0_4::getDisplay() {
+Display *esp32::s3::full::v0_2v0_4::getDisplay() {
   return _display;
 }
 
-Backlight *b2_1_v0_2v0_4::getBacklight() {
+Backlight *esp32::s3::full::v0_2v0_4::getBacklight() {
   return _backlight;
 }
 
-void b2_1_v0_2v0_4::powerOff() {
+void esp32::s3::full::v0_2v0_4::powerOff() {
   LOGI(TAG, "Poweroff");
   vTaskDelay(100 / portTICK_PERIOD_MS);
   esp_io_expander_set_level(_io_expander, IO_EXPANDER_PIN_NUM_3, 1);
 
 }
 
-BOARD_POWER b2_1_v0_2v0_4::powerState() {
+BOARD_POWER esp32::s3::full::v0_2v0_4::powerState() {
   if (_vbus->VbusConnected()) {
     return BOARD_POWER_NORMAL;
   }
@@ -147,14 +147,14 @@ BOARD_POWER b2_1_v0_2v0_4::powerState() {
   return BOARD_POWER_NORMAL;
 }
 
-bool b2_1_v0_2v0_4::storageReady() {
+bool esp32::s3::full::v0_2v0_4::storageReady() {
   return checkSdState(_io_expander);
 }
 
-void b2_1_v0_2v0_4::lateInit() {
+void esp32::s3::full::v0_2v0_4::lateInit() {
 
 }
-Vbus *b2_1_v0_2v0_4::getVbus() {
+Vbus *esp32::s3::full::v0_2v0_4::getVbus() {
   return _vbus;
 }
 }

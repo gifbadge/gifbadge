@@ -1,5 +1,5 @@
 #pragma once
-#include <hal/board.h>
+#include "hal/board.h"
 #include "drivers/battery_analog.h"
 #include "esp_lcd_panel_io.h"
 #include "esp_lcd_panel_vendor.h"
@@ -14,39 +14,42 @@
 #include "esp_pm.h"
 #include "drivers/config_nvs.h"
 #include "soc/gpio_num.h"
-#include "esp32s3_sdmmc.h"
+#include "boards/esp32s3_sdmmc.h"
 #include "drivers/vbus_gpio.h"
 
 namespace Boards {
-
-class b1_28_v0_3 : public Boards::esp32s3_sdmmc {
+namespace esp32::mini {
+class v0_1 : public Boards::esp32::s3::esp32s3_sdmmc {
  public:
-  b1_28_v0_3();
-  ~b1_28_v0_3() override = default;
+  v0_1();
+  ~v0_1() override = default;
 
-  Battery *getBattery() override;
-  Touch *getTouch() override;
-  Keys *getKeys() override;
-  Display *getDisplay() override;
-  Backlight *getBacklight() override;
+  Battery * getBattery() override;
+  Touch * getTouch() override;
+  Keys * getKeys() override;
+  Display * getDisplay() override;
+  Backlight * getBacklight() override;
 
   void powerOff() override;
 
   BOARD_POWER powerState() override;
   bool storageReady() override;
-  const char *name() override;
-  void *turboBuffer() override { return buffer; }
+  const char * name() override;
+  void * turboBuffer() override {return buffer;}
   void lateInit() override;
-  WAKEUP_SOURCE bootReason() override;;
+  Vbus *getVbus() override;;
 
  private:
   battery_max17048 *_battery;
   I2C *_i2c;
-  keys_gpio *_keys;
-  display_gc9a01 *_display;
-  backlight_ledc *_backlight;
+  keys_gpio * _keys;
+  display_gc9a01 * _display;
+  backlight_ledc * _backlight;
+  touch_ft5x06 * _touch;
   void *buffer;
   VbusGpio *_vbus;
 };
+}
+
 }
 

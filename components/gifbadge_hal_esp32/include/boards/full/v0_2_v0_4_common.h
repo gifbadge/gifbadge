@@ -1,5 +1,5 @@
 #pragma once
-#include <hal/board.h>
+#include "hal/board.h"
 #include "esp_lcd_panel_io.h"
 #include "esp_lcd_panel_vendor.h"
 #include "esp_lcd_panel_ops.h"
@@ -12,7 +12,7 @@
 #include "driver/sdmmc_host.h"
 #include "drivers/config_nvs.h"
 
-#include "esp32s3_sdmmc.h"
+#include "boards/esp32s3_sdmmc.h"
 
 class b2_1_v0_2v0_4_vbus: public Vbus {
  public:
@@ -27,11 +27,12 @@ class b2_1_v0_2v0_4_vbus: public Vbus {
   uint8_t _expander_gpio;
 };
 
-namespace Boards {
-class b2_1_v0_2v0_4 : public Boards::esp32s3_sdmmc {
+namespace Boards::esp32::s3::full {
+
+class v0_2v0_4 : public Boards::esp32::s3::esp32s3_sdmmc {
  public:
-  b2_1_v0_2v0_4();
-  ~b2_1_v0_2v0_4() override = default;
+  v0_2v0_4();
+  ~v0_2v0_4() override = default;
 
   Battery *getBattery() override;
   Touch *getTouch() override;

@@ -5,11 +5,12 @@ static Boards::Board *global_board;
 
 #include "esp_efuse_custom_table.h"
 #include "boards/boards.h"
-#include "boards/v0.h"
-#include "boards/b1_28_v0_1.h"
-#include "boards/b2_1_v0_2.h"
-#include "boards/b2_1_v0_4.h"
-#include "boards/b1_28_v0_3.h"
+#include "boards/mini/v0.h"
+#include "boards/mini/v0_1.h"
+#include "boards/full/v0_2.h"
+#include "boards/full/v0_4.h"
+#include "boards/full/v0_5.h"
+#include "boards/mini/v0_3.h"
 
 Boards::Board *get_board() {
 //    return new board_v0();
@@ -19,19 +20,19 @@ Boards::Board *get_board() {
   if (!global_board) {
     switch (board) {
       case BOARD_1_28_V0:
-        global_board = new Boards::v0();
+        global_board = new Boards::esp32::mini::v0();
         break;
       case BOARD_2_1_V0_2:
-        global_board = new Boards::b2_1_v0_2();
+        global_board = new Boards::esp32::s3::full::v0_2();
         break;
       case BOARD_1_28_V0_1:
-        global_board = new Boards::b1_28_v0_1();
+        global_board = new Boards::esp32::mini::v0_1();
         break;
       case BOARD_2_1_V0_4:
-        global_board = new Boards::b2_1_v0_4();
+        global_board = new Boards::esp32::s3::full::v0_4();
         break;
       case BOARD_1_28_V0_3:
-        global_board = new Boards::b1_28_v0_3();
+        global_board = new Boards::esp32::mini::v0_3();
         break;
       default:
         return nullptr;

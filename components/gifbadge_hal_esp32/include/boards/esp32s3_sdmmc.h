@@ -2,8 +2,8 @@
 #include "driver/sdmmc_host.h"
 #include "boards_esp32s3.h"
 
-namespace Boards {
-class esp32s3_sdmmc : public Boards::esp32s3 {
+namespace Boards::esp32::s3 {
+ class esp32s3_sdmmc : public Boards::esp32::s3::esp32s3 {
  public:
   esp32s3_sdmmc() = default;
   ~esp32s3_sdmmc() override = default;

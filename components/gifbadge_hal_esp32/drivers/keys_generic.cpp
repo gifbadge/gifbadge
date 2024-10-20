@@ -48,7 +48,7 @@ KeysGeneric::KeysGeneric(Gpio *up, Gpio *down, Gpio *enter) {
   };
 
   ESP_ERROR_CHECK(esp_timer_create(&keyTimerArgs, &keyTimer));
-//  ESP_ERROR_CHECK(esp_timer_start_periodic(keyTimer, 5 * 1000));
+  ESP_ERROR_CHECK(esp_timer_start_periodic(keyTimer, 5 * 1000));
 
 }
 void KeysGeneric::poll() {

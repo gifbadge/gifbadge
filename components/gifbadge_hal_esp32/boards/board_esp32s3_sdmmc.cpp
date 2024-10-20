@@ -10,7 +10,7 @@ static const char *TAG = "board_esp32s3_sdmmc";
 
 namespace Boards {
 
-StorageInfo esp32s3_sdmmc::storageInfo() {
+StorageInfo esp32::s3::esp32s3_sdmmc::storageInfo() {
   StorageType type = (card->ocr & SD_OCR_SDHC_CAP) ? StorageType_SDHC : StorageType_SD;
   double speed = card->real_freq_khz / 1000.00;
   uint64_t total_bytes;
@@ -19,14 +19,14 @@ StorageInfo esp32s3_sdmmc::storageInfo() {
   return {card->cid.name, type, speed, total_bytes, free_bytes};
 }
 
-void esp32s3_sdmmc::reset() {
+void esp32::s3::esp32s3_sdmmc::reset() {
   if(tinyusb_msc_storage_unmount() != ESP_OK){
     LOGI(TAG, "Failed to unmount");
   }
   esp32s3::reset();
 }
 
-int esp32s3_sdmmc::StorageFormat() {
+int esp32::s3::esp32s3_sdmmc::StorageFormat() {
   LOGI(TAG, "Format Start");
   esp_err_t ret;
   esp_task_wdt_config_t wdtConfig = {
@@ -47,15 +47,15 @@ int esp32s3_sdmmc::StorageFormat() {
   LOGI(TAG, "Format Done");
   return ret;
 }
-esp_err_t esp32s3_sdmmc::mount(gpio_num_t clk,
-                               gpio_num_t cmd,
-                               gpio_num_t d0,
-                               gpio_num_t d1,
-                               gpio_num_t d2,
-                               gpio_num_t d3,
-                               gpio_num_t cd,
-                               int width,
-                               gpio_num_t usb_sense) {
+esp_err_t esp32::s3::esp32s3_sdmmc::mount(gpio_num_t clk,
+                                          gpio_num_t cmd,
+                                          gpio_num_t d0,
+                                          gpio_num_t d1,
+                                          gpio_num_t d2,
+                                          gpio_num_t d3,
+                                          gpio_num_t cd,
+                                          int width,
+                                          gpio_num_t usb_sense) {
 #ifndef USB_DISABLED
   if (init_sdmmc_slot(clk,
                       cmd,
@@ -85,7 +85,7 @@ esp_err_t esp32s3_sdmmc::mount(gpio_num_t clk,
 #endif
 }
 
-bool esp32s3_sdmmc::usbConnected() {
+bool esp32::s3::esp32s3_sdmmc::usbConnected() {
   if(!storageAvailable){
     return false;
   }
@@ -95,7 +95,7 @@ bool esp32s3_sdmmc::usbConnected() {
   return false;
 #endif
 }
-int esp32s3_sdmmc::usbCallBack(tusb_msc_callback_t callback) {
+int esp32::s3::esp32s3_sdmmc::usbCallBack(tusb_msc_callback_t callback) {
   tinyusb_msc_register_callback(TINYUSB_MSC_EVENT_MOUNT_CHANGED, callback);
   return 0;
 }

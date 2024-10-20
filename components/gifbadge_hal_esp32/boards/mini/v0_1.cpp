@@ -3,7 +3,7 @@
 #include <driver/sdmmc_defs.h>
 #include <esp_task_wdt.h>
 #include <esp_sleep.h>
-#include "boards/b1_28_v0_1.h"
+#include "boards/mini/v0_1.h"
 #include "drivers/display_gc9a01.h"
 #include "driver/gpio.h"
 #include "drivers/config_nvs.h"
@@ -32,7 +32,7 @@ static void IRAM_ATTR usb_connected(void *) {
 
 namespace Boards {
 
-b1_28_v0_1::b1_28_v0_1() {
+esp32::mini::v0_1::v0_1() {
   buffer = heap_caps_malloc(240 * 240 + 0x6100, MALLOC_CAP_INTERNAL);
   _i2c = new I2C(I2C_NUM_0, 17, 18, 100 * 1000, false);
   _battery = new battery_max17048(_i2c, GPIO_VBUS_DETECT);
@@ -83,34 +83,34 @@ b1_28_v0_1::b1_28_v0_1() {
   _vbus = new VbusGpio(GPIO_VBUS_DETECT);
 }
 
-Battery *b1_28_v0_1::getBattery() {
+Battery *esp32::mini::v0_1::getBattery() {
   return _battery;
 }
 
-Touch *b1_28_v0_1::getTouch() {
+Touch *esp32::mini::v0_1::getTouch() {
   return nullptr;
 }
 
-Keys *b1_28_v0_1::getKeys() {
+Keys *esp32::mini::v0_1::getKeys() {
   return _keys;
 }
 
-Display *b1_28_v0_1::getDisplay() {
+Display *esp32::mini::v0_1::getDisplay() {
   return _display;
 }
 
-Backlight *b1_28_v0_1::getBacklight() {
+Backlight *esp32::mini::v0_1::getBacklight() {
   return _backlight;
 }
 
-void b1_28_v0_1::powerOff() {
+void esp32::mini::v0_1::powerOff() {
   LOGI(TAG, "Poweroff");
   vTaskDelay(100 / portTICK_PERIOD_MS);
   gpio_set_level(GPIO_SHUTDOWN, 1);
   gpio_hold_en(GPIO_SHUTDOWN);
 }
 
-BOARD_POWER b1_28_v0_1::powerState() {
+BOARD_POWER esp32::mini::v0_1::powerState() {
   //TODO Detect USB power status, implement critical level
   if (_vbus->VbusConnected()) {
     return BOARD_POWER_NORMAL;
@@ -125,21 +125,21 @@ BOARD_POWER b1_28_v0_1::powerState() {
   return BOARD_POWER_NORMAL;
 }
 
-bool b1_28_v0_1::storageReady() {
+bool esp32::mini::v0_1::storageReady() {
   if (!gpio_get_level(GPIO_CARD_DETECT)) {
     return true;
   }
   return false;
 }
 
-const char *b1_28_v0_1::name() {
+const char *esp32::mini::v0_1::name() {
   return "1.28\" 0.1-0.2";
 }
 
-void b1_28_v0_1::lateInit() {
+void esp32::mini::v0_1::lateInit() {
 
 }
-Vbus *b1_28_v0_1::getVbus() {
+Vbus *esp32::mini::v0_1::getVbus() {
   return _vbus;
 }
 }

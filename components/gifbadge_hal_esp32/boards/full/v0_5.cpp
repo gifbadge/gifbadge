@@ -1,4 +1,4 @@
-#include "boards/b2_1_v0_5.h"
+#include "boards/full/v0_5.h"
 
 #include <esp_pm.h>
 #include "log.h"
@@ -19,7 +19,7 @@ static bool checkSdState(Gpio *gpio) {
 
 namespace Boards {
 
-b2_1_v0_5::b2_1_v0_5() {
+esp32::s3::full::v0_5::v0_5() {
   _config = new Config_NVS();
   gpio_install_isr_service(0);
   _i2c = new I2C(I2C_NUM_0, 47, 48, 100 * 1000, false);
@@ -49,31 +49,30 @@ b2_1_v0_5::b2_1_v0_5() {
 
   _pmic->Init();
 
-
   _battery = new battery_max17048(_i2c, GPIO_NUM_0);
 }
 
-Battery *b2_1_v0_5::getBattery() {
+Battery *esp32::s3::full::v0_5::getBattery() {
   return _pmic;
 }
 
-Touch *b2_1_v0_5::getTouch() {
+Touch *esp32::s3::full::v0_5::getTouch() {
   return _touch;
 }
 
-Keys *b2_1_v0_5::getKeys() {
+Keys *esp32::s3::full::v0_5::getKeys() {
   return _keys;
 }
 
-Display *b2_1_v0_5::getDisplay() {
+Display *esp32::s3::full::v0_5::getDisplay() {
   return _display;
 }
 
-Backlight *b2_1_v0_5::getBacklight() {
+Backlight *esp32::s3::full::v0_5::getBacklight() {
   return _backlight;
 }
 
-void b2_1_v0_5::powerOff() {
+void esp32::s3::full::v0_5::powerOff() {
   LOGI(TAG, "Poweroff");
   vTaskDelay(100 / portTICK_PERIOD_MS);
   rtc_gpio_pullup_dis(GPIO_NUM_21);
@@ -84,7 +83,7 @@ void b2_1_v0_5::powerOff() {
   esp_deep_sleep_start();
 }
 
-BOARD_POWER b2_1_v0_5::powerState() {
+BOARD_POWER esp32::s3::full::v0_5::powerState() {
 //  if (powerConnected() != CHARGE_NONE) {
 //    return BOARD_POWER_NORMAL;
 //  }
@@ -98,16 +97,18 @@ BOARD_POWER b2_1_v0_5::powerState() {
   return BOARD_POWER_NORMAL;
 }
 
-bool b2_1_v0_5::storageReady() {
+bool esp32::s3::full::v0_5::storageReady() {
   return checkSdState(_card_detect);
 }
 
-const char *b2_1_v0_5::name() {
+const char *esp32::s3::full::v0_5::name() {
   return "2.1\" 0.5";
 }
-void b2_1_v0_5::lateInit() {
+void esp32::s3::full::v0_5::lateInit() {
   buffer = heap_caps_malloc(480 * 480 + 0x6100, MALLOC_CAP_INTERNAL);
-  esp_rom_gpio_connect_in_signal(GPIO_MATRIX_CONST_ZERO_INPUT, USB_SRP_BVALID_IN_IDX, false); //Start with USB Disconnected
+  esp_rom_gpio_connect_in_signal(GPIO_MATRIX_CONST_ZERO_INPUT,
+                                 USB_SRP_BVALID_IN_IDX,
+                                 false); //Start with USB Disconnected
 
   _pmic->Buck1Set(3300);
 
@@ -129,7 +130,6 @@ void b2_1_v0_5::lateInit() {
       .sda_gpio_num = 4,
       .io_expander = _io_expander,                        // Set to NULL if not using IO expander
   };
-
 
   PmicNpm1300Gpio *up = _pmic->GpioGet(4);
   up->GpioConfig(Gpio::GpioDirection::IN, Gpio::GpioPullMode::UP);
@@ -161,27 +161,33 @@ void b2_1_v0_5::lateInit() {
   if (storageReady()) {
     _card_detect->GpioInt(Gpio::GpioIntDirection::RISING, esp_restart);
     mount(GPIO_NUM_40, GPIO_NUM_41, GPIO_NUM_39, GPIO_NUM_38, GPIO_NUM_44, GPIO_NUM_42, GPIO_NUM_NC, 4, GPIO_NUM_NC);
-  }
-  else {
+  } else {
     _card_detect->GpioInt(Gpio::GpioIntDirection::FALLING, esp_restart);
   }
 
 }
-Board::WAKEUP_SOURCE b2_1_v0_5::bootReason() {
-  if(esp_reset_reason() != ESP_RST_POWERON){
+Board::WAKEUP_SOURCE esp32::s3::full::v0_5::bootReason() {
+  if (esp_reset_reason() != ESP_RST_POWERON) {
     return Board::WAKEUP_SOURCE::REBOOT;
   }
   return _pmic->GetWakeup();
 }
-Vbus *b2_1_v0_5::getVbus() {
+Vbus *esp32::s3::full::v0_5::getVbus() {
   return _pmic;
 }
-Charger *b2_1_v0_5::getCharger() {
+Charger *esp32::s3::full::v0_5::getCharger() {
   return _pmic;
 }
-void b2_1_v0_5::debugInfo() {
-void b2_1_v0_5::VbusCallback(bool state) {
-  LOGI(TAG, "Vbus connected: %s", state?"True":"False");
+void esp32::s3::full::v0_5::debugInfo() {
+  LOGI(TAG,
+       "MAX17048 SOC: %i, Voltage %fV NPM1300 SOC: %i, Voltage %fV",
+       _battery->getSoc(),
+       _battery->BatteryVoltage(),
+       _pmic->getSoc(),
+       _pmic->BatteryVoltage());
+}
+void esp32::s3::full::v0_5::VbusCallback(bool state) {
+  LOGI(TAG, "Vbus connected: %s", state ? "True" : "False");
   if (state) {
     esp_rom_gpio_connect_in_signal(GPIO_MATRIX_CONST_ONE_INPUT, USB_SRP_BVALID_IN_IDX, false);
   } else {

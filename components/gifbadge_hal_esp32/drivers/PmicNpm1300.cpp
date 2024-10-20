@@ -38,7 +38,7 @@ npmx_error_t npmx_read(void *p_context, uint32_t register_address, uint8_t *p_da
   return NPMX_SUCCESS;
 }
 
-void PmicNpm1300::VbusVoltage(npmx_instance_t *pm, npmx_callback_type_t type, uint8_t mask) {
+void PmicNpm1300::VbusVoltage(npmx_instance_t *pm, npmx_callback_type_t, uint8_t mask) {
   if (mask & (NPMX_EVENT_GROUP_VBUSIN_DETECTED_MASK | NPMX_EVENT_GROUP_VBUSIN_REMOVED_MASK)) {
     auto *pmic = static_cast<PmicNpm1300 *>(npmx_core_context_get(pm));
     if (mask & NPMX_EVENT_GROUP_VBUSIN_DETECTED_MASK) {
@@ -77,7 +77,7 @@ static void cc_set_current(npmx_instance_t *pm) {
   npmx_vbusin_task_trigger(npmx_vbusin_get(pm, 0), NPMX_VBUSIN_TASK_APPLY_CURRENT_LIMIT);
 }
 
-static void vbus_thermal(npmx_instance_t *pm, npmx_callback_type_t type, uint8_t mask) {
+static void vbus_thermal(npmx_instance_t *pm, npmx_callback_type_t, uint8_t mask) {
   if (mask & (NPMX_EVENT_GROUP_USB_CC1_MASK | NPMX_EVENT_GROUP_USB_CC2_MASK)) {
     cc_set_current(pm);
   }
@@ -130,8 +130,26 @@ double PmicNpm1300::BatteryVoltage() {
   return _vbat/1000.00;
 }
 
+static inline uint8_t sigmoidal(uint16_t voltage, uint16_t minVoltage, uint16_t maxVoltage) {
+  auto result =
+      static_cast<uint8_t>(105 - (105 / (1 + pow(1.724 * (voltage - minVoltage) / (maxVoltage - minVoltage), 5.5))));
+  return result >= 100 ? 100 : result;
+}
+
+static inline uint8_t asigmoidal(uint16_t voltage, uint16_t minVoltage = 2800, uint16_t maxVoltage = 4200) {
+  if(voltage < minVoltage){
+    return 0;
+  }
+  if(voltage > maxVoltage){
+    return 100;
+  }
+//  uint8_t result = 101 - (101 / pow(1 + pow(1.33 * (voltage - minVoltage)/(maxVoltage - minVoltage) ,4.5), 3));
+  uint8_t result = 100 - (100 / pow(1 + pow(1.6 * (voltage - minVoltage)/(maxVoltage - minVoltage) ,5.5), 1.2));
+  return result >= 100 ? 100 : result;
+}
+
 int PmicNpm1300::getSoc() {
-  return _soc;
+  return asigmoidal(static_cast<uint16_t>(_vbat));
 }
 
 double PmicNpm1300::getRate() {
@@ -275,21 +293,17 @@ void PmicNpm1300::Loop() {
 Boards::Board::WAKEUP_SOURCE PmicNpm1300::GetWakeup() {
   return _wakeup_source;
 }
+
 void PmicNpm1300::PwrLedSet(Gpio *gpio) {
   _power_led = gpio;
+  uint8_t status;
+  npmx_vbusin_vbus_status_get(npmx_vbusin_get(&_npmx_instance, 0), &status);
+  if(_power_led != nullptr){
+    _power_led->GpioWrite((status&NPMX_VBUSIN_STATUS_CONNECTED_MASK)==1);
+  }
 }
-void PmicNpm1300::Init() {
-//  uint8_t status;
-//  npmx_vbusin_vbus_status_get(npmx_vbusin_get(&_npmx_instance, 0), &status);
-//
-//  if(status&NPMX_VBUSIN_STATUS_CONNECTED_MASK){
-//    VbusVoltage(&_npmx_instance, NPMX_CALLBACK_TYPE_EVENT_VBUSIN_VOLTAGE, NPMX_EVENT_GROUP_VBUSIN_DETECTED_MASK);
-//  }
-//  else {
-//    VbusVoltage(&_npmx_instance, NPMX_CALLBACK_TYPE_EVENT_VBUSIN_VOLTAGE, NPMX_EVENT_GROUP_VBUSIN_REMOVED_MASK);
-//  }
 
-  npmx_vbusin_current_limit_set(npmx_vbusin_get(&_npmx_instance, 0), NPMX_VBUSIN_CURRENT_500_MA); //Always default to 500mA
+void PmicNpm1300::Init() {
   cc_set_current(&_npmx_instance);
   npmx_vbusin_suspend_mode_enable_set(npmx_vbusin_get(&_npmx_instance, 0), false);
 
@@ -351,7 +365,7 @@ void PmicNpm1300::DisableGpioEvent(uint8_t index) {
 }
 
 
-void PmicNpm1300::GpioHandler(npmx_instance_t *pm, npmx_callback_type_t type, uint8_t mask) {
+void PmicNpm1300::GpioHandler(npmx_instance_t *pm, npmx_callback_type_t, uint8_t mask) {
   auto *pmic = static_cast<PmicNpm1300 *>(npmx_core_context_get(pm));
   for(int x = 0; x< 5; x++){
     if(mask & (1 << x)){
@@ -372,7 +386,6 @@ void PmicNpm1300::RegisterGpioCallback(uint8_t index, void (*callback)()) {
 uint16_t PmicNpm1300::VbusMaxCurrentGet() {
   npmx_vbusin_cc_t cc1;
   npmx_vbusin_cc_t cc2;
-  npmx_vbusin_cc_t selected;
   npmx_vbusin_cc_status_get(npmx_vbusin_get(&_npmx_instance, 0), &cc1, &cc2);
   switch(cc1 >= cc2 ? cc1 : cc2){
     case NPMX_VBUSIN_CC_NOT_CONNECTED:

@@ -16,7 +16,7 @@
 #include "driver/sdmmc_host.h"
 #include "drivers/config_nvs.h"
 
-namespace Boards {
+namespace Boards::esp32::s3 {
 class esp32s3 : public Boards::Board {
 public:
  esp32s3();
