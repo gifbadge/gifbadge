@@ -24,6 +24,8 @@ struct mem_buf {
   size_t size;
 };
 
+static void * prev_buffer = nullptr;
+
 static void *OpenFile(const char *fname, int32_t *pSize) {
   FILE *infile = fopen(fname, "r");
   setvbuf(infile, nullptr, _IOFBF, 4096);
@@ -119,7 +121,7 @@ GIF::~GIF() {
   (*_gif.pfnClose)(_gif.GIFFile.fHandle);
 }
 
-int GIF::playFrame(bool bSync, int *delayMilliseconds, void *pUser)
+int GIF::playFrame(bool bSync, int *delayMilliseconds, GIFUser *pUser)
 {
   int rc;
 
@@ -130,6 +132,13 @@ int GIF::playFrame(bool bSync, int *delayMilliseconds, void *pUser)
   if (GIFParseInfo(&_gif, 0))
   {
     _gif.pUser = pUser;
+    if((_gif.iHeight != _gif.iCanvasHeight)|(_gif.iCanvasWidth != _gif.iWidth)){
+      auto *previous = static_cast<uint16_t *>(prev_buffer);
+      previous += pUser->y * pUser->width;
+      auto * current = (uint16_t *)pUser->buffer;
+      current += pUser->y * pUser->width;
+      memcpy(current, previous, _gif.iCanvasHeight*pUser->width*2);
+    }
     if (_gif.iError == GIF_EMPTY_FRAME) // don't try to decode it
       return 0;
     if (_gif.pTurboBuffer) {
@@ -162,7 +171,8 @@ int GIF::playFrame(bool bSync, int *delayMilliseconds, void *pUser)
 frameReturn GIF::loop(uint8_t *outBuf, int16_t x, int16_t y, int16_t width) {
   GIFUser gifuser = {outBuf, x, y, width};
   int frameDelay;
-  int ret = playFrame(false, &frameDelay, (void *) &gifuser);
+  int ret = playFrame(false, &frameDelay, &gifuser);
+  prev_buffer = outBuf;
   if (ret == -1) {
     printf("GIF Error: %i\n", _gif.iError);
     return {frameStatus::ERROR, 0};
