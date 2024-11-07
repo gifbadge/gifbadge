@@ -1,7 +1,3 @@
-//
-// Created by gifbadge on 09/05/24.
-//
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>

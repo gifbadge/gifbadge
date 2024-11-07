@@ -1,7 +1,3 @@
-//
-// Created by gifbadge on 26/01/24.
-//
-
 #include "ui/device_group.h"
 
 #ifdef __cplusplus

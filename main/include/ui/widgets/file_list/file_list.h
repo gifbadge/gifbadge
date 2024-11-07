@@ -1,7 +1,3 @@
-//
-// Created by gifbadge on 26/01/24.
-//
-
 #ifndef LVGL_FILE_LIST_H
 #define LVGL_FILE_LIST_H
 

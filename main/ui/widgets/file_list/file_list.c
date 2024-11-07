@@ -1,7 +1,3 @@
-//
-// Created by gifbadge on 26/01/24.
-//
-
 #include <math.h>
 #include "ui/widgets/file_list/file_list.h"
 

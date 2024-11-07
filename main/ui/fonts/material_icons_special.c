@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Size: 180 px
  * Bpp: 1
- * Opts: --bpp 1 --size 180 --format lvgl --lv-include lvgl.h --font /home/gifbadge/esp32badge_software/MaterialSymbolsOutlined[FILL,GRAD,opsz,wght].ttf -r0xe1e0,0xe3f4 -o /home/gifbadge/esp32badge_software/main/ui/fonts//material_icons_special.c
+ * Opts: --bpp 1 --size 180 --format lvgl --lv-include lvgl.h --font MaterialSymbolsOutlined[FILL,GRAD,opsz,wght].ttf -r0xe1e0,0xe3f4 -o ui/fonts//material_icons_special.c
  ******************************************************************************/
 
 #ifdef LV_LVGL_H_INCLUDE_SIMPLE

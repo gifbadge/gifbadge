@@ -1,7 +1,3 @@
-//
-// Created by gifbadge on 27/12/23.
-//
-
 #include <driver/ledc.h>
 #include "log.h"
 #include "drivers/backlight_ledc.h"

@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Size: 56 px
  * Bpp: 1
- * Opts: --bpp 1 --size 56 --format lvgl --lv-include lvgl.h --font /home/gifbadge/esp32badge_software/MaterialSymbolsOutlined[FILL,GRAD,opsz,wght].ttf -r0xe3f4,0xe897,0xe41b,0xe41b,0xe425,0xe161,0xe5c9,0xe3ab,0xe2c7,0xe2c8,0xe623,0xf80e,0xf568,0xe5d8 -o /home/gifbadge/esp32badge_software/main/ui/fonts/material_icons_56.c
+ * Opts: --bpp 1 --size 56 --format lvgl --lv-include lvgl.h --font MaterialSymbolsOutlined[FILL,GRAD,opsz,wght].ttf -r0xe3f4,0xe897,0xe41b,0xe41b,0xe425,0xe161,0xe5c9,0xe3ab,0xe2c7,0xe2c8,0xe623,0xf80e,0xf568,0xe5d8 -o main/ui/fonts/material_icons_56.c
  ******************************************************************************/
 
 #ifdef LV_LVGL_H_INCLUDE_SIMPLE

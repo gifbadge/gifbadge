@@ -1,7 +1,3 @@
-//
-// Created by gifbadge on 26/01/24.
-//
-
 #ifndef LVGL_FILE_SELECT_H
 #define LVGL_FILE_SELECT_H
 #include <lvgl.h>

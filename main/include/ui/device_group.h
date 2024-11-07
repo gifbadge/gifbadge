@@ -1,7 +1,3 @@
-//
-// Created by gifbadge on 26/01/24.
-//
-
 #ifndef LVGL_DEVICE_GROUP_H
 #define LVGL_DEVICE_GROUP_H
 #ifdef __cplusplus
