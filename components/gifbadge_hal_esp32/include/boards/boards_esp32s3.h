@@ -30,11 +30,20 @@ public:
  const char *swVersion() override;
   void reset() override;
   char *serialNumber() override;
+  void BootInfo() override;
+  bool OtaCheck() override;
+  OtaError OtaValidate() override;
+  void OtaInstall() override;
+  int OtaStatus() override;
 
  protected:
  esp_pm_lock_handle_t pmLockHandle = nullptr;
  Config_NVS *_config;
  char serial[18];
+
+ static void OtaInstallTask(void *arg);
+  TaskHandle_t _ota_task_handle;
+  int _ota_status;
 
 };
 }

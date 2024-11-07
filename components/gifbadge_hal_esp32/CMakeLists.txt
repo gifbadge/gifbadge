@@ -27,7 +27,6 @@ if (ESP_PLATFORM)
             "drivers/VbusGpio.cpp"
             "esp_efuse_custom_table.c"
             "hw_init.cpp"
-            "ota.cpp"
             INCLUDE_DIRS public_include
             PRIV_INCLUDE_DIRS include
             REQUIRES

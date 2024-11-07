@@ -81,10 +81,8 @@ class OTAImage : public ErrorImage {
     _delay = 500;
   }
   frameReturn loop(uint8_t *outBuf, int16_t x, int16_t y, int16_t width) override {
-#ifdef ESP_PLATFORM
-    int percent = OTA::ota_status();
+    int percent = get_board()->OtaStatus();
     sprintf(_error, "Update In Progress\n%d%%", percent);
-#endif
     return ErrorImage::loop(outBuf, x, y, width);
   }
   bool animated() override {

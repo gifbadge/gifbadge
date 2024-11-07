@@ -27,6 +27,16 @@ enum CHARGE_POWER{
   CHARGE_HIGH,
 };
 
+/*!
+ * OTA Validation return value
+ */
+enum class OtaError {
+  OK = 0,
+  WRONG_CHIP,
+  WRONG_BOARD,
+  SAME_VERSION,
+};
+
 class Board {
  public:
   Board() = default;
@@ -56,6 +66,13 @@ class Board {
   virtual const char *swVersion() = 0;
   virtual char *serialNumber() = 0;
   virtual void lateInit() = 0;
+
+  // OTA Stuff
+  virtual void BootInfo() {};
+  virtual bool OtaCheck() { return false;};
+  virtual OtaError OtaValidate() { return OtaError::OK; };
+  virtual void OtaInstall() {};
+  virtual int OtaStatus() {return 100;};
 
   enum class WAKEUP_SOURCE {
     NONE,

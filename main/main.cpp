@@ -117,10 +117,8 @@ extern "C" void app_main(void) {
 
   TaskHandle_t display_task_handle = nullptr;
 
-//  dumpDebugTimerInit();
-#ifdef ESP_PLATFORM
-  OTA::bootInfo();
-#endif
+  dumpDebugTimerInit();
+  board->BootInfo();
 
   lvgl_init(board);
 
@@ -165,20 +163,16 @@ extern "C" void app_main(void) {
             vTaskDelay(200 / portTICK_PERIOD_MS);
             xTaskNotifyIndexed(lvglHandle, 0, LVGL_STOP, eSetValueWithOverwrite);
             //Check for OTA File
-#ifdef ESP_PLATFORM
-            if (OTA::check()) {
+            if (board->OtaCheck()) {
               xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_OTA, eSetValueWithOverwrite);
               vTaskDelay(100 / portTICK_PERIOD_MS);
-              OTA::install();
+              board->OtaInstall();
               currentState = MAIN_OTA;
               break;
             }
             else {
               xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_FILE, eSetValueWithOverwrite);
             }
-#else
-            xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_FILE, eSetValueWithOverwrite);
-#endif
           }
           break;
         case MAIN_USB:
