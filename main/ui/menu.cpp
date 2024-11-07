@@ -270,6 +270,7 @@ void battery_symbol_update(lv_obj_t *cont) {
     lv_image_set_src(symbol, LV_SYMBOL_DUMMY "\uea0b");
     lv_obj_set_style_text_color(symbol, lv_color_hex(0x50C878), LV_PART_MAIN); //Green
   } else {
+    lv_image_set_src(symbol, LV_SYMBOL_DUMMY);
     lv_obj_add_state(cont, LV_OBJ_FLAG_HIDDEN);
     lv_obj_set_style_bg_opa(cont, LV_OPA_TRANSP, LV_PART_MAIN);
   }
