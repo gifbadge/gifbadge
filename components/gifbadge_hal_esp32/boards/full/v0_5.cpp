@@ -49,7 +49,6 @@ esp32::s3::full::v0_5::v0_5() {
 
   _pmic->Init();
 
-  _battery = new battery_max17048(_i2c, GPIO_NUM_0);
 }
 
 Battery *esp32::s3::full::v0_5::getBattery() {

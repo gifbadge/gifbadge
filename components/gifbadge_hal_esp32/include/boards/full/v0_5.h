@@ -49,7 +49,6 @@ class v0_5 : public Boards::esp32::s3::esp32s3_sdmmc {
   PmicNpm1300 *_pmic;
 
   void *buffer;
-  battery_max17048 *_battery;
   esp_io_expander_handle_t _io_expander = nullptr;
   Gpio *_card_detect = nullptr;
   PmicNpm1300Led *_vbus_led = nullptr;
