@@ -178,12 +178,7 @@ Charger *esp32::s3::full::v0_5::getCharger() {
   return _pmic;
 }
 void esp32::s3::full::v0_5::debugInfo() {
-  LOGI(TAG,
-       "MAX17048 SOC: %i, Voltage %fV NPM1300 SOC: %i, Voltage %fV",
-       _battery->getSoc(),
-       _battery->BatteryVoltage(),
-       _pmic->getSoc(),
-       _pmic->BatteryVoltage());
+  _pmic->DebugLog();
 }
 void esp32::s3::full::v0_5::VbusCallback(bool state) {
   LOGI(TAG, "Vbus connected: %s", state ? "True" : "False");

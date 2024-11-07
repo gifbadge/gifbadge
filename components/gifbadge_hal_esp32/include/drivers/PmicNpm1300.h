@@ -131,6 +131,8 @@ class PmicNpm1300 final : public Battery, public Charger, public Vbus {
   bool VbusConnected() override;
   void VbusConnectedCallback(void (*callback)(bool));
 
+  void DebugLog();
+
  private:
   I2C *_i2c;
   double _voltage = 0;

@@ -6,7 +6,7 @@
 #include <soc/gpio_sig_map.h>
 #include <cmath>
 
-static const char *TAG = "mfd_npm1300";
+static const char *TAG = "PmicNpm1300";
 
 static void irq(void *arg) {
   auto pmic = static_cast<PmicNpm1300 *>(arg);
@@ -497,6 +497,11 @@ void PmicNpm1300::VbusConnectedCallback(void (*callback)(bool)) {
     _vbus_callback((status&NPMX_VBUSIN_STATUS_CONNECTED_MASK)==1);
   }
 }
+void PmicNpm1300::DebugLog() {
+  LOGI(TAG, "SOC: %i, Voltage %fV", getSoc(), BatteryVoltage());
+  LOGI(TAG, "Temperature: %fC, Current %fA", BatteryTemperature(), BatteryCurrent());
+}
+
 
 void PmicNpm1300Gpio::GpioConfig(GpioDirection direction, GpioPullMode pull) {
   npmx_gpio_pull_t pull_mode = NPMX_GPIO_PULL_DOWN;
