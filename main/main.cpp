@@ -19,11 +19,6 @@ void dumpDebugFunc(TimerHandle_t) {
   args->pmLock();
   args->debugInfo();
 
-  LOGI(TAG, "SOC: %i", args->getBattery()->getSoc());
-  LOGI(TAG, "Voltage: %f", args->getBattery()->BatteryVoltage());
-//    LOGI(TAG, "Rate: %f", args->getBattery()->getRate());
-//    LOGI(TAG, "State: %d", static_cast<int>(args->getBattery()->status()));
-
 //  TaskStatus_t tasks[20];
 //  unsigned int count = uxTaskGetSystemState(tasks, 20, nullptr);
 //  for (unsigned int i = 0; i < count; i++) {
