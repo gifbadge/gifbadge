@@ -169,7 +169,21 @@ void PmicNpm1300::inserted() {
 }
 
 Battery::State PmicNpm1300::status() {
-  return Battery::State::ERROR;
+  uint8_t status;
+  npmx_charger_status_get(npmx_charger_get(&_npmx_instance, 0), &status);
+  if(!(status & NPMX_CHARGER_STATUS_BATTERY_DETECTED_MASK)){
+    return Battery::State::NOT_PRESENT;
+  }
+  if(_charge_error != Charger::ChargeError::NONE){
+    return Battery::State::ERROR;
+  }
+  if(status & (NPMX_CHARGER_STATUS_TRICKLE_CHARGE_MASK | NPMX_CHARGER_STATUS_CONSTANT_CURRENT_MASK | NPMX_CHARGER_STATUS_CONSTANT_VOLTAGE_MASK)){
+    return Battery::State::CHARGING;
+  }
+  if(!VbusConnected()){
+    return Battery::State::DISCHARGING;
+  }
+  return Battery::State::OK;
 }
 
 void PmicNpm1300::Buck1Set(uint32_t millivolts) {
