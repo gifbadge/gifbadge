@@ -20,18 +20,10 @@ static const char *TAG = "MENU";
 static lv_disp_t *disp;
 static TaskHandle_t lvgl_task;
 static flushCbData cbData;
-#ifdef ESP_PLATFORM
-#include <esp_timer.h>
-static esp_timer_handle_t lvgl_tick_timer;
-#else
 static TimerHandle_t tickHandle;
-#endif
 static SemaphoreHandle_t lvgl_mux = nullptr;
 static SemaphoreHandle_t flushSem;
 static SemaphoreHandle_t lvgl_open = nullptr;
-
-
-
 
 //Exported Variables
 extern "C" {
@@ -102,11 +94,7 @@ void lvgl_close() {
   }
 
   vTaskDelay(100 / portTICK_PERIOD_MS); //Wait some time so the task can finish
-#ifdef ESP_PLATFORM
-  ESP_ERROR_CHECK(esp_timer_stop(lvgl_tick_timer));
-#else
   xTimerStop(tickHandle, 0);
-#endif
   get_board()->pmRelease();
   LOGI(TAG, "Close Done");
 }
@@ -206,19 +194,7 @@ void lvgl_init(Boards::Board *board) {
   flushSem = xSemaphoreCreateBinary();
   lvgl_open = xSemaphoreCreateRecursiveMutex();
 
-#ifdef ESP_PLATFORM
-  const esp_timer_create_args_t lvgl_tick_timer_args = {
-      .callback = reinterpret_cast<esp_timer_cb_t>(&tick),
-      .arg = nullptr,
-      .dispatch_method = ESP_TIMER_TASK,
-      .name = "lvgl_tick",
-      .skip_unhandled_events = true
-  };
-  lvgl_tick_timer = nullptr;
-  ESP_ERROR_CHECK(esp_timer_create(&lvgl_tick_timer_args, &lvgl_tick_timer));
-#else
   tickHandle = xTimerCreate("lvglTick", 10/portTICK_PERIOD_MS, pdTRUE, nullptr, tick);
-#endif
 
   xTaskCreate(task, "LVGL", 7*1024, nullptr, LVGL_TASK_PRIORITY, &lvgl_task);
 
@@ -349,11 +325,8 @@ void lvgl_wake_up() {
     vTaskResume(lvgl_task);
     xTaskNotifyIndexed(lvgl_task, 0, LVGL_RESUME, eSetValueWithOverwrite);
 
-#ifdef ESP_PLATFORM
-    ESP_ERROR_CHECK(esp_timer_start_periodic(lvgl_tick_timer, LVGL_TICK_PERIOD_MS * 1000));
-#else
     xTimerStart(tickHandle, 0);
-#endif
+
     if (lvgl_lock(-1)) {
       lv_group_t *g = lv_group_create();
       lv_group_set_default(g);
