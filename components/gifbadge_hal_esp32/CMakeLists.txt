@@ -10,7 +10,7 @@ if (ESP_PLATFORM)
             "boards/board_esp32s3_sdmmc.cpp"
             "boards/mini/v0.cpp"
             "boards/full/v0_2_v0_4_common.cpp"
-            "boards/full/v0_5.cpp"
+            "boards/full/v0_6.cpp"
             "boards/full/v0_2.cpp"
             "boards/full/v0_4.cpp"
             "boards/mini/v0_1.cpp"

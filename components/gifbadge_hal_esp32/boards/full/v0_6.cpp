@@ -1,4 +1,4 @@
-#include "boards/full/v0_5.h"
+#include "boards/full/v0_6.h"
 
 #include <esp_pm.h>
 #include "log.h"
@@ -11,7 +11,7 @@
 
 #define USB_ENABLE
 
-static const char *TAG = "Board::esp32::s3::full::v0_5";
+static const char *TAG = "Board::esp32::s3::full::v0_6";
 
 static bool checkSdState(Gpio *gpio) {
   return !gpio->GpioRead();
@@ -19,7 +19,7 @@ static bool checkSdState(Gpio *gpio) {
 
 namespace Boards {
 
-esp32::s3::full::v0_5::v0_5() {
+esp32::s3::full::v0_6::v0_6() {
   _config = new Config_NVS();
   gpio_install_isr_service(0);
   _i2c = new I2C(I2C_NUM_0, 47, 48, 100 * 1000, false);
@@ -51,27 +51,27 @@ esp32::s3::full::v0_5::v0_5() {
 
 }
 
-Battery *esp32::s3::full::v0_5::getBattery() {
+Battery *esp32::s3::full::v0_6::getBattery() {
   return _pmic;
 }
 
-Touch *esp32::s3::full::v0_5::getTouch() {
+Touch *esp32::s3::full::v0_6::getTouch() {
   return _touch;
 }
 
-Keys *esp32::s3::full::v0_5::getKeys() {
+Keys *esp32::s3::full::v0_6::getKeys() {
   return _keys;
 }
 
-Display *esp32::s3::full::v0_5::getDisplay() {
+Display *esp32::s3::full::v0_6::getDisplay() {
   return _display;
 }
 
-Backlight *esp32::s3::full::v0_5::getBacklight() {
+Backlight *esp32::s3::full::v0_6::getBacklight() {
   return _backlight;
 }
 
-void esp32::s3::full::v0_5::powerOff() {
+void esp32::s3::full::v0_6::powerOff() {
   LOGI(TAG, "Poweroff");
   vTaskDelay(100 / portTICK_PERIOD_MS);
   rtc_gpio_pullup_dis(GPIO_NUM_21);
@@ -82,7 +82,7 @@ void esp32::s3::full::v0_5::powerOff() {
   esp_deep_sleep_start();
 }
 
-BOARD_POWER esp32::s3::full::v0_5::powerState() {
+BOARD_POWER esp32::s3::full::v0_6::powerState() {
 //  if (powerConnected() != CHARGE_NONE) {
 //    return BOARD_POWER_NORMAL;
 //  }
@@ -96,14 +96,14 @@ BOARD_POWER esp32::s3::full::v0_5::powerState() {
   return BOARD_POWER_NORMAL;
 }
 
-bool esp32::s3::full::v0_5::storageReady() {
+bool esp32::s3::full::v0_6::storageReady() {
   return checkSdState(_card_detect);
 }
 
-const char *esp32::s3::full::v0_5::name() {
-  return "2.1\" 0.5";
+const char *esp32::s3::full::v0_6::name() {
+  return "2.1\" 0.6";
 }
-void esp32::s3::full::v0_5::lateInit() {
+void esp32::s3::full::v0_6::lateInit() {
   buffer = heap_caps_malloc(480 * 480 + 0x6100, MALLOC_CAP_INTERNAL);
   esp_rom_gpio_connect_in_signal(GPIO_MATRIX_CONST_ZERO_INPUT,
                                  USB_SRP_BVALID_IN_IDX,
@@ -165,22 +165,22 @@ void esp32::s3::full::v0_5::lateInit() {
   }
 
 }
-Board::WAKEUP_SOURCE esp32::s3::full::v0_5::bootReason() {
+Board::WAKEUP_SOURCE esp32::s3::full::v0_6::bootReason() {
   if (esp_reset_reason() != ESP_RST_POWERON) {
     return Board::WAKEUP_SOURCE::REBOOT;
   }
   return _pmic->GetWakeup();
 }
-Vbus *esp32::s3::full::v0_5::getVbus() {
+Vbus *esp32::s3::full::v0_6::getVbus() {
   return _pmic;
 }
-Charger *esp32::s3::full::v0_5::getCharger() {
+Charger *esp32::s3::full::v0_6::getCharger() {
   return _pmic;
 }
-void esp32::s3::full::v0_5::debugInfo() {
+void esp32::s3::full::v0_6::debugInfo() {
   _pmic->DebugLog();
 }
-void esp32::s3::full::v0_5::VbusCallback(bool state) {
+void esp32::s3::full::v0_6::VbusCallback(bool state) {
   LOGI(TAG, "Vbus connected: %s", state ? "True" : "False");
   if (state) {
     esp_rom_gpio_connect_in_signal(GPIO_MATRIX_CONST_ONE_INPUT, USB_SRP_BVALID_IN_IDX, false);

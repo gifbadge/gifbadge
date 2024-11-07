@@ -17,10 +17,10 @@
 #include "drivers/keys_generic.h"
 
 namespace Boards::esp32::s3::full {
-class v0_5 : public Boards::esp32::s3::esp32s3_sdmmc {
+class v0_6 : public Boards::esp32::s3::esp32s3_sdmmc {
  public:
-  v0_5();
-  ~v0_5() override = default;
+  v0_6();
+  ~v0_6() override = default;
 
   Battery *getBattery() override;
   Touch *getTouch() override;

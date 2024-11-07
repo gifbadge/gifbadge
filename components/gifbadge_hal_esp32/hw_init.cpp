@@ -9,7 +9,7 @@ static Boards::Board *global_board;
 #include "boards/mini/v0_1.h"
 #include "boards/full/v0_2.h"
 #include "boards/full/v0_4.h"
-#include "boards/full/v0_5.h"
+#include "boards/full/v0_6.h"
 #include "boards/mini/v0_3.h"
 
 Boards::Board *get_board() {
@@ -33,6 +33,9 @@ Boards::Board *get_board() {
         break;
       case BOARD_1_28_V0_3:
         global_board = new Boards::esp32::mini::v0_3();
+        break;
+      case BOARD_2_1_V0_6:
+        global_board = new Boards::esp32::s3::full::v0_6();
         break;
       default:
         return nullptr;
