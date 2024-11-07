@@ -76,4 +76,10 @@ bool esp32::mini::v0::usbConnected() {
 void esp32::mini::v0::lateInit() {
 
 }
+
+int esp32::mini::v0::usbCallBack(tusb_msc_callback_t callback) {
+  tinyusb_msc_register_callback(TINYUSB_MSC_EVENT_MOUNT_CHANGED, callback);
+  return 0;
+}
+
 }

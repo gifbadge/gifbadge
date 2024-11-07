@@ -42,6 +42,7 @@ class v0 : public Boards::esp32::s3::esp32s3 {
   keys_gpio *_keys;
   display_gc9a01 *_display;
   Backlight *_backlight;
+  int usbCallBack(tusb_msc_callback_t callback);
 };
 }
 }
