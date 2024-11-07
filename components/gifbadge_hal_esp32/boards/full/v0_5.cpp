@@ -11,7 +11,7 @@
 
 #define USB_ENABLE
 
-static const char *TAG = "board_2_1_v0_5";
+static const char *TAG = "Board::esp32::s3::full::v0_5";
 
 static bool checkSdState(Gpio *gpio) {
   return !gpio->GpioRead();
