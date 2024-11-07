@@ -149,6 +149,11 @@ static inline uint8_t asigmoidal(uint16_t voltage, uint16_t minVoltage = 2800, u
 }
 
 int PmicNpm1300::getSoc() {
+  uint8_t status;
+  npmx_charger_status_get(npmx_charger_get(&_npmx_instance, 0), &status);
+  if(status & NPMX_CHARGER_STATUS_COMPLETED_MASK){
+    return 100;
+  }
   return asigmoidal(static_cast<uint16_t>(_vbat));
 }
 
