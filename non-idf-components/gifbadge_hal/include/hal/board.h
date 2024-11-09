@@ -21,12 +21,6 @@ enum BoardPower {
   BOARD_POWER_CRITICAL,
 };
 
-enum ChargePower{
-  CHARGE_NONE,
-  CHARGE_LOW,
-  CHARGE_HIGH,
-};
-
 /*!
  * OTA Validation return value
  */
