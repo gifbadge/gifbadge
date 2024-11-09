@@ -51,27 +51,27 @@ esp32::s3::full::v0_6::v0_6() {
 
 }
 
-Battery *esp32::s3::full::v0_6::getBattery() {
+Battery *esp32::s3::full::v0_6::GetBattery() {
   return _pmic;
 }
 
-Touch *esp32::s3::full::v0_6::getTouch() {
+Touch *esp32::s3::full::v0_6::GetTouch() {
   return _touch;
 }
 
-Keys *esp32::s3::full::v0_6::getKeys() {
+Keys *esp32::s3::full::v0_6::GetKeys() {
   return _keys;
 }
 
-Display *esp32::s3::full::v0_6::getDisplay() {
+Display *esp32::s3::full::v0_6::GetDisplay() {
   return _display;
 }
 
-Backlight *esp32::s3::full::v0_6::getBacklight() {
+Backlight *esp32::s3::full::v0_6::GetBacklight() {
   return _backlight;
 }
 
-void esp32::s3::full::v0_6::powerOff() {
+void esp32::s3::full::v0_6::PowerOff() {
   LOGI(TAG, "Poweroff");
   vTaskDelay(100 / portTICK_PERIOD_MS);
   rtc_gpio_pullup_dis(GPIO_NUM_21);
@@ -82,7 +82,7 @@ void esp32::s3::full::v0_6::powerOff() {
   esp_deep_sleep_start();
 }
 
-BOARD_POWER esp32::s3::full::v0_6::powerState() {
+BoardPower esp32::s3::full::v0_6::PowerState() {
 //  if (powerConnected() != CHARGE_NONE) {
 //    return BOARD_POWER_NORMAL;
 //  }
@@ -96,14 +96,14 @@ BOARD_POWER esp32::s3::full::v0_6::powerState() {
   return BOARD_POWER_NORMAL;
 }
 
-bool esp32::s3::full::v0_6::storageReady() {
+bool esp32::s3::full::v0_6::StorageReady() {
   return checkSdState(_card_detect);
 }
 
-const char *esp32::s3::full::v0_6::name() {
+const char *esp32::s3::full::v0_6::Name() {
   return "2.1\" 0.6";
 }
-void esp32::s3::full::v0_6::lateInit() {
+void esp32::s3::full::v0_6::LateInit() {
   buffer = heap_caps_malloc(480 * 480 + 0x6100, MALLOC_CAP_INTERNAL);
   esp_rom_gpio_connect_in_signal(GPIO_MATRIX_CONST_ZERO_INPUT,
                                  USB_SRP_BVALID_IN_IDX,
@@ -157,7 +157,7 @@ void esp32::s3::full::v0_6::lateInit() {
 
   _pmic->EnableADC();
 
-  if (storageReady()) {
+  if (StorageReady()) {
     _card_detect->GpioInt(Gpio::GpioIntDirection::RISING, esp_restart);
     mount(GPIO_NUM_40, GPIO_NUM_41, GPIO_NUM_39, GPIO_NUM_38, GPIO_NUM_44, GPIO_NUM_42, GPIO_NUM_NC, 4, GPIO_NUM_NC);
   } else {
@@ -165,19 +165,19 @@ void esp32::s3::full::v0_6::lateInit() {
   }
 
 }
-Board::WAKEUP_SOURCE esp32::s3::full::v0_6::bootReason() {
+Board::WAKEUP_SOURCE esp32::s3::full::v0_6::BootReason() {
   if (esp_reset_reason() != ESP_RST_POWERON) {
     return Board::WAKEUP_SOURCE::REBOOT;
   }
   return _pmic->GetWakeup();
 }
-Vbus *esp32::s3::full::v0_6::getVbus() {
+Vbus *esp32::s3::full::v0_6::GetVbus() {
   return _pmic;
 }
-Charger *esp32::s3::full::v0_6::getCharger() {
+Charger *esp32::s3::full::v0_6::GetCharger() {
   return _pmic;
 }
-void esp32::s3::full::v0_6::debugInfo() {
+void esp32::s3::full::v0_6::DebugInfo() {
   _pmic->DebugLog();
 }
 void esp32::s3::full::v0_6::VbusCallback(bool state) {

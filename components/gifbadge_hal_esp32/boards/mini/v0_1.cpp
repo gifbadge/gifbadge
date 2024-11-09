@@ -83,34 +83,34 @@ esp32::mini::v0_1::v0_1() {
   _vbus = new VbusGpio(GPIO_VBUS_DETECT);
 }
 
-Battery *esp32::mini::v0_1::getBattery() {
+Battery *esp32::mini::v0_1::GetBattery() {
   return _battery;
 }
 
-Touch *esp32::mini::v0_1::getTouch() {
+Touch *esp32::mini::v0_1::GetTouch() {
   return nullptr;
 }
 
-Keys *esp32::mini::v0_1::getKeys() {
+Keys *esp32::mini::v0_1::GetKeys() {
   return _keys;
 }
 
-Display *esp32::mini::v0_1::getDisplay() {
+Display *esp32::mini::v0_1::GetDisplay() {
   return _display;
 }
 
-Backlight *esp32::mini::v0_1::getBacklight() {
+Backlight *esp32::mini::v0_1::GetBacklight() {
   return _backlight;
 }
 
-void esp32::mini::v0_1::powerOff() {
+void esp32::mini::v0_1::PowerOff() {
   LOGI(TAG, "Poweroff");
   vTaskDelay(100 / portTICK_PERIOD_MS);
   gpio_set_level(GPIO_SHUTDOWN, 1);
   gpio_hold_en(GPIO_SHUTDOWN);
 }
 
-BOARD_POWER esp32::mini::v0_1::powerState() {
+BoardPower esp32::mini::v0_1::PowerState() {
   //TODO Detect USB power status, implement critical level
   if (_vbus->VbusConnected()) {
     return BOARD_POWER_NORMAL;
@@ -125,21 +125,21 @@ BOARD_POWER esp32::mini::v0_1::powerState() {
   return BOARD_POWER_NORMAL;
 }
 
-bool esp32::mini::v0_1::storageReady() {
+bool esp32::mini::v0_1::StorageReady() {
   if (!gpio_get_level(GPIO_CARD_DETECT)) {
     return true;
   }
   return false;
 }
 
-const char *esp32::mini::v0_1::name() {
+const char *esp32::mini::v0_1::Name() {
   return "1.28\" 0.1-0.2";
 }
 
-void esp32::mini::v0_1::lateInit() {
+void esp32::mini::v0_1::LateInit() {
 
 }
-Vbus *esp32::mini::v0_1::getVbus() {
+Vbus *esp32::mini::v0_1::GetVbus() {
   return _vbus;
 }
 }

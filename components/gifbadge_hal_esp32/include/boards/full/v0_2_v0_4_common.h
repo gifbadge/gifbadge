@@ -34,18 +34,18 @@ class v0_2v0_4 : public Boards::esp32::s3::esp32s3_sdmmc {
   v0_2v0_4();
   ~v0_2v0_4() override = default;
 
-  Battery *getBattery() override;
-  Touch *getTouch() override;
-  Keys *getKeys() override;
-  Display *getDisplay() override;
-  Backlight *getBacklight() override;
+  Battery *GetBattery() override;
+  Touch *GetTouch() override;
+  Keys *GetKeys() override;
+  Display *GetDisplay() override;
+  Backlight *GetBacklight() override;
 
-  void powerOff() override;
-  BOARD_POWER powerState() override;
-  bool storageReady() override;
-  void *turboBuffer() override { return buffer; }
-  void lateInit() override;
-  Vbus *getVbus() override;;
+  void PowerOff() override;
+  BoardPower PowerState() override;
+  bool StorageReady() override;
+  void *TurboBuffer() override { return buffer; }
+  void LateInit() override;
+  Vbus *GetVbus() override;;
 
  protected:
   I2C *_i2c;

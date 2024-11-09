@@ -8,11 +8,11 @@ namespace Boards::esp32::s3 {
   esp32s3_sdmmc() = default;
   ~esp32s3_sdmmc() override = default;
 
-  bool usbConnected() override;
-  StorageInfo storageInfo() override;
+  bool UsbConnected() override;
+  StorageInfo GetStorageInfo() override;
   int StorageFormat() override;
-  void reset() override;
-  int usbCallBack(tusb_msc_callback_t callback) override;
+  void Reset() override;
+  int UsbCallBack(tusb_msc_callback_t callback) override;
 
  protected:
   bool storageAvailable = false;

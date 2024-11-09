@@ -8,7 +8,7 @@ esp32::s3::full::v0_2::v0_2() {
   _battery->inserted(); //Set battery inserted, as we can't detect status on this revision
 }
 
-const char *esp32::s3::full::v0_2::name() {
+const char *esp32::s3::full::v0_2::Name() {
   return "2.1\" 0.2-0.3";
 }
 }

@@ -106,34 +106,34 @@ esp32::s3::full::v0_2v0_4::v0_2v0_4() {
   _vbus = new b2_1_v0_2v0_4_vbus(GPIO_NUM_0, _io_expander, 8);
 }
 
-Battery *esp32::s3::full::v0_2v0_4::getBattery() {
+Battery *esp32::s3::full::v0_2v0_4::GetBattery() {
   return _battery;
 }
 
-Touch *esp32::s3::full::v0_2v0_4::getTouch() {
+Touch *esp32::s3::full::v0_2v0_4::GetTouch() {
   return _touch;
 }
 
-Keys *esp32::s3::full::v0_2v0_4::getKeys() {
+Keys *esp32::s3::full::v0_2v0_4::GetKeys() {
   return _keys;
 }
 
-Display *esp32::s3::full::v0_2v0_4::getDisplay() {
+Display *esp32::s3::full::v0_2v0_4::GetDisplay() {
   return _display;
 }
 
-Backlight *esp32::s3::full::v0_2v0_4::getBacklight() {
+Backlight *esp32::s3::full::v0_2v0_4::GetBacklight() {
   return _backlight;
 }
 
-void esp32::s3::full::v0_2v0_4::powerOff() {
+void esp32::s3::full::v0_2v0_4::PowerOff() {
   LOGI(TAG, "Poweroff");
   vTaskDelay(100 / portTICK_PERIOD_MS);
   esp_io_expander_set_level(_io_expander, IO_EXPANDER_PIN_NUM_3, 1);
 
 }
 
-BOARD_POWER esp32::s3::full::v0_2v0_4::powerState() {
+BoardPower esp32::s3::full::v0_2v0_4::PowerState() {
   if (_vbus->VbusConnected()) {
     return BOARD_POWER_NORMAL;
   }
@@ -147,14 +147,14 @@ BOARD_POWER esp32::s3::full::v0_2v0_4::powerState() {
   return BOARD_POWER_NORMAL;
 }
 
-bool esp32::s3::full::v0_2v0_4::storageReady() {
+bool esp32::s3::full::v0_2v0_4::StorageReady() {
   return checkSdState(_io_expander);
 }
 
-void esp32::s3::full::v0_2v0_4::lateInit() {
+void esp32::s3::full::v0_2v0_4::LateInit() {
 
 }
-Vbus *esp32::s3::full::v0_2v0_4::getVbus() {
+Vbus *esp32::s3::full::v0_2v0_4::GetVbus() {
   return _vbus;
 }
 }

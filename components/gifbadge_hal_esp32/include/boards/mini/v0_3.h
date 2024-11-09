@@ -24,20 +24,20 @@ class v0_3 : public Boards::esp32::s3::esp32s3_sdmmc {
   v0_3();
   ~v0_3() override = default;
 
-  Battery *getBattery() override;
-  Touch *getTouch() override;
-  Keys *getKeys() override;
-  Display *getDisplay() override;
-  Backlight *getBacklight() override;
+  Battery *GetBattery() override;
+  Touch *GetTouch() override;
+  Keys *GetKeys() override;
+  Display *GetDisplay() override;
+  Backlight *GetBacklight() override;
 
-  void powerOff() override;
+  void PowerOff() override;
 
-  BOARD_POWER powerState() override;
-  bool storageReady() override;
-  const char *name() override;
-  void *turboBuffer() override { return buffer; }
-  void lateInit() override;
-  WAKEUP_SOURCE bootReason() override;;
+  BoardPower PowerState() override;
+  bool StorageReady() override;
+  const char *Name() override;
+  void *TurboBuffer() override { return buffer; }
+  void LateInit() override;
+  WAKEUP_SOURCE BootReason() override;;
 
  private:
   battery_max17048 *_battery;

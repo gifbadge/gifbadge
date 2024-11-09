@@ -105,7 +105,7 @@ static void StorageFormatOK(lv_event_t *e) {
 
 static void StorageRefresh(lv_event_t *e) {
   auto *fields = static_cast<StorageFields *>(lv_event_get_user_data(e));
-  StorageInfo info = get_board()->storageInfo();
+  StorageInfo info = get_board()->GetStorageInfo();
   lv_bar_set_value(fields->space_bar, static_cast<int>((info.free_bytes +  info.total_bytes/2)/info.total_bytes), LV_ANIM_OFF);
   lv_label_set_text_fmt(fields->space_label, "%llu/%lluMB", (info.total_bytes - info.free_bytes)/1000000, info.total_bytes/1000000);
 }
@@ -147,7 +147,7 @@ lv_obj_t *storage_menu() {
     lv_obj_t *cont_flex = lv_file_list_create(lv_scr_act());
     lv_file_list_icon_style(cont_flex, &icon_style);
 
-    StorageInfo info = get_board()->storageInfo();
+    StorageInfo info = get_board()->GetStorageInfo();
 
     auto *fields = static_cast<StorageFields *>(malloc(sizeof(StorageFields)));
     assert(fields != nullptr);

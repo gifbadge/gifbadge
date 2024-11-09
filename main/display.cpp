@@ -196,7 +196,7 @@ static int get_file(char *path) {
 static Image *openFile(const char *path, Display *display) {
   Image *in = ImageFactory(path);
   if (in) {
-    if (in->open(path, get_board()->turboBuffer()) != 0) {
+    if (in->open(path, get_board()->TurboBuffer()) != 0) {
       const char *lastError = in->getLastError();
       delete in;
       return new ErrorImage(display->size, "Error Displaying File\n%s\n%s", path, lastError);
@@ -265,16 +265,16 @@ static void slideShowStop() {
 void display_task(void *params) {
   auto *board = (Boards::Board *) params;
 
-  auto config = board->getConfig();
+  auto config = board->GetConfig();
 
-  auto display = board->getDisplay();
+  auto display = board->GetDisplay();
 
   slideShowTimer = xTimerCreate("slideshow", 100 / portTICK_PERIOD_MS, pdTRUE, nullptr, slideShowHandler);
 
   memset(display->buffer, 255, display->size.first * display->size.second * 2);
   display->write(0, 0, display->size.first, display->size.second, display->buffer);
 
-  board->getBacklight()->setLevel(board->getConfig()->getBacklight() * 10);
+  board->GetBacklight()->setLevel(board->GetConfig()->getBacklight() * 10);
 
   DISPLAY_OPTIONS last_mode = DISPLAY_NONE;
 
@@ -290,7 +290,7 @@ void display_task(void *params) {
   while (true) {
     uint32_t option;
     xTaskNotifyWaitIndexed(0, 0, 0xffffffff, &option, delay);
-    while (board->usbConnected()) {
+    while (board->UsbConnected()) {
       //If USB connected, clear any open files. Block until USB disconnected
       in.reset();
       closedir_sorted(&dir);

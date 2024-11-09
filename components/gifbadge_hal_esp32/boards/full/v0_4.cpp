@@ -37,7 +37,7 @@ esp32::s3::full::v0_4::v0_4() {
   ESP_ERROR_CHECK(esp_timer_start_periodic(batteryTimerHandle, 500 * 1000));
 }
 
-const char *esp32::s3::full::v0_4::name() {
+const char *esp32::s3::full::v0_4::Name() {
   return "2.1\" 0.4";
 }
 }

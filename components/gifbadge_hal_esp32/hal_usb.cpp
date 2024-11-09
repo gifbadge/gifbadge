@@ -238,7 +238,7 @@ void usb_init_mmc(int usb_sense, sdmmc_card_t **card) {
       "\x09\x04",                // 0: is supported language is English (0x0409)
       "GifBadge", // 1: Manufacturer
       "2.1",      // 2: Product
-      get_board()->serialNumber(),       // 3: Serials, should use chip ID
+      get_board()->SerialNumber(),       // 3: Serials, should use chip ID
       "", // 4: CDC Interface
       "GifBadge MSC Device",          // 5: MSC Interface
       nullptr                                     // NULL: Must be last. Indicates end of array

@@ -8,6 +8,6 @@ class v0_2 : public Boards::esp32::s3::full::v0_2v0_4 {
   v0_2();
   ~v0_2() override = default;
 
-  const char * name() override;
+  const char * Name() override;
 };
 }

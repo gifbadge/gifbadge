@@ -16,15 +16,15 @@ static const char *TAG = "MAIN";
 
 void dumpDebugFunc(TimerHandle_t) {
   auto *args = get_board();
-  args->pmLock();
-  args->debugInfo();
+  args->PmLock();
+  args->DebugInfo();
 
 //  TaskStatus_t tasks[20];
 //  unsigned int count = uxTaskGetSystemState(tasks, 20, nullptr);
 //  for (unsigned int i = 0; i < count; i++) {
 //    LOGI(TAG, "%s Highwater: %lu", tasks[i].pcTaskName, tasks[i].usStackHighWaterMark);
 //  }
-  args->pmRelease();
+  args->PmRelease();
 
 }
 
@@ -44,7 +44,7 @@ static void lowBatteryTask(TimerHandle_t) {
   TaskHandle_t display_task_handle;
 
   if (currentState != MAIN_OTA) {
-    switch (board->powerState()) {
+    switch (board->PowerState()) {
       case Boards::BOARD_POWER_NORMAL:
         if (currentState == MAIN_LOW_BATT) {
           currentState = MAIN_NORMAL;
@@ -61,7 +61,7 @@ static void lowBatteryTask(TimerHandle_t) {
         display_task_handle = xTaskGetHandle("display_task");
         xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_BATT, eSetValueWithOverwrite);
         vTaskDelay(15000 / portTICK_PERIOD_MS);
-        board->powerOff();
+        board->PowerOff();
         break;
     }
   }
@@ -89,7 +89,7 @@ static void usbCall(tinyusb_msc_event_t *e){
 
 extern "C" void app_main(void) {
   Boards::Board *board = get_board();
-  switch(board->bootReason()){
+  switch(board->BootReason()){
 
     case Boards::Board::WAKEUP_SOURCE::NONE:
       LOGI(TAG, "Wakeup Reason: None");
@@ -104,11 +104,11 @@ extern "C" void app_main(void) {
       LOGI(TAG, "Wakeup Reason: REBOOT");
       break;
   }
-  if(!(board->bootReason() == Boards::Board::WAKEUP_SOURCE::KEY || board->bootReason() == Boards::Board::WAKEUP_SOURCE::REBOOT)){
-    board->powerOff();
+  if(!(board->BootReason() == Boards::Board::WAKEUP_SOURCE::KEY || board->BootReason() == Boards::Board::WAKEUP_SOURCE::REBOOT)){
+    board->PowerOff();
   }
 
-  board->lateInit();
+  board->LateInit();
 
   TaskHandle_t display_task_handle = nullptr;
 
@@ -127,7 +127,7 @@ extern "C" void app_main(void) {
   xTaskCreate(display_task, "display_task", 5000, board, 2, &display_task_handle);
 #endif
 
-  if (!board->storageReady()) {
+  if (!board->StorageReady()) {
     xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_NO_STORAGE, eSetValueWithOverwrite);
     while (true){
       vTaskDelay(1000/portTICK_PERIOD_MS);
@@ -138,8 +138,8 @@ extern "C" void app_main(void) {
   TaskHandle_t lvglHandle = xTaskGetHandle("LVGL");
   initInputTimer(board);
 
-  board->usbCallBack(&usbCall);
-  if(board->usbConnected()){
+  board->UsbCallBack(&usbCall);
+  if(board->UsbConnected()){
     currentState = MAIN_USB;
   } else {
     currentState = MAIN_NORMAL;

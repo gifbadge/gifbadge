@@ -30,27 +30,27 @@ esp32::mini::v0::v0() {
   esp_pm_configure(&pm_config);
 }
 
-Battery *esp32::mini::v0::getBattery() {
+Battery *esp32::mini::v0::GetBattery() {
   return _battery;
 }
 
-Touch *esp32::mini::v0::getTouch() {
+Touch *esp32::mini::v0::GetTouch() {
   return nullptr;
 }
 
-Keys *esp32::mini::v0::getKeys() {
+Keys *esp32::mini::v0::GetKeys() {
   return _keys;
 }
 
-Display *esp32::mini::v0::getDisplay() {
+Display *esp32::mini::v0::GetDisplay() {
   return _display;
 }
 
-Backlight *esp32::mini::v0::getBacklight() {
+Backlight *esp32::mini::v0::GetBacklight() {
   return _backlight;
 }
 
-void esp32::mini::v0::powerOff() {
+void esp32::mini::v0::PowerOff() {
   esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_ON);
   rtc_gpio_pullup_en(static_cast<gpio_num_t>(0));
   rtc_gpio_pulldown_dis(static_cast<gpio_num_t>(0));
@@ -58,26 +58,26 @@ void esp32::mini::v0::powerOff() {
   esp_deep_sleep_start();
 }
 
-BOARD_POWER esp32::mini::v0::powerState() {
+BoardPower esp32::mini::v0::PowerState() {
   return BOARD_POWER_NORMAL;
 }
 
-StorageInfo esp32::mini::v0::storageInfo() {
-  return StorageInfo();
+StorageInfo esp32::mini::v0::GetStorageInfo() {
+  return GetStorageInfo();
 }
 
-const char *esp32::mini::v0::name() {
+const char *esp32::mini::v0::Name() {
   return "1.28\" 0.0";
 }
 
-bool esp32::mini::v0::usbConnected() {
+bool esp32::mini::v0::UsbConnected() {
   return tinyusb_msc_storage_in_use_by_usb_host();
 }
-void esp32::mini::v0::lateInit() {
+void esp32::mini::v0::LateInit() {
 
 }
 
-int esp32::mini::v0::usbCallBack(tusb_msc_callback_t callback) {
+int esp32::mini::v0::UsbCallBack(tusb_msc_callback_t callback) {
   tinyusb_msc_register_callback(TINYUSB_MSC_EVENT_MOUNT_CHANGED, callback);
   return 0;
 }

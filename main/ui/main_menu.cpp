@@ -20,19 +20,19 @@ static lv_obj_t * exit_callback() {
 
 static void BacklightSliderExitCallback(lv_event_t *e) {
   lv_obj_t *obj = lv_event_get_target_obj(e);
-  get_board()->getConfig()->setBacklight(lv_slider_get_value(obj));
+  get_board()->GetConfig()->setBacklight(lv_slider_get_value(obj));
   restore_group(static_cast<lv_obj_t *>(lv_event_get_user_data(e)));
 }
 
 static lv_obj_t *ShutdownCallback() {
-  get_board()->powerOff();
+  get_board()->PowerOff();
   return nullptr;
 }
 
 static void BacklightSliderChangedCallback(lv_event_t *e) {
   lv_obj_t *obj = lv_event_get_target_obj(e);
   int level = lv_slider_get_value(obj) * 10;
-  get_board()->getBacklight()->setLevel(level);
+  get_board()->GetBacklight()->setLevel(level);
 }
 
 static void mainMenuCleanup(lv_event_t *e){
@@ -105,7 +105,7 @@ void main_menu() {
     lv_group_add_obj(slider_group, slider);
     lv_obj_add_event_cb(slider, BacklightSliderChangedCallback, LV_EVENT_VALUE_CHANGED, backlight_button);
     lv_obj_add_event_cb(slider, BacklightSliderExitCallback, LV_EVENT_RELEASED, backlight_button);
-    lv_slider_set_value(slider, get_board()->getConfig()->getBacklight(), LV_ANIM_OFF);
+    lv_slider_set_value(slider, get_board()->GetConfig()->getBacklight(), LV_ANIM_OFF);
 
     subMenu(main_menu, "File Select", &FileOptions);
     subMenu(main_menu, "Storage", &storage_menu);

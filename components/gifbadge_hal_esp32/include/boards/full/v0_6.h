@@ -22,22 +22,22 @@ class v0_6 : public Boards::esp32::s3::esp32s3_sdmmc {
   v0_6();
   ~v0_6() override = default;
 
-  Battery *getBattery() override;
-  Touch *getTouch() override;
-  Keys *getKeys() override;
-  Display *getDisplay() override;
-  Backlight *getBacklight() override;
+  Battery *GetBattery() override;
+  Touch *GetTouch() override;
+  Keys *GetKeys() override;
+  Display *GetDisplay() override;
+  Backlight *GetBacklight() override;
 
-  void powerOff() override;
-  BOARD_POWER powerState() override;
-  bool storageReady() override;
-  void *turboBuffer() override { return buffer; };
-  const char *name() override;
-  void lateInit() override;
-  WAKEUP_SOURCE bootReason() override;
-  Vbus *getVbus() override;
-  Charger *getCharger() override;
-  void debugInfo() override;
+  void PowerOff() override;
+  BoardPower PowerState() override;
+  bool StorageReady() override;
+  void *TurboBuffer() override { return buffer; };
+  const char *Name() override;
+  void LateInit() override;
+  WAKEUP_SOURCE BootReason() override;
+  Vbus *GetVbus() override;
+  Charger *GetCharger() override;
+  void DebugInfo() override;
 
  protected:
   I2C *_i2c;

@@ -17,32 +17,32 @@ esp32::s3::esp32s3::esp32s3() {
   esp_pm_lock_create(ESP_PM_CPU_FREQ_MAX, 0, "Board Lock", &pmLockHandle);
   _config = new Config_NVS();
 }
-void esp32::s3::esp32s3::reset() {
+void esp32::s3::esp32s3::Reset() {
   esp_restart();
 }
 
-void esp32::s3::esp32s3::pmLock() {
+void esp32::s3::esp32s3::PmLock() {
   esp_pm_lock_acquire(pmLockHandle);
 }
 
-void esp32::s3::esp32s3::pmRelease() {
+void esp32::s3::esp32s3::PmRelease() {
   esp_pm_lock_release(pmLockHandle);
 }
 
-Config *esp32::s3::esp32s3::getConfig() {
+Config *esp32::s3::esp32s3::GetConfig() {
   return _config;
 }
 
-void esp32::s3::esp32s3::debugInfo() {
+void esp32::s3::esp32s3::DebugInfo() {
 //  esp_pm_dump_locks(stdout);
 //  heap_caps_print_heap_info(MALLOC_CAP_INTERNAL);
 //  heap_caps_print_heap_info(MALLOC_CAP_SPIRAM);
 }
 
-const char *esp32::s3::esp32s3::swVersion() {
+const char *esp32::s3::esp32s3::SwVersion() {
   return esp_app_get_description()->version;
 }
-char *esp32::s3::esp32s3::serialNumber() {
+char *esp32::s3::esp32s3::SerialNumber() {
   uint8_t mac[6] = {0};
   esp_efuse_mac_get_default(mac);
   sprintf(serial, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0],mac[1],mac[2],mac[3],mac[4],mac[5]);
@@ -233,7 +233,7 @@ void esp32::s3::esp32s3::OtaInstallTask(void *arg) {
     vTaskDelete(nullptr);
   }
   LOGI(TAG, "Prepare to restart system!");
-  board->reset();
+  board->Reset();
 }
 
 }

@@ -28,37 +28,37 @@ lv_obj_t *device_info() {
     lv_obj_t *board_name_label = lv_label_create(board_name);
     lv_obj_add_style(board_name, &menu_font_style, LV_PART_MAIN);
     char tmpStr[50];
-    snprintf(tmpStr, sizeof(tmpStr), "Version: %s", get_board()->name());
+    snprintf(tmpStr, sizeof(tmpStr), "Version: %s", get_board()->Name());
     lv_label_set_text(board_name_label, tmpStr);
 
     lv_obj_t *serial_number = lv_file_list_add(cont_flex, nullptr);
     lv_obj_t *serial_number_label = lv_label_create(serial_number);
     lv_obj_add_style(serial_number_label, &menu_font_style, LV_PART_MAIN);
-    snprintf(tmpStr, sizeof(tmpStr), "Serial: %s", get_board()->serialNumber());
+    snprintf(tmpStr, sizeof(tmpStr), "Serial: %s", get_board()->SerialNumber());
     lv_label_set_text(serial_number_label, tmpStr);
 
     lv_obj_t *version = lv_file_list_add(cont_flex, nullptr);
     lv_obj_t *version_label = lv_label_create(version);
     lv_obj_add_style(version_label, &menu_font_style, LV_PART_MAIN);
-    snprintf(tmpStr, sizeof(tmpStr), "SW Version: %s", get_board()->swVersion());
+    snprintf(tmpStr, sizeof(tmpStr), "SW Version: %s", get_board()->SwVersion());
     lv_label_set_text(version_label, tmpStr);
 
-    if(get_board()->getVbus() != nullptr){
+    if(get_board()->GetVbus() != nullptr){
       refresh_widget(cont_flex, [](lv_event_t *e){
         lv_obj_t *widget = lv_event_get_target_obj(e);
         lv_obj_t *label = lv_obj_get_child(widget, 0);
         char tmp_str[50];
-        snprintf(tmp_str, sizeof(tmp_str), "USB Current Limit: %imA", get_board()->getVbus()->VbusMaxCurrentGet());
+        snprintf(tmp_str, sizeof(tmp_str), "USB Current Limit: %imA", get_board()->GetVbus()->VbusMaxCurrentGet());
         lv_label_set_text(label, tmp_str);
       });
     }
 
-    if(get_board()->getCharger() != nullptr){
+    if(get_board()->GetCharger() != nullptr){
       refresh_widget(cont_flex, [](lv_event_t *e){
         lv_obj_t *widget = lv_event_get_target_obj(e);
         lv_obj_t *label = lv_obj_get_child(widget, 0);
         char tmp_str[50];
-        snprintf(tmp_str, sizeof(tmpStr), "Battery Ichg Limit: %imA", get_board()->getCharger()->ChargeCurrentGet());
+        snprintf(tmp_str, sizeof(tmpStr), "Battery Ichg Limit: %imA", get_board()->GetCharger()->ChargeCurrentGet());
         lv_label_set_text(label, tmp_str);
       });
 
@@ -66,7 +66,7 @@ lv_obj_t *device_info() {
         lv_obj_t *widget = lv_event_get_target_obj(e);
         lv_obj_t *label = lv_obj_get_child(widget, 0);
         char tmp_str[50];
-        snprintf(tmp_str, sizeof(tmpStr), "Battery Idchg Limit: %imA", get_board()->getCharger()->DischargeCurrentGet());
+        snprintf(tmp_str, sizeof(tmpStr), "Battery Idchg Limit: %imA", get_board()->GetCharger()->DischargeCurrentGet());
         lv_label_set_text(label, tmp_str);
       });
 
@@ -74,7 +74,7 @@ lv_obj_t *device_info() {
         lv_obj_t *widget = lv_event_get_target_obj(e);
         lv_obj_t *label = lv_obj_get_child(widget, 0);
         char tmp_str[50];
-        snprintf(tmp_str, sizeof(tmpStr), "Battery Vterm: %imV", get_board()->getCharger()->ChargeVtermGet());
+        snprintf(tmp_str, sizeof(tmpStr), "Battery Vterm: %imV", get_board()->GetCharger()->ChargeVtermGet());
         lv_label_set_text(label, tmp_str);
       });
 
@@ -82,7 +82,7 @@ lv_obj_t *device_info() {
         lv_obj_t *widget = lv_event_get_target_obj(e);
         lv_obj_t *label = lv_obj_get_child(widget, 0);
         char tmp_str[50];
-        snprintf(tmp_str, sizeof(tmpStr), "Charge Status: %s", get_board()->getCharger()->ChargeStatusString(get_board()->getCharger()->ChargeStatusGet()));
+        snprintf(tmp_str, sizeof(tmpStr), "Charge Status: %s", get_board()->GetCharger()->ChargeStatusString(get_board()->GetCharger()->ChargeStatusGet()));
         lv_label_set_text(label, tmp_str);
       });
     }
@@ -91,26 +91,26 @@ lv_obj_t *device_info() {
       lv_obj_t *widget = lv_event_get_target_obj(e);
       lv_obj_t *label = lv_obj_get_child(widget, 0);
       char tmp_str[50];
-      snprintf(tmp_str, sizeof(tmpStr), "Battery Voltage: %.2fV", get_board()->getBattery()->BatteryVoltage());
+      snprintf(tmp_str, sizeof(tmpStr), "Battery Voltage: %.2fV", get_board()->GetBattery()->BatteryVoltage());
       lv_label_set_text(label, tmp_str);
     });
 
-    if(get_board()->getBattery()->BatteryTemperature() != NAN){
+    if(get_board()->GetBattery()->BatteryTemperature() != NAN){
       refresh_widget(cont_flex, [](lv_event_t *e){
         lv_obj_t *widget = lv_event_get_target_obj(e);
         lv_obj_t *label = lv_obj_get_child(widget, 0);
         char tmp_str[50];
-        snprintf(tmp_str, sizeof(tmpStr), "Battery Temperature: %.1f°C", get_board()->getBattery()->BatteryTemperature());
+        snprintf(tmp_str, sizeof(tmpStr), "Battery Temperature: %.1f°C", get_board()->GetBattery()->BatteryTemperature());
         lv_label_set_text(label, tmp_str);
       });
     }
 
-    if(get_board()->getBattery()->BatteryCurrent() != NAN){
+    if(get_board()->GetBattery()->BatteryCurrent() != NAN){
       refresh_widget(cont_flex, [](lv_event_t *e){
         lv_obj_t *widget = lv_event_get_target_obj(e);
         lv_obj_t *label = lv_obj_get_child(widget, 0);
         char tmp_str[50];
-        snprintf(tmp_str, sizeof(tmpStr), "Battery Current: %.3fA", get_board()->getBattery()->BatteryCurrent());
+        snprintf(tmp_str, sizeof(tmpStr), "Battery Current: %.3fA", get_board()->GetBattery()->BatteryCurrent());
         lv_label_set_text(label, tmp_str);
       });
     }

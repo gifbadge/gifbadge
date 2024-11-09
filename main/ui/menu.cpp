@@ -84,7 +84,7 @@ void lvgl_unlock() {
 
 void lvgl_close() {
   LOGI(TAG, "Close");
-  get_board()->getDisplay()->onColorTransDone(nullptr);
+  get_board()->GetDisplay()->onColorTransDone(nullptr);
 
   if (lvgl_lock(-1)) {
     destroy_screens();
@@ -95,7 +95,7 @@ void lvgl_close() {
 
   vTaskDelay(100 / portTICK_PERIOD_MS); //Wait some time so the task can finish
   xTimerStop(tickHandle, 0);
-  get_board()->pmRelease();
+  get_board()->PmRelease();
   LOGI(TAG, "Close Done");
 }
 
@@ -198,25 +198,26 @@ void lvgl_init(Boards::Board *board) {
 
   xTaskCreate(task, "LVGL", 7*1024, nullptr, LVGL_TASK_PRIORITY, &lvgl_task);
 
-  disp = lv_display_create(board->getDisplay()->size.first, board->getDisplay()->size.second);
+  disp = lv_display_create(board->GetDisplay()->size.first, board->GetDisplay()->size.second);
   lv_display_set_flush_cb(disp, flush_cb);
   lv_display_set_flush_wait_cb(disp, flushWaitCb);
-  lv_display_set_buffers(disp, board->getDisplay()->buffer, nullptr, board->getDisplay()->size.first * board->getDisplay()->size.second * 2,
+  lv_display_set_buffers(disp, board->GetDisplay()->buffer, nullptr,
+                         board->GetDisplay()->size.first * board->GetDisplay()->size.second * 2,
                          LV_DISPLAY_RENDER_MODE_FULL);
 
   style_init();
   lvgl_encoder = lv_indev_create();
   lv_indev_set_type(lvgl_encoder, LV_INDEV_TYPE_ENCODER);
-  lv_indev_set_user_data(lvgl_encoder, board->getKeys());
+  lv_indev_set_user_data(lvgl_encoder, board->GetKeys());
   lv_indev_set_read_cb(lvgl_encoder, keyboard_read);
   lv_timer_set_period(lv_indev_get_read_timer(lvgl_encoder), 20);
 //
 //
-  if (board->getTouch()) {
+  if (board->GetTouch()) {
     lvgl_touch = lv_indev_create();
     lv_indev_set_type(lvgl_touch, LV_INDEV_TYPE_POINTER);
     lv_indev_set_read_cb(lvgl_touch, touch_read);
-    lv_indev_set_driver_data(lvgl_touch, board->getTouch());
+    lv_indev_set_driver_data(lvgl_touch, board->GetTouch());
     lv_timer_set_period(lv_indev_get_read_timer(lvgl_touch), 150);
   }
 
@@ -264,7 +265,7 @@ static void battery_widget(lv_obj_t *scr) {
   lv_obj_add_style(bar, &style_battery_main, LV_PART_MAIN);
   lv_obj_set_size(bar, 20, 40);
   lv_obj_center(bar);
-  lv_obj_set_user_data(bar, get_board()->getBattery());
+  lv_obj_set_user_data(bar, get_board()->GetBattery());
 
 
   //TODO: See why this causes a freeze in LVGL
@@ -292,7 +293,7 @@ static void battery_widget(lv_obj_t *scr) {
   lv_obj_add_style(battery_symbol, &style_battery_icon, LV_PART_MAIN);
   lv_obj_align(battery_symbol, LV_ALIGN_CENTER, 0, 0);
 
-  lv_obj_set_user_data(battery_symbol_cont, get_board()->getBattery());
+  lv_obj_set_user_data(battery_symbol_cont, get_board()->GetBattery());
 
   //TODO: See why this causes a freeze in LVGL
   lv_obj_add_event_cb(battery_symbol_cont, [](lv_event_t *e) {
@@ -315,9 +316,9 @@ void lvgl_wake_up() {
   if (xSemaphoreTake(lvgl_open, 100)) {
     xSemaphoreGive(lvgl_open);
     LOGI(TAG, "Wakeup");
-    get_board()->pmLock();
+    get_board()->PmLock();
 
-    cbData.display = get_board()->getDisplay();
+    cbData.display = get_board()->GetDisplay();
 
     cbData.callbackEnabled = cbData.display->onColorTransDone(flush_ready);
 

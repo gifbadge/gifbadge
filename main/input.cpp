@@ -14,7 +14,7 @@ static void openMenu() {
 }
 
 static void powerOff() {
-  get_board()->powerOff();
+  get_board()->PowerOff();
 }
 
 static void imageCurrent() {
@@ -68,7 +68,7 @@ static esp_timer_handle_t inputTimer = nullptr;
 
 static void inputTimerHandler(void *args) {
   auto board = (Boards::Board *) args;
-  EVENT_STATE *key_state = board->getKeys()->read();
+  EVENT_STATE *key_state = board->GetKeys()->read();
 
   switch (inputState) {
     case STATE_RELEASED:

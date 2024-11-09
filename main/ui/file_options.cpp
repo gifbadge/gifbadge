@@ -35,7 +35,7 @@ struct FileOptionFields {
 
 static void FileOptionsSave(lv_event_t *e) {
   auto fields = static_cast<FileOptionFields *>(lv_event_get_user_data(e));
-  auto config = get_board()->getConfig();
+  auto config = get_board()->GetConfig();
 
   char *path = lv_label_get_text(fields->file_select);
   LOGI(TAG, "File: %s", path);
@@ -126,7 +126,7 @@ lv_obj_t *FileOptions() {
   if (lvgl_lock(-1)) {
     LV_LOG_USER("FileOptions");
 
-    auto config = get_board()->getConfig();
+    auto config = get_board()->GetConfig();
 
     new_group();
     lv_obj_t *cont_flex = lv_file_list_create(lv_scr_act());

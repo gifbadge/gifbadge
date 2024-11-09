@@ -22,14 +22,14 @@ public:
  esp32s3();
  ~esp32s3() override = default;
 
- void pmLock() override;
- void pmRelease() override;
+ void PmLock() override;
+ void PmRelease() override;
 
- Config *getConfig() override;
- void debugInfo() override;
- const char *swVersion() override;
-  void reset() override;
-  char *serialNumber() override;
+ Config *GetConfig() override;
+ void DebugInfo() override;
+ const char *SwVersion() override;
+  void Reset() override;
+  char *SerialNumber() override;
   void BootInfo() override;
   bool OtaCheck() override;
   OtaError OtaValidate() override;

@@ -20,21 +20,21 @@ class v0 : public Boards::esp32::s3::esp32s3 {
   v0();
   ~v0() override = default;
 
-  Battery *getBattery() override;
-  Touch *getTouch() override;
-  Keys *getKeys() override;
-  Display *getDisplay() override;
-  Backlight *getBacklight() override;
+  Battery *GetBattery() override;
+  Touch *GetTouch() override;
+  Keys *GetKeys() override;
+  Display *GetDisplay() override;
+  Backlight *GetBacklight() override;
 
-  void powerOff() override;
-  BOARD_POWER powerState() override;
-  bool storageReady() override { return true; };
-  StorageInfo storageInfo() override;
+  void PowerOff() override;
+  BoardPower PowerState() override;
+  bool StorageReady() override { return true; };
+  StorageInfo GetStorageInfo() override;
   int StorageFormat() override { return ESP_OK; };
-  const char *name() override;
-  void *turboBuffer() override { return nullptr; };
-  bool usbConnected() override;
-  void lateInit() override;
+  const char *Name() override;
+  void *TurboBuffer() override { return nullptr; };
+  bool UsbConnected() override;
+  void LateInit() override;
 
  private:
   battery_analog *_battery;
@@ -42,7 +42,7 @@ class v0 : public Boards::esp32::s3::esp32s3 {
   keys_gpio *_keys;
   display_gc9a01 *_display;
   Backlight *_backlight;
-  int usbCallBack(tusb_msc_callback_t callback);
+  int UsbCallBack(tusb_msc_callback_t callback);
 };
 }
 }

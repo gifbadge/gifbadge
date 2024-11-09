@@ -10,7 +10,7 @@ class v0_4 : public Boards::esp32::s3::full::v0_2v0_4 {
   v0_4();
   ~v0_4() override = default;
 
-  const char * name() override;
+  const char * Name() override;
 
  private:
   typedef struct {
