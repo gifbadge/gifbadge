@@ -15,8 +15,6 @@ class battery_dummy final : public Battery {
 
   int getSoc() override;
 
-  double getRate() override;
-
   void removed() override;
 
   void inserted() override;

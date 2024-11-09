@@ -157,10 +157,6 @@ int PmicNpm1300::getSoc() {
   return asigmoidal(static_cast<uint16_t>(_vbat));
 }
 
-double PmicNpm1300::getRate() {
-  return _rate;
-}
-
 void PmicNpm1300::removed() {
   _present = false;
 }

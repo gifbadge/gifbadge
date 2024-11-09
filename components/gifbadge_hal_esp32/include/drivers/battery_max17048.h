@@ -18,8 +18,6 @@ class battery_max17048 final : public Battery {
 
   int getSoc() override;
 
-  double getRate() override;
-
   void removed() override;
 
   void inserted() override;

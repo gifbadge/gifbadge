@@ -93,8 +93,6 @@ class PmicNpm1300 final : public Battery, public Charger, public Vbus {
 
   int getSoc() override;
 
-  double getRate() override;
-
   void removed() override;
 
   void inserted() override;

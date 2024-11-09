@@ -44,10 +44,6 @@ int battery_max17048::getSoc() {
   return _soc;
 }
 
-double battery_max17048::getRate() {
-  return _rate;
-}
-
 void battery_max17048::removed() {
   present = false;
 }

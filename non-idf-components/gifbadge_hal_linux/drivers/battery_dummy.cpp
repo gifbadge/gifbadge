@@ -9,9 +9,6 @@ double battery_dummy::BatteryVoltage() {
 int battery_dummy::getSoc() {
   return 100;
 }
-double battery_dummy::getRate() {
-  return 0;
-}
 void battery_dummy::removed() {
 
 }

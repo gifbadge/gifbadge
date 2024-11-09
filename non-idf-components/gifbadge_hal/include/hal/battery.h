@@ -27,8 +27,6 @@ class Battery {
 
   virtual int getSoc() = 0;
 
-  virtual double getRate() = 0;
-
   virtual void removed() = 0;
 
   virtual void inserted() = 0;

@@ -16,9 +16,7 @@ class battery_analog final : public Battery {
 
   double BatteryVoltage() override;
 
-  int getSoc() override;
-
-  double getRate() override { return 0; };
+  int getSoc() override;;
 
   void removed() override {};
 
