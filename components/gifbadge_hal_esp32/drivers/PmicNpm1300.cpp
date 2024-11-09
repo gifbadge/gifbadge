@@ -95,17 +95,17 @@ static void npmx_callback(npmx_instance_t *pm, npmx_callback_type_t type, uint8_
   LOGI(TAG, "npm1300 status %u", status);
 }
 
-static Boards::Board::WAKEUP_SOURCE get_wakeup(npmx_instance_t *pm){
-  Boards::Board::WAKEUP_SOURCE wakeup = Boards::Board::WAKEUP_SOURCE::NONE;
+static Boards::WakeupSource get_wakeup(npmx_instance_t *pm){
+  Boards::WakeupSource wakeup = Boards::WakeupSource::NONE;
   uint8_t flags;
   npmx_backend_register_read(pm->p_backend, NPMX_REG_TO_ADDR(NPM_MAIN->EVENTSVBUSIN0SET), &flags, 1);
   if(flags & NPMX_EVENT_GROUP_VBUSIN_DETECTED_MASK){
-    wakeup = Boards::Board::WAKEUP_SOURCE::VBUS;
+    wakeup = Boards::WakeupSource::VBUS;
   }
 
   npmx_backend_register_read(pm->p_backend, NPMX_REG_TO_ADDR(NPM_MAIN->EVENTSSHPHLDSET), &flags, 1);
   if(flags & NPMX_EVENT_GROUP_SHIPHOLD_PRESSED_MASK){
-    wakeup = Boards::Board::WAKEUP_SOURCE::KEY;
+    wakeup = Boards::WakeupSource::KEY;
   }
   return wakeup;
 }
@@ -309,7 +309,7 @@ void PmicNpm1300::HandleInterrupt() {
 void PmicNpm1300::Loop() {
   npmx_core_proc(&_npmx_instance);
 }
-Boards::Board::WAKEUP_SOURCE PmicNpm1300::GetWakeup() {
+Boards::WakeupSource PmicNpm1300::GetWakeup() {
   return _wakeup_source;
 }
 

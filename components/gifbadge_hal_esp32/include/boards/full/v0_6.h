@@ -34,7 +34,7 @@ class v0_6 : public Boards::esp32::s3::esp32s3_sdmmc {
   void *TurboBuffer() override { return buffer; };
   const char *Name() override;
   void LateInit() override;
-  WAKEUP_SOURCE BootReason() override;
+  WakeupSource BootReason() override;
   Vbus *GetVbus() override;
   Charger *GetCharger() override;
   void DebugInfo() override;

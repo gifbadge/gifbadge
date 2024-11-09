@@ -116,7 +116,7 @@ class PmicNpm1300 final : public Battery, public Charger, public Vbus {
   void HandleInterrupt();
   void Loop();
 
-  Boards::Board::WAKEUP_SOURCE GetWakeup();
+  Boards::WakeupSource GetWakeup();
 
   void PwrLedSet(Gpio *gpio);
 
@@ -140,7 +140,7 @@ class PmicNpm1300 final : public Battery, public Charger, public Vbus {
   double _rate = 0;
   gpio_num_t _gpio_int;
   bool _present = false;
-  Boards::Board::WAKEUP_SOURCE _wakeup_source = Boards::Board::WAKEUP_SOURCE::NONE;
+  Boards::WakeupSource _wakeup_source = Boards::WakeupSource::NONE;
   Gpio *_power_led = nullptr;
 
 //NPM1300 Stuff

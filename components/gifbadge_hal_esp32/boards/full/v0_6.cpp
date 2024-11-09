@@ -165,9 +165,9 @@ void esp32::s3::full::v0_6::LateInit() {
   }
 
 }
-Board::WAKEUP_SOURCE esp32::s3::full::v0_6::BootReason() {
+WakeupSource esp32::s3::full::v0_6::BootReason() {
   if (esp_reset_reason() != ESP_RST_POWERON) {
-    return Board::WAKEUP_SOURCE::REBOOT;
+    return WakeupSource::REBOOT;
   }
   return _pmic->GetWakeup();
 }

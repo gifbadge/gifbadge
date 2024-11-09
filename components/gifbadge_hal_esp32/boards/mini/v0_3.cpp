@@ -146,10 +146,10 @@ void esp32::mini::v0_3::LateInit() {
   gpio_isr_handler_add(GPIO_VBUS_DETECT, usb_connected, nullptr);
   usb_connected(nullptr); //Trigger usb detection
 }
-Board::WAKEUP_SOURCE esp32::mini::v0_3::BootReason() {
+WakeupSource esp32::mini::v0_3::BootReason() {
   if (esp_reset_reason() != ESP_RST_POWERON) {
-    return Board::WAKEUP_SOURCE::KEY;
+    return WakeupSource::KEY;
   }
-  return Board::WAKEUP_SOURCE::NONE;
+  return WakeupSource::NONE;
 }
 }

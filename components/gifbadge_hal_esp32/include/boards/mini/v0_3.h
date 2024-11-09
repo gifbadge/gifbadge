@@ -37,7 +37,7 @@ class v0_3 : public Boards::esp32::s3::esp32s3_sdmmc {
   const char *Name() override;
   void *TurboBuffer() override { return buffer; }
   void LateInit() override;
-  WAKEUP_SOURCE BootReason() override;;
+  WakeupSource BootReason() override;;
 
  private:
   battery_max17048 *_battery;

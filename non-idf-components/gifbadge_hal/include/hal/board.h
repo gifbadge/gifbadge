@@ -37,6 +37,13 @@ enum class OtaError {
   SAME_VERSION,
 };
 
+enum class WakeupSource {
+  NONE,
+  VBUS,
+  KEY,
+  REBOOT,
+};
+
 
 /**
  * The Board class represents the hardware gifbadge is running on.
@@ -228,18 +235,11 @@ class Board {
    */
   virtual int OtaStatus() {return 100;};
 
-  enum class WAKEUP_SOURCE {
-    NONE,
-    VBUS,
-    KEY,
-    REBOOT,
-  };
-
   /**
    * The source of the wakeup. E.G. power button, hw reset
    * @return
    */
-  virtual WAKEUP_SOURCE BootReason() {return WAKEUP_SOURCE::KEY;};
+  virtual WakeupSource BootReason() {return WakeupSource::KEY;};
 
 };
 }

@@ -91,20 +91,20 @@ extern "C" void app_main(void) {
   Boards::Board *board = get_board();
   switch(board->BootReason()){
 
-    case Boards::Board::WAKEUP_SOURCE::NONE:
+    case Boards::WakeupSource::NONE:
       LOGI(TAG, "Wakeup Reason: None");
       break;
-    case Boards::Board::WAKEUP_SOURCE::VBUS:
+    case Boards::WakeupSource::VBUS:
       LOGI(TAG, "Wakeup Reason: VBUS");
       break;
-    case Boards::Board::WAKEUP_SOURCE::KEY:
+    case Boards::WakeupSource::KEY:
       LOGI(TAG, "Wakeup Reason: KEY");
       break;
-    case Boards::Board::WAKEUP_SOURCE::REBOOT:
+    case Boards::WakeupSource::REBOOT:
       LOGI(TAG, "Wakeup Reason: REBOOT");
       break;
   }
-  if(!(board->BootReason() == Boards::Board::WAKEUP_SOURCE::KEY || board->BootReason() == Boards::Board::WAKEUP_SOURCE::REBOOT)){
+  if(!(board->BootReason() == Boards::WakeupSource::KEY || board->BootReason() == Boards::WakeupSource::REBOOT)){
     board->PowerOff();
   }
 
