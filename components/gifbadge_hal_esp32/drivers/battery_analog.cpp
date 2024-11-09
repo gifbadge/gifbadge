@@ -36,7 +36,7 @@ battery_analog::battery_analog(adc_channel_t) {
   }, .arg = this, .dispatch_method = ESP_TIMER_TASK, .name = "battery_analog", .skip_unhandled_events = true};
   esp_timer_handle_t battery_handler_handle = nullptr;
   ESP_ERROR_CHECK(esp_timer_create(&battery_timer_args, &battery_handler_handle));
-  esp_timer_start_periodic(battery_handler_handle, pollInterval() * 1000);
+  esp_timer_start_periodic(battery_handler_handle, 250 * 1000);
 }
 
 battery_analog::~battery_analog() = default;

@@ -9,8 +9,6 @@ class battery_dummy final : public Battery {
 
   void poll();
 
-  int pollInterval() override { return 1000; };
-
   double BatteryVoltage() override;
 
   int getSoc() override;

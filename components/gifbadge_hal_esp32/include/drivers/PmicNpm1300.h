@@ -85,8 +85,6 @@ class PmicNpm1300 final : public Battery, public Charger, public Vbus {
 
   void poll();
 
-  int pollInterval() override { return 10000; };
-
   double BatteryVoltage() override;
   double BatteryCurrent() override;
   double BatteryTemperature() override;

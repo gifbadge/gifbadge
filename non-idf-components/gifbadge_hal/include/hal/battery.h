@@ -21,8 +21,6 @@ class Battery {
 
   virtual ~Battery() = default;
 
-  virtual int pollInterval() = 0;
-
   /**
    * Get the battery voltage
    * @return voltage in V

@@ -22,7 +22,7 @@ battery_max17048::battery_max17048(I2C *i2c, gpio_num_t vbus_pin)
   };
   esp_timer_handle_t battery_handler_handle = nullptr;
   ESP_ERROR_CHECK(esp_timer_create(&battery_timer_args, &battery_handler_handle));
-  esp_timer_start_periodic(battery_handler_handle, pollInterval() * 1000);
+  esp_timer_start_periodic(battery_handler_handle, 10000 * 1000);
   poll();
 }
 

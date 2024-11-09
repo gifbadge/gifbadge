@@ -12,8 +12,6 @@ class battery_max17048 final : public Battery {
 
   void poll();
 
-  int pollInterval() override { return 10000; };
-
   double BatteryVoltage() override;
 
   int getSoc() override;
