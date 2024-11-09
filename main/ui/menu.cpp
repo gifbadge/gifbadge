@@ -225,10 +225,10 @@ void lvgl_init(Boards::Board *board) {
 
 void battery_percent_update(lv_obj_t *widget) {
   auto battery = static_cast<Battery *>(lv_obj_get_user_data(widget));
-  if (battery->status() == Battery::State::ERROR || battery->status() == Battery::State::NOT_PRESENT) {
+  if (battery->BatteryStatus() == Battery::State::ERROR || battery->BatteryStatus() == Battery::State::NOT_PRESENT) {
     lv_battery_set_value(widget, 0);
   } else {
-    lv_battery_set_value(widget, battery->getSoc());
+    lv_battery_set_value(widget, battery->BatterySoc());
   }
 }
 
@@ -237,13 +237,13 @@ void battery_symbol_update(lv_obj_t *cont) {
   lv_obj_t *symbol = lv_obj_get_child(cont, 0);
   lv_obj_set_style_bg_opa(cont, LV_OPA_COVER, LV_PART_MAIN);
   lv_obj_remove_state(cont, LV_OBJ_FLAG_HIDDEN);
-  if (battery->status() == Battery::State::ERROR) {
+  if (battery->BatteryStatus() == Battery::State::ERROR) {
     lv_image_set_src(symbol, LV_SYMBOL_DUMMY "\uf22f");
     lv_obj_set_style_text_color(symbol, lv_color_hex(0xeed202), LV_PART_MAIN); //Yellow
-  } else if (battery->status() == Battery::State::NOT_PRESENT) {
+  } else if (battery->BatteryStatus() == Battery::State::NOT_PRESENT) {
     lv_image_set_src(symbol, LV_SYMBOL_DUMMY "\ue5cd");
     lv_obj_set_style_text_color(symbol, lv_color_hex(0xff0033), LV_PART_MAIN); //Red
-  } else if (battery->status() == Battery::State::CHARGING) {
+  } else if (battery->BatteryStatus() == Battery::State::CHARGING) {
     lv_image_set_src(symbol, LV_SYMBOL_DUMMY "\uea0b");
     lv_obj_set_style_text_color(symbol, lv_color_hex(0x50C878), LV_PART_MAIN); //Green
   } else {

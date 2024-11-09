@@ -43,21 +43,21 @@ class Battery {
    * Get the state of charge of the battery
    * @return charge in percent
    */
-  virtual int getSoc() = 0;
+  virtual int BatterySoc() = 0;
 
   /**
    * Notify hardware that battery has been removed
    */
-  virtual void removed() = 0;
+  virtual void BatteryRemoved() = 0;
 
   /**
    * Notify hardware that battery has been inserted
    */
-  virtual void inserted() = 0;
+  virtual void BatteryInserted() = 0;
 
   /**
    * Get the current status of the battery hardware
    * @return
    */
-  virtual State status() = 0;
+  virtual State BatteryStatus() = 0;
 };

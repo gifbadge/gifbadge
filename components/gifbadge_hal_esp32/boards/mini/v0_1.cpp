@@ -36,7 +36,7 @@ esp32::mini::v0_1::v0_1() {
   buffer = heap_caps_malloc(240 * 240 + 0x6100, MALLOC_CAP_INTERNAL);
   _i2c = new I2C(I2C_NUM_0, 17, 18, 100 * 1000, false);
   _battery = new battery_max17048(_i2c, GPIO_VBUS_DETECT);
-  _battery->inserted(); //Battery not removable. So set this
+  _battery->BatteryInserted(); //Battery not removable. So set this
   gpio_install_isr_service(0);
   _keys = new keys_gpio(GPIO_NUM_0, GPIO_NUM_2, GPIO_NUM_1);
   _display = new display_gc9a01(35, 36, 34, 37, 38);
@@ -115,8 +115,8 @@ BoardPower esp32::mini::v0_1::PowerState() {
   if (_vbus->VbusConnected()) {
     return BOARD_POWER_NORMAL;
   }
-  if (_battery->getSoc() < 12) {
-    if (_battery->getSoc() < 10) {
+  if (_battery->BatterySoc() < 12) {
+    if (_battery->BatterySoc() < 10) {
       return BOARD_POWER_CRITICAL;
     }
     return BOARD_POWER_LOW;

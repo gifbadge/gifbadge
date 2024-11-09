@@ -14,13 +14,13 @@ class battery_analog final : public Battery {
 
   double BatteryVoltage() override;
 
-  int getSoc() override;;
+  int BatterySoc() override;;
 
-  void removed() override {};
+  void BatteryRemoved() override {};
 
-  void inserted() override {};
+  void BatteryInserted() override {};
 
-  Battery::State status() override { return Battery::State::OK ;}
+  Battery::State BatteryStatus() override { return Battery::State::OK ;}
 
  private:
   adc_oneshot_unit_handle_t adc_handle = nullptr;

@@ -92,8 +92,8 @@ BoardPower esp32::mini::v0_3::PowerState() {
   if (_vbus->VbusConnected()) {
     return BOARD_POWER_NORMAL;
   }
-  if (_battery->getSoc() < 12) {
-    if (_battery->getSoc() < 10) {
+  if (_battery->BatterySoc() < 12) {
+    if (_battery->BatterySoc() < 10) {
       return BOARD_POWER_CRITICAL;
     }
     return BOARD_POWER_LOW;
@@ -117,7 +117,7 @@ void esp32::mini::v0_3::LateInit() {
   buffer = heap_caps_malloc(240 * 240 + 0x6100, MALLOC_CAP_INTERNAL);
   _i2c = new I2C(I2C_NUM_0, 6, 7, 100 * 1000, true);
   _battery = new battery_max17048(_i2c, GPIO_VBUS_DETECT);
-  _battery->inserted(); //Battery not removable. So set this
+  _battery->BatteryInserted(); //Battery not removable. So set this
 
   gpio_install_isr_service(0);
   _keys = new keys_gpio(GPIO_KEY_UP, GPIO_KEY_DOWN, GPIO_KEY_ENTER);

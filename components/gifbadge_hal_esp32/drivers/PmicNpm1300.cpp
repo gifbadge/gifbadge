@@ -148,7 +148,7 @@ static inline uint8_t asigmoidal(uint16_t voltage, uint16_t minVoltage = 2800, u
   return result >= 100 ? 100 : result;
 }
 
-int PmicNpm1300::getSoc() {
+int PmicNpm1300::BatterySoc() {
   uint8_t status;
   npmx_charger_status_get(npmx_charger_get(&_npmx_instance, 0), &status);
   if(status & NPMX_CHARGER_STATUS_COMPLETED_MASK){
@@ -157,14 +157,14 @@ int PmicNpm1300::getSoc() {
   return asigmoidal(static_cast<uint16_t>(_vbat));
 }
 
-void PmicNpm1300::removed() {
+void PmicNpm1300::BatteryRemoved() {
   _present = false;
 }
 
-void PmicNpm1300::inserted() {
+void PmicNpm1300::BatteryInserted() {
 }
 
-Battery::State PmicNpm1300::status() {
+Battery::State PmicNpm1300::BatteryStatus() {
   uint8_t status;
   npmx_charger_status_get(npmx_charger_get(&_npmx_instance, 0), &status);
   if(!(status & NPMX_CHARGER_STATUS_BATTERY_DETECTED_MASK)){
@@ -494,7 +494,7 @@ void PmicNpm1300::VbusConnectedCallback(void (*callback)(bool)) {
   }
 }
 void PmicNpm1300::DebugLog() {
-  LOGI(TAG, "SOC: %i, Voltage %fV", getSoc(), BatteryVoltage());
+  LOGI(TAG, "SOC: %i, Voltage %fV", BatterySoc(), BatteryVoltage());
   LOGI(TAG, "Temperature: %fC, Current %fA", BatteryTemperature(), BatteryCurrent());
 }
 

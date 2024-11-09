@@ -18,9 +18,9 @@ bool esp32::s3::full::v0_4::checkBatteryInstalled(esp_io_expander_handle_t io_ex
 void esp32::s3::full::v0_4::batteryTimer(void *args) {
   auto data = static_cast<batteryTimerArgs *>(args);
   if (checkBatteryInstalled(data->io_expander)) {
-    data->battery->inserted();
+    data->battery->BatteryInserted();
   } else {
-    data->battery->removed();
+    data->battery->BatteryRemoved();
   }
 }
 

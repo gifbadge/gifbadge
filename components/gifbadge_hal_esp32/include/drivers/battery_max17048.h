@@ -14,13 +14,13 @@ class battery_max17048 final : public Battery {
 
   double BatteryVoltage() override;
 
-  int getSoc() override;
+  int BatterySoc() override;
 
-  void removed() override;
+  void BatteryRemoved() override;
 
-  void inserted() override;
+  void BatteryInserted() override;
 
-  State status() override;
+  State BatteryStatus() override;
 
  private:
   I2C *_i2c;

@@ -89,13 +89,13 @@ class PmicNpm1300 final : public Battery, public Charger, public Vbus {
   double BatteryCurrent() override;
   double BatteryTemperature() override;
 
-  int getSoc() override;
+  int BatterySoc() override;
 
-  void removed() override;
+  void BatteryRemoved() override;
 
-  void inserted() override;
+  void BatteryInserted() override;
 
-  State status() override;
+  State BatteryStatus() override;
 
   void ChargeEnable() override;
   void ChargeDisable() override;

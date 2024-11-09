@@ -6,15 +6,15 @@ void battery_dummy::poll() {
 double battery_dummy::BatteryVoltage() {
   return 4.2;
 }
-int battery_dummy::getSoc() {
+int battery_dummy::BatterySoc() {
   return 100;
 }
-void battery_dummy::removed() {
+void battery_dummy::BatteryRemoved() {
 
 }
-void battery_dummy::inserted() {
+void battery_dummy::BatteryInserted() {
 
 }
-Battery::State battery_dummy::status() {
+Battery::State battery_dummy::BatteryStatus() {
   return Battery::State::OK;
 }

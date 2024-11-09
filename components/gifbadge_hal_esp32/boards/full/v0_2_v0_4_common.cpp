@@ -137,8 +137,8 @@ BoardPower esp32::s3::full::v0_2v0_4::PowerState() {
   if (_vbus->VbusConnected()) {
     return BOARD_POWER_NORMAL;
   }
-  if (_battery->getSoc() < 12) {
-    if (_battery->getSoc() < 10) {
+  if (_battery->BatterySoc() < 12) {
+    if (_battery->BatterySoc() < 10) {
       return BOARD_POWER_CRITICAL;
     }
     return BOARD_POWER_LOW;

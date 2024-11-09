@@ -51,7 +51,7 @@ void battery_analog::poll() {
 double battery_analog::BatteryVoltage() {
   return smoothed_voltage / 1000.00;
 }
-int battery_analog::getSoc() {
+int battery_analog::BatterySoc() {
   return sigmoidal(static_cast<uint16_t>(smoothed_voltage), 3000, 4200);
 }
 

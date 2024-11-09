@@ -40,15 +40,15 @@ double battery_max17048::BatteryVoltage() {
   return _voltage;
 }
 
-int battery_max17048::getSoc() {
+int battery_max17048::BatterySoc() {
   return _soc;
 }
 
-void battery_max17048::removed() {
+void battery_max17048::BatteryRemoved() {
   present = false;
 }
 
-void battery_max17048::inserted() {
+void battery_max17048::BatteryInserted() {
   // Quickstart. so the MAX17048 restarts it's SOC algorythm.
   //Prevents erroneous readings if battery is swapped while charging
   uint8_t cmd[] = {0x80, 0x00};
@@ -56,7 +56,7 @@ void battery_max17048::inserted() {
   present = true;
 }
 
-Battery::State battery_max17048::status() {
+Battery::State battery_max17048::BatteryStatus() {
   if(!present){
     return State::NOT_PRESENT;
   }
