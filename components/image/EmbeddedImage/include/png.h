@@ -20,17 +20,17 @@ public:
 
     ~PNGImage() override;
 
-  frameReturn loop(uint8_t *outBuf, int16_t x, int16_t y, int16_t width) override;
+  frameReturn GetFrame(uint8_t *outBuf, int16_t x, int16_t y, int16_t width) override;
 
-    std::pair<int16_t, int16_t> size() override;
+    std::pair<int16_t, int16_t> Size() override;
 
-    static Image *create();
+    static Image *Create();
 
-    int open(const char *path, void *buffer) override;
+    int Open(const char *path, void *buffer) override;
 
-    int open(uint8_t *bin, int size);
+    int Open(uint8_t *bin, int size);
 
-    const char * getLastError() override;
+    const char * GetLastError() override;
 
 
 protected:

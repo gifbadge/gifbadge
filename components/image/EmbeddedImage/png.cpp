@@ -8,17 +8,17 @@ image::PNGImage::~PNGImage() {
     png.close();
 }
 
-image::frameReturn image::PNGImage::loop(uint8_t *outBuf, int16_t x, int16_t y, int16_t width) {
+image::frameReturn image::PNGImage::GetFrame(uint8_t *outBuf, int16_t x, int16_t y, int16_t width) {
     pnguser config = {.png = &png, .buffer = outBuf, .x = x, .y = y, .width = width};
     png.decode((void *) &config, 0);
   return {image::frameStatus::END, 0};
 }
 
-std::pair<int16_t, int16_t> image::PNGImage::size() {
+std::pair<int16_t, int16_t> image::PNGImage::Size() {
     return {png.getWidth(), png.getHeight()};
 }
 
-image::Image *image::PNGImage::create() {
+image::Image *image::PNGImage::Create() {
     return new PNGImage();
 }
 
@@ -26,11 +26,11 @@ typedef int32_t (*readfile)(PNGFILE *pFile, uint8_t *pBuf, int32_t iLen);
 typedef int32_t (*seekfile)(PNGFILE *pFile, int32_t iPosition);
 
 
-int image::PNGImage::open(const char *path, void *buffer) {
+int image::PNGImage::Open(const char *path, void *buffer) {
     return png.open(path, bb2OpenFile, bb2CloseFile, (readfile)bb2ReadFile, (seekfile)bb2SeekFile, PNGDraw);
 }
 
-int image::PNGImage::open(uint8_t *bin, int size) {
+int image::PNGImage::Open(uint8_t *bin, int size) {
     png.openRAM(bin, size, PNGDraw);
     return -1;
 }
@@ -47,7 +47,7 @@ void image::PNGImage::PNGDraw(PNGDRAW *pDraw) {
 #endif
 }
 
-const char * image::PNGImage::getLastError() {
+const char * image::PNGImage::GetLastError() {
     switch(png.getLastError()){
         case PNG_SUCCESS:
             return "PNG_SUCCESS";

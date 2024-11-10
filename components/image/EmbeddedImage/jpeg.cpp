@@ -11,18 +11,18 @@ image::JPEG::~JPEG() {
 }
 
 
-image::frameReturn image::JPEG::loop(uint8_t *outBuf, int16_t x, int16_t y, int16_t width) {
+image::frameReturn image::JPEG::GetFrame(uint8_t *outBuf, int16_t x, int16_t y, int16_t width) {
   pnguser config = {.png = nullptr, .buffer = outBuf, .x = x, .y = y, .width = width};
   jpeg.setUserPointer(&config);
   jpeg.decode(0, 0, 0);
   return {image::frameStatus::END, 0};
 }
 
-std::pair<int16_t, int16_t> image::JPEG::size() {
+std::pair<int16_t, int16_t> image::JPEG::Size() {
     return {jpeg.getWidth(), jpeg.getHeight()};
 }
 
-image::Image *image::JPEG::create() {
+image::Image *image::JPEG::Create() {
     return new image::JPEG();
 }
 
@@ -43,13 +43,13 @@ return 1;
 typedef int32_t (*readfile)(JPEGFILE *pFile, uint8_t *pBuf, int32_t iLen);
 typedef int32_t (*seekfile)(JPEGFILE *pFile, int32_t iPosition);
 
-int image::JPEG::open(const char *path, void *buffer) {
+int image::JPEG::Open(const char *path, void *buffer) {
   int ret = jpeg.open(path, bb2OpenFile, bb2CloseFile, (readfile)bb2ReadFile, (seekfile)bb2SeekFile, JPEGDraw);
   jpeg.setPixelType(RGB565_BIG_ENDIAN);
   return ret==0; //Invert the return value
 }
 
-const char * image::JPEG::getLastError() {
+const char * image::JPEG::GetLastError() {
     switch(jpeg.getLastError()){
       case JPEG_SUCCESS:
         return "JPEG_SUCCESS";

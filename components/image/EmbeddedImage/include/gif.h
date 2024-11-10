@@ -19,17 +19,17 @@ public:
 
     ~GIF() override;
 
-    int open(const char *path, void *buffer) override;
+    int Open(const char *path, void *buffer) override;
 
-  frameReturn loop(uint8_t *outBuf, int16_t x, int16_t y, int16_t width) override;
+  frameReturn GetFrame(uint8_t *outBuf, int16_t x, int16_t y, int16_t width) override;
 
-    std::pair<int16_t, int16_t> size() final;
+    std::pair<int16_t, int16_t> Size() final;
 
-    static Image * create();
+    static Image * Create();
 
-    bool animated() override {return true;};
+    bool Animated() override {return true;};
 
-    const char *getLastError() override;
+    const char *GetLastError() override;
 
 
 private:

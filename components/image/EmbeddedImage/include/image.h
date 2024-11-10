@@ -30,13 +30,13 @@ class Image {
    * @param width width of the display
    * @return
    */
-  virtual frameReturn loop(uint8_t *outBuf, int16_t x, int16_t y, int16_t width) { return {frameStatus::OK, 0}; };
+  virtual frameReturn GetFrame(uint8_t *outBuf, int16_t x, int16_t y, int16_t width) { return {frameStatus::OK, 0}; };
 
   /**
-   * Get the size of the image. Can only be called after image is opened with open()
+   * Get the size of the image. Can only be called after image is opened with Open()
    * @return x, y pair representing the width and height of the image
    */
-  virtual std::pair<int16_t, int16_t> size() { return {0, 0}; };
+  virtual std::pair<int16_t, int16_t> Size() { return {0, 0}; };
 
   /**
    * Open an image from a path.
@@ -45,19 +45,19 @@ class Image {
    * @param buffer
    * @return
    */
-  virtual int open(const char *path, void *buffer) { return 0; };
+  virtual int Open(const char *path, void *buffer) { return 0; };
 
   /**
-   * check if the image is animated
-   * @return true if animated
+   * check if the image is Animated
+   * @return true if Animated
    */
-  virtual bool animated() { return false; };
+  virtual bool Animated() { return false; };
 
   /**
    * get any errors from the underlying image decoder as a string
    * @return decoder error as null terminated string
    */
-  virtual const char *getLastError() = 0;
+  virtual const char *GetLastError() = 0;
 };
 }
 

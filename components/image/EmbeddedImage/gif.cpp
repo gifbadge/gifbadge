@@ -169,7 +169,7 @@ int image::GIF::playFrame(bool bSync, int *delayMilliseconds, GIFUser *pUser)
   return (_gif.GIFFile.iPos < _gif.GIFFile.iSize-10);
 } /* playFrame() */
 
-image::frameReturn image::GIF::loop(uint8_t *outBuf, int16_t x, int16_t y, int16_t width) {
+image::frameReturn image::GIF::GetFrame(uint8_t *outBuf, int16_t x, int16_t y, int16_t width) {
   GIFUser gifuser = {outBuf, x, y, width};
   int frameDelay;
   int ret = playFrame(false, &frameDelay, &gifuser);
@@ -183,7 +183,7 @@ image::frameReturn image::GIF::loop(uint8_t *outBuf, int16_t x, int16_t y, int16
   return {frameStatus::OK, frameDelay};
 }
 
-std::pair<int16_t, int16_t> image::GIF::size() {
+std::pair<int16_t, int16_t> image::GIF::Size() {
   return {_gif.iCanvasWidth, _gif.iCanvasHeight};
 }
 
@@ -199,11 +199,11 @@ void image::GIF::GIFDraw(GIFDRAW *pDraw) {
   memcpy(d, pDraw->pPixels, pDraw->iWidth * 2);
 }
 
-image::Image *image::GIF::create() {
+image::Image *image::GIF::Create() {
   return new image::GIF();
 }
 
-int image::GIF::open(const char *path, void *buffer) {
+int image::GIF::Open(const char *path, void *buffer) {
 #ifdef ESP_PLATFORM
   unsigned char ucPaletteType = BIG_ENDIAN_PIXELS;
 #else
@@ -253,7 +253,7 @@ int image::GIF::open(const char *path, void *buffer) {
   return -1;
 }
 
-const char *image::GIF::getLastError() {
+const char *image::GIF::GetLastError() {
   switch (_gif.iError) {
     case GIF_SUCCESS:
       return "GIF_SUCCESS";
