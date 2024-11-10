@@ -110,7 +110,7 @@ static std::pair<int16_t, int16_t> lastSize = {0,0};
 
 bool newImage = false;
 
-static frameReturn displayFile(std::unique_ptr<Image> &in, Display *display) {
+static frameReturn displayFile(std::unique_ptr<Image> &in, hal::display::Display *display) {
   int64_t start = millis();
   frameReturn status;
   int16_t xOffset = 0;
@@ -193,7 +193,7 @@ static int get_file(char *path) {
   return -1;
 }
 
-static Image *openFile(const char *path, Display *display) {
+static Image *openFile(const char *path, hal::display::Display *display) {
   Image *in = ImageFactory(path);
   if (in) {
     if (in->open(path, get_board()->TurboBuffer()) != 0) {
@@ -214,7 +214,7 @@ static Image *openFile(const char *path, Display *display) {
   return in;
 }
 
-static Image *openFileUpdatePath(char *path, Display *display) {
+static Image *openFileUpdatePath(char *path, hal::display::Display *display) {
   if (get_file(path) != 0) {
     file_position = -1;
     return new NoImage(display->size);
@@ -222,7 +222,7 @@ static Image *openFileUpdatePath(char *path, Display *display) {
   return openFile(path, display);
 }
 
-static void next_prev(std::unique_ptr<Image> &in, char *current_file, Config *config, Display *display, int increment){
+static void next_prev(std::unique_ptr<Image> &in, char *current_file, hal::config::Config *config, hal::display::Display *display, int increment){
   if (config->getLocked() || file_position < 0) {
     return;
   }
@@ -241,7 +241,7 @@ static void slideShowHandler(TimerHandle_t) {
   xTaskNotifyIndexed(displayHandle, 0, DISPLAY_ADVANCE, eSetValueWithOverwrite);
 }
 
-static void slideShowStart(Config *config) {
+static void slideShowStart(hal::config::Config *config) {
   if (config->getSlideShow()) {
     xTimerChangePeriod(slideShowTimer, (config->getSlideShowTime() * 1000) / portTICK_PERIOD_MS, 0);
     xTimerStart(slideShowTimer, 0);

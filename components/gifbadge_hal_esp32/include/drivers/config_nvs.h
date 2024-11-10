@@ -3,7 +3,7 @@
 #include <nvs_handle.hpp>
 #include "hal/config.h"
 
-
+namespace hal::config::esp32s3 {
 class Config_NVS: public Config {
  public:
   Config_NVS();
@@ -29,3 +29,5 @@ class Config_NVS: public Config {
   T get_item_or_default(const char *key, T value);
   void get_string_or_default(const char *item, const char* default_value, char *out, size_t out_len);
 };
+}
+

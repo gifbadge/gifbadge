@@ -5,7 +5,7 @@
 
 static const char *TAG = "battery_max17048";
 
-battery_max17048::battery_max17048(I2C *i2c, gpio_num_t vbus_pin)
+hal::battery::esp32s3::battery_max17048::battery_max17048(I2C *i2c, gpio_num_t vbus_pin)
     : _i2c(i2c), _vbus_pin(vbus_pin) {
   uint8_t data[2];
   _i2c->read_reg(0x36, 0x08, data, 2);
@@ -26,7 +26,7 @@ battery_max17048::battery_max17048(I2C *i2c, gpio_num_t vbus_pin)
   poll();
 }
 
-void battery_max17048::poll() {
+void hal::battery::esp32s3::battery_max17048::poll() {
   uint8_t d[2];
   _i2c->read_reg(0x36, 0x02, d, 2);
   _voltage = ((static_cast<uint16_t>(d[0] << 8) | d[1]) * 78.125) / 1000000;
@@ -36,19 +36,19 @@ void battery_max17048::poll() {
   _rate = (static_cast<int16_t>(d[0] << 8) | d[1]) * 0.208;
 }
 
-double battery_max17048::BatteryVoltage() {
+double hal::battery::esp32s3::battery_max17048::BatteryVoltage() {
   return _voltage;
 }
 
-int battery_max17048::BatterySoc() {
+int hal::battery::esp32s3::battery_max17048::BatterySoc() {
   return _soc;
 }
 
-void battery_max17048::BatteryRemoved() {
+void hal::battery::esp32s3::battery_max17048::BatteryRemoved() {
   present = false;
 }
 
-void battery_max17048::BatteryInserted() {
+void hal::battery::esp32s3::battery_max17048::BatteryInserted() {
   // Quickstart. so the MAX17048 restarts it's SOC algorythm.
   //Prevents erroneous readings if battery is swapped while charging
   uint8_t cmd[] = {0x80, 0x00};
@@ -56,7 +56,7 @@ void battery_max17048::BatteryInserted() {
   present = true;
 }
 
-Battery::State battery_max17048::BatteryStatus() {
+hal::battery::Battery::State hal::battery::esp32s3::battery_max17048::BatteryStatus() {
   if(!present){
     return State::NOT_PRESENT;
   }
@@ -69,5 +69,5 @@ Battery::State battery_max17048::BatteryStatus() {
   if(!gpio_get_level(_vbus_pin)) {
     return State::DISCHARGING;
   }
-  return Battery::State::ERROR;
+  return hal::battery::Battery::State::ERROR;
 }

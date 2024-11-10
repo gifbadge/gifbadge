@@ -16,11 +16,11 @@ namespace Boards {
 
 esp32::s3::mini::v0::v0() {
   _i2c = new I2C(I2C_NUM_0, 21, 18, 100 * 1000, false);
-  _battery = new battery_analog(ADC_CHANNEL_9);
+  _battery = new hal::battery::esp32s3::battery_analog(ADC_CHANNEL_9);
   gpio_install_isr_service(0);
-  _keys = new keys_gpio(GPIO_NUM_43, GPIO_NUM_44, GPIO_NUM_0);
-  _display = new display_gc9a01(35, 36, 34, 37, 46);
-  _backlight = new backlight_ledc(GPIO_NUM_45, false, 0);
+  _keys = new hal::keys::esp32s3::keys_gpio(GPIO_NUM_43, GPIO_NUM_44, GPIO_NUM_0);
+  _display = new hal::display::esp32s3::display_gc9a01(35, 36, 34, 37, 46);
+  _backlight = new hal::backlight::esp32s3::backlight_ledc(GPIO_NUM_45, false, 0);
 
   static wl_handle_t wl_handle = WL_INVALID_HANDLE;
   ESP_ERROR_CHECK(init_ext_flash(39, 41, 40, 42, &wl_handle));
@@ -30,23 +30,23 @@ esp32::s3::mini::v0::v0() {
   esp_pm_configure(&pm_config);
 }
 
-Battery *esp32::s3::mini::v0::GetBattery() {
+hal::battery::Battery *esp32::s3::mini::v0::GetBattery() {
   return _battery;
 }
 
-Touch *esp32::s3::mini::v0::GetTouch() {
+hal::touch::Touch *esp32::s3::mini::v0::GetTouch() {
   return nullptr;
 }
 
-Keys *esp32::s3::mini::v0::GetKeys() {
+hal::keys::Keys *esp32::s3::mini::v0::GetKeys() {
   return _keys;
 }
 
-Display *esp32::s3::mini::v0::GetDisplay() {
+hal::display::Display *esp32::s3::mini::v0::GetDisplay() {
   return _display;
 }
 
-Backlight *esp32::s3::mini::v0::GetBacklight() {
+hal::backlight::Backlight *esp32::s3::mini::v0::GetBacklight() {
   return _backlight;
 }
 

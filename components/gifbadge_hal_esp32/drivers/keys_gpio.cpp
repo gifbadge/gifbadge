@@ -8,7 +8,7 @@
 static const char *TAG = "keys_gpio.cpp";
 
 static void pollKeys(void *args) {
-  auto *keys = (keys_gpio *) args;
+  auto *keys = (hal::keys::esp32s3::keys_gpio *) args;
   keys->poll();
 }
 
@@ -17,7 +17,7 @@ static esp_timer_handle_t wakeTimer;
 
 static void IRAM_ATTR keyWake(void *arg) {
   auto *buttonConfig = static_cast<gpio_num_t *>(arg);
-  for(int i = 0; i < KEY_MAX; i++){
+  for(int i = 0; i < hal::keys::KEY_MAX; i++){
     gpio_intr_disable(buttonConfig[i]);
   }
   esp_pm_lock_acquire(key_pm);
@@ -31,7 +31,7 @@ static void IRAM_ATTR keyWake(void *arg) {
 static void wakeTimerHandler(void *arg) {
   LOGI(TAG, "Releasing keyWake lock");
   auto *buttonConfig = static_cast<gpio_num_t *>(arg);
-  for(int i = 0; i < KEY_MAX; i++){
+  for(int i = 0; i < hal::keys::KEY_MAX; i++){
     gpio_intr_enable(buttonConfig[i]);
   }
   esp_pm_lock_release(key_pm);
@@ -39,7 +39,7 @@ static void wakeTimerHandler(void *arg) {
 
 
 
-keys_gpio::keys_gpio(gpio_num_t up, gpio_num_t down, gpio_num_t enter) {
+hal::keys::esp32s3::keys_gpio::keys_gpio(gpio_num_t up, gpio_num_t down, gpio_num_t enter) {
   buttonConfig[KEY_UP] = up;
   buttonConfig[KEY_DOWN] = down;
   buttonConfig[KEY_ENTER] = enter;
@@ -86,11 +86,11 @@ keys_gpio::keys_gpio(gpio_num_t up, gpio_num_t down, gpio_num_t enter) {
 
 }
 
-EVENT_STATE * keys_gpio::read() {
+hal::keys::EVENT_STATE * hal::keys::esp32s3::keys_gpio::read() {
 
   for (int b = 0; b < KEY_MAX; b++) {
     if (buttonConfig[b] >= 0) {
-      EVENT_STATE state = key_debounce_is_pressed(&_debounce_states[b]) ? STATE_PRESSED : STATE_RELEASED;
+      hal::keys::EVENT_STATE state = key_debounce_is_pressed(&_debounce_states[b]) ? STATE_PRESSED : STATE_RELEASED;
       if (state == STATE_PRESSED && last_state[b] == state) {
         _currentState[b] = STATE_HELD;
       } else {
@@ -102,7 +102,7 @@ EVENT_STATE * keys_gpio::read() {
   return _currentState;
 }
 
-void keys_gpio::poll() {
+void hal::keys::esp32s3::keys_gpio::poll() {
     auto time = esp_timer_get_time() / 1000;
 
     for (int b = 0; b < KEY_MAX; b++) {

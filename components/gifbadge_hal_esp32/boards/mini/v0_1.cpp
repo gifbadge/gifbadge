@@ -35,12 +35,12 @@ namespace Boards {
 esp32::s3::mini::v0_1::v0_1() {
   buffer = heap_caps_malloc(240 * 240 + 0x6100, MALLOC_CAP_INTERNAL);
   _i2c = new I2C(I2C_NUM_0, 17, 18, 100 * 1000, false);
-  _battery = new battery_max17048(_i2c, GPIO_VBUS_DETECT);
+  _battery = new hal::battery::esp32s3::battery_max17048(_i2c, GPIO_VBUS_DETECT);
   _battery->BatteryInserted(); //Battery not removable. So set this
   gpio_install_isr_service(0);
-  _keys = new keys_gpio(GPIO_NUM_0, GPIO_NUM_2, GPIO_NUM_1);
-  _display = new display_gc9a01(35, 36, 34, 37, 38);
-  _backlight = new backlight_ledc(GPIO_NUM_9, false, 0);
+  _keys = new hal::keys::esp32s3::keys_gpio(GPIO_NUM_0, GPIO_NUM_2, GPIO_NUM_1);
+  _display = new hal::display::esp32s3::display_gc9a01(35, 36, 34, 37, 38);
+  _backlight = new hal::backlight::esp32s3::backlight_ledc(GPIO_NUM_9, false, 0);
   _backlight->setLevel(100);
 
   esp_pm_config_t pm_config = {.max_freq_mhz = 240, .min_freq_mhz = 40, .light_sleep_enable = true};
@@ -80,26 +80,26 @@ esp32::s3::mini::v0_1::v0_1() {
   io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
   gpio_config(&io_conf);
   gpio_set_drive_capability(GPIO_SHUTDOWN, GPIO_DRIVE_CAP_MAX);
-  _vbus = new VbusGpio(GPIO_VBUS_DETECT);
+  _vbus = new hal::vbus::esp32s3::VbusGpio(GPIO_VBUS_DETECT);
 }
 
-Battery *esp32::s3::mini::v0_1::GetBattery() {
+hal::battery::Battery *esp32::s3::mini::v0_1::GetBattery() {
   return _battery;
 }
 
-Touch *esp32::s3::mini::v0_1::GetTouch() {
+hal::touch::Touch *esp32::s3::mini::v0_1::GetTouch() {
   return nullptr;
 }
 
-Keys *esp32::s3::mini::v0_1::GetKeys() {
+hal::keys::Keys *esp32::s3::mini::v0_1::GetKeys() {
   return _keys;
 }
 
-Display *esp32::s3::mini::v0_1::GetDisplay() {
+hal::display::Display *esp32::s3::mini::v0_1::GetDisplay() {
   return _display;
 }
 
-Backlight *esp32::s3::mini::v0_1::GetBacklight() {
+hal::backlight::Backlight *esp32::s3::mini::v0_1::GetBacklight() {
   return _backlight;
 }
 
@@ -139,7 +139,7 @@ const char *esp32::s3::mini::v0_1::Name() {
 void esp32::s3::mini::v0_1::LateInit() {
 
 }
-Vbus *esp32::s3::mini::v0_1::GetVbus() {
+hal::vbus::Vbus *esp32::s3::mini::v0_1::GetVbus() {
   return _vbus;
 }
 }

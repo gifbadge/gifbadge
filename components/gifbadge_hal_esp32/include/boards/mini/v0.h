@@ -18,11 +18,11 @@ class v0 : public esp32s3 {
   v0();
   ~v0() override = default;
 
-  Battery *GetBattery() override;
-  Touch *GetTouch() override;
-  Keys *GetKeys() override;
-  Display *GetDisplay() override;
-  Backlight *GetBacklight() override;
+  hal::battery::Battery *GetBattery() override;
+  hal::touch::Touch *GetTouch() override;
+  hal::keys::Keys *GetKeys() override;
+  hal::display::Display *GetDisplay() override;
+  hal::backlight::Backlight *GetBacklight() override;
 
   void PowerOff() override;
   BoardPower PowerState() override;
@@ -35,11 +35,11 @@ class v0 : public esp32s3 {
   void LateInit() override;
 
  private:
-  battery_analog *_battery;
+  hal::battery::esp32s3::battery_analog *_battery;
   I2C *_i2c;
-  keys_gpio *_keys;
-  display_gc9a01 *_display;
-  Backlight *_backlight;
+  hal::keys::esp32s3::keys_gpio *_keys;
+  hal::display::esp32s3::display_gc9a01 *_display;
+  hal::backlight::Backlight *_backlight;
   int UsbCallBack(tusb_msc_callback_t callback);
 };
 }

@@ -2,7 +2,8 @@
 
 #include "hal/backlight.h"
 
-class backlight_dummy : public Backlight {
+namespace hal::backlight::linux {
+class backlight_dummy : public hal::backlight::Backlight {
  public:
   backlight_dummy();
   ~backlight_dummy() override = default;
@@ -12,3 +13,5 @@ class backlight_dummy : public Backlight {
  private:
   int lastLevel = 100;
 };
+}
+

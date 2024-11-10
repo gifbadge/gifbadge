@@ -7,17 +7,23 @@
 #include "drivers/display_sdl.h"
 #include "drivers/config_mem.h"
 #include "drivers/key_sdl.h"
+#include "backlight.h"
+#include "battery.h"
+#include "display.h"
+#include "keys.h"
+#include "touch.h"
+#include "backlight_dummy.h"
 
 class board_linux : public Board {
  public:
   board_linux();
   ~board_linux() override = default;
 
-  Battery * getBattery() override;
-  Touch * getTouch() override;
-  Keys * getKeys() override;
-  Display * getDisplay() override;
-  Backlight * getBacklight() override;
+  hal::battery::Battery * getBattery() override;
+  hal::touch::Touch * getTouch() override;
+  hal::keys::Keys * getKeys() override;
+  hal::display::Display * getDisplay() override;
+  hal::backlight::Backlight * getBacklight() override;
 
   void powerOff() override;
   void pmLock() override {};
@@ -34,7 +40,7 @@ class board_linux : public Board {
   bool usbConnected() override;
 
  private:
-  backlight_dummy *_backlight;
+  hal::backlight::_linux::backlight_dummy *_backlight;
   battery_dummy *_battery;
   display_sdl *_display;
   Config_Mem *_config;

@@ -14,7 +14,7 @@ class v0_4 : public Boards::esp32::s3::full::v0_2v0_4 {
 
  private:
   typedef struct {
-    battery_max17048 * battery;
+    hal::battery::esp32s3::battery_max17048 * battery;
     esp_io_expander_handle_t io_expander;
   } batteryTimerArgs;
 

@@ -2,13 +2,15 @@
 
 
 #include "hal/keys.h"
+#include "keys.h"
 
-class keys_sdl : public Keys {
+namespace hal::keys::linux {
+class keys_sdl : public hal::keys::Keys {
  public:
   keys_sdl();
   ~keys_sdl() override = default;
 
-  EVENT_STATE * read() override;
+  hal::keys::EVENT_STATE * read() override;
 
   int pollInterval() override { return 100; };
 
@@ -16,11 +18,12 @@ class keys_sdl : public Keys {
 
  private:
 
-  debounce_state _debounce_states[KEY_MAX];
-  debounce_config _debounce_config = {0, 0};
-  EVENT_STATE _currentState[KEY_MAX];
+  hal::keys::debounce_state _debounce_states[KEY_MAX];
+  hal::keys::debounce_config _debounce_config = {0, 0};
+  hal::keys::EVENT_STATE _currentState[KEY_MAX];
 
 
   long last;
 
 };
+}

@@ -30,7 +30,7 @@ extern "C" {
  * @return
  *      - ESP_OK: Success, otherwise returns ESP_ERR_xxx
  */
-esp_err_t esp_io_expander_new_gpio(Gpio *gpio, esp_io_expander_handle_t *handle);
+esp_err_t esp_io_expander_new_gpio(hal::gpio::Gpio *gpio, esp_io_expander_handle_t *handle);
 
 
 

@@ -5,11 +5,11 @@
 static const char *TAG = "keys_esp_io_expander";
 
 static void pollKeys(void *args) {
-  auto *keys = (keys_esp_io_expander *) args;
+  auto *keys = (hal::keys::esp32s3::keys_esp_io_expander *) args;
   keys->poll();
 }
 
-keys_esp_io_expander::keys_esp_io_expander(esp_io_expander_handle_t io_expander, I2C *i2c, int up, int down, int enter)
+hal::keys::esp32s3::keys_esp_io_expander::keys_esp_io_expander(esp_io_expander_handle_t io_expander, I2C *i2c, int up, int down, int enter)
     : _io_expander(io_expander), _i2c(i2c) {
 
   buttonConfig[KEY_UP] = up;
@@ -33,10 +33,10 @@ keys_esp_io_expander::keys_esp_io_expander(esp_io_expander_handle_t io_expander,
   last = esp_timer_get_time() / 1000;
 }
 
-EVENT_STATE * keys_esp_io_expander::read() {
+hal::keys::EVENT_STATE * hal::keys::esp32s3::keys_esp_io_expander::read() {
   for (int b = 0; b < KEY_MAX; b++) {
     if (buttonConfig[b] >= 0) {
-      EVENT_STATE state = key_debounce_is_pressed(&_debounce_states[b]) ? STATE_PRESSED : STATE_RELEASED;
+      hal::keys::EVENT_STATE state = key_debounce_is_pressed(&_debounce_states[b]) ? STATE_PRESSED : STATE_RELEASED;
       if (state == STATE_PRESSED && last_state[b] == state) {
         _currentState[b] = STATE_HELD;
       } else {
@@ -48,7 +48,7 @@ EVENT_STATE * keys_esp_io_expander::read() {
   return _currentState;
 }
 
-void keys_esp_io_expander::poll() {
+void hal::keys::esp32s3::keys_esp_io_expander::poll() {
   const std::lock_guard<std::mutex> lock(_i2c->i2c_lock);
   uint32_t levels = lastLevels;
   if (esp_io_expander_get_level(_io_expander, 0xffff, &levels) == ESP_OK) {

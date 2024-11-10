@@ -2,18 +2,21 @@
 
 #include "hal/keys.h"
 #include "hal/gpio.h"
-class KeysGeneric: public Keys{
+
+namespace hal::keys::esp32s3 {
+class KeysGeneric: public hal::keys::Keys{
  public:
-  KeysGeneric(Gpio *up, Gpio *down, Gpio *enter);
+  KeysGeneric(gpio::Gpio *up, gpio::Gpio *down, gpio::Gpio *enter);
   EVENT_STATE *read() override;
   int pollInterval() override;
   void poll();
 
  private:
-  Gpio *_keys[KEY_MAX];
+  gpio::Gpio *_keys[KEY_MAX];
   debounce_state _debounce_states[KEY_MAX];
   debounce_config _debounce_config = {10, 10};
   EVENT_STATE _currentState[KEY_MAX];
   long long last;
   esp_timer_handle_t keyTimer = nullptr;
 };
+}

@@ -9,6 +9,7 @@
 #include <lvgl.h>
 #include "hal/config.h"
 #include "hal/board.h"
+#include "display.h"
 
 #define LVGL_TICK_PERIOD_MS    5
 #define LVGL_TASK_MAX_DELAY_MS 500
@@ -16,7 +17,7 @@
 #define LVGL_TASK_PRIORITY     2
 
 struct flushCbData {
-  Display *display;
+  hal::display::Display *display;
   bool callbackEnabled;
 };
 

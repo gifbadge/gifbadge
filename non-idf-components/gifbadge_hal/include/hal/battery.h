@@ -1,6 +1,7 @@
 #pragma once
 #include <cmath>
 
+namespace hal::battery {
 /**
  * Abstraction for battery hardware
  */
@@ -61,3 +62,5 @@ class Battery {
    */
   virtual State BatteryStatus() = 0;
 };
+}
+

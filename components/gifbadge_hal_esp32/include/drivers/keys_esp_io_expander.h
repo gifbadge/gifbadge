@@ -6,7 +6,8 @@
 #include <esp_timer.h>
 #include "i2c.h"
 
-class keys_esp_io_expander : public Keys {
+namespace hal::keys::esp32s3 {
+class keys_esp_io_expander : public hal::keys::Keys {
  public:
   keys_esp_io_expander(esp_io_expander_handle_t io_expander,
                        I2C *i2c,
@@ -35,3 +36,5 @@ class keys_esp_io_expander : public Keys {
   long long last;
 
 };
+}
+

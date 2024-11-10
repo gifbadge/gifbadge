@@ -2,7 +2,7 @@
 
 #include <utility>
 
-touch_ft5x06::touch_ft5x06(I2C *bus) : _bus(bus) {
+hal::touch::esp32s3::touch_ft5x06::touch_ft5x06(I2C *bus) : _bus(bus) {
   // Valid touching detect threshold
   uint8_t out;
   out = 70;
@@ -41,7 +41,7 @@ touch_ft5x06::touch_ft5x06(I2C *bus) : _bus(bus) {
   _bus->write_reg(0x38, FT5x06_ID_G_PERIODMONITOR, &out, 1);
 }
 
-std::pair<int16_t, int16_t> touch_ft5x06::read() {
+std::pair<int16_t, int16_t> hal::touch::esp32s3::touch_ft5x06::read() {
   uint8_t data;
   _bus->read_reg(0x38, FT5x06_TOUCH_POINTS, &data, 1);
   if ((data & 0x0f) > 0 && (data & 0x0f) < 5) {

@@ -22,11 +22,11 @@ class v0_6 : public Boards::esp32::s3::esp32s3_sdmmc {
   v0_6();
   ~v0_6() override = default;
 
-  Battery *GetBattery() override;
-  Touch *GetTouch() override;
-  Keys *GetKeys() override;
-  Display *GetDisplay() override;
-  Backlight *GetBacklight() override;
+  hal::battery::Battery *GetBattery() override;
+  hal::touch::Touch *GetTouch() override;
+  hal::keys::Keys *GetKeys() override;
+  hal::display::Display *GetDisplay() override;
+  hal::backlight::Backlight *GetBacklight() override;
 
   void PowerOff() override;
   BoardPower PowerState() override;
@@ -35,24 +35,24 @@ class v0_6 : public Boards::esp32::s3::esp32s3_sdmmc {
   const char *Name() override;
   void LateInit() override;
   WakeupSource BootReason() override;
-  Vbus *GetVbus() override;
-  Charger *GetCharger() override;
+  hal::vbus::Vbus *GetVbus() override;
+  hal::charger::Charger *GetCharger() override;
   void DebugInfo() override;
 
  protected:
   I2C *_i2c;
-  KeysGeneric *_keys;
-  display_st7701s *_display;
-  backlight_ledc *_backlight;
-  touch_ft5x06 *_touch;
+  hal::keys::esp32s3::KeysGeneric *_keys;
+  hal::display::esp32s3::display_st7701s *_display;
+  hal::backlight::esp32s3::backlight_ledc *_backlight;
+  hal::touch::esp32s3::touch_ft5x06 *_touch;
   bool _usbConnected = false;
-  PmicNpm1300 *_pmic;
+  hal::pmic::esp32s3::PmicNpm1300 *_pmic;
 
   void *buffer;
   esp_io_expander_handle_t _io_expander = nullptr;
-  Gpio *_card_detect = nullptr;
-  PmicNpm1300Led *_vbus_led = nullptr;
-  PmicNpm1300Led *_charge_led = nullptr;
+  hal::gpio::Gpio *_card_detect = nullptr;
+  hal::pmic::esp32s3::PmicNpm1300Led *_vbus_led = nullptr;
+  hal::pmic::esp32s3::PmicNpm1300Led *_charge_led = nullptr;
   static void VbusCallback(bool state);
 };
 }

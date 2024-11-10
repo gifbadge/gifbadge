@@ -3,6 +3,7 @@
 #include <utility>
 typedef bool (*flushCallback_t)();
 
+namespace hal::display {
 class Display {
  public:
   Display() = default;
@@ -16,3 +17,5 @@ class Display {
   std::pair<int16_t, int16_t> size;
 
 };
+}
+

@@ -14,7 +14,8 @@
 
 #include "boards/esp32s3_sdmmc.h"
 
-class b2_1_v0_2v0_4_vbus: public Vbus {
+namespace hal::vbus::esp32s3 {
+class b2_1_v0_2v0_4_vbus: public hal::vbus::Vbus {
  public:
   b2_1_v0_2v0_4_vbus(gpio_num_t gpio, esp_io_expander_handle_t expander, uint8_t expander_pin);
   uint16_t VbusMaxCurrentGet() override;
@@ -26,6 +27,7 @@ class b2_1_v0_2v0_4_vbus: public Vbus {
   gpio_num_t _gpio;
   uint8_t _expander_gpio;
 };
+}
 
 namespace Boards::esp32::s3::full {
 
@@ -34,30 +36,30 @@ class v0_2v0_4 : public Boards::esp32::s3::esp32s3_sdmmc {
   v0_2v0_4();
   ~v0_2v0_4() override = default;
 
-  Battery *GetBattery() override;
-  Touch *GetTouch() override;
-  Keys *GetKeys() override;
-  Display *GetDisplay() override;
-  Backlight *GetBacklight() override;
+  hal::battery::Battery *GetBattery() override;
+  hal::touch::Touch *GetTouch() override;
+  hal::keys::Keys *GetKeys() override;
+  hal::display::Display *GetDisplay() override;
+  hal::backlight::Backlight *GetBacklight() override;
 
   void PowerOff() override;
   BoardPower PowerState() override;
   bool StorageReady() override;
   void *TurboBuffer() override { return buffer; }
   void LateInit() override;
-  Vbus *GetVbus() override;;
+  hal::vbus::Vbus *GetVbus() override;;
 
  protected:
   I2C *_i2c;
-  keys_esp_io_expander *_keys;
-  display_st7701s *_display;
-  backlight_ledc *_backlight;
-  touch_ft5x06 *_touch;
-  b2_1_v0_2v0_4_vbus *_vbus;
+  hal::keys::esp32s3::keys_esp_io_expander *_keys;
+  hal::display::esp32s3::display_st7701s *_display;
+  hal::backlight::esp32s3::backlight_ledc *_backlight;
+  hal::touch::esp32s3::touch_ft5x06 *_touch;
+  hal::vbus::esp32s3::b2_1_v0_2v0_4_vbus *_vbus;
   bool _usbConnected = false;
 
   void *buffer;
-  battery_max17048 *_battery;
+  hal::battery::esp32s3::battery_max17048 *_battery;
   esp_io_expander_handle_t _io_expander = nullptr;
 };
 }

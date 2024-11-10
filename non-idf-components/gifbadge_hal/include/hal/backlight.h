@@ -1,5 +1,6 @@
 #pragma once
 
+namespace hal::backlight{
 class Backlight {
  public:
   Backlight() = default;
@@ -11,3 +12,5 @@ class Backlight {
   virtual void setLevel(int) = 0;
   virtual int getLevel() = 0;
 };
+}
+

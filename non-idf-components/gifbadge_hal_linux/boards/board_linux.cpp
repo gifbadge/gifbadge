@@ -1,8 +1,14 @@
 #include <cassert>
 #include "boards/board_linux.h"
+#include "backlight.h"
+#include "battery.h"
+#include "display.h"
+#include "keys.h"
+#include "touch.h"
+#include "backlight_dummy.h"
 
 board_linux::board_linux() {
-  _backlight = new backlight_dummy();
+  _backlight = new hal::backlight::_linux::backlight_dummy();
   assert(_backlight != nullptr);
   _battery = new battery_dummy();
   assert(_battery != nullptr);
@@ -16,19 +22,19 @@ board_linux::board_linux() {
 
 
 }
-Battery *board_linux::getBattery() {
+hal::battery::Battery *board_linux::getBattery() {
   return _battery;
 }
-Touch *board_linux::getTouch() {
+hal::touch::Touch *board_linux::getTouch() {
   return nullptr;
 }
-Keys *board_linux::getKeys() {
+hal::keys::Keys *board_linux::getKeys() {
   return _keys;
 }
-Display *board_linux::getDisplay() {
+hal::display::Display *board_linux::getDisplay() {
   return _display;
 }
-Backlight *board_linux::getBacklight() {
+hal::backlight::Backlight *board_linux::getBacklight() {
   return _backlight;
 }
 void board_linux::powerOff() {

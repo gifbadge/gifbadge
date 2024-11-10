@@ -2,7 +2,7 @@
 #include <memory>
 #include "hal/config.h"
 
-
+namespace hal::config::linux {
 class Config_Mem: public Config {
  public:
   Config_Mem();
@@ -29,3 +29,4 @@ class Config_Mem: public Config {
   char _path[128] = "/data";
 
 };
+}

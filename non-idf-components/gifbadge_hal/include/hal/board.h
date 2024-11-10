@@ -12,6 +12,8 @@
 #include "tusb_msc_storage.h"
 #include "vbus.h"
 #include "charger.h"
+#include "battery.h"
+#include "touch.h"
 
 namespace Boards {
 
@@ -61,56 +63,56 @@ class Board {
    * @return Battery * or nullptr
    * @see Battery
    */
-  virtual Battery * GetBattery() = 0;
+  virtual hal::battery::Battery * GetBattery() = 0;
 
   /**
    * Get the instance of Touch used by the current board
    * @return Touch * or nullptr
    * @see Touch
    */
-  virtual Touch * GetTouch() = 0;
+  virtual hal::touch::Touch * GetTouch() = 0;
 
   /**
   * Get the instance of Keys used by the current board
   * @return Keys * or nullptr
    * @see Touch
   */
-  virtual Keys * GetKeys() = 0;
+  virtual hal::keys::Keys * GetKeys() = 0;
 
   /**
   * Get the instance of Display used by the current board
   * @return Display * or nullptr
    * @see Keys
   */
-  virtual Display * GetDisplay() = 0;
+  virtual hal::display::Display * GetDisplay() = 0;
 
   /**
   * Get the instance of Backlight used by the current board
   * @return Backlight * or nullptr
    * @see Display
   */
-  virtual Backlight * GetBacklight() = 0;
+  virtual hal::backlight::Backlight * GetBacklight() = 0;
 
   /**
   * Get the instance of Vbus used by the current board
   * @return Vbus * or nullptr
    * @see Vbus
   */
-  virtual Vbus *GetVbus() { return nullptr;};
+  virtual hal::vbus::Vbus *GetVbus() { return nullptr;};
 
   /**
   * Get the instance of Charger used by the current board
   * @return Charger * or nullptr
    * @see Charger
   */
-  virtual Charger *GetCharger() {return nullptr;};
+  virtual hal::charger::Charger *GetCharger() {return nullptr;};
 
   /**
   * Get the instance of Config used by the current board
   * @return Config * or nullptr
    * @see Config
   */
-  virtual Config *GetConfig() = 0;
+  virtual hal::config::Config *GetConfig() = 0;
 
   /**
    * power off if the hardware supports it. If not, deep sleep instead

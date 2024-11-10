@@ -52,13 +52,13 @@ static void imageSpecial2() {
   }
 }
 
-static const keyCommands keyOptions[KEY_MAX] = {
+static const keyCommands keyOptions[hal::keys::KEY_MAX] = {
     keyCommands{imageNext, imageSpecial1, 300*1000},
     keyCommands{imagePrevious, imageSpecial2, 300*1000},
     keyCommands{openMenu, powerOff, 5000*1000}
 };
 
-EVENT_STATE inputState;
+hal::keys::EVENT_STATE inputState;
 static int lastKey;
 static long long lastKeyPress;
 
@@ -68,33 +68,33 @@ static esp_timer_handle_t inputTimer = nullptr;
 
 static void inputTimerHandler(void *args) {
   auto board = (Boards::Board *) args;
-  EVENT_STATE *key_state = board->GetKeys()->read();
+  hal::keys::EVENT_STATE *key_state = board->GetKeys()->read();
 
   switch (inputState) {
-    case STATE_RELEASED:
-      for (int b = 0; b < KEY_MAX; b++) {
-        if (key_state[b] == STATE_PRESSED) {
+    case hal::keys::STATE_RELEASED:
+      for (int b = 0; b < hal::keys::KEY_MAX; b++) {
+        if (key_state[b] == hal::keys::STATE_PRESSED) {
           lastKey = b;
-          inputState = STATE_PRESSED;
+          inputState = hal::keys::STATE_PRESSED;
           lastKeyPress = esp_timer_get_time();
         }
       }
       break;
-    case STATE_PRESSED:
-      if (key_state[lastKey] == STATE_RELEASED) {
+    case hal::keys::STATE_PRESSED:
+      if (key_state[lastKey] == hal::keys::STATE_RELEASED) {
         keyOptions[lastKey].press();
-        inputState = STATE_RELEASED;
+        inputState = hal::keys::STATE_RELEASED;
       } else if (esp_timer_get_time() - lastKeyPress > keyOptions[lastKey].delay) {
-        if (key_state[lastKey] == STATE_HELD) {
+        if (key_state[lastKey] == hal::keys::STATE_HELD) {
           keyOptions[lastKey].hold();
-          inputState = STATE_HELD;
+          inputState = hal::keys::STATE_HELD;
         }
       }
       break;
-    case STATE_HELD:
-      if (key_state[lastKey] == STATE_RELEASED) {
+    case hal::keys::STATE_HELD:
+      if (key_state[lastKey] == hal::keys::STATE_RELEASED) {
         imageCurrent();
-        inputState = STATE_RELEASED;
+        inputState = hal::keys::STATE_RELEASED;
       }
       break;
   }

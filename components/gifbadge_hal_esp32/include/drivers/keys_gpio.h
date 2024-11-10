@@ -4,7 +4,8 @@
 #include <hal/keys.h>
 #include "hal/gpio_hal.h"
 
-class keys_gpio : public Keys {
+namespace hal::keys::esp32s3 {
+class keys_gpio : public hal::keys::Keys {
  public:
   keys_gpio(gpio_num_t up, gpio_num_t down, gpio_num_t enter);
   ~keys_gpio() override = default;
@@ -28,3 +29,5 @@ class keys_gpio : public Keys {
   long long last;
 
 };
+}
+

@@ -80,12 +80,12 @@ static void flushTimer(void *args){
 
 }
 
-display_st7701s::display_st7701s(spi_line_config_t line_cfg,
-                                 int hsync,
-                                 int vsync,
-                                 int de,
-                                 int pclk,
-                                 std::array<int, 16> &rgb) {
+hal::display::esp32s3::display_st7701s::display_st7701s(spi_line_config_t line_cfg,
+                                                        int hsync,
+                                                        int vsync,
+                                                        int de,
+                                                        int pclk,
+                                                        std::array<int, 16> &rgb) {
 
   LOGI(TAG, "Install 3-wire SPI panel IO");
   esp_lcd_panel_io_3wire_spi_config_t io_config = {
@@ -195,7 +195,7 @@ display_st7701s::display_st7701s(spi_line_config_t line_cfg,
   ESP_ERROR_CHECK(esp_timer_create(&flushTimerArgs, &flushTimerHandle));
 }
 
-void display_st7701s::write(int x_start, int y_start, int x_end, int y_end, const void *color_data) {
+void hal::display::esp32s3::display_st7701s::write(int x_start, int y_start, int x_end, int y_end, const void *color_data) {
   buffer = static_cast<uint8_t *>(color_data == _fb0 ? _fb1 : _fb0);
   esp_lcd_panel_draw_bitmap(panel_handle, x_start, y_start, x_end, y_end, color_data);
   esp_timer_start_once(flushTimerHandle, 30*1000);
@@ -205,12 +205,12 @@ void display_st7701s::write(int x_start, int y_start, int x_end, int y_end, cons
   }
 }
 
-bool display_st7701s::onColorTransDone(flushCallback_t callback) {
+bool hal::display::esp32s3::display_st7701s::onColorTransDone(flushCallback_t callback) {
   flushCallback = callback;
   return true;
 }
 
-void display_st7701s::clear() {
+void hal::display::esp32s3::display_st7701s::clear() {
   _clear = true;
   memset(buffer, 0xFF, size.first * size.second * 2);
 }

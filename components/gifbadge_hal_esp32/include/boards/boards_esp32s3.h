@@ -25,7 +25,7 @@ public:
  void PmLock() override;
  void PmRelease() override;
 
- Config *GetConfig() override;
+ hal::config::Config *GetConfig() override;
  void DebugInfo() override;
  const char *SwVersion() override;
   void Reset() override;
@@ -38,7 +38,7 @@ public:
 
  protected:
  esp_pm_lock_handle_t pmLockHandle = nullptr;
- Config_NVS *_config;
+ hal::config::esp32s3::Config_NVS *_config;
  char serial[18];
 
  static void OtaInstallTask(void *arg);

@@ -9,12 +9,12 @@
 static const char *TAG = "PmicNpm1300";
 
 static void irq(void *arg) {
-  auto pmic = static_cast<PmicNpm1300 *>(arg);
+  auto pmic = static_cast<hal::pmic::esp32s3::PmicNpm1300 *>(arg);
   pmic->HandleInterrupt();
 }
 
 static void npmx_timer(void *arg) {
-  auto pmic = static_cast<PmicNpm1300 *>(arg);
+  auto pmic = static_cast<hal::pmic::esp32s3::PmicNpm1300 *>(arg);
   pmic->Loop();
 }
 
@@ -38,9 +38,9 @@ npmx_error_t npmx_read(void *p_context, uint32_t register_address, uint8_t *p_da
   return NPMX_SUCCESS;
 }
 
-void PmicNpm1300::VbusVoltage(npmx_instance_t *pm, npmx_callback_type_t, uint8_t mask) {
+void hal::pmic::esp32s3::PmicNpm1300::VbusVoltage(npmx_instance_t *pm, npmx_callback_type_t, uint8_t mask) {
   if (mask & (NPMX_EVENT_GROUP_VBUSIN_DETECTED_MASK | NPMX_EVENT_GROUP_VBUSIN_REMOVED_MASK)) {
-    auto *pmic = static_cast<PmicNpm1300 *>(npmx_core_context_get(pm));
+    auto *pmic = static_cast<hal::pmic::esp32s3::PmicNpm1300 *>(npmx_core_context_get(pm));
     if (mask & NPMX_EVENT_GROUP_VBUSIN_DETECTED_MASK) {
       LOGI(TAG, "VBUS CONNECTED");
       if(pmic->_vbus_callback){
@@ -110,7 +110,7 @@ static Boards::WakeupSource get_wakeup(npmx_instance_t *pm){
   return wakeup;
 }
 
-PmicNpm1300::PmicNpm1300(I2C *i2c, gpio_num_t gpio_int)
+hal::pmic::esp32s3::PmicNpm1300::PmicNpm1300(I2C *i2c, gpio_num_t gpio_int)
     : _i2c(i2c), _gpio_int(gpio_int), _npmx_backend(npmx_write, npmx_read, i2c) {
 
   if (npmx_core_init(&_npmx_instance, &_npmx_backend, npmx_callback, false) != NPMX_SUCCESS) {
@@ -123,10 +123,10 @@ PmicNpm1300::PmicNpm1300(I2C *i2c, gpio_num_t gpio_int)
 
 }
 
-void PmicNpm1300::poll() {
+void hal::pmic::esp32s3::PmicNpm1300::poll() {
 }
 
-double PmicNpm1300::BatteryVoltage() {
+double hal::pmic::esp32s3::PmicNpm1300::BatteryVoltage() {
   return _vbat/1000.00;
 }
 
@@ -148,7 +148,7 @@ static inline uint8_t asigmoidal(uint16_t voltage, uint16_t minVoltage = 2800, u
   return result >= 100 ? 100 : result;
 }
 
-int PmicNpm1300::BatterySoc() {
+int hal::pmic::esp32s3::PmicNpm1300::BatterySoc() {
   uint8_t status;
   npmx_charger_status_get(npmx_charger_get(&_npmx_instance, 0), &status);
   if(status & NPMX_CHARGER_STATUS_COMPLETED_MASK){
@@ -157,14 +157,14 @@ int PmicNpm1300::BatterySoc() {
   return asigmoidal(static_cast<uint16_t>(_vbat));
 }
 
-void PmicNpm1300::BatteryRemoved() {
+void hal::pmic::esp32s3::PmicNpm1300::BatteryRemoved() {
   _present = false;
 }
 
-void PmicNpm1300::BatteryInserted() {
+void hal::pmic::esp32s3::PmicNpm1300::BatteryInserted() {
 }
 
-Battery::State PmicNpm1300::BatteryStatus() {
+hal::battery::Battery::State hal::pmic::esp32s3::PmicNpm1300::BatteryStatus() {
   uint8_t status;
   npmx_charger_status_get(npmx_charger_get(&_npmx_instance, 0), &status);
   if(!(status & NPMX_CHARGER_STATUS_BATTERY_DETECTED_MASK)){
@@ -182,7 +182,7 @@ Battery::State PmicNpm1300::BatteryStatus() {
   return Battery::State::OK;
 }
 
-void PmicNpm1300::Buck1Set(uint32_t millivolts) {
+void hal::pmic::esp32s3::PmicNpm1300::Buck1Set(uint32_t millivolts) {
   LOGI(TAG, "Buck 1 set voltage %lumV", millivolts);
   auto buck = npmx_buck_get(&_npmx_instance, 0);
   npmx_buck_normal_voltage_set(buck, npmx_buck_voltage_convert(millivolts));
@@ -193,67 +193,67 @@ void PmicNpm1300::Buck1Set(uint32_t millivolts) {
   LOGI(TAG, "Buck status mode %u powered %u pwm %u", status.buck_mode, status.powered, status.pwm_enabled);
 }
 
-void PmicNpm1300::Buck1Disable() {
+void hal::pmic::esp32s3::PmicNpm1300::Buck1Disable() {
   auto buck = npmx_buck_get(&_npmx_instance, 0);
   npmx_buck_task_trigger(buck, NPMX_BUCK_TASK_DISABLE);
 }
 
-void PmicNpm1300::LoadSw1Enable() {
+void hal::pmic::esp32s3::PmicNpm1300::LoadSw1Enable() {
   auto loadswitch = npmx_ldsw_get(&_npmx_instance, 0);
   npmx_ldsw_active_discharge_enable_set(loadswitch, true);
   npmx_ldsw_task_trigger(loadswitch, NPMX_LDSW_TASK_ENABLE);
 }
 
-void PmicNpm1300::LoadSw1Disable() {
+void hal::pmic::esp32s3::PmicNpm1300::LoadSw1Disable() {
   auto loadswitch = npmx_ldsw_get(&_npmx_instance, 0);
   npmx_ldsw_task_trigger(loadswitch, NPMX_LDSW_TASK_DISABLE);
 }
 
-PmicNpm1300Gpio *PmicNpm1300::GpioGet(uint8_t index) {
+hal::pmic::esp32s3::PmicNpm1300Gpio *hal::pmic::esp32s3::PmicNpm1300::GpioGet(uint8_t index) {
   return new PmicNpm1300Gpio(&_npmx_instance, index);
 }
-PmicNpm1300ShpHld *PmicNpm1300::ShphldGet() {
+hal::pmic::esp32s3::PmicNpm1300ShpHld *hal::pmic::esp32s3::PmicNpm1300::ShphldGet() {
   return new PmicNpm1300ShpHld(&_npmx_instance);
 }
-PmicNpm1300Led *PmicNpm1300::LedGet(uint8_t index) {
+hal::pmic::esp32s3::PmicNpm1300Led *hal::pmic::esp32s3::PmicNpm1300::LedGet(uint8_t index) {
   return new PmicNpm1300Led(&_npmx_instance, index);
 }
-void PmicNpm1300::ChargeEnable() {
+void hal::pmic::esp32s3::PmicNpm1300::ChargeEnable() {
   npmx_charger_task_trigger(npmx_charger_get(&_npmx_instance, 0),NPMX_CHARGER_TASK_CLEAR_ERROR);
   npmx_charger_task_trigger(npmx_charger_get(&_npmx_instance, 0),NPMX_CHARGER_TASK_CLEAR_TIMERS);
   npmx_charger_module_enable_set(npmx_charger_get(&_npmx_instance, 0),
                                  NPMX_CHARGER_MODULE_CHARGER_MASK);
 }
-void PmicNpm1300::ChargeDisable() {
+void hal::pmic::esp32s3::PmicNpm1300::ChargeDisable() {
   npmx_charger_module_disable_set(npmx_charger_get(&_npmx_instance, 0),
                                   NPMX_CHARGER_MODULE_CHARGER_MASK);
 }
-void PmicNpm1300::ChargeCurrentSet(uint16_t iset) {
+void hal::pmic::esp32s3::PmicNpm1300::ChargeCurrentSet(uint16_t iset) {
   uint16_t set = ((iset + 1) / 2) * 2;
   npmx_charger_charging_current_set(npmx_charger_get(&_npmx_instance, 0), set);
 }
-uint16_t PmicNpm1300::ChargeCurrentGet() {
+uint16_t hal::pmic::esp32s3::PmicNpm1300::ChargeCurrentGet() {
   uint16_t iset;
   npmx_charger_charging_current_get(npmx_charger_get(&_npmx_instance, 0), &iset);
   return iset;
 }
-void PmicNpm1300::DischargeCurrentSet(uint16_t iset) {
+void hal::pmic::esp32s3::PmicNpm1300::DischargeCurrentSet(uint16_t iset) {
   uint16_t set = ((iset + 1) / 2) * 2;
   npmx_charger_discharging_current_set(npmx_charger_get(&_npmx_instance, 0), set);
 }
-uint16_t PmicNpm1300::DischargeCurrentGet() {
+uint16_t hal::pmic::esp32s3::PmicNpm1300::DischargeCurrentGet() {
   uint16_t iset;
   npmx_charger_discharging_current_get(npmx_charger_get(&_npmx_instance, 0), &iset);
   return iset;
 }
-void PmicNpm1300::ChargeVtermSet(uint16_t vterm) {
+void hal::pmic::esp32s3::PmicNpm1300::ChargeVtermSet(uint16_t vterm) {
   npmx_charger_termination_normal_voltage_set(npmx_charger_get(&_npmx_instance, 0),
                                               npmx_charger_voltage_convert(vterm));
   /* Set battery termination voltage in warm temperature. */
   npmx_charger_termination_warm_voltage_set(npmx_charger_get(&_npmx_instance, 0),
                                             npmx_charger_voltage_convert(vterm));
 }
-uint16_t PmicNpm1300::ChargeVtermGet() {
+uint16_t hal::pmic::esp32s3::PmicNpm1300::ChargeVtermGet() {
   npmx_charger_voltage_t voltage_enum;
   npmx_charger_termination_normal_voltage_get(npmx_charger_get(&_npmx_instance, 0), &voltage_enum);
   uint32_t voltage;
@@ -261,7 +261,7 @@ uint16_t PmicNpm1300::ChargeVtermGet() {
   return static_cast<uint16_t>(voltage);
 }
 
-Charger::ChargeStatus PmicNpm1300::ChargeStatusGet() {
+hal::charger::Charger::ChargeStatus hal::pmic::esp32s3::PmicNpm1300::ChargeStatusGet() {
   if (_charge_error != Charger::ChargeError::NONE) {
     return Charger::ChargeStatus::ERROR;
   }
@@ -291,25 +291,25 @@ Charger::ChargeStatus PmicNpm1300::ChargeStatusGet() {
   }
   return Charger::ChargeStatus::NONE;
 }
-Charger::ChargeError PmicNpm1300::ChargeErrorGet() {
+hal::charger::Charger::ChargeError hal::pmic::esp32s3::PmicNpm1300::ChargeErrorGet() {
   return _charge_error;
 }
-bool PmicNpm1300::ChargeBattDetect() {
+bool hal::pmic::esp32s3::PmicNpm1300::ChargeBattDetect() {
   uint8_t status_mask;
   npmx_charger_status_get(npmx_charger_get(&_npmx_instance, 0), &status_mask);
   return NPMX_CHARGER_STATUS_BATTERY_DETECTED_MASK & status_mask;
 }
-void PmicNpm1300::HandleInterrupt() {
+void hal::pmic::esp32s3::PmicNpm1300::HandleInterrupt() {
   npmx_core_interrupt(&_npmx_instance);
 }
-void PmicNpm1300::Loop() {
+void hal::pmic::esp32s3::PmicNpm1300::Loop() {
   npmx_core_proc(&_npmx_instance);
 }
-Boards::WakeupSource PmicNpm1300::GetWakeup() {
+Boards::WakeupSource hal::pmic::esp32s3::PmicNpm1300::GetWakeup() {
   return _wakeup_source;
 }
 
-void PmicNpm1300::PwrLedSet(Gpio *gpio) {
+void hal::pmic::esp32s3::PmicNpm1300::PwrLedSet(hal::gpio::Gpio *gpio) {
   _power_led = gpio;
   uint8_t status;
   npmx_vbusin_vbus_status_get(npmx_vbusin_get(&_npmx_instance, 0), &status);
@@ -318,7 +318,7 @@ void PmicNpm1300::PwrLedSet(Gpio *gpio) {
   }
 }
 
-void PmicNpm1300::Init() {
+void hal::pmic::esp32s3::PmicNpm1300::Init() {
   cc_set_current(&_npmx_instance);
   npmx_vbusin_suspend_mode_enable_set(npmx_vbusin_get(&_npmx_instance, 0), false);
 
@@ -369,19 +369,19 @@ void PmicNpm1300::Init() {
 
 }
 
-void PmicNpm1300::EnableGpioEvent(uint8_t index) {
+void hal::pmic::esp32s3::PmicNpm1300::EnableGpioEvent(uint8_t index) {
   _gpio_event_mask |= (1 << index);
   npmx_core_event_interrupt_enable(&_npmx_instance, NPMX_EVENT_GROUP_GPIO, _gpio_event_mask);
 }
 
-void PmicNpm1300::DisableGpioEvent(uint8_t index) {
+void hal::pmic::esp32s3::PmicNpm1300::DisableGpioEvent(uint8_t index) {
   _gpio_event_mask &= ~(1 << index);
   npmx_core_event_interrupt_enable(&_npmx_instance, NPMX_EVENT_GROUP_GPIO, _gpio_event_mask);
 }
 
 
-void PmicNpm1300::GpioHandler(npmx_instance_t *pm, npmx_callback_type_t, uint8_t mask) {
-  auto *pmic = static_cast<PmicNpm1300 *>(npmx_core_context_get(pm));
+void hal::pmic::esp32s3::PmicNpm1300::GpioHandler(npmx_instance_t *pm, npmx_callback_type_t, uint8_t mask) {
+  auto *pmic = static_cast<hal::pmic::esp32s3::PmicNpm1300 *>(npmx_core_context_get(pm));
   for(int x = 0; x< 5; x++){
     if(mask & (1 << x)){
       LOGI(TAG, "GPIO %u", x);
@@ -390,15 +390,15 @@ void PmicNpm1300::GpioHandler(npmx_instance_t *pm, npmx_callback_type_t, uint8_t
   }
 
 }
-void PmicNpm1300::GpioCallback(uint8_t index) {
+void hal::pmic::esp32s3::PmicNpm1300::GpioCallback(uint8_t index) {
   if(_gpio_callbacks[index] != nullptr){
     _gpio_callbacks[index]();
   }
 }
-void PmicNpm1300::RegisterGpioCallback(uint8_t index, void (*callback)()) {
+void hal::pmic::esp32s3::PmicNpm1300::RegisterGpioCallback(uint8_t index, void (*callback)()) {
   _gpio_callbacks[index] = callback;
 }
-uint16_t PmicNpm1300::VbusMaxCurrentGet() {
+uint16_t hal::pmic::esp32s3::PmicNpm1300::VbusMaxCurrentGet() {
   npmx_vbusin_cc_t cc1;
   npmx_vbusin_cc_t cc2;
   npmx_vbusin_cc_status_get(npmx_vbusin_get(&_npmx_instance, 0), &cc1, &cc2);
@@ -420,18 +420,18 @@ uint16_t PmicNpm1300::VbusMaxCurrentGet() {
   }
 }
 
-void PmicNpm1300::VbusMaxCurrentSet(uint16_t mA) {
+void hal::pmic::esp32s3::PmicNpm1300::VbusMaxCurrentSet(uint16_t mA) {
   npmx_vbusin_current_t setting = npmx_vbusin_current_convert(((mA+ 499) / 500) * 500);
   npmx_vbusin_current_limit_set(npmx_vbusin_get(&_npmx_instance, 0), setting);
 }
 
-bool PmicNpm1300::VbusConnected() {
+bool hal::pmic::esp32s3::PmicNpm1300::VbusConnected() {
   uint8_t vbus_status;
   npmx_vbusin_vbus_status_get(npmx_vbusin_get(&_npmx_instance, 0), &vbus_status);
   return vbus_status&NPMX_VBUSIN_STATUS_CONNECTED_MASK;
 }
 
-void PmicNpm1300::EnableADC() {
+void hal::pmic::esp32s3::PmicNpm1300::EnableADC() {
   npmx_adc_ntc_config_t ntc_config = { .type = NPMX_ADC_NTC_TYPE_10_K, .beta = 3380 };
 
   /* Set thermistor type and NTC beta value for ADC measurements. */
@@ -459,8 +459,8 @@ void PmicNpm1300::EnableADC() {
 
 }
 
-void PmicNpm1300::ADCTimerHandler(void *arg) {
-  auto pmic = static_cast<PmicNpm1300 *>(arg);
+void hal::pmic::esp32s3::PmicNpm1300::ADCTimerHandler(void *arg) {
+  auto pmic = static_cast<hal::pmic::esp32s3::PmicNpm1300 *>(arg);
   npmx_adc_meas_all_t meas;
   if (npmx_adc_meas_all_get(npmx_adc_get(&pmic->_npmx_instance, 0), &meas) != NPMX_SUCCESS) {
     LOGI(TAG, "Reading ADC measurements failed.");
@@ -479,13 +479,13 @@ void PmicNpm1300::ADCTimerHandler(void *arg) {
   }
 
 }
-double PmicNpm1300::BatteryCurrent() {
+double hal::pmic::esp32s3::PmicNpm1300::BatteryCurrent() {
   return _ibat/1000.00;
 }
-double PmicNpm1300::BatteryTemperature() {
+double hal::pmic::esp32s3::PmicNpm1300::BatteryTemperature() {
   return _tbat/1000.00;
 }
-void PmicNpm1300::VbusConnectedCallback(void (*callback)(bool)) {
+void hal::pmic::esp32s3::PmicNpm1300::VbusConnectedCallback(void (*callback)(bool)) {
   _vbus_callback = callback;
   uint8_t status;
   npmx_vbusin_vbus_status_get(npmx_vbusin_get(&_npmx_instance, 0), &status);
@@ -493,27 +493,27 @@ void PmicNpm1300::VbusConnectedCallback(void (*callback)(bool)) {
     _vbus_callback((status&NPMX_VBUSIN_STATUS_CONNECTED_MASK)==1);
   }
 }
-void PmicNpm1300::DebugLog() {
+void hal::pmic::esp32s3::PmicNpm1300::DebugLog() {
   LOGI(TAG, "SOC: %i, Voltage %fV", BatterySoc(), BatteryVoltage());
   LOGI(TAG, "Temperature: %fC, Current %fA", BatteryTemperature(), BatteryCurrent());
 }
 
 
-void PmicNpm1300Gpio::GpioConfig(GpioDirection direction, GpioPullMode pull) {
+void hal::pmic::esp32s3::PmicNpm1300Gpio::GpioConfig(gpio::GpioDirection direction, gpio::GpioPullMode pull) {
   npmx_gpio_pull_t pull_mode = NPMX_GPIO_PULL_DOWN;
   switch (pull) {
-    case GpioPullMode::NONE:
+    case gpio::GpioPullMode::NONE:
       pull_mode = NPMX_GPIO_PULL_NONE;
       break;
-    case GpioPullMode::UP:
+    case gpio::GpioPullMode::UP:
       pull_mode = NPMX_GPIO_PULL_UP;
       break;
-    case GpioPullMode::DOWN:
+    case gpio::GpioPullMode::DOWN:
       pull_mode = NPMX_GPIO_PULL_DOWN;
       break;
   }
   _config = {
-      .mode = direction == GpioDirection::IN ? NPMX_GPIO_MODE_INPUT
+      .mode = direction == gpio::GpioDirection::IN ? NPMX_GPIO_MODE_INPUT
                                              : NPMX_GPIO_MODE_OUTPUT_OVERRIDE_0,
       .drive = NPMX_GPIO_DRIVE_6_MA,
       .pull = pull_mode,
@@ -523,18 +523,18 @@ void PmicNpm1300Gpio::GpioConfig(GpioDirection direction, GpioPullMode pull) {
   npmx_gpio_config_set(npmx_gpio_get(_npmx_instance, _index), &_config);
 }
 
-bool PmicNpm1300Gpio::GpioRead() {
+bool hal::pmic::esp32s3::PmicNpm1300Gpio::GpioRead() {
   bool state;
   npmx_gpio_status_check(npmx_gpio_get(_npmx_instance, _index), &state);
   return state;
 }
 
-void PmicNpm1300Gpio::GpioWrite(bool b) {
+void hal::pmic::esp32s3::PmicNpm1300Gpio::GpioWrite(bool b) {
   npmx_gpio_mode_set(npmx_gpio_get(_npmx_instance, _index),
                      b ? NPMX_GPIO_MODE_OUTPUT_OVERRIDE_1 : NPMX_GPIO_MODE_OUTPUT_OVERRIDE_0);
 }
 
-PmicNpm1300Gpio::PmicNpm1300Gpio(npmx_instance_t *npmx, uint8_t index) : _npmx_instance(npmx), _index(index) {
+hal::pmic::esp32s3::PmicNpm1300Gpio::PmicNpm1300Gpio(npmx_instance_t *npmx, uint8_t index) : _npmx_instance(npmx), _index(index) {
 
 }
 
@@ -542,29 +542,29 @@ PmicNpm1300Gpio::PmicNpm1300Gpio(npmx_instance_t *npmx, uint8_t index) : _npmx_i
  * Enables IRQ output on this GPIO
  * @param b true to enable, false to disable
  */
-void PmicNpm1300Gpio::EnableIrq(bool b) {
+void hal::pmic::esp32s3::PmicNpm1300Gpio::EnableIrq(bool b) {
   npmx_gpio_mode_set(npmx_gpio_get(_npmx_instance, _index),
                      b ? NPMX_GPIO_MODE_OUTPUT_IRQ : NPMX_GPIO_MODE_INPUT);
 
 }
-void PmicNpm1300Gpio::GpioInt(Gpio::GpioIntDirection dir, void (*callback)()) {
+void hal::pmic::esp32s3::PmicNpm1300Gpio::GpioInt(hal::gpio::GpioIntDirection dir, void (*callback)()) {
   _callback = callback;
   _int_direction = dir;
   npmx_gpio_mode_t set_dir = NPMX_GPIO_MODE_INPUT;
   switch(dir){
-    case GpioIntDirection::NONE:
+    case gpio::GpioIntDirection::NONE:
       set_dir = NPMX_GPIO_MODE_INPUT;
       break;
-    case GpioIntDirection::RISING:
+    case gpio::GpioIntDirection::RISING:
       set_dir = NPMX_GPIO_MODE_INPUT_RISING_EDGE;
       break;
-    case GpioIntDirection::FALLING:
+    case gpio::GpioIntDirection::FALLING:
       set_dir = NPMX_GPIO_MODE_INPUT_FALLING_EDGE;
       break;
   }
   npmx_gpio_mode_set(npmx_gpio_get(_npmx_instance, _index), set_dir);
-  auto pmic = static_cast<PmicNpm1300 *>(npmx_core_context_get(_npmx_instance));
-  if(dir != GpioIntDirection::NONE){
+  auto pmic = static_cast<hal::pmic::esp32s3::PmicNpm1300 *>(npmx_core_context_get(_npmx_instance));
+  if(dir != gpio::GpioIntDirection::NONE){
     pmic->EnableGpioEvent(_index);
   }
   else{
@@ -573,31 +573,31 @@ void PmicNpm1300Gpio::GpioInt(Gpio::GpioIntDirection dir, void (*callback)()) {
   pmic->RegisterGpioCallback(_index, callback);
 }
 
-void PmicNpm1300ShpHld::GpioConfig(GpioDirection direction, GpioPullMode pull) {
+void hal::pmic::esp32s3::PmicNpm1300ShpHld::GpioConfig(gpio::GpioDirection direction, gpio::GpioPullMode pull) {
 
 }
-bool PmicNpm1300ShpHld::GpioRead() {
+bool hal::pmic::esp32s3::PmicNpm1300ShpHld::GpioRead() {
   bool state;
   npmx_ship_gpio_status_check(npmx_ship_get(_npmx_instance, 0), &state);
   return !state;
 }
-void PmicNpm1300ShpHld::GpioWrite(bool b) {
+void hal::pmic::esp32s3::PmicNpm1300ShpHld::GpioWrite(bool b) {
 
 }
-PmicNpm1300ShpHld::PmicNpm1300ShpHld(npmx_instance_t *npmx) : _npmx_instance(npmx) {
+hal::pmic::esp32s3::PmicNpm1300ShpHld::PmicNpm1300ShpHld(npmx_instance_t *npmx) : _npmx_instance(npmx) {
 
 }
-PmicNpm1300Led::PmicNpm1300Led(npmx_instance_t *npmx, uint8_t index) : _npmx_instance(npmx), _index(index) {
+hal::pmic::esp32s3::PmicNpm1300Led::PmicNpm1300Led(npmx_instance_t *npmx, uint8_t index) : _npmx_instance(npmx), _index(index) {
 
 }
-void PmicNpm1300Led::GpioConfig(GpioDirection direction, GpioPullMode pull) {
+void hal::pmic::esp32s3::PmicNpm1300Led::GpioConfig(gpio::GpioDirection direction, gpio::GpioPullMode pull) {
 
 }
 /***
  * Always returns false, as LED does not support input
  * @return false
  */
-bool PmicNpm1300Led::GpioRead() {
+bool hal::pmic::esp32s3::PmicNpm1300Led::GpioRead() {
   return false;
 }
 
@@ -605,7 +605,7 @@ bool PmicNpm1300Led::GpioRead() {
  * Write LED State
  * @param b true turns on the LED, false turns off
  */
-void PmicNpm1300Led::GpioWrite(bool b) {
+void hal::pmic::esp32s3::PmicNpm1300Led::GpioWrite(bool b) {
   npmx_led_state_set(npmx_led_get(_npmx_instance, _index), b);
 }
 
@@ -613,7 +613,7 @@ void PmicNpm1300Led::GpioWrite(bool b) {
  * Sets the LED to indicate charging status
  * @param b true enables, false disables
  */
-void PmicNpm1300Led::ChargingIndicator(bool b) {
+void hal::pmic::esp32s3::PmicNpm1300Led::ChargingIndicator(bool b) {
   npmx_led_mode_set(npmx_led_get(_npmx_instance, _index), b ? NPMX_LED_MODE_CHARGING : NPMX_LED_MODE_HOST);
 }
 

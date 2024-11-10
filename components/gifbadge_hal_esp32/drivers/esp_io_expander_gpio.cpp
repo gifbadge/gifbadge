@@ -29,7 +29,7 @@
  */
 typedef struct {
   esp_io_expander_t base;
-  Gpio *gpio;
+  hal::gpio::Gpio *gpio;
   struct {
     uint16_t direction;
     uint16_t output;
@@ -46,7 +46,7 @@ static esp_err_t read_direction_reg(esp_io_expander_handle_t handle, uint32_t *v
 static esp_err_t reset(esp_io_expander_t *handle);
 static esp_err_t del(esp_io_expander_t *handle);
 
-esp_err_t esp_io_expander_new_gpio(Gpio *gpio, esp_io_expander_handle_t *handle)
+esp_err_t esp_io_expander_new_gpio(hal::gpio::Gpio *gpio, esp_io_expander_handle_t *handle)
 {
   ESP_RETURN_ON_FALSE(gpio != nullptr, ESP_ERR_INVALID_ARG, TAG, "Invalid gpio");
   ESP_RETURN_ON_FALSE(handle, ESP_ERR_INVALID_ARG, TAG, "Invalid handle");

@@ -2,7 +2,10 @@
 
 #include <soc/gpio_num.h>
 #include "hal/vbus.h"
-class VbusGpio: public Vbus{
+
+namespace hal::vbus::esp32s3 {
+
+class VbusGpio: public hal::vbus::Vbus{
  public:
   VbusGpio(gpio_num_t gpio);
   uint16_t VbusMaxCurrentGet() override;
@@ -13,4 +16,5 @@ class VbusGpio: public Vbus{
   gpio_num_t _gpio;
 
 };
+}
 

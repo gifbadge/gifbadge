@@ -2,7 +2,8 @@
 
 #include <hal/backlight.h>
 
-class backlight_ledc : public Backlight {
+namespace hal::backlight::esp32s3 {
+class backlight_ledc : public hal::backlight::Backlight {
  public:
   explicit backlight_ledc(gpio_num_t gpio, bool invert, int level = 100);
   ~backlight_ledc() override = default;
@@ -12,3 +13,5 @@ class backlight_ledc : public Backlight {
  private:
   int lastLevel;
 };
+}
+

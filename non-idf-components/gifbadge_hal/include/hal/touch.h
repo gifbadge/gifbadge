@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <utility>
 
+namespace hal::touch {
 class Touch {
  public:
   Touch() = default;
@@ -11,3 +12,5 @@ class Touch {
 
   virtual std::pair<int16_t, int16_t> read() = 0;
 };
+}
+

@@ -1,13 +1,16 @@
 #pragma once
 
 #include "hal/display.h"
+#include "display.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_timer.h>
 #include <semaphore>
 #include <semaphore.h>
 
-class display_sdl : public Display {
+namespace hal::display::linux {
+
+class display_sdl : public hal::display::Display {
  public:
   display_sdl();
   ~display_sdl() override = default;
@@ -29,3 +32,5 @@ class display_sdl : public Display {
 };
 
 extern display_sdl *displaySdl;
+
+}

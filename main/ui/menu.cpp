@@ -13,6 +13,7 @@
 #include "display.h"
 #include "ui/widgets/battery/lv_battery.h"
 #include "timers.h"
+#include "touch.h"
 
 static const char *TAG = "MENU";
 
@@ -145,14 +146,14 @@ void keyboard_read(lv_indev_t *indev, lv_indev_data_t *data) {
 //    LOGI(TAG, "keyboard_read");
   auto g = lv_indev_get_group(indev);
   bool editing = lv_group_get_editing(g);
-  Keys *device = static_cast<Keys *>(lv_indev_get_user_data(indev));
+  hal::keys::Keys *device = static_cast<hal::keys::Keys *>(lv_indev_get_user_data(indev));
   if(device) {
-    EVENT_STATE *keys = device->read();
-    if (keys[KEY_UP] == STATE_PRESSED) {
+    hal::keys::EVENT_STATE *keys = device->read();
+    if (keys[hal::keys::KEY_UP] == hal::keys::STATE_PRESSED) {
       data->enc_diff += editing ? +1 : -1;
-    } else if (keys[KEY_DOWN] == STATE_PRESSED) {
+    } else if (keys[hal::keys::KEY_DOWN] == hal::keys::STATE_PRESSED) {
       data->enc_diff += editing ? -1 : +1;
-    } else if (keys[KEY_ENTER] == STATE_PRESSED || keys[KEY_ENTER] == STATE_HELD) {
+    } else if (keys[hal::keys::KEY_ENTER] == hal::keys::STATE_PRESSED || keys[hal::keys::KEY_ENTER] == hal::keys::STATE_HELD) {
       data->state = LV_INDEV_STATE_PRESSED;
     } else {
       data->state = LV_INDEV_STATE_RELEASED;
@@ -171,7 +172,7 @@ bool lvgl_menu_state() {
 
 void touch_read(lv_indev_t *drv, lv_indev_data_t *data) {
 
-  auto touch = static_cast<Touch *>(lv_indev_get_driver_data(drv));
+  auto touch = static_cast<hal::touch::Touch *>(lv_indev_get_driver_data(drv));
   auto i = touch->read();
   if (i.first > 0 && i.second > 0) {
     data->point.x = (int32_t) i.first;
@@ -224,8 +225,8 @@ void lvgl_init(Boards::Board *board) {
 }
 
 void battery_percent_update(lv_obj_t *widget) {
-  auto battery = static_cast<Battery *>(lv_obj_get_user_data(widget));
-  if (battery->BatteryStatus() == Battery::State::ERROR || battery->BatteryStatus() == Battery::State::NOT_PRESENT) {
+  auto battery = static_cast<hal::battery::Battery *>(lv_obj_get_user_data(widget));
+  if (battery->BatteryStatus() == hal::battery::Battery::State::ERROR || battery->BatteryStatus() == hal::battery::Battery::State::NOT_PRESENT) {
     lv_battery_set_value(widget, 0);
   } else {
     lv_battery_set_value(widget, battery->BatterySoc());
@@ -233,17 +234,17 @@ void battery_percent_update(lv_obj_t *widget) {
 }
 
 void battery_symbol_update(lv_obj_t *cont) {
-  auto battery = static_cast<Battery *>(lv_obj_get_user_data(cont));
+  auto battery = static_cast<hal::battery::Battery *>(lv_obj_get_user_data(cont));
   lv_obj_t *symbol = lv_obj_get_child(cont, 0);
   lv_obj_set_style_bg_opa(cont, LV_OPA_COVER, LV_PART_MAIN);
   lv_obj_remove_state(cont, LV_OBJ_FLAG_HIDDEN);
-  if (battery->BatteryStatus() == Battery::State::ERROR) {
+  if (battery->BatteryStatus() == hal::battery::Battery::State::ERROR) {
     lv_image_set_src(symbol, LV_SYMBOL_DUMMY "\uf22f");
     lv_obj_set_style_text_color(symbol, lv_color_hex(0xeed202), LV_PART_MAIN); //Yellow
-  } else if (battery->BatteryStatus() == Battery::State::NOT_PRESENT) {
+  } else if (battery->BatteryStatus() == hal::battery::Battery::State::NOT_PRESENT) {
     lv_image_set_src(symbol, LV_SYMBOL_DUMMY "\ue5cd");
     lv_obj_set_style_text_color(symbol, lv_color_hex(0xff0033), LV_PART_MAIN); //Red
-  } else if (battery->BatteryStatus() == Battery::State::CHARGING) {
+  } else if (battery->BatteryStatus() == hal::battery::Battery::State::CHARGING) {
     lv_image_set_src(symbol, LV_SYMBOL_DUMMY "\uea0b");
     lv_obj_set_style_text_color(symbol, lv_color_hex(0x50C878), LV_PART_MAIN); //Green
   } else {

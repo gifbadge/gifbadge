@@ -13,19 +13,19 @@
 
 static const char *TAG = "Board::esp32::s3::full::v0_6";
 
-static bool checkSdState(Gpio *gpio) {
+static bool checkSdState(hal::gpio::Gpio *gpio) {
   return !gpio->GpioRead();
 }
 
 namespace Boards {
 
 esp32::s3::full::v0_6::v0_6() {
-  _config = new Config_NVS();
+  _config = new hal::config::esp32s3::Config_NVS();
   gpio_install_isr_service(0);
   _i2c = new I2C(I2C_NUM_0, 47, 48, 100 * 1000, false);
 
   //Initialize the PMIC, and start the battery charging
-  _pmic = new PmicNpm1300(_i2c, GPIO_NUM_21);
+  _pmic = new hal::pmic::esp32s3::PmicNpm1300(_i2c, GPIO_NUM_21);
 
   //Enable Battery charging
   _pmic->ChargeDisable();
@@ -38,7 +38,7 @@ esp32::s3::full::v0_6::v0_6() {
   _charge_led->ChargingIndicator(true);
 
   //Enable IRQ from npm1300
-  PmicNpm1300Gpio *irq = _pmic->GpioGet(2);
+  hal::pmic::esp32s3::PmicNpm1300Gpio *irq = _pmic->GpioGet(2);
   irq->EnableIrq(true);
   delete irq;
 
@@ -51,23 +51,23 @@ esp32::s3::full::v0_6::v0_6() {
 
 }
 
-Battery *esp32::s3::full::v0_6::GetBattery() {
+hal::battery::Battery *esp32::s3::full::v0_6::GetBattery() {
   return _pmic;
 }
 
-Touch *esp32::s3::full::v0_6::GetTouch() {
+hal::touch::Touch *esp32::s3::full::v0_6::GetTouch() {
   return _touch;
 }
 
-Keys *esp32::s3::full::v0_6::GetKeys() {
+hal::keys::Keys *esp32::s3::full::v0_6::GetKeys() {
   return _keys;
 }
 
-Display *esp32::s3::full::v0_6::GetDisplay() {
+hal::display::Display *esp32::s3::full::v0_6::GetDisplay() {
   return _display;
 }
 
-Backlight *esp32::s3::full::v0_6::GetBacklight() {
+hal::backlight::Backlight *esp32::s3::full::v0_6::GetBacklight() {
   return _backlight;
 }
 
@@ -111,11 +111,11 @@ void esp32::s3::full::v0_6::LateInit() {
 
   _pmic->Buck1Set(3300);
 
-  _backlight = new backlight_ledc(GPIO_NUM_0, true, 0);
-  _touch = new touch_ft5x06(_i2c);
+  _backlight = new hal::backlight::esp32s3::backlight_ledc(GPIO_NUM_0, true, 0);
+  _touch = new hal::touch::esp32s3::touch_ft5x06(_i2c);
 
-  Gpio *_cs = _pmic->GpioGet(1);
-  _cs->GpioConfig(Gpio::GpioDirection::OUT, Gpio::GpioPullMode::NONE);
+  hal::gpio::Gpio *_cs = _pmic->GpioGet(1);
+  _cs->GpioConfig(hal::gpio::GpioDirection::OUT, hal::gpio::GpioPullMode::NONE);
   _cs->GpioWrite(true);
 
   esp_io_expander_new_gpio(_cs, &_io_expander);
@@ -130,25 +130,25 @@ void esp32::s3::full::v0_6::LateInit() {
       .io_expander = _io_expander,                        // Set to NULL if not using IO expander
   };
 
-  PmicNpm1300Gpio *up = _pmic->GpioGet(4);
-  up->GpioConfig(Gpio::GpioDirection::IN, Gpio::GpioPullMode::UP);
+  hal::pmic::esp32s3::PmicNpm1300Gpio *up = _pmic->GpioGet(4);
+  up->GpioConfig(hal::gpio::GpioDirection::IN, hal::gpio::GpioPullMode::UP);
 
-  PmicNpm1300Gpio *down = _pmic->GpioGet(3);
-  down->GpioConfig(Gpio::GpioDirection::IN, Gpio::GpioPullMode::UP);
+  hal::pmic::esp32s3::PmicNpm1300Gpio *down = _pmic->GpioGet(3);
+  down->GpioConfig(hal::gpio::GpioDirection::IN, hal::gpio::GpioPullMode::UP);
 
-  PmicNpm1300ShpHld *enter = _pmic->ShphldGet();
+  hal::pmic::esp32s3::PmicNpm1300ShpHld *enter = _pmic->ShphldGet();
 
-  _keys = new KeysGeneric(up, down, enter);
+  _keys = new hal::keys::esp32s3::KeysGeneric(up, down, enter);
 
   _pmic->LoadSw1Enable();
   _card_detect = _pmic->GpioGet(0);
-  _card_detect->GpioConfig(Gpio::GpioDirection::IN, Gpio::GpioPullMode::UP);
+  _card_detect->GpioConfig(hal::gpio::GpioDirection::IN, hal::gpio::GpioPullMode::UP);
 
   _pmic->VbusConnectedCallback(VbusCallback);
 
   /*G3, G4, G5, R1, R2, R3, R4, R5, B1, B2, B3, B4, B5, G0, G1, G2 */
   std::array<int, 16> rgb = {11, 12, 13, 3, 4, 5, 6, 7, 14, 15, 16, 17, 18, 8, 9, 10};
-  _display = new display_st7701s(line_config, 2, 1, 45, 46, rgb);
+  _display = new hal::display::esp32s3::display_st7701s(line_config, 2, 1, 45, 46, rgb);
 
 
   //TODO: Check if we can use DFS with the RGB LCD
@@ -158,10 +158,10 @@ void esp32::s3::full::v0_6::LateInit() {
   _pmic->EnableADC();
 
   if (StorageReady()) {
-    _card_detect->GpioInt(Gpio::GpioIntDirection::RISING, esp_restart);
+    _card_detect->GpioInt(hal::gpio::GpioIntDirection::RISING, esp_restart);
     mount(GPIO_NUM_40, GPIO_NUM_41, GPIO_NUM_39, GPIO_NUM_38, GPIO_NUM_44, GPIO_NUM_42, GPIO_NUM_NC, 4, GPIO_NUM_NC);
   } else {
-    _card_detect->GpioInt(Gpio::GpioIntDirection::FALLING, esp_restart);
+    _card_detect->GpioInt(hal::gpio::GpioIntDirection::FALLING, esp_restart);
   }
 
 }
@@ -171,10 +171,10 @@ WakeupSource esp32::s3::full::v0_6::BootReason() {
   }
   return _pmic->GetWakeup();
 }
-Vbus *esp32::s3::full::v0_6::GetVbus() {
+hal::vbus::Vbus *esp32::s3::full::v0_6::GetVbus() {
   return _pmic;
 }
-Charger *esp32::s3::full::v0_6::GetCharger() {
+hal::charger::Charger *esp32::s3::full::v0_6::GetCharger() {
   return _pmic;
 }
 void esp32::s3::full::v0_6::DebugInfo() {

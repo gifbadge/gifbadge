@@ -3,7 +3,8 @@
 #include <utility>
 #include <hal/display.h>
 
-class display_gc9a01 : public Display {
+namespace hal::display::esp32s3 {
+class display_gc9a01 : public hal::display::Display {
  public:
   display_gc9a01(int mosi, int sck, int cs, int dc, int reset);
   ~display_gc9a01() override = default;
@@ -15,3 +16,5 @@ class display_gc9a01 : public Display {
   esp_lcd_panel_handle_t panel_handle = nullptr;
   esp_lcd_panel_io_handle_t io_handle = nullptr;
 };
+}
+

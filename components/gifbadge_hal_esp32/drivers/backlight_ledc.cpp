@@ -4,7 +4,7 @@
 
 static const char *TAG = "backlight_gpio.cpp";
 
-backlight_ledc::backlight_ledc(gpio_num_t gpio, bool invert, int level) : lastLevel(level) {
+hal::backlight::esp32s3::backlight_ledc::backlight_ledc(gpio_num_t gpio, bool invert, int level) : lastLevel(level) {
   LOGI(TAG, "Turn on LCD backlight");
 
   // Prepare and then apply the LEDC PWM timer configuration
@@ -35,7 +35,7 @@ backlight_ledc::backlight_ledc(gpio_num_t gpio, bool invert, int level) : lastLe
   ESP_ERROR_CHECK(gpio_sleep_sel_dis((gpio_num_t) gpio));
 }
 
-void backlight_ledc::state(bool state) {
+void hal::backlight::esp32s3::backlight_ledc::state(bool state) {
   if (state) {
     ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, static_cast<uint32_t>(256 / (lastLevel / 100.00)) - 1);
     ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0);
@@ -45,7 +45,7 @@ void backlight_ledc::state(bool state) {
   }
 }
 
-void backlight_ledc::setLevel(int level) {
+void hal::backlight::esp32s3::backlight_ledc::setLevel(int level) {
   lastLevel = level;
   uint32_t duty = (level*256)/100;
   LOGI(TAG, "backlight level: %lu\n", duty);
@@ -53,6 +53,6 @@ void backlight_ledc::setLevel(int level) {
   ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0);
 }
 
-int backlight_ledc::getLevel() {
+int hal::backlight::esp32s3::backlight_ledc::getLevel() {
   return lastLevel;
 }

@@ -5,7 +5,8 @@
 
 #include <hal/battery.h>
 
-class battery_analog final : public Battery {
+namespace hal::battery::esp32s3 {
+class battery_analog final : public hal::battery::Battery {
  public:
   explicit battery_analog(adc_channel_t);
   ~battery_analog() final;
@@ -20,7 +21,7 @@ class battery_analog final : public Battery {
 
   void BatteryInserted() override {};
 
-  Battery::State BatteryStatus() override { return Battery::State::OK ;}
+  State BatteryStatus() override { return State::OK ;}
 
  private:
   adc_oneshot_unit_handle_t adc_handle = nullptr;
@@ -29,3 +30,5 @@ class battery_analog final : public Battery {
   double alpha = 0.05;
   double scale_factor = 2;
 };
+}
+

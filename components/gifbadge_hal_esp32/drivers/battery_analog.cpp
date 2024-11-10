@@ -13,7 +13,7 @@ static inline uint8_t sigmoidal(uint16_t voltage, uint16_t minVoltage, uint16_t 
   return result >= 100 ? 100 : result;
 }
 
-battery_analog::battery_analog(adc_channel_t) {
+hal::battery::esp32s3::battery_analog::battery_analog(adc_channel_t) {
   adc_oneshot_unit_init_cfg_t
       init_config1 = {.unit_id = ADC_UNIT_1, .clk_src = ADC_RTC_CLK_SRC_DEFAULT, .ulp_mode = ADC_ULP_MODE_DISABLE,};
   ESP_ERROR_CHECK(adc_oneshot_new_unit(&init_config1, &adc_handle));
@@ -31,7 +31,7 @@ battery_analog::battery_analog(adc_channel_t) {
   LOGI(TAG, "Initial Voltage: %f", smoothed_voltage * 2);
   alpha = 0.05;
   const esp_timer_create_args_t battery_timer_args = {.callback = [](void *params) {
-    auto bat = (battery_analog *) params;
+    auto bat = (hal::battery::esp32s3::battery_analog *) params;
     bat->poll();
   }, .arg = this, .dispatch_method = ESP_TIMER_TASK, .name = "battery_analog", .skip_unhandled_events = true};
   esp_timer_handle_t battery_handler_handle = nullptr;
@@ -39,19 +39,19 @@ battery_analog::battery_analog(adc_channel_t) {
   esp_timer_start_periodic(battery_handler_handle, 250 * 1000);
 }
 
-battery_analog::~battery_analog() = default;
+hal::battery::esp32s3::battery_analog::~battery_analog() = default;
 
-void battery_analog::poll() {
+void hal::battery::esp32s3::battery_analog::poll() {
   int reading;
   int voltage;
   adc_oneshot_read(adc_handle, ADC_CHANNEL_9, &reading);
   ESP_ERROR_CHECK(adc_cali_raw_to_voltage(calibration_scheme, reading, &voltage));
   smoothed_voltage = (voltage * scale_factor) * (alpha) + smoothed_voltage * (1.0f - alpha);
 }
-double battery_analog::BatteryVoltage() {
+double hal::battery::esp32s3::battery_analog::BatteryVoltage() {
   return smoothed_voltage / 1000.00;
 }
-int battery_analog::BatterySoc() {
+int hal::battery::esp32s3::battery_analog::BatterySoc() {
   return sigmoidal(static_cast<uint16_t>(smoothed_voltage), 3000, 4200);
 }
 

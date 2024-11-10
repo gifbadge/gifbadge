@@ -23,11 +23,11 @@ class v0_3 : public esp32s3_sdmmc {
   v0_3();
   ~v0_3() override = default;
 
-  Battery *GetBattery() override;
-  Touch *GetTouch() override;
-  Keys *GetKeys() override;
-  Display *GetDisplay() override;
-  Backlight *GetBacklight() override;
+  hal::battery::Battery *GetBattery() override;
+  hal::touch::Touch *GetTouch() override;
+  hal::keys::Keys *GetKeys() override;
+  hal::display::Display *GetDisplay() override;
+  hal::backlight::Backlight *GetBacklight() override;
 
   void PowerOff() override;
 
@@ -39,13 +39,13 @@ class v0_3 : public esp32s3_sdmmc {
   WakeupSource BootReason() override;;
 
  private:
-  battery_max17048 *_battery;
+  hal::battery::esp32s3::battery_max17048 *_battery;
   I2C *_i2c;
-  keys_gpio *_keys;
-  display_gc9a01 *_display;
-  backlight_ledc *_backlight;
+  hal::keys::esp32s3::keys_gpio *_keys;
+  hal::display::esp32s3::display_gc9a01 *_display;
+  hal::backlight::esp32s3::backlight_ledc *_backlight;
   void *buffer;
-  VbusGpio *_vbus;
+  hal::vbus::esp32s3::VbusGpio *_vbus;
 };
 }
 

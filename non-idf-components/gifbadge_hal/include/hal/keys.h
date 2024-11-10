@@ -10,6 +10,8 @@
 #define DEBOUNCE_COUNTER_BITS 14
 #define DEBOUNCE_COUNTER_MAX BIT_MASK(DEBOUNCE_COUNTER_BITS)
 
+namespace hal::keys {
+
 struct debounce_state {
   bool pressed: 1;
   bool changed: 1;
@@ -74,3 +76,5 @@ class Keys {
  protected:
   EVENT_STATE last_state[KEY_MAX] = {};
 };
+}
+

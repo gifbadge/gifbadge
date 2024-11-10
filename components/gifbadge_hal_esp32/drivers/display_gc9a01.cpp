@@ -11,7 +11,7 @@
 
 static const char *TAG = "display_gc9a01.cpp";
 
-display_gc9a01::display_gc9a01(int mosi, int sck, int cs, int dc, int reset) {
+hal::display::esp32s3::display_gc9a01::display_gc9a01(int mosi, int sck, int cs, int dc, int reset) {
   LOGI(TAG, "Initialize SPI bus");
   spi_bus_config_t buscfg = {
       .mosi_io_num = mosi,//21,
@@ -88,7 +88,7 @@ bool flush_ready(esp_lcd_panel_io_handle_t, esp_lcd_panel_io_event_data_t *, voi
   return false;
 }
 
-bool display_gc9a01::onColorTransDone(flushCallback_t callback) {
+bool hal::display::esp32s3::display_gc9a01::onColorTransDone(flushCallback_t callback) {
   if (callback) {
     pcallback = callback;
     esp_lcd_panel_io_callbacks_t conf = {.on_color_trans_done = flush_ready};
@@ -101,11 +101,11 @@ bool display_gc9a01::onColorTransDone(flushCallback_t callback) {
   return true;
 }
 
-void display_gc9a01::write(int x_start, int y_start, int x_end, int y_end,
-                           const void *color_data) {
+void hal::display::esp32s3::display_gc9a01::write(int x_start, int y_start, int x_end, int y_end,
+                                                  const void *color_data) {
   esp_lcd_panel_draw_bitmap(panel_handle, x_start, y_start, x_end, y_end, color_data);
 }
 
-void display_gc9a01::clear() {
+void hal::display::esp32s3::display_gc9a01::clear() {
   memset(buffer, 0xFF, size.first * size.second * 2);
 }

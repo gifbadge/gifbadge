@@ -3,6 +3,7 @@
 #include <string>
 #include <mutex>
 
+namespace hal::config {
 class Config {
  public:
   Config() = default;
@@ -22,3 +23,5 @@ class Config {
   virtual void reload() = 0;
 
 };
+}
+

@@ -5,7 +5,8 @@
 #include <hal/battery.h>
 #include "i2c.h"
 
-class battery_max17048 final : public Battery {
+namespace hal::battery::esp32s3 {
+class battery_max17048 final : public hal::battery::Battery {
  public:
   explicit battery_max17048(I2C *, gpio_num_t vbus_pin);
   ~battery_max17048() final = default;
@@ -30,3 +31,5 @@ class battery_max17048 final : public Battery {
   gpio_num_t _vbus_pin;
   bool present = false;
 };
+}
+

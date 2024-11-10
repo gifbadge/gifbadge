@@ -15,7 +15,7 @@ namespace Boards{
 
 esp32::s3::esp32s3::esp32s3() {
   esp_pm_lock_create(ESP_PM_CPU_FREQ_MAX, 0, "Board Lock", &pmLockHandle);
-  _config = new Config_NVS();
+  _config = new hal::config::esp32s3::Config_NVS();
 }
 void esp32::s3::esp32s3::Reset() {
   esp_restart();
@@ -29,7 +29,7 @@ void esp32::s3::esp32s3::PmRelease() {
   esp_pm_lock_release(pmLockHandle);
 }
 
-Config *esp32::s3::esp32s3::GetConfig() {
+hal::config::Config *esp32::s3::esp32s3::GetConfig() {
   return _config;
 }
 

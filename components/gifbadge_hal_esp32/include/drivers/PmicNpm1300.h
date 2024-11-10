@@ -13,17 +13,19 @@
 #include "hal/board.h"
 #include "hal/vbus.h"
 
+namespace hal::pmic::esp32s3 {
+
 class PmicNpm1300;
 
-class PmicNpm1300Gpio final : public Gpio {
+class PmicNpm1300Gpio final : public gpio::Gpio {
  public:
   PmicNpm1300Gpio(npmx_instance_t *npmx, uint8_t index);
   ~PmicNpm1300Gpio() = default;
-  void GpioConfig(GpioDirection direction, GpioPullMode pull) override;
+  void GpioConfig(gpio::GpioDirection direction, gpio::GpioPullMode pull) override;
   bool GpioRead() override;
   void GpioWrite(bool b) override;
   void EnableIrq(bool b);
-  void GpioInt(GpioIntDirection dir, void (*callback)()) override;
+  void GpioInt(hal::gpio::GpioIntDirection dir, void (*callback)()) override;
 
  private:
   npmx_instance_t *_npmx_instance;
@@ -35,14 +37,14 @@ class PmicNpm1300Gpio final : public Gpio {
       .debounce = false,
   };
   uint8_t _index;
-  GpioIntDirection _int_direction = GpioIntDirection::NONE;
+  gpio::GpioIntDirection _int_direction = gpio::GpioIntDirection::NONE;
   void (*_callback)() = nullptr;
 };
 
-class PmicNpm1300ShpHld : public Gpio {
+class PmicNpm1300ShpHld : public gpio::Gpio {
  public:
   explicit PmicNpm1300ShpHld(npmx_instance_t *npmx);
-  void GpioConfig(GpioDirection direction, GpioPullMode pull) override;
+  void GpioConfig(gpio::GpioDirection direction, gpio::GpioPullMode pull) override;
   bool GpioRead() override;
   void GpioWrite(bool b) override;
 
@@ -50,10 +52,10 @@ class PmicNpm1300ShpHld : public Gpio {
   npmx_instance_t *_npmx_instance;
 };
 
-class PmicNpm1300Led : public Gpio {
+class PmicNpm1300Led : public gpio::Gpio {
  public:
   PmicNpm1300Led(npmx_instance_t *npmx, uint8_t index);
-  void GpioConfig(GpioDirection direction, GpioPullMode pull) override;
+  void GpioConfig(gpio::GpioDirection direction, gpio::GpioPullMode pull) override;
   bool GpioRead() override;
   void GpioWrite(bool b) override;
   void ChargingIndicator(bool b);
@@ -63,7 +65,7 @@ class PmicNpm1300Led : public Gpio {
   uint8_t _index;
 };
 
-class PmicNpm1300 final : public Battery, public Charger, public Vbus {
+class PmicNpm1300 final : public hal::battery::Battery, public hal::charger::Charger, public hal::vbus::Vbus {
  public:
   explicit PmicNpm1300(I2C *, gpio_num_t gpio_int);
   ~PmicNpm1300() final = default;
@@ -105,7 +107,7 @@ class PmicNpm1300 final : public Battery, public Charger, public Vbus {
   uint16_t DischargeCurrentGet() override;
   void ChargeVtermSet(uint16_t vterm) override;
   uint16_t ChargeVtermGet() override;
-  Charger::ChargeStatus ChargeStatusGet() override;
+  ChargeStatus ChargeStatusGet() override;
   ChargeError ChargeErrorGet() override;
   bool ChargeBattDetect() override;
 
@@ -114,7 +116,7 @@ class PmicNpm1300 final : public Battery, public Charger, public Vbus {
 
   Boards::WakeupSource GetWakeup();
 
-  void PwrLedSet(Gpio *gpio);
+  void PwrLedSet(hal::gpio::Gpio *gpio);
 
   void EnableGpioEvent(uint8_t index);
   void DisableGpioEvent(uint8_t index);
@@ -137,13 +139,13 @@ class PmicNpm1300 final : public Battery, public Charger, public Vbus {
   gpio_num_t _gpio_int;
   bool _present = false;
   Boards::WakeupSource _wakeup_source = Boards::WakeupSource::NONE;
-  Gpio *_power_led = nullptr;
+  hal::gpio::Gpio *_power_led = nullptr;
 
 //NPM1300 Stuff
   npmx_backend_t _npmx_backend;
   npmx_instance_t _npmx_instance;
 
-  Charger::ChargeError _charge_error = Charger::ChargeError::NONE;
+  ChargeError _charge_error = ChargeError::NONE;
 
   esp_timer_handle_t _looptimer = nullptr;
 
@@ -163,3 +165,5 @@ class PmicNpm1300 final : public Battery, public Charger, public Vbus {
 
 
 };
+
+}

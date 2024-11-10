@@ -2,6 +2,7 @@
 
 #include <cstdint>
 
+namespace hal::vbus {
 /**
  * Abstracts hardware controlling USB VBus supply
  */
@@ -28,3 +29,5 @@ class Vbus {
    */
   virtual bool VbusConnected() = 0;
 };
+}
+

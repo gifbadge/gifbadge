@@ -34,9 +34,9 @@ namespace Boards {
 
 esp32::s3::full::v0_2v0_4::v0_2v0_4() {
   buffer = heap_caps_malloc(480 * 480 + 0x6100, MALLOC_CAP_INTERNAL);
-  _config = new Config_NVS();
+  _config = new hal::config::esp32s3::Config_NVS();
   _i2c = new I2C(I2C_NUM_0, 47, 48, 100 * 1000, false);
-  _battery = new battery_max17048(_i2c, GPIO_NUM_0);
+  _battery = new hal::battery::esp32s3::battery_max17048(_i2c, GPIO_NUM_0);
   /*G3, G4, G5, R1, R2, R3, R4, R5, B1, B2, B3, B4, B5, G0, G1, G2 */
   std::array<int, 16> rgb = {11, 12, 13, 3, 4, 5, 6, 7, 14, 15, 16, 17, 18, 8, 9, 10};
 //    uint8_t data = IO_EXPANDER_PIN_NUM_3;
@@ -63,17 +63,17 @@ esp32::s3::full::v0_2v0_4::v0_2v0_4() {
       .sda_gpio_num = 4,
       .io_expander = _io_expander,                        // Set to NULL if not using IO expander
   };
-  _display = new display_st7701s(line_config, 2, 1, 45, 46, rgb);
+  _display = new hal::display::esp32s3::display_st7701s(line_config, 2, 1, 45, 46, rgb);
 
   esp_io_expander_set_dir(_io_expander,
                           IO_EXPANDER_PIN_NUM_14 | IO_EXPANDER_PIN_NUM_12 | IO_EXPANDER_PIN_NUM_13,
                           IO_EXPANDER_INPUT);
   esp_io_expander_print_state(_io_expander);
-  _keys = new keys_esp_io_expander(_io_expander, _i2c, 14, 12, 13);
+  _keys = new hal::keys::esp32s3::keys_esp_io_expander(_io_expander, _i2c, 14, 12, 13);
 
-  _backlight = new backlight_ledc(GPIO_NUM_21, false, 0);
+  _backlight = new hal::backlight::esp32s3::backlight_ledc(GPIO_NUM_21, false, 0);
   _backlight->setLevel(_config->getBacklight() * 10);
-  _touch = new touch_ft5x06(_i2c);
+  _touch = new hal::touch::esp32s3::touch_ft5x06(_i2c);
 
   //TODO: Check if we can use DFS with the RGB LCD
   esp_pm_config_t pm_config = {.max_freq_mhz = 240, .min_freq_mhz = 80, .light_sleep_enable = false};
@@ -103,26 +103,26 @@ esp32::s3::full::v0_2v0_4::v0_2v0_4() {
   esp_timer_handle_t sdTimer = nullptr;
   ESP_ERROR_CHECK(esp_timer_create(&checkSdTimerArgs, &sdTimer));
   ESP_ERROR_CHECK(esp_timer_start_periodic(sdTimer, 500 * 1000));
-  _vbus = new b2_1_v0_2v0_4_vbus(GPIO_NUM_0, _io_expander, 8);
+  _vbus = new hal::vbus::esp32s3::b2_1_v0_2v0_4_vbus(GPIO_NUM_0, _io_expander, 8);
 }
 
-Battery *esp32::s3::full::v0_2v0_4::GetBattery() {
+hal::battery::Battery *esp32::s3::full::v0_2v0_4::GetBattery() {
   return _battery;
 }
 
-Touch *esp32::s3::full::v0_2v0_4::GetTouch() {
+hal::touch::Touch *esp32::s3::full::v0_2v0_4::GetTouch() {
   return _touch;
 }
 
-Keys *esp32::s3::full::v0_2v0_4::GetKeys() {
+hal::keys::Keys *esp32::s3::full::v0_2v0_4::GetKeys() {
   return _keys;
 }
 
-Display *esp32::s3::full::v0_2v0_4::GetDisplay() {
+hal::display::Display *esp32::s3::full::v0_2v0_4::GetDisplay() {
   return _display;
 }
 
-Backlight *esp32::s3::full::v0_2v0_4::GetBacklight() {
+hal::backlight::Backlight *esp32::s3::full::v0_2v0_4::GetBacklight() {
   return _backlight;
 }
 
@@ -154,11 +154,11 @@ bool esp32::s3::full::v0_2v0_4::StorageReady() {
 void esp32::s3::full::v0_2v0_4::LateInit() {
 
 }
-Vbus *esp32::s3::full::v0_2v0_4::GetVbus() {
+hal::vbus::Vbus *esp32::s3::full::v0_2v0_4::GetVbus() {
   return _vbus;
 }
 }
-uint16_t b2_1_v0_2v0_4_vbus::VbusMaxCurrentGet() {
+uint16_t hal::vbus::esp32s3::b2_1_v0_2v0_4_vbus::VbusMaxCurrentGet() {
   if(gpio_get_level(_gpio)){
     uint32_t levels;
     if(esp_io_expander_get_level(_io_expander, 0xffff, &levels) == ESP_OK){
@@ -176,15 +176,15 @@ uint16_t b2_1_v0_2v0_4_vbus::VbusMaxCurrentGet() {
   return 0;
 }
 
-void b2_1_v0_2v0_4_vbus::VbusMaxCurrentSet(uint16_t mA) {
+void hal::vbus::esp32s3::b2_1_v0_2v0_4_vbus::VbusMaxCurrentSet(uint16_t mA) {
 
 }
 
-bool b2_1_v0_2v0_4_vbus::VbusConnected() {
+bool hal::vbus::esp32s3::b2_1_v0_2v0_4_vbus::VbusConnected() {
   return gpio_get_level(_gpio);
 }
 
-b2_1_v0_2v0_4_vbus::b2_1_v0_2v0_4_vbus(gpio_num_t gpio, esp_io_expander_handle_t expander, uint8_t expander_pin): _io_expander(expander), _gpio(gpio), _expander_gpio(expander_pin) {
+hal::vbus::esp32s3::b2_1_v0_2v0_4_vbus::b2_1_v0_2v0_4_vbus(gpio_num_t gpio, esp_io_expander_handle_t expander, uint8_t expander_pin): _io_expander(expander), _gpio(gpio), _expander_gpio(expander_pin) {
 
 
 }

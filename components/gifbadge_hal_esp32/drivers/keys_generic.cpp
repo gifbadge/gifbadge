@@ -5,16 +5,16 @@
 static const char *TAG = "keys_generic";
 
 static void pollKeys(void *args) {
-  auto *keys = (KeysGeneric *) args;
+  auto *keys = (hal::keys::esp32s3::KeysGeneric *) args;
   keys->poll();
 }
 
-EVENT_STATE *KeysGeneric::read() {
-  for (int b = 0; b < KEY_MAX; b++) {
+hal::keys::EVENT_STATE *hal::keys::esp32s3::KeysGeneric::read() {
+  for (int b = 0; b < hal::keys::KEY_MAX; b++) {
     if (_keys[b] != nullptr) {
-      EVENT_STATE state = key_debounce_is_pressed(&_debounce_states[b]) ? STATE_PRESSED : STATE_RELEASED;
-      if (state == STATE_PRESSED && last_state[b] == state) {
-        _currentState[b] = STATE_HELD;
+      hal::keys::EVENT_STATE state = key_debounce_is_pressed(&_debounce_states[b]) ? hal::keys::STATE_PRESSED : hal::keys::STATE_RELEASED;
+      if (state == hal::keys::STATE_PRESSED && last_state[b] == state) {
+        _currentState[b] = hal::keys::STATE_HELD;
       } else {
         last_state[b] = state;
         _currentState[b] = state;
@@ -24,18 +24,18 @@ EVENT_STATE *KeysGeneric::read() {
   return _currentState;
 }
 
-int KeysGeneric::pollInterval() {
+int hal::keys::esp32s3::KeysGeneric::pollInterval() {
   return 0;
 }
 
-KeysGeneric::KeysGeneric(Gpio *up, Gpio *down, Gpio *enter) {
-  _keys[KEY_UP] = up,
-  _keys[KEY_DOWN] = down,
-  _keys[KEY_ENTER] = enter;
+hal::keys::esp32s3::KeysGeneric::KeysGeneric(hal::gpio::Gpio *up, hal::gpio::Gpio *down, hal::gpio::Gpio *enter) {
+  _keys[hal::keys::KEY_UP] = up,
+  _keys[hal::keys::KEY_DOWN] = down,
+  _keys[hal::keys::KEY_ENTER] = enter;
 
-  _debounce_states[KEY_UP] = debounce_state{false, false, 0};
-  _debounce_states[KEY_DOWN] = debounce_state{false, false, 0};
-  _debounce_states[KEY_ENTER] = debounce_state{false, false, 0};
+  _debounce_states[hal::keys::KEY_UP] = debounce_state{false, false, 0};
+  _debounce_states[hal::keys::KEY_DOWN] = debounce_state{false, false, 0};
+  _debounce_states[hal::keys::KEY_ENTER] = debounce_state{false, false, 0};
 
   last = esp_timer_get_time() / 1000;
 
@@ -51,10 +51,10 @@ KeysGeneric::KeysGeneric(Gpio *up, Gpio *down, Gpio *enter) {
   ESP_ERROR_CHECK(esp_timer_start_periodic(keyTimer, 5 * 1000));
 
 }
-void KeysGeneric::poll() {
+void hal::keys::esp32s3::KeysGeneric::poll() {
   auto time = esp_timer_get_time() / 1000;
 
-  for (int b = 0; b < KEY_MAX; b++) {
+  for (int b = 0; b < hal::keys::KEY_MAX; b++) {
     if (_keys[b] != nullptr) {
       bool state = _keys[b]->GpioRead();
       key_debounce_update(&_debounce_states[b], state == 0, static_cast<int>(time - last), &_debounce_config);

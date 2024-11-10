@@ -53,26 +53,26 @@ esp32::s3::mini::v0_3::v0_3() {
   esp_pm_config_t pm_config = {.max_freq_mhz = 240, .min_freq_mhz = 40, .light_sleep_enable = true};
   esp_pm_configure(&pm_config);
   esp_sleep_enable_gpio_wakeup();
-  _vbus = new VbusGpio(GPIO_VBUS_DETECT);
+  _vbus = new hal::vbus::esp32s3::VbusGpio(GPIO_VBUS_DETECT);
   }
 
-Battery *esp32::s3::mini::v0_3::GetBattery() {
+hal::battery::Battery *esp32::s3::mini::v0_3::GetBattery() {
   return _battery;
 }
 
-Touch *esp32::s3::mini::v0_3::GetTouch() {
+hal::touch::Touch *esp32::s3::mini::v0_3::GetTouch() {
   return nullptr;
 }
 
-Keys *esp32::s3::mini::v0_3::GetKeys() {
+hal::keys::Keys *esp32::s3::mini::v0_3::GetKeys() {
   return _keys;
 }
 
-Display *esp32::s3::mini::v0_3::GetDisplay() {
+hal::display::Display *esp32::s3::mini::v0_3::GetDisplay() {
   return _display;
 }
 
-Backlight *esp32::s3::mini::v0_3::GetBacklight() {
+hal::backlight::Backlight *esp32::s3::mini::v0_3::GetBacklight() {
   return _backlight;
 }
 
@@ -116,14 +116,14 @@ const char *esp32::s3::mini::v0_3::Name() {
 void esp32::s3::mini::v0_3::LateInit() {
   buffer = heap_caps_malloc(240 * 240 + 0x6100, MALLOC_CAP_INTERNAL);
   _i2c = new I2C(I2C_NUM_0, 6, 7, 100 * 1000, true);
-  _battery = new battery_max17048(_i2c, GPIO_VBUS_DETECT);
+  _battery = new hal::battery::esp32s3::battery_max17048(_i2c, GPIO_VBUS_DETECT);
   _battery->BatteryInserted(); //Battery not removable. So set this
 
   gpio_install_isr_service(0);
-  _keys = new keys_gpio(GPIO_KEY_UP, GPIO_KEY_DOWN, GPIO_KEY_ENTER);
+  _keys = new hal::keys::esp32s3::keys_gpio(GPIO_KEY_UP, GPIO_KEY_DOWN, GPIO_KEY_ENTER);
 
-  _display = new display_gc9a01(18, 17, 16, 15, 21);
-  _backlight = new backlight_ledc(GPIO_NUM_10, false, 0);
+  _display = new hal::display::esp32s3::display_gc9a01(18, 17, 16, 15, 21);
+  _backlight = new hal::backlight::esp32s3::backlight_ledc(GPIO_NUM_10, false, 0);
 
   gpio_pullup_en(GPIO_CARD_DETECT);
   if (!gpio_get_level(GPIO_CARD_DETECT)) {

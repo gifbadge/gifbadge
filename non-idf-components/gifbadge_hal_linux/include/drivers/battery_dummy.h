@@ -2,7 +2,8 @@
 
 #include <hal/battery.h>
 
-class battery_dummy final : public Battery {
+namespace hal::battery::linux {
+class battery_dummy final : public hal::battery::Battery {
  public:
   battery_dummy();
   ~battery_dummy() final = default;
@@ -19,3 +20,4 @@ class battery_dummy final : public Battery {
 
   State BatteryStatus() override;
 };
+}

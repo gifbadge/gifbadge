@@ -4,7 +4,8 @@
 #include "esp_lcd_panel_io_additions.h"
 #include <array>
 
-class display_st7701s : public Display {
+namespace hal::display::esp32s3 {
+class display_st7701s : public hal::display::Display {
  public:
   display_st7701s(spi_line_config_t line_cfg,
                   int hsync,
@@ -27,3 +28,5 @@ class display_st7701s : public Display {
   flushCallback_t flushCallback = nullptr;
   bool _clear = false;
 };
+}
+

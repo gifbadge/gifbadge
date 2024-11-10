@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 
+namespace hal::charger {
 class Charger {
  public:
 
@@ -121,3 +122,5 @@ class Charger {
   virtual ChargeError ChargeErrorGet() = 0;
 
 };
+}
+
