@@ -36,7 +36,7 @@ static void IRAM_ATTR usb_connected(void *) {
 
 namespace Boards {
 
-esp32::mini::v0_3::v0_3() {
+esp32::s3::mini::v0_3::v0_3() {
 //  Power pin
   gpio_config_t io_conf = {};
 
@@ -56,27 +56,27 @@ esp32::mini::v0_3::v0_3() {
   _vbus = new VbusGpio(GPIO_VBUS_DETECT);
   }
 
-Battery *esp32::mini::v0_3::GetBattery() {
+Battery *esp32::s3::mini::v0_3::GetBattery() {
   return _battery;
 }
 
-Touch *esp32::mini::v0_3::GetTouch() {
+Touch *esp32::s3::mini::v0_3::GetTouch() {
   return nullptr;
 }
 
-Keys *esp32::mini::v0_3::GetKeys() {
+Keys *esp32::s3::mini::v0_3::GetKeys() {
   return _keys;
 }
 
-Display *esp32::mini::v0_3::GetDisplay() {
+Display *esp32::s3::mini::v0_3::GetDisplay() {
   return _display;
 }
 
-Backlight *esp32::mini::v0_3::GetBacklight() {
+Backlight *esp32::s3::mini::v0_3::GetBacklight() {
   return _backlight;
 }
 
-void esp32::mini::v0_3::PowerOff() {
+void esp32::s3::mini::v0_3::PowerOff() {
   LOGI(TAG, "Poweroff");
   vTaskDelay(100 / portTICK_PERIOD_MS);
   gpio_hold_dis(GPIO_EXT_PWR);
@@ -88,7 +88,7 @@ void esp32::mini::v0_3::PowerOff() {
   esp_deep_sleep_start();
 }
 
-BoardPower esp32::mini::v0_3::PowerState() {
+BoardPower esp32::s3::mini::v0_3::PowerState() {
   if (_vbus->VbusConnected()) {
     return BOARD_POWER_NORMAL;
   }
@@ -102,18 +102,18 @@ BoardPower esp32::mini::v0_3::PowerState() {
   return BOARD_POWER_NORMAL;
 }
 
-bool esp32::mini::v0_3::StorageReady() {
+bool esp32::s3::mini::v0_3::StorageReady() {
   if (!gpio_get_level(GPIO_CARD_DETECT)) {
     return true;
   }
   return false;
 }
 
-const char *esp32::mini::v0_3::Name() {
+const char *esp32::s3::mini::v0_3::Name() {
   return "1.28\" 0.3";
 }
 
-void esp32::mini::v0_3::LateInit() {
+void esp32::s3::mini::v0_3::LateInit() {
   buffer = heap_caps_malloc(240 * 240 + 0x6100, MALLOC_CAP_INTERNAL);
   _i2c = new I2C(I2C_NUM_0, 6, 7, 100 * 1000, true);
   _battery = new battery_max17048(_i2c, GPIO_VBUS_DETECT);
@@ -146,7 +146,7 @@ void esp32::mini::v0_3::LateInit() {
   gpio_isr_handler_add(GPIO_VBUS_DETECT, usb_connected, nullptr);
   usb_connected(nullptr); //Trigger usb detection
 }
-WakeupSource esp32::mini::v0_3::BootReason() {
+WakeupSource esp32::s3::mini::v0_3::BootReason() {
   if (esp_reset_reason() != ESP_RST_POWERON) {
     return WakeupSource::KEY;
   }

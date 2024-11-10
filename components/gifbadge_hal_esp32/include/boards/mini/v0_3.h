@@ -17,9 +17,8 @@
 #include "boards/esp32s3_sdmmc.h"
 #include "drivers/vbus_gpio.h"
 
-namespace Boards {
-namespace esp32::mini {
-class v0_3 : public Boards::esp32::s3::esp32s3_sdmmc {
+namespace Boards::esp32::s3::mini {
+class v0_3 : public esp32s3_sdmmc {
  public:
   v0_3();
   ~v0_3() override = default;
@@ -48,6 +47,5 @@ class v0_3 : public Boards::esp32::s3::esp32s3_sdmmc {
   void *buffer;
   VbusGpio *_vbus;
 };
-}
 }
 

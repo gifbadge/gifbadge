@@ -32,7 +32,7 @@ static void IRAM_ATTR usb_connected(void *) {
 
 namespace Boards {
 
-esp32::mini::v0_1::v0_1() {
+esp32::s3::mini::v0_1::v0_1() {
   buffer = heap_caps_malloc(240 * 240 + 0x6100, MALLOC_CAP_INTERNAL);
   _i2c = new I2C(I2C_NUM_0, 17, 18, 100 * 1000, false);
   _battery = new battery_max17048(_i2c, GPIO_VBUS_DETECT);
@@ -83,34 +83,34 @@ esp32::mini::v0_1::v0_1() {
   _vbus = new VbusGpio(GPIO_VBUS_DETECT);
 }
 
-Battery *esp32::mini::v0_1::GetBattery() {
+Battery *esp32::s3::mini::v0_1::GetBattery() {
   return _battery;
 }
 
-Touch *esp32::mini::v0_1::GetTouch() {
+Touch *esp32::s3::mini::v0_1::GetTouch() {
   return nullptr;
 }
 
-Keys *esp32::mini::v0_1::GetKeys() {
+Keys *esp32::s3::mini::v0_1::GetKeys() {
   return _keys;
 }
 
-Display *esp32::mini::v0_1::GetDisplay() {
+Display *esp32::s3::mini::v0_1::GetDisplay() {
   return _display;
 }
 
-Backlight *esp32::mini::v0_1::GetBacklight() {
+Backlight *esp32::s3::mini::v0_1::GetBacklight() {
   return _backlight;
 }
 
-void esp32::mini::v0_1::PowerOff() {
+void esp32::s3::mini::v0_1::PowerOff() {
   LOGI(TAG, "Poweroff");
   vTaskDelay(100 / portTICK_PERIOD_MS);
   gpio_set_level(GPIO_SHUTDOWN, 1);
   gpio_hold_en(GPIO_SHUTDOWN);
 }
 
-BoardPower esp32::mini::v0_1::PowerState() {
+BoardPower esp32::s3::mini::v0_1::PowerState() {
   //TODO Detect USB power status, implement critical level
   if (_vbus->VbusConnected()) {
     return BOARD_POWER_NORMAL;
@@ -125,21 +125,21 @@ BoardPower esp32::mini::v0_1::PowerState() {
   return BOARD_POWER_NORMAL;
 }
 
-bool esp32::mini::v0_1::StorageReady() {
+bool esp32::s3::mini::v0_1::StorageReady() {
   if (!gpio_get_level(GPIO_CARD_DETECT)) {
     return true;
   }
   return false;
 }
 
-const char *esp32::mini::v0_1::Name() {
+const char *esp32::s3::mini::v0_1::Name() {
   return "1.28\" 0.1-0.2";
 }
 
-void esp32::mini::v0_1::LateInit() {
+void esp32::s3::mini::v0_1::LateInit() {
 
 }
-Vbus *esp32::mini::v0_1::GetVbus() {
+Vbus *esp32::s3::mini::v0_1::GetVbus() {
   return _vbus;
 }
 }

@@ -20,19 +20,19 @@ Boards::Board *get_board() {
   if (!global_board) {
     switch (board) {
       case BOARD_1_28_V0:
-        global_board = new Boards::esp32::mini::v0();
+        global_board = new Boards::esp32::s3::mini::v0();
         break;
       case BOARD_2_1_V0_2:
         global_board = new Boards::esp32::s3::full::v0_2();
         break;
       case BOARD_1_28_V0_1:
-        global_board = new Boards::esp32::mini::v0_1();
+        global_board = new Boards::esp32::s3::mini::v0_1();
         break;
       case BOARD_2_1_V0_4:
         global_board = new Boards::esp32::s3::full::v0_4();
         break;
       case BOARD_1_28_V0_3:
-        global_board = new Boards::esp32::mini::v0_3();
+        global_board = new Boards::esp32::s3::mini::v0_3();
         break;
       case BOARD_2_1_V0_6:
         global_board = new Boards::esp32::s3::full::v0_6();

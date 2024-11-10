@@ -12,10 +12,8 @@
 #include "i2c.h"
 #include "boards/boards_esp32s3.h"
 
-namespace Boards {
-namespace esp32 {
-namespace mini {
-class v0 : public Boards::esp32::s3::esp32s3 {
+namespace Boards::esp32::s3::mini {
+class v0 : public esp32s3 {
  public:
   v0();
   ~v0() override = default;
@@ -44,6 +42,4 @@ class v0 : public Boards::esp32::s3::esp32s3 {
   Backlight *_backlight;
   int UsbCallBack(tusb_msc_callback_t callback);
 };
-}
-}
 }
