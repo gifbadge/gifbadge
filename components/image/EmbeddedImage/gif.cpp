@@ -1,6 +1,7 @@
 #include "gif.h"
 #include <string>
 #include "bitbank2.h"
+#include "image.h"
 
 #include <cstdio>
 #include <sys/stat.h>
@@ -112,16 +113,16 @@ static int32_t SeekFile(GIFFILE *pFile, int32_t iPosition) {
   }
 }
 
-GIF::GIF() = default;
+image::GIF::GIF() = default;
 
-GIF::~GIF() {
+image::GIF::~GIF() {
   printf("GIF DELETED\n");
   free(_gif.pFrameBuffer);
   _gif.pFrameBuffer = nullptr;
   (*_gif.pfnClose)(_gif.GIFFile.fHandle);
 }
 
-int GIF::playFrame(bool bSync, int *delayMilliseconds, GIFUser *pUser)
+int image::GIF::playFrame(bool bSync, int *delayMilliseconds, GIFUser *pUser)
 {
   int rc;
 
@@ -168,7 +169,7 @@ int GIF::playFrame(bool bSync, int *delayMilliseconds, GIFUser *pUser)
   return (_gif.GIFFile.iPos < _gif.GIFFile.iSize-10);
 } /* playFrame() */
 
-frameReturn GIF::loop(uint8_t *outBuf, int16_t x, int16_t y, int16_t width) {
+image::frameReturn image::GIF::loop(uint8_t *outBuf, int16_t x, int16_t y, int16_t width) {
   GIFUser gifuser = {outBuf, x, y, width};
   int frameDelay;
   int ret = playFrame(false, &frameDelay, &gifuser);
@@ -182,11 +183,11 @@ frameReturn GIF::loop(uint8_t *outBuf, int16_t x, int16_t y, int16_t width) {
   return {frameStatus::OK, frameDelay};
 }
 
-std::pair<int16_t, int16_t> GIF::size() {
+std::pair<int16_t, int16_t> image::GIF::size() {
   return {_gif.iCanvasWidth, _gif.iCanvasHeight};
 }
 
-void GIF::GIFDraw(GIFDRAW *pDraw) {
+void image::GIF::GIFDraw(GIFDRAW *pDraw) {
   int y;
   uint16_t *d;
 
@@ -198,11 +199,11 @@ void GIF::GIFDraw(GIFDRAW *pDraw) {
   memcpy(d, pDraw->pPixels, pDraw->iWidth * 2);
 }
 
-Image *GIF::create() {
-  return new GIF();
+image::Image *image::GIF::create() {
+  return new image::GIF();
 }
 
-int GIF::open(const char *path, void *buffer) {
+int image::GIF::open(const char *path, void *buffer) {
 #ifdef ESP_PLATFORM
   unsigned char ucPaletteType = BIG_ENDIAN_PIXELS;
 #else
@@ -252,7 +253,7 @@ int GIF::open(const char *path, void *buffer) {
   return -1;
 }
 
-const char *GIF::getLastError() {
+const char *image::GIF::getLastError() {
   switch (_gif.iError) {
     case GIF_SUCCESS:
       return "GIF_SUCCESS";

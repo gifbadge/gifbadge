@@ -11,7 +11,9 @@ struct pnguser {
     int16_t width;
 };
 
-class PNGImage : public Image {
+namespace image {
+
+class PNGImage : public image::Image {
 
 public:
     PNGImage() = default;
@@ -36,3 +38,5 @@ protected:
 
     static void PNGDraw(PNGDRAW *pDraw);
 };
+}
+

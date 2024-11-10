@@ -27,7 +27,12 @@ static int file_position;
 
 #define MAX_FILE_LEN 128
 
-class ErrorImage : public Image {
+namespace image {
+
+/**
+ * Render a string as an image to display errors/etc
+ */
+class ErrorImage : public image::Image {
  public:
   ErrorImage(std::pair<int16_t, int16_t> size, const char *error)
       : _width(size.first), _height(size.second), _error("") {
@@ -74,6 +79,9 @@ class TooLargeImage : public ErrorImage {
   }
 };
 
+/**
+ * Used to display OTA status during update
+ */
 class OTAImage : public ErrorImage {
  public:
   explicit OTAImage(std::pair<int16_t, int16_t> size) : ErrorImage(size, nullptr) {
@@ -96,10 +104,11 @@ class NoStorageImage : public ErrorImage {
     strcpy(_error, "No SDCARD");
   }
 };
+}
 
-static PNGImage * display_image_batt() {
+static image::PNGImage * display_image_batt() {
   LOGI(TAG, "Displaying Low Battery");
-  auto *png = new PNGImage;
+  auto *png = new image::PNGImage;
   png->open((uint8_t *)low_batt_png, sizeof(low_batt_png));
   return png;
 }
@@ -110,9 +119,9 @@ static std::pair<int16_t, int16_t> lastSize = {0,0};
 
 bool newImage = false;
 
-static frameReturn displayFile(std::unique_ptr<Image> &in, hal::display::Display *display) {
+static image::frameReturn displayFile(std::unique_ptr<image::Image> &in, hal::display::Display *display) {
   int64_t start = millis();
-  frameReturn status;
+  image::frameReturn status;
   int16_t xOffset = 0;
   int16_t yOffset = 0;
   if (in->size() != display->size) {
@@ -124,9 +133,9 @@ static frameReturn displayFile(std::unique_ptr<Image> &in, hal::display::Display
     yOffset = static_cast<int16_t>((display->size.second / 2) - ((in->size().second + 1) / 2));
   }
   status = in->loop(display->buffer, xOffset, yOffset, display->size.first);
-  if (status.first == frameStatus::ERROR) {
+  if (status.first == image::frameStatus::ERROR) {
     LOGI(TAG, "Image loop error");
-    return {frameStatus::ERROR, 0};
+    return {image::frameStatus::ERROR, 0};
   } else {
     display->write(0, 0, display->size.first, display->size.second, display->buffer);
   }
@@ -139,7 +148,7 @@ static frameReturn displayFile(std::unique_ptr<Image> &in, hal::display::Display
     return {status.first, (calc_delay > 0 ? calc_delay : 0)/portTICK_PERIOD_MS};
   }
   else{
-    return {frameStatus::END, portMAX_DELAY};
+    return {image::frameStatus::END, portMAX_DELAY};
   }
 }
 
@@ -193,36 +202,36 @@ static int get_file(char *path) {
   return -1;
 }
 
-static Image *openFile(const char *path, hal::display::Display *display) {
-  Image *in = ImageFactory(path);
+static image::Image *openFile(const char *path, hal::display::Display *display) {
+  image::Image *in = ImageFactory(path);
   if (in) {
     if (in->open(path, get_board()->TurboBuffer()) != 0) {
       const char *lastError = in->getLastError();
       delete in;
-      return new ErrorImage(display->size, "Error Displaying File\n%s\n%s", path, lastError);
+      return new image::ErrorImage(display->size, "Error Displaying File\n%s\n%s", path, lastError);
     }
     printf("%s x: %i y: %i\n", path, in->size().first, in->size().second);
     auto size = in->size();
     if (size > display->size) {
       delete in;
-      return new TooLargeImage(display->size, path);
+      return new image::TooLargeImage(display->size, path);
     }
   } else {
-    return new ErrorImage(display->size, "Could not Display\n%s", path);
+    return new image::ErrorImage(display->size, "Could not Display\n%s", path);
   }
   newImage = true;
   return in;
 }
 
-static Image *openFileUpdatePath(char *path, hal::display::Display *display) {
+static image::Image *openFileUpdatePath(char *path, hal::display::Display *display) {
   if (get_file(path) != 0) {
     file_position = -1;
-    return new NoImage(display->size);
+    return new image::NoImage(display->size);
   }
   return openFile(path, display);
 }
 
-static void next_prev(std::unique_ptr<Image> &in, char *current_file, hal::config::Config *config, hal::display::Display *display, int increment){
+static void next_prev(std::unique_ptr<image::Image> &in, char *current_file, hal::config::Config *config, hal::display::Display *display, int increment){
   if (config->getLocked() || file_position < 0) {
     return;
   }
@@ -284,7 +293,7 @@ void display_task(void *params) {
   bool redraw = false; //Reload from configuration next time we go to display an image
   bool advance = false; //Advance the slideshow
   bool endOfFrame = false; //Last frame of animation
-  std::unique_ptr<Image> in = nullptr; //The image we are displaying
+  std::unique_ptr<image::Image> in = nullptr; //The image we are displaying
   char current_file[MAX_FILE_LEN + 1]; //The current file path that has been selected
   config->getPath(current_file);
   while (true) {
@@ -327,13 +336,13 @@ void display_task(void *params) {
           last_mode = static_cast<DISPLAY_OPTIONS>(option);
           break;
         case DISPLAY_OTA:
-          in = std::make_unique<OTAImage>(display->size);
+          in = std::make_unique<image::OTAImage>(display->size);
           file_position = -1;
           last_mode = static_cast<DISPLAY_OPTIONS>(option);
           break;
         case DISPLAY_NO_STORAGE:
           last_mode = static_cast<DISPLAY_OPTIONS>(option);
-          in = std::make_unique<NoStorageImage>(display->size);
+          in = std::make_unique<image::NoStorageImage>(display->size);
           file_position = -1;
           break;
         case DISPLAY_SPECIAL_1:
@@ -391,20 +400,20 @@ void display_task(void *params) {
 
     if (in) {
       // If there is an open file, display the next frame
-      frameReturn status = displayFile(in, display);
+      image::frameReturn status = displayFile(in, display);
       delay = status.second;
-      if (status.first == frameStatus::ERROR) {
+      if (status.first == image::frameStatus::ERROR) {
         if (config->getSlideShow()) {
           //Skip the error, and head to the next file in slideshow mode
           next_prev(in, current_file, config, display, 1);
           continue;
         }
-        in = std::make_unique<ErrorImage>(display->size,
-                                          "Error Displaying File\n%s\n%s",
-                                          current_file,
-                                          in->getLastError());
+        in = std::make_unique<image::ErrorImage>(display->size,
+                                                 "Error Displaying File\n%s\n%s",
+                                                 current_file,
+                                                 in->getLastError());
       }
-      endOfFrame = status.first == frameStatus::END;
+      endOfFrame = status.first == image::frameStatus::END;
     }
   }
 }

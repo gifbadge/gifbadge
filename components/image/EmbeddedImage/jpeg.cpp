@@ -3,26 +3,27 @@
 
 #include "bitbank2.h"
 #include "png.h"
+#include "image.h"
 
-JPEG::~JPEG() {
+image::JPEG::~JPEG() {
   printf("JPEG DELETED\n");
   jpeg.close();
 }
 
 
-frameReturn JPEG::loop(uint8_t *outBuf, int16_t x, int16_t y, int16_t width) {
+image::frameReturn image::JPEG::loop(uint8_t *outBuf, int16_t x, int16_t y, int16_t width) {
   pnguser config = {.png = nullptr, .buffer = outBuf, .x = x, .y = y, .width = width};
   jpeg.setUserPointer(&config);
   jpeg.decode(0, 0, 0);
-  return {frameStatus::END, 0};
+  return {image::frameStatus::END, 0};
 }
 
-std::pair<int16_t, int16_t> JPEG::size() {
+std::pair<int16_t, int16_t> image::JPEG::size() {
     return {jpeg.getWidth(), jpeg.getHeight()};
 }
 
-Image *JPEG::create() {
-    return new JPEG();
+image::Image *image::JPEG::create() {
+    return new image::JPEG();
 }
 
 int JPEGDraw(JPEGDRAW *pDraw){
@@ -42,13 +43,13 @@ return 1;
 typedef int32_t (*readfile)(JPEGFILE *pFile, uint8_t *pBuf, int32_t iLen);
 typedef int32_t (*seekfile)(JPEGFILE *pFile, int32_t iPosition);
 
-int JPEG::open(const char *path, void *buffer) {
+int image::JPEG::open(const char *path, void *buffer) {
   int ret = jpeg.open(path, bb2OpenFile, bb2CloseFile, (readfile)bb2ReadFile, (seekfile)bb2SeekFile, JPEGDraw);
   jpeg.setPixelType(RGB565_BIG_ENDIAN);
   return ret==0; //Invert the return value
 }
 
-const char * JPEG::getLastError() {
+const char * image::JPEG::getLastError() {
     switch(jpeg.getLastError()){
       case JPEG_SUCCESS:
         return "JPEG_SUCCESS";

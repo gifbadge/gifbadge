@@ -1,23 +1,24 @@
 #include "png.h"
 #include <string>
 #include "bitbank2.h"
+#include "image.h"
 
-PNGImage::~PNGImage() {
+image::PNGImage::~PNGImage() {
     printf("PNG DELETED\n");
     png.close();
 }
 
-frameReturn PNGImage::loop(uint8_t *outBuf, int16_t x, int16_t y, int16_t width) {
+image::frameReturn image::PNGImage::loop(uint8_t *outBuf, int16_t x, int16_t y, int16_t width) {
     pnguser config = {.png = &png, .buffer = outBuf, .x = x, .y = y, .width = width};
     png.decode((void *) &config, 0);
-  return {frameStatus::END, 0};
+  return {image::frameStatus::END, 0};
 }
 
-std::pair<int16_t, int16_t> PNGImage::size() {
+std::pair<int16_t, int16_t> image::PNGImage::size() {
     return {png.getWidth(), png.getHeight()};
 }
 
-Image *PNGImage::create() {
+image::Image *image::PNGImage::create() {
     return new PNGImage();
 }
 
@@ -25,16 +26,16 @@ typedef int32_t (*readfile)(PNGFILE *pFile, uint8_t *pBuf, int32_t iLen);
 typedef int32_t (*seekfile)(PNGFILE *pFile, int32_t iPosition);
 
 
-int PNGImage::open(const char *path, void *buffer) {
+int image::PNGImage::open(const char *path, void *buffer) {
     return png.open(path, bb2OpenFile, bb2CloseFile, (readfile)bb2ReadFile, (seekfile)bb2SeekFile, PNGDraw);
 }
 
-int PNGImage::open(uint8_t *bin, int size) {
+int image::PNGImage::open(uint8_t *bin, int size) {
     png.openRAM(bin, size, PNGDraw);
     return -1;
 }
 
-void PNGImage::PNGDraw(PNGDRAW *pDraw) {
+void image::PNGImage::PNGDraw(PNGDRAW *pDraw) {
     auto *config = (pnguser *) pDraw->pUser;
     auto *buffer = (uint16_t *) config->buffer;
     uint32_t y = (pDraw->y+config->y) * config->width;
@@ -46,7 +47,7 @@ void PNGImage::PNGDraw(PNGDRAW *pDraw) {
 #endif
 }
 
-const char * PNGImage::getLastError() {
+const char * image::PNGImage::getLastError() {
     switch(png.getLastError()){
         case PNG_SUCCESS:
             return "PNG_SUCCESS";

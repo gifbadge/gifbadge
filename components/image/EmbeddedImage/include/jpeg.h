@@ -7,7 +7,9 @@
 
 #include "image.h"
 
-class JPEG : public Image {
+namespace image {
+
+class JPEG : public image::Image {
 public:
     JPEG() = default;
 
@@ -26,3 +28,5 @@ public:
 private:
     JPEGDEC jpeg;
 };
+}
+

@@ -11,6 +11,7 @@ struct GIFUser{
     int32_t width;
 };
 
+namespace image {
 class GIF : public Image {
 
 public:
@@ -38,3 +39,5 @@ private:
   static void GIFDraw(GIFDRAW *pDraw);
     int32_t width = 0; //GIF width, needed for GIFDraw
 };
+}
+
