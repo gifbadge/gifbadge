@@ -2,6 +2,7 @@
 #define LVGL_FILE_LIST_H
 
 #include "lvgl.h"
+#include "lvgl_private.h"
 
 #ifdef __cplusplus
 extern "C"

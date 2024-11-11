@@ -1,4 +1,5 @@
 #include <dirent.h>
+#include <cstring>
 #include "ui/file_select.h"
 #include "ui/widgets/file_list/file_list.h"
 #include "ui/device_group.h"
