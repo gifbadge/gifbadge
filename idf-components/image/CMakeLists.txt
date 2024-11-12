@@ -1,6 +1,6 @@
 
-file(GLOB PNGdec_src EmbeddedImage/PNGdec/src/*.c EmbeddedImage/PNGdec/src/*.cpp)
-file(GLOB JPEGDEC_src EmbeddedImage/JPEGDEC/src/*.c EmbeddedImage/JPEGDEC/src/*.cpp EmbeddedImage/JPEGDEC/src/*.S)
+file(GLOB PNGdec_src ${CMAKE_SOURCE_DIR}/external-deps/PNGdec/src/*.c ${CMAKE_SOURCE_DIR}/external-deps/PNGdec/src/*.cpp)
+file(GLOB JPEGDEC_src ${CMAKE_SOURCE_DIR}/external-deps/JPEGDEC/src/*.c ${CMAKE_SOURCE_DIR}/external-deps/JPEGDEC/src/*.cpp ${CMAKE_SOURCE_DIR}/external-deps/JPEGDEC/src/*.S)
 
 
 SET(SRC "EmbeddedImage/image.cpp"
@@ -13,9 +13,9 @@ SET(SRC "EmbeddedImage/image.cpp"
 )
 
 SET(INCLUDE "EmbeddedImage/include"
-        "EmbeddedImage/AnimatedGIF/src"
-        "EmbeddedImage/PNGdec/src"
-        "EmbeddedImage/JPEGDEC/src"
+        "${CMAKE_SOURCE_DIR}/external-deps/AnimatedGIF/src"
+        "${CMAKE_SOURCE_DIR}/external-deps/PNGdec/src"
+        "${CMAKE_SOURCE_DIR}/external-deps/JPEGDEC/src"
 )
 
 if (ESP_PLATFORM)

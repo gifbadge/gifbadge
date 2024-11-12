@@ -1,11 +1,11 @@
 [submodule "components/image/EmbeddedImage/AnimatedGIF"]
-	path = components/image/EmbeddedImage/AnimatedGIF
+	path = external-deps/AnimatedGIF
 	url = https://github.com/bitbank2/AnimatedGIF.git
 [submodule "components/image/EmbeddedImage/PNGdec"]
-	path = components/image/EmbeddedImage/PNGdec
+	path = external-deps/PNGdec
 	url = https://github.com/bitbank2/PNGdec.git
 [submodule "non-idf-components/font_render/mcufont"]
-	path = non-idf-components/font_render/mcufont
+	path = external-deps/mcufont
 	url = https://github.com/mcufont/mcufont.git
 [submodule "components/lvgl__lvgl"]
 	path = components/lvgl__lvgl
@@ -14,14 +14,14 @@
 	path = lv_font_conv
 	url = https://github.com/lvgl/lv_font_conv.git
 [submodule "non-idf-components/FreeRTOS-Kernel"]
-	path = non-idf-components/FreeRTOS-Kernel
+	path = external-deps/FreeRTOS-Kernel
 	url = https://github.com/FreeRTOS/FreeRTOS-Kernel/
 [submodule "non-idf-components/Unity"]
-	path = non-idf-components/Unity
+	path = external-deps/Unity
 	url = https://github.com/ThrowTheSwitch/Unity.git
 [submodule "components/image/EmbeddedImage/JPEGDEC"]
-	path = components/image/EmbeddedImage/JPEGDEC
+	path = external-deps/JPEGDEC
 	url = https://github.com/bitbank2/JPEGDEC.git
 [submodule "non-idf-components/npmx/npmx"]
-	path = non-idf-components/npmx/npmx
+	path = external-deps/npmx/npmx
 	url = https://github.com/NordicSemiconductor/npmx.git

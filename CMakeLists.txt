@@ -6,21 +6,23 @@ cmake_minimum_required(VERSION 3.24)
 
 
 if (ESP_PLATFORM)
+    set(COMPONENT_DIRS "$ENV{IDF_PATH}/components" "${CMAKE_SOURCE_DIR}/idf-components" "${CMAKE_SOURCE_DIR}/managed_components" "${CMAKE_SOURCE_DIR}/main")
     set(COMPONENTS "esp32" "esp_gdbstub" "esptool_py" "main")
     include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 endif ()
 
 project(GifBadge VERSION 1.0 LANGUAGES C CXX)
-add_subdirectory(non-idf-components/gifbadge_hal)
-add_subdirectory(non-idf-components/fileutil)
-add_subdirectory(non-idf-components/font_render)
-add_subdirectory(non-idf-components/npmx)
+add_subdirectory(lib/gifbadge_hal)
+add_subdirectory(lib/fileutil)
+add_subdirectory(lib/font_render)
+add_subdirectory(external-deps/npmx)
 
 if (ESP_PLATFORM)
     if(EXISTS ${CMAKE_SOURCE_DIR}/config/esp32s3/lv_conf.h)
         message(LV_CONF_PATH=${CMAKE_SOURCE_DIR}/config/esp32s3/lv_conf.h)
         idf_build_set_property(COMPILE_OPTIONS "-I${CMAKE_SOURCE_DIR}/config/esp32s3" APPEND)
     endif ()
+#    idf_build_set_property()
 #    target_compile_options(mbedcrypto PRIVATE "-Wno-maybe-uninitialized")
 #    target_compile_options(mbedtls PRIVATE "-DMBEDTLS_ECP_LIGHT=1")
 else()
@@ -59,7 +61,7 @@ else()
     set( FREERTOS_PORT "GCC_POSIX" CACHE STRING "" FORCE)
 
     # Adding the FreeRTOS-Kernel subdirectory
-    add_subdirectory(non-idf-components/FreeRTOS-Kernel)
+    add_subdirectory(external-deps/FreeRTOS-Kernel)
 
     target_compile_options(freertos_kernel
             PRIVATE
@@ -73,9 +75,9 @@ else()
     include_directories(${SDL2_INCLUDE_DIRS})
 
     add_subdirectory(main)
-    add_subdirectory(components/image)
-    add_subdirectory(non-idf-components/gifbadge_hal_linux)
-    add_subdirectory(components/lvgl__lvgl)
+    add_subdirectory(idf-components/image)
+    add_subdirectory(lib/gifbadge_hal_linux)
+    add_subdirectory(idf-components/lvgl__lvgl)
     target_compile_options(lvgl PUBLIC -DLV_CONF_PATH=${CMAKE_SOURCE_DIR}/main/include/lv_conf_linux.h)
     target_link_libraries(GifBadge gifbadge_hal gifbadge_hal_linux freertos_kernel image FileUtil FontRender lvgl ${SDL2_LIBRARIES})
     set_property(TARGET GifBadge PROPERTY CXX_STANDARD 23)

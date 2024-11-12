@@ -11,4 +11,4 @@ target_link_libraries(test_file
         gcov
 )
 
-add_test(NAME file_test COMMAND test_file WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
+add_test(NAME file_test COMMAND test_file WORKING_DIRECTORY .)
