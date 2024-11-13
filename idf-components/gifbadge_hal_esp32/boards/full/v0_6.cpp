@@ -77,6 +77,9 @@ void esp32::s3::full::v0_6::PowerOff() {
   rtc_gpio_pullup_dis(GPIO_NUM_21);
   rtc_gpio_pulldown_dis(GPIO_NUM_21);
   esp_sleep_enable_ext0_wakeup(GPIO_NUM_21, 1);
+  if(_cs != nullptr){
+    _cs->GpioConfig(hal::gpio::GpioDirection::IN, hal::gpio::GpioPullMode::NONE);
+  }
   _pmic->LoadSw1Disable();
   _pmic->Buck1Disable();
   esp_deep_sleep_start();
@@ -114,7 +117,7 @@ void esp32::s3::full::v0_6::LateInit() {
   _backlight = new hal::backlight::esp32s3::backlight_ledc(GPIO_NUM_0, true, 0);
   _touch = new hal::touch::esp32s3::touch_ft5x06(_i2c);
 
-  hal::gpio::Gpio *_cs = _pmic->GpioGet(1);
+  _cs = _pmic->GpioGet(1);
   _cs->GpioConfig(hal::gpio::GpioDirection::OUT, hal::gpio::GpioPullMode::NONE);
   _cs->GpioWrite(true);
 

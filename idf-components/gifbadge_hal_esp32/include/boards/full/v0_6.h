@@ -50,6 +50,7 @@ class v0_6 : public Boards::esp32::s3::esp32s3_sdmmc {
 
   void *buffer;
   esp_io_expander_handle_t _io_expander = nullptr;
+  hal::gpio::Gpio *_cs = nullptr;
   hal::gpio::Gpio *_card_detect = nullptr;
   hal::pmic::esp32s3::PmicNpm1300Led *_vbus_led = nullptr;
   hal::pmic::esp32s3::PmicNpm1300Led *_charge_led = nullptr;
