@@ -69,7 +69,7 @@ static void flush_cb(lv_disp_t *, const lv_area_t *area, uint8_t *color_map) {
 }
 
 static void tick(TimerHandle_t) {
-  lv_tick_inc(10);
+  lv_tick_inc(5);
 }
 
 bool lvgl_lock(int timeout_ms) {
@@ -195,7 +195,7 @@ void lvgl_init(Boards::Board *board) {
   flushSem = xSemaphoreCreateBinary();
   lvgl_open = xSemaphoreCreateRecursiveMutex();
 
-  tickHandle = xTimerCreate("lvglTick", 10/portTICK_PERIOD_MS, pdTRUE, nullptr, tick);
+  tickHandle = xTimerCreate("lvglTick", 5/portTICK_PERIOD_MS, pdTRUE, nullptr, tick);
 
   xTaskCreate(task, "LVGL", 7*1024, nullptr, LVGL_TASK_PRIORITY, &lvgl_task);
 
@@ -211,7 +211,7 @@ void lvgl_init(Boards::Board *board) {
   lv_indev_set_type(lvgl_encoder, LV_INDEV_TYPE_ENCODER);
   lv_indev_set_user_data(lvgl_encoder, board->GetKeys());
   lv_indev_set_read_cb(lvgl_encoder, keyboard_read);
-  lv_timer_set_period(lv_indev_get_read_timer(lvgl_encoder), 20);
+  lv_timer_set_period(lv_indev_get_read_timer(lvgl_encoder), 10);
 //
 //
   if (board->GetTouch()) {
