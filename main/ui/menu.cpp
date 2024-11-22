@@ -146,7 +146,7 @@ void keyboard_read(lv_indev_t *indev, lv_indev_data_t *data) {
 //    LOGI(TAG, "keyboard_read");
   auto g = lv_indev_get_group(indev);
   bool editing = lv_group_get_editing(g);
-  hal::keys::Keys *device = static_cast<hal::keys::Keys *>(lv_indev_get_user_data(indev));
+  auto *device = static_cast<hal::keys::Keys *>(lv_indev_get_user_data(indev));
   if(device) {
     hal::keys::EVENT_STATE *keys = device->read();
     if (keys[hal::keys::KEY_UP] == hal::keys::STATE_PRESSED) {
@@ -175,8 +175,8 @@ void touch_read(lv_indev_t *drv, lv_indev_data_t *data) {
   auto touch = static_cast<hal::touch::Touch *>(lv_indev_get_driver_data(drv));
   auto i = touch->read();
   if (i.first > 0 && i.second > 0) {
-    data->point.x = (int32_t) i.first;
-    data->point.y = (int32_t) i.second;
+    data->point.x = static_cast<int32_t>(i.first);
+    data->point.y = static_cast<int32_t>(i.second);
     data->state = LV_INDEV_STATE_PRESSED;
   } else {
     data->state = LV_INDEV_STATE_RELEASED;
@@ -276,11 +276,11 @@ static void battery_widget(lv_obj_t *scr) {
   battery_percent_update(bar);
 
   lv_timer_t *timer = lv_timer_create([](lv_timer_t *timer) {
-    auto *obj = (lv_obj_t *) timer->user_data;
+    auto *obj = static_cast<lv_obj_t *>(timer->user_data);
     lv_obj_send_event(obj, LV_EVENT_REFRESH, nullptr);
   }, 30000, bar);
   lv_obj_add_event_cb(bar, [](lv_event_t *e) {
-    auto *timer = (lv_timer_t *) e->user_data;
+    auto *timer = static_cast<lv_timer_t *>(e->user_data);
     lv_timer_del(timer);
   }, LV_EVENT_DELETE, timer);
 
@@ -303,11 +303,11 @@ static void battery_widget(lv_obj_t *scr) {
   battery_symbol_update(battery_symbol_cont);
 
   lv_timer_t *timer_icon = lv_timer_create([](lv_timer_t *timer) {
-    auto *obj = (lv_obj_t *) timer->user_data;
+    auto *obj = static_cast<lv_obj_t *>(timer->user_data);
     lv_obj_send_event(obj, LV_EVENT_REFRESH, nullptr);
   }, 30000, battery_symbol_cont);
   lv_obj_add_event_cb(battery_symbol_cont, [](lv_event_t *e) {
-    auto *timer = (lv_timer_t *) e->user_data;
+    auto *timer = static_cast<lv_timer_t *>(e->user_data);
     lv_timer_del(timer);
   }, LV_EVENT_DELETE, timer_icon);
 
