@@ -126,7 +126,7 @@ void esp32::s3::mini::v0_3::LateInit() {
   _backlight = new hal::backlight::esp32s3::backlight_ledc(GPIO_NUM_10, false, 0);
 
   gpio_pullup_en(GPIO_CARD_DETECT);
-  if (!gpio_get_level(GPIO_CARD_DETECT)) {
+  if (StorageReady()) {
     mount(GPIO_NUM_33, GPIO_NUM_36, GPIO_NUM_35, GPIO_NUM_34, GPIO_NUM_37, GPIO_NUM_38, GPIO_CARD_DETECT, 4, GPIO_NUM_0);
   }
   gpio_isr_handler_add(GPIO_CARD_DETECT, sdcard_removed, nullptr);
