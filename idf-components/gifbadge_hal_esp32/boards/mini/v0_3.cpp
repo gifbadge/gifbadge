@@ -50,8 +50,7 @@ esp32::s3::mini::v0_3::v0_3() {
   gpio_set_level(GPIO_EXT_PWR, 0);
   gpio_hold_en(GPIO_EXT_PWR);
 
-  esp_pm_config_t pm_config = {.max_freq_mhz = 240, .min_freq_mhz = 40, .light_sleep_enable = true};
-  esp_pm_configure(&pm_config);
+
   esp_sleep_enable_gpio_wakeup();
   _vbus = new hal::vbus::esp32s3::VbusGpio(GPIO_VBUS_DETECT);
   }
@@ -132,6 +131,8 @@ void esp32::s3::mini::v0_3::LateInit() {
   gpio_isr_handler_add(GPIO_CARD_DETECT, sdcard_removed, nullptr);
   gpio_set_intr_type(GPIO_CARD_DETECT, GPIO_INTR_ANYEDGE);
 
+  esp_pm_config_t pm_config = {.max_freq_mhz = 240, .min_freq_mhz = 40, .light_sleep_enable = true};
+  esp_pm_configure(&pm_config);
   esp_pm_lock_create(ESP_PM_CPU_FREQ_MAX, 0, "USB", &usb_pm);
 
   gpio_config_t vbus_config = {};
