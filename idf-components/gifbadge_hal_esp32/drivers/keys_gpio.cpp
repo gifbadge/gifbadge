@@ -15,25 +15,8 @@ static void pollKeys(void *args) {
 static esp_pm_lock_handle_t key_pm;
 static esp_timer_handle_t wakeTimer;
 
-static void IRAM_ATTR keyWake(void *arg) {
-  auto *buttonConfig = static_cast<gpio_num_t *>(arg);
-  for(int i = 0; i < hal::keys::KEY_MAX; i++){
-    gpio_intr_disable(buttonConfig[i]);
-  }
-  esp_pm_lock_acquire(key_pm);
-  if(esp_timer_is_active(wakeTimer)) {
-    esp_timer_restart(wakeTimer, 10 * 1000 * 1000);
-  } else {
-    esp_timer_start_once(wakeTimer, 10 * 1000 * 1000);
-  }
-}
-
 static void wakeTimerHandler(void *arg) {
   LOGI(TAG, "Releasing keyWake lock");
-  auto *buttonConfig = static_cast<gpio_num_t *>(arg);
-  for(int i = 0; i < hal::keys::KEY_MAX; i++){
-    gpio_intr_enable(buttonConfig[i]);
-  }
   esp_pm_lock_release(key_pm);
 }
 
@@ -54,7 +37,6 @@ hal::keys::esp32s3::keys_gpio::keys_gpio(gpio_num_t up, gpio_num_t down, gpio_nu
       ESP_ERROR_CHECK(gpio_set_pull_mode(input, GPIO_PULLUP_ONLY));
       ESP_ERROR_CHECK(gpio_pullup_en(input));
       ESP_ERROR_CHECK(gpio_wakeup_enable(input, GPIO_INTR_LOW_LEVEL));
-      ESP_ERROR_CHECK(gpio_isr_handler_add(input, keyWake, buttonConfig));
     }
   }
 
@@ -103,16 +85,33 @@ hal::keys::EVENT_STATE * hal::keys::esp32s3::keys_gpio::read() {
 }
 
 void hal::keys::esp32s3::keys_gpio::poll() {
-    auto time = esp_timer_get_time() / 1000;
+  auto time = esp_timer_get_time() / 1000;
 
-    for (int b = 0; b < KEY_MAX; b++) {
-      if (buttonConfig[b] >= 0) {
-        bool state = gpio_get_level(buttonConfig[b]);
-        key_debounce_update(&_debounce_states[b], state == 0, static_cast<int>(time - last), &_debounce_config);
-        if (key_debounce_get_changed(&_debounce_states[b])) {
-          LOGI(TAG, "%i changed", b);
-        }
+  for (int b = 0; b < KEY_MAX; b++) {
+    if (buttonConfig[b] >= 0) {
+      bool state = gpio_get_level(buttonConfig[b]);
+      key_debounce_update(&_debounce_states[b], state == 0, static_cast<int>(time - last), &_debounce_config);
+      if (key_debounce_get_changed(&_debounce_states[b])) {
+        LOGI(TAG, "%i changed", b);
       }
     }
-    last = time;
+  }
+
+  bool changed = false;
+  for (int b = 0; b < KEY_MAX; b++) {
+    if (buttonConfig[b] >= 0) {
+      if (key_debounce_get_changed(&_debounce_states[b])) {
+        changed = true;
+      }
+    }
+  }
+  if (changed) {
+    esp_pm_lock_acquire(key_pm);
+    if (esp_timer_is_active(wakeTimer)) {
+      esp_timer_restart(wakeTimer, 10 * 1000 * 1000);
+    } else {
+      esp_timer_start_once(wakeTimer, 10 * 1000 * 1000);
+    }
+  }
+  last = time;
 }
