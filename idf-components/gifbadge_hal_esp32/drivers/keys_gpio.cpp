@@ -8,7 +8,7 @@
 static const char *TAG = "keys_gpio.cpp";
 
 static void pollKeys(void *args) {
-  auto *keys = (hal::keys::esp32s3::keys_gpio *) args;
+  auto *keys = static_cast<hal::keys::esp32s3::keys_gpio *>(args);
   keys->poll();
 }
 
@@ -29,7 +29,7 @@ hal::keys::esp32s3::keys_gpio::keys_gpio(gpio_num_t up, gpio_num_t down, gpio_nu
 
   esp_pm_lock_create(ESP_PM_NO_LIGHT_SLEEP, 0, "keyWake", &key_pm);
 
-  for (auto &input : buttonConfig) {
+  for (const auto &input : buttonConfig) {
     if (input >= 0) {
       LOGI(TAG, "Setting up GPIO %u", input);
       ESP_ERROR_CHECK(gpio_reset_pin(input));
