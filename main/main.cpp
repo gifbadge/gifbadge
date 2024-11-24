@@ -127,6 +127,8 @@ extern "C" void app_main(void) {
   xTaskCreate(display_task, "display_task", 5000, board, 2, &display_task_handle);
 #endif
 
+  initInputTimer(board);
+
   if (!board->StorageReady()) {
     xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_NO_STORAGE, eSetValueWithOverwrite);
     while (true){
@@ -136,7 +138,6 @@ extern "C" void app_main(void) {
 
   MAIN_STATES oldState = MAIN_NONE;
   TaskHandle_t lvglHandle = xTaskGetHandle("LVGL");
-  initInputTimer(board);
 
   board->UsbCallBack(&usbCall);
   if(board->UsbConnected()){
