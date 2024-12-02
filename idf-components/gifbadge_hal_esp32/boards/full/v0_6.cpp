@@ -8,6 +8,8 @@
 #include "esp_io_expander_cat9532.h"
 #include "drivers/keys_esp_io_expander.h"
 #include "drivers/esp_io_expander_gpio.h"
+#include "esp_efuse_custom_table.h"
+
 
 #define USB_ENABLE
 
@@ -190,5 +192,11 @@ void esp32::s3::full::v0_6::VbusCallback(bool state) {
   } else {
     esp_rom_gpio_connect_in_signal(GPIO_MATRIX_CONST_ZERO_INPUT, USB_SRP_BVALID_IN_IDX, false);
   }
+}
+char *esp32::s3::full::v0_6::SerialNumber() {
+  uint64_t sn;
+  esp_efuse_read_field_blob(ESP_EFUSE_KEY0_SERIAL, &sn, 64);
+  sprintf(serial, "%llu", sn);
+  return serial;
 }
 }

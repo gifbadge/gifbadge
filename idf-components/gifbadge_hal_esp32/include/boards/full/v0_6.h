@@ -19,6 +19,8 @@
 namespace Boards::esp32::s3::full {
 class v0_6 : public Boards::esp32::s3::esp32s3_sdmmc {
  public:
+  char * SerialNumber() override;
+
   v0_6();
   ~v0_6() override = default;
 
