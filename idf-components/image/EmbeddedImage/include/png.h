@@ -35,7 +35,8 @@ public:
 
 protected:
     PNG png;
-
+    bool decoded = false;
+    char _path[255];
     static void PNGDraw(PNGDRAW *pDraw);
 };
 }

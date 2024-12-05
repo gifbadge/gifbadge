@@ -10,14 +10,6 @@ image::JPEG::~JPEG() {
   jpeg.close();
 }
 
-
-image::frameReturn image::JPEG::GetFrame(uint8_t *outBuf, int16_t x, int16_t y, int16_t width) {
-  pnguser config = {.png = nullptr, .buffer = outBuf, .x = x, .y = y, .width = width};
-  jpeg.setUserPointer(&config);
-  jpeg.decode(0, 0, 0);
-  return {image::frameStatus::END, 0};
-}
-
 std::pair<int16_t, int16_t> image::JPEG::Size() {
     return {jpeg.getWidth(), jpeg.getHeight()};
 }
@@ -44,9 +36,23 @@ typedef int32_t (*readfile)(JPEGFILE *pFile, uint8_t *pBuf, int32_t iLen);
 typedef int32_t (*seekfile)(JPEGFILE *pFile, int32_t iPosition);
 
 int image::JPEG::Open(const char *path, void *buffer) {
+  strncpy(_path, path, sizeof(_path));
   int ret = jpeg.open(path, bb2OpenFile, bb2CloseFile, (readfile)bb2ReadFile, (seekfile)bb2SeekFile, JPEGDraw);
   jpeg.setPixelType(RGB565_BIG_ENDIAN);
   return ret==0; //Invert the return value
+}
+
+image::frameReturn image::JPEG::GetFrame(uint8_t *outBuf, int16_t x, int16_t y, int16_t width) {
+  if (decoded) {
+    jpeg.close();
+    jpeg.open(_path, bb2OpenFile, bb2CloseFile, (readfile)bb2ReadFile, (seekfile)bb2SeekFile, JPEGDraw);
+    jpeg.setPixelType(RGB565_BIG_ENDIAN);
+  }
+  decoded = true;
+  pnguser config = {.png = nullptr, .buffer = outBuf, .x = x, .y = y, .width = width};
+  jpeg.setUserPointer(&config);
+  jpeg.decode(0, 0, 0);
+  return {image::frameStatus::END, 0};
 }
 
 const char * image::JPEG::GetLastError() {

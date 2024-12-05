@@ -27,6 +27,8 @@ public:
 
 private:
     JPEGDEC jpeg;
+    bool decoded = false;
+    char _path[255];
 };
 }
 

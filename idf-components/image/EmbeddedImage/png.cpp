@@ -8,12 +8,6 @@ image::PNGImage::~PNGImage() {
     png.close();
 }
 
-image::frameReturn image::PNGImage::GetFrame(uint8_t *outBuf, int16_t x, int16_t y, int16_t width) {
-    pnguser config = {.png = &png, .buffer = outBuf, .x = x, .y = y, .width = width};
-    png.decode((void *) &config, 0);
-  return {image::frameStatus::END, 0};
-}
-
 std::pair<int16_t, int16_t> image::PNGImage::Size() {
     return {png.getWidth(), png.getHeight()};
 }
@@ -27,12 +21,24 @@ typedef int32_t (*seekfile)(PNGFILE *pFile, int32_t iPosition);
 
 
 int image::PNGImage::Open(const char *path, void *buffer) {
+    strncpy(_path, path, sizeof(_path));
     return png.open(path, bb2OpenFile, bb2CloseFile, (readfile)bb2ReadFile, (seekfile)bb2SeekFile, PNGDraw);
 }
 
 int image::PNGImage::Open(uint8_t *bin, int size) {
     png.openRAM(bin, size, PNGDraw);
     return -1;
+}
+
+image::frameReturn image::PNGImage::GetFrame(uint8_t *outBuf, int16_t x, int16_t y, int16_t width) {
+    if (decoded) {
+        png.close();
+        png.open(_path, bb2OpenFile, bb2CloseFile, (readfile)bb2ReadFile, (seekfile)bb2SeekFile, PNGDraw);
+    }
+    decoded = true;
+    pnguser config = {.png = &png, .buffer = outBuf, .x = x, .y = y, .width = width};
+    png.decode((void *) &config, 0);
+    return {image::frameStatus::END, 0};
 }
 
 void image::PNGImage::PNGDraw(PNGDRAW *pDraw) {
