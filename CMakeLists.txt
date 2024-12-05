@@ -11,7 +11,7 @@ if (ESP_PLATFORM)
     include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 endif ()
 
-project(GifBadge VERSION 1.0 LANGUAGES C CXX)
+project(GifBadge LANGUAGES C CXX)
 add_subdirectory(lib/gifbadge_hal)
 add_subdirectory(lib/fileutil)
 add_subdirectory(lib/font_render)
