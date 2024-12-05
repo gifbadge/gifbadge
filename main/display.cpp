@@ -379,6 +379,7 @@ void display_task(void *params) {
 
     if (lvgl_menu_state()) {
       //Go back to the top if the menu is open
+      redraw = true;
       continue;
     }
 
