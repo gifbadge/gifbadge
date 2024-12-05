@@ -115,6 +115,11 @@ void task(void *) {
         LOGI(TAG, "LVGL_STOP");
         lvgl_close();
         xSemaphoreGive(lvgl_open);
+        if (cbData.display) {
+          vTaskDelay(200 / portTICK_PERIOD_MS);
+          cbData.display->clear();
+          cbData.display->write(0, 0, cbData.display->size.first, cbData.display->size.second, cbData.display->buffer);
+        }
         display_task_handle = xTaskGetHandle("display_task");
         xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_NONE, eSetValueWithOverwrite); //Notify the display task to redraw
         vTaskSuspend(nullptr);
