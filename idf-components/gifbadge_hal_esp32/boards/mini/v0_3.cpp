@@ -127,7 +127,7 @@ void esp32::s3::mini::v0_3::LateInit() {
 
   gpio_pullup_en(GPIO_CARD_DETECT);
   if (StorageReady()) {
-    mount(GPIO_NUM_33, GPIO_NUM_36, GPIO_NUM_35, GPIO_NUM_34, GPIO_NUM_37, GPIO_NUM_38, GPIO_CARD_DETECT, 4, GPIO_NUM_0);
+    mount(GPIO_NUM_33, GPIO_NUM_36, GPIO_NUM_35, GPIO_NUM_34, GPIO_NUM_37, GPIO_NUM_38, GPIO_CARD_DETECT, 4, GPIO_NUM_NC);
   }
   gpio_isr_handler_add(GPIO_CARD_DETECT, sdcard_removed, nullptr);
   gpio_set_intr_type(GPIO_CARD_DETECT, GPIO_INTR_ANYEDGE);

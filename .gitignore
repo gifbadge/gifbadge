@@ -1,5 +1,5 @@
 build/
-cmake-build-debug/
+cmake-build-*/
 sdkconfig
 sdkconfig.old
 managed_components
@@ -8,3 +8,4 @@ managed_components
 dependencies.lock
 fatfs
 .idea
+Testing/
