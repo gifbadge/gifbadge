@@ -201,7 +201,7 @@ void hal::display::esp32s3::display_st7701s::write(int x_start, int y_start, int
   esp_timer_start_once(flushTimerHandle, 30*1000);
   if(_clear){
     _clear = false;
-    memset(buffer, 0xFF, size.first * size.second * 2);
+    memset(buffer, 0x00, size.first * size.second * 2);
   }
 }
 
@@ -212,7 +212,7 @@ bool hal::display::esp32s3::display_st7701s::onColorTransDone(flushCallback_t ca
 
 void hal::display::esp32s3::display_st7701s::clear() {
   _clear = true;
-  memset(buffer, 0xFF, size.first * size.second * 2);
+  memset(buffer, 0x00, size.first * size.second * 2);
 }
 
 
