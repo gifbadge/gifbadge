@@ -88,16 +88,16 @@ void esp32::s3::full::v0_6::PowerOff() {
 }
 
 BoardPower esp32::s3::full::v0_6::PowerState() {
-//  if (powerConnected() != CHARGE_NONE) {
-//    return BOARD_POWER_NORMAL;
-//  }
-//  if (_battery->getSoc() < 12) {
-//    if (_battery->getSoc() < 10) {
-//      return BOARD_POWER_CRITICAL;
-//    }
-//    return BOARD_POWER_LOW;
-//
-//  }
+  if (_pmic->VbusConnected()) {
+    return BOARD_POWER_NORMAL;
+  }
+  if (_pmic->BatterySoc() < 12) {
+    if (_pmic->BatterySoc() < 10) {
+      return BOARD_POWER_CRITICAL;
+    }
+    return BOARD_POWER_LOW;
+
+  }
   return BOARD_POWER_NORMAL;
 }
 

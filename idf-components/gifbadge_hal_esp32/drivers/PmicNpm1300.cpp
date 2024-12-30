@@ -100,12 +100,12 @@ static Boards::WakeupSource get_wakeup(npmx_instance_t *pm){
   uint8_t flags;
   npmx_backend_register_read(pm->p_backend, NPMX_REG_TO_ADDR(NPM_MAIN->EVENTSVBUSIN0SET), &flags, 1);
   if(flags & NPMX_EVENT_GROUP_VBUSIN_DETECTED_MASK){
-    wakeup = Boards::WakeupSource::VBUS;
+    return Boards::WakeupSource::VBUS;
   }
 
   npmx_backend_register_read(pm->p_backend, NPMX_REG_TO_ADDR(NPM_MAIN->EVENTSSHPHLDSET), &flags, 1);
   if(flags & NPMX_EVENT_GROUP_SHIPHOLD_PRESSED_MASK){
-    wakeup = Boards::WakeupSource::KEY;
+    return Boards::WakeupSource::KEY;
   }
   return wakeup;
 }
@@ -168,18 +168,18 @@ hal::battery::Battery::State hal::pmic::esp32s3::PmicNpm1300::BatteryStatus() {
   uint8_t status;
   npmx_charger_status_get(npmx_charger_get(&_npmx_instance, 0), &status);
   if(!(status & NPMX_CHARGER_STATUS_BATTERY_DETECTED_MASK)){
-    return Battery::State::NOT_PRESENT;
+    return State::NOT_PRESENT;
   }
   if(_charge_error != Charger::ChargeError::NONE){
-    return Battery::State::ERROR;
+    return State::ERROR;
   }
   if(status & (NPMX_CHARGER_STATUS_TRICKLE_CHARGE_MASK | NPMX_CHARGER_STATUS_CONSTANT_CURRENT_MASK | NPMX_CHARGER_STATUS_CONSTANT_VOLTAGE_MASK)){
-    return Battery::State::CHARGING;
+    return State::CHARGING;
   }
   if(!VbusConnected()){
-    return Battery::State::DISCHARGING;
+    return State::DISCHARGING;
   }
-  return Battery::State::OK;
+  return State::OK;
 }
 
 void hal::pmic::esp32s3::PmicNpm1300::Buck1Set(uint32_t millivolts) {
@@ -493,9 +493,32 @@ void hal::pmic::esp32s3::PmicNpm1300::VbusConnectedCallback(void (*callback)(boo
     _vbus_callback((status&NPMX_VBUSIN_STATUS_CONNECTED_MASK)==1);
   }
 }
-void hal::pmic::esp32s3::PmicNpm1300::DebugLog() {
+void  hal::pmic::esp32s3::PmicNpm1300::DebugLog() {
   LOGI(TAG, "SOC: %i, Voltage %fV", BatterySoc(), BatteryVoltage());
   LOGI(TAG, "Temperature: %fC, Current %fA", BatteryTemperature(), BatteryCurrent());
+  uint8_t status_mask;
+  npmx_charger_status_get(npmx_charger_get(&_npmx_instance, 0), &status_mask);
+  LOGI(TAG, "State: %x", status_mask);
+  switch (BatteryStatus()) {
+    case State::OK:
+      LOGI(TAG, "OK");
+      break;
+    case State::CHARGING:
+      LOGI(TAG, "Charging");
+      break;
+    case State::CONNECTED_NOT_CHARGING:
+      LOGI(TAG, "Connected not charging");
+      break;
+    case State::DISCHARGING:
+      LOGI(TAG, "Discharging");
+      break;
+    case State::NOT_PRESENT:
+      LOGI(TAG, "No Battery");
+      break;
+    case State::ERROR:
+      LOGI(TAG, "Error");
+      break;
+  }
 }
 
 
