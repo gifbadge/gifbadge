@@ -42,8 +42,8 @@ public:
  char serial[18];
 
  static void OtaInstallTask(void *arg);
-  TaskHandle_t _ota_task_handle;
-  int _ota_status;
+  TaskHandle_t _ota_task_handle = nullptr;
+  int _ota_status = -1;
 
 };
 }

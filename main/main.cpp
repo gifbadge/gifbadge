@@ -160,8 +160,8 @@ extern "C" void app_main(void) {
             xTaskNotifyIndexed(lvglHandle, 0, LVGL_STOP, eSetValueWithOverwrite);
             //Check for OTA File
             if (board->OtaCheck()) {
-              xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_OTA, eSetValueWithOverwrite);
-              vTaskDelay(100 / portTICK_PERIOD_MS);
+                vTaskDelay(1000 / portTICK_PERIOD_MS);
+                xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_OTA, eSetValueWithOverwrite);
               board->OtaInstall();
               currentState = MAIN_OTA;
               break;

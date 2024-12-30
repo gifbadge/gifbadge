@@ -67,7 +67,11 @@ void esp32::s3::esp32s3::BootInfo() {
 }
 bool esp32::s3::esp32s3::OtaCheck() {
   struct stat buffer{};
-  return (stat("/data/ota.bin", &buffer) == 0);
+  if(stat("/data/ota.bin", &buffer) == 0){
+      LOGI("TAG", "OTA File Exists");
+      return true;
+  }
+  return false;
 }
 OtaError esp32::s3::esp32s3::OtaValidate() {
   FILE *ota_file = fopen("/data/ota.bin", "r");
@@ -189,6 +193,9 @@ void esp32::s3::esp32s3::OtaInstallTask(void *arg) {
 
   FILE *ota_file = fopen("/data/ota.bin", "r");
   static char *ota_buffer = static_cast<char *>(malloc(OTA_BUFFER_SIZE));
+  if(ota_buffer == nullptr){
+      board->_ota_status = -2;
+  }
 
   size_t bytes_read;
 

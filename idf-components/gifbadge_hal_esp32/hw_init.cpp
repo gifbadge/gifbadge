@@ -11,14 +11,16 @@ static Boards::Board *global_board;
 #include "boards/full/v0_4.h"
 #include "boards/full/v0_6.h"
 #include "boards/mini/v0_3.h"
+#include "log.h"
 
 Boards::Board *get_board() {
 //    return new board_v0();
   uint8_t board;
   esp_efuse_read_field_blob(ESP_EFUSE_USER_DATA_BOARD, &board, 8);
-//    LOGI(TAG, "Board %u", board);
   if (!global_board) {
-    switch (board) {
+      LOGI(TAG, "Board %u", board);
+
+      switch (board) {
       case BOARD_1_28_V0:
         global_board = new Boards::esp32::s3::mini::v0();
         break;
@@ -40,6 +42,7 @@ Boards::Board *get_board() {
       default:
         return nullptr;
     }
+    LOGI(TAG, "Board %s", global_board->Name());
   }
-  return global_board;
+    return global_board;
 }
