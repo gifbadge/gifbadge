@@ -171,10 +171,14 @@ void esp32::s3::full::v0_6::LateInit() {
 
 }
 WakeupSource esp32::s3::full::v0_6::BootReason() {
+  LOGI(TAG, "esp_reset_reason() %i", esp_reset_reason());
+  if (_pmic->GetWakeup() != WakeupSource::NONE) {
+    return _pmic->GetWakeup();
+  }
   if (esp_reset_reason() != ESP_RST_POWERON) {
     return WakeupSource::REBOOT;
   }
-  return _pmic->GetWakeup();
+  return WakeupSource::NONE;
 }
 hal::vbus::Vbus *esp32::s3::full::v0_6::GetVbus() {
   return _pmic;
