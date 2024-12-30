@@ -26,6 +26,12 @@ void esp32::s3::esp32s3_sdmmc::Reset() {
   esp32s3::Reset();
 }
 
+void esp32::s3::esp32s3_sdmmc::PowerOff() {
+  if(tinyusb_msc_storage_unmount() != ESP_OK){
+    LOGI(TAG, "Failed to unmount");
+  }
+}
+
 int esp32::s3::esp32s3_sdmmc::StorageFormat() {
   LOGI(TAG, "Format Start");
   esp_err_t ret;

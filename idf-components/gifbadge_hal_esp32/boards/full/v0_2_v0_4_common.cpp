@@ -128,6 +128,7 @@ hal::backlight::Backlight *esp32::s3::full::v0_2v0_4::GetBacklight() {
 
 void esp32::s3::full::v0_2v0_4::PowerOff() {
   LOGI(TAG, "Poweroff");
+  esp32s3_sdmmc::PowerOff();
   vTaskDelay(100 / portTICK_PERIOD_MS);
   esp_io_expander_set_level(_io_expander, IO_EXPANDER_PIN_NUM_3, 1);
 

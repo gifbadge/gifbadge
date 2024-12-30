@@ -75,7 +75,8 @@ hal::backlight::Backlight *esp32::s3::full::v0_6::GetBacklight() {
 
 void esp32::s3::full::v0_6::PowerOff() {
   LOGI(TAG, "Poweroff");
-  vTaskDelay(100 / portTICK_PERIOD_MS);
+  esp32s3_sdmmc::PowerOff();
+  vTaskDelay(500 / portTICK_PERIOD_MS);
   rtc_gpio_pullup_dis(GPIO_NUM_21);
   rtc_gpio_pulldown_dis(GPIO_NUM_21);
   esp_sleep_enable_ext0_wakeup(GPIO_NUM_21, 1);

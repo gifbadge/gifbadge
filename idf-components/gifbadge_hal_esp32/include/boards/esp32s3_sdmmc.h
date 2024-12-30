@@ -4,8 +4,10 @@
 
 namespace Boards::esp32::s3 {
  class esp32s3_sdmmc : public Boards::esp32::s3::esp32s3 {
- public:
-  esp32s3_sdmmc() = default;
+  public:
+   void PowerOff() override;
+
+   esp32s3_sdmmc() = default;
   ~esp32s3_sdmmc() override = default;
 
   bool UsbConnected() override;
