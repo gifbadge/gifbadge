@@ -188,6 +188,10 @@ extern "C" void app_main(void) {
 
 }
 
+void vApplicationTickHook() {
+  lv_tick(nullptr);
+}
+
 #ifndef ESP_PLATFORM
 
 void vLoggingPrintf( const char * pcFormat,

@@ -68,8 +68,8 @@ static void flush_cb(lv_disp_t *, const lv_area_t *area, uint8_t *color_map) {
                          LV_DISPLAY_RENDER_MODE_FULL);
 }
 
-static void tick(TimerHandle_t) {
-  lv_tick_inc(5);
+void lv_tick(TimerHandle_t) {
+  lv_tick_inc(portTICK_PERIOD_MS);
 }
 
 bool lvgl_lock(int timeout_ms) {
@@ -95,7 +95,7 @@ void lvgl_close() {
   }
 
   vTaskDelay(100 / portTICK_PERIOD_MS); //Wait some time so the task can finish
-  xTimerStop(tickHandle, 0);
+  // xTimerStop(tickHandle, 0);
   get_board()->PmRelease();
   LOGI(TAG, "Close Done");
 }
@@ -200,7 +200,7 @@ void lvgl_init(Boards::Board *board) {
   flushSem = xSemaphoreCreateBinary();
   lvgl_open = xSemaphoreCreateRecursiveMutex();
 
-  tickHandle = xTimerCreate("lvglTick", 5/portTICK_PERIOD_MS, pdTRUE, nullptr, tick);
+  // tickHandle = xTimerCreate("lvglTick", 5/portTICK_PERIOD_MS, pdTRUE, nullptr, lv_tick);
 
   xTaskCreate(task, "LVGL", 7*1024, nullptr, LVGL_TASK_PRIORITY, &lvgl_task);
 
@@ -332,7 +332,7 @@ void lvgl_wake_up() {
     vTaskResume(lvgl_task);
     xTaskNotifyIndexed(lvgl_task, 0, LVGL_RESUME, eSetValueWithOverwrite);
 
-    xTimerStart(tickHandle, 0);
+    // xTimerStart(tickHandle, 0);
 
     if (lvgl_lock(-1)) {
       lv_group_t *g = lv_group_create();
