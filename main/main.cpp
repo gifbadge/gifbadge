@@ -188,7 +188,7 @@ extern "C" void app_main(void) {
 
 }
 
-void vApplicationTickHook() {
+IRAM_ATTR void vApplicationTickHook() {
   lv_tick(nullptr);
 }
 

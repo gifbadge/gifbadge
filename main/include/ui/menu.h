@@ -46,5 +46,5 @@ void destroy_screens();
 
 typedef lv_obj_t *(*MenuType)();
 
-void lv_tick(TimerHandle_t);
+IRAM_ATTR void lv_tick(TimerHandle_t);
 
