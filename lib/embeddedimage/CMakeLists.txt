@@ -30,7 +30,7 @@ if (ESP_PLATFORM)
     target_link_options(JPEGDEC    PUBLIC ${ESP_COMPILE_OPTIONS})
 endif ()
 
-SET(SRC "image.cpp" "bitbank2.cpp" "jpeg.cpp" "png.cpp" "gif.cpp" ${PNGdec_src} )
+SET(SRC "image.cpp" "bitbank2.cpp" "jpeg.cpp" "png.cpp" "gif.cpp" "bmp.cpp" ${PNGdec_src} )
 
 SET(INCLUDE "include"
         "${CMAKE_SOURCE_DIR}/external-deps/AnimatedGIF/src"
@@ -41,7 +41,7 @@ target_include_directories(EmbeddedImage PUBLIC ${INCLUDE})
 target_compile_options(EmbeddedImage PUBLIC -D__LINUX__)
 
 target_link_libraries(EmbeddedImage PRIVATE FileBuffer)
-target_link_libraries(EmbeddedImage PUBLIC PNGdec JPEGDEC)
+target_link_libraries(EmbeddedImage PUBLIC PNGdec JPEGDEC simplebmp)
 
 set_property(TARGET EmbeddedImage PROPERTY C_STANDARD 11)
 set_property(TARGET EmbeddedImage PROPERTY C_EXTENSIONS ON)

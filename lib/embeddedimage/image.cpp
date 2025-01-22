@@ -4,11 +4,12 @@
 #include "jpeg.h"
 #include "png.h"
 #include "gif.h"
+#include "bmp.h"
 
-std::array<const char *, 4> extensionArray = {".gif", ".jpg", ".jpeg", ".png"};
-std::array<const char *, 4> magicArray = {"GIF87a", "GIF89a", "\xFF\xD8\xFF", "\x89\x50\x4E\x47\x0D\x0A\x1A\x0A"};
+std::array<const char *, 5> extensionArray = {".gif", ".jpg", ".jpeg", ".png", ".bmp"};
+std::array<const char *, 5> magicArray = {"GIF87a", "GIF89a", "\xFF\xD8\xFF", "\x89\x50\x4E\x47\x0D\x0A\x1A\x0A", "BM"};
 std::span<const char *> extensions(extensionArray);
-std::array<image::Image*(*)(image::screenResolution res), 4> handlers = {image::GIF::Create, image::GIF::Create, image::JPEG::Create, image::PNGImage::Create};
+std::array<image::Image*(*)(image::screenResolution res), 5> handlers = {image::GIF::Create, image::GIF::Create, image::JPEG::Create, image::PNGImage::Create, image::bmpImage::Create};
 
 
 image::Image *ImageFactory(image::screenResolution res, const char *path) {

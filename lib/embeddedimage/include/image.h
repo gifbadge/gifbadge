@@ -64,6 +64,6 @@ class Image {
 };
 }
 
-extern std::array<const char *, 4> extensionArray;
+extern std::array<const char *, 5> extensionArray;
 extern std::span<const char *> extensions;
 image::Image *ImageFactory(image::screenResolution res, const char *path);
