@@ -21,6 +21,11 @@ image::Image::Image(screenResolution res, const char *path) :resolution(res) {
   strncpy(_path, path, 254);
 }
 
+void CachedPath(const char *path, char *cachepath) {
+  strcpy(cachepath, "/data/.cache");
+  const char *relpath = strchr(path + 1, '/');
+  strcat(cachepath, relpath);
+}
 
 image::Image *ImageFactory(image::screenResolution res, const char *path) {
   int fd = open(path, O_RDONLY);

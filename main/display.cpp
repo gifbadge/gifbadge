@@ -108,7 +108,15 @@ class NoStorageImage : public ErrorImage {
     strcpy(_error, "No SDCARD");
   }
 };
+class ResizingImage: public image::ErrorImage {
+  public:
+  explicit ResizingImage(std::pair<int16_t, int16_t> size) : ErrorImage(size, nullptr) {
+    strcpy(_error, "Resizing");
+  }
+};
 }
+
+
 
 static image::PNGImage * display_image_batt() {
   LOGI(TAG, "Displaying Low Battery");

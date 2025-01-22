@@ -20,8 +20,7 @@ struct pnguser {
 namespace image {
 
 class PNGImage : public image::Image {
-
-public:
+    public:
     explicit PNGImage(screenResolution res, const char *path): Image(res, path) {};
     explicit PNGImage(screenResolution res): Image(res) {};
 
@@ -38,11 +37,16 @@ public:
     int Open(uint8_t *bin, int size);
 
     const char * GetLastError() override;
+    bool resizable() override;
+    int resize(int16_t x, int16_t y) override;
 
 
 protected:
     PNG png{};
     bool decoded = false;
+    static void PNGDraw(PNGDRAW *pDraw);
+    static void PNGResize(PNGDRAW *pDraw);
+    void *_buffer = nullptr;
 };
 }
 
