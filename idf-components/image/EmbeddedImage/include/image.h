@@ -18,6 +18,10 @@ typedef std::pair<frameStatus, uint32_t> frameReturn;
 class Image {
 
  public:
+    /**
+     *
+     * @param path null terminated string containing the path
+     */
     explicit Image(const char *path);
 
   virtual ~Image() = default;
@@ -41,7 +45,6 @@ class Image {
   /**
    * Open an image from a path.
    * if buffer is provided, it will be used as working memory for image decoding
-   * @param path null terminated string containing the path
    * @param buffer
    * @return
    */
@@ -59,11 +62,27 @@ class Image {
    */
   virtual const char *GetLastError() = 0;
 
+  /**
+   * Check if image is resizable
+   * @return true if resizable
+   */
+  virtual bool resizable() { return false; };
+
+    /**
+     * 
+     * @param x
+     * @param y 
+     * @return 
+     */
+    virtual int resize(int16_t x, int16_t y) { return -1; };
+
   protected:
   char _path[255];
 };
 }
 
-extern std::array<const char *, 4> extensionArray;
+extern std::array<const char *, 5> extensionArray;
 extern std::span<const char *> extensions;
 image::Image *ImageFactory(const char *path);
+
+void CachedPath(const char *path, char *cachepath);

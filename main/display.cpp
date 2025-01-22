@@ -104,7 +104,15 @@ class NoStorageImage : public ErrorImage {
     strcpy(_error, "No SDCARD");
   }
 };
+class ResizingImage: public image::ErrorImage {
+  public:
+  explicit ResizingImage(std::pair<int16_t, int16_t> size) : ErrorImage(size, nullptr) {
+    strcpy(_error, "Resizing");
+  }
+};
 }
+
+
 
 static image::PNGImage * display_image_batt() {
   LOGI(TAG, "Displaying Low Battery");
@@ -212,9 +220,25 @@ static image::Image *openFile(const char *path, hal::display::Display *display) 
     }
     printf("%s x: %i y: %i\n", path, in->Size().first, in->Size().second);
     auto size = in->Size();
-    if (size > display->size) {
+    if (size > display->size && in->resizable() == false) {
       delete in;
       return new image::TooLargeImage(display->size, path);
+    }
+    if(size != display->size && in->resizable() == true) {
+      auto *resizing = new image::ResizingImage(display->size);
+      resizing->GetFrame(display->buffer, 0, 0, display->size.first);
+      display->write(0, 0, display->size.first, display->size.second, display->buffer);
+      if (in->resize(display->size.first, display->size.second) != 0) {
+        delete in;
+        return new image::ErrorImage(display->size, "Error Resizing File\n%s", path);
+      }
+      delete in;
+      in = ImageFactory(path);
+      if (in->Open(get_board()->TurboBuffer()) != 0) {
+        const char *lastError = in->GetLastError();
+        delete in;
+        return new image::ErrorImage(display->size, "Error Displaying File\n%s\n%s", path, lastError);
+      }
     }
   } else {
     return new image::ErrorImage(display->size, "Could not Display\n%s", path);

@@ -3,19 +3,15 @@
 #include "image.h"
 #include <PNGdec.h>
 
-struct pnguser {
-    PNG *png;
-    uint8_t *buffer;
-    int16_t x;
-    int16_t y;
-    int16_t width;
-};
 
 namespace image {
 
 class PNGImage : public image::Image {
+  public:
+    int resize(int16_t x, int16_t y) override;
 
-public:
+    bool resizable() override ;
+
     explicit PNGImage(const char *path);
     ~PNGImage() override;
 
@@ -36,6 +32,8 @@ protected:
     PNG png;
     bool decoded = false;
     static void PNGDraw(PNGDRAW *pDraw);
+    static void PNGResize(PNGDRAW *pDraw);
+    void * _buffer = nullptr;
 };
 }
 

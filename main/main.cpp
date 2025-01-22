@@ -122,7 +122,7 @@ extern "C" void app_main(void) {
   vTaskDelay(500 / portTICK_PERIOD_MS); //Let USB Settle
 
 #ifdef ESP_PLATFORM
-  xTaskCreatePinnedToCore(display_task, "display_task", 5000, board, 2, &display_task_handle, 1);
+  xTaskCreatePinnedToCore(display_task, "display_task", 7000, board, 2, &display_task_handle, 1);
 #else
   xTaskCreate(display_task, "display_task", 5000, board, 2, &display_task_handle);
 #endif
