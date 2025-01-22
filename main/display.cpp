@@ -35,7 +35,7 @@ namespace image {
 class ErrorImage : public image::Image {
  public:
   ErrorImage(std::pair<int16_t, int16_t> size, const char *error)
-      : _width(size.first), _height(size.second), _error("") {
+      : Image(""), _width(size.first), _height(size.second), _error("") {
     if (error != nullptr) {
       strcpy(_error, error);
     }
@@ -43,7 +43,7 @@ class ErrorImage : public image::Image {
 
   template<typename ... Args>
   ErrorImage(std::pair<int16_t, int16_t> size, const char *fmt, Args &&... args)
-      : _width(size.first), _height(size.second), _error("") {
+      : Image(""), _width(size.first), _height(size.second), _error("") {
     snprintf(_error, sizeof(_error) - 1, fmt, std::forward<Args>(args) ...);
   };
 
@@ -108,7 +108,7 @@ class NoStorageImage : public ErrorImage {
 
 static image::PNGImage * display_image_batt() {
   LOGI(TAG, "Displaying Low Battery");
-  auto *png = new image::PNGImage;
+  auto *png = new image::PNGImage("");
   png->Open((uint8_t *) low_batt_png, sizeof(low_batt_png));
   return png;
 }
@@ -205,7 +205,7 @@ static int get_file(char *path) {
 static image::Image *openFile(const char *path, hal::display::Display *display) {
   image::Image *in = ImageFactory(path);
   if (in) {
-    if (in->Open(path, get_board()->TurboBuffer()) != 0) {
+    if (in->Open(get_board()->TurboBuffer()) != 0) {
       const char *lastError = in->GetLastError();
       delete in;
       return new image::ErrorImage(display->size, "Error Displaying File\n%s\n%s", path, lastError);

@@ -3,6 +3,8 @@
 #include "bitbank2.h"
 #include "image.h"
 
+image::PNGImage::PNGImage(const char *path): Image(path) {
+}
 image::PNGImage::~PNGImage() {
     printf("PNG DELETED\n");
     png.close();
@@ -12,17 +14,16 @@ std::pair<int16_t, int16_t> image::PNGImage::Size() {
     return {png.getWidth(), png.getHeight()};
 }
 
-image::Image *image::PNGImage::Create() {
-    return new PNGImage();
+image::Image *image::PNGImage::Create(const char *path) {
+    return new PNGImage(path);
 }
 
 typedef int32_t (*readfile)(PNGFILE *pFile, uint8_t *pBuf, int32_t iLen);
 typedef int32_t (*seekfile)(PNGFILE *pFile, int32_t iPosition);
 
 
-int image::PNGImage::Open(const char *path, void *buffer) {
-    strncpy(_path, path, sizeof(_path));
-    return png.open(path, bb2OpenFile, bb2CloseFile, (readfile)bb2ReadFile, (seekfile)bb2SeekFile, PNGDraw);
+int image::PNGImage::Open(void *buffer) {
+    return png.open(_path, bb2OpenFile, bb2CloseFile, (readfile)bb2ReadFile, (seekfile)bb2SeekFile, PNGDraw);
 }
 
 int image::PNGImage::Open(uint8_t *bin, int size) {

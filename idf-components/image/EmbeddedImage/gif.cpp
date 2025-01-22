@@ -113,7 +113,9 @@ static int32_t SeekFile(GIFFILE *pFile, int32_t iPosition) {
   }
 }
 
-image::GIF::GIF() = default;
+image::GIF::GIF(const char *path): Image(path) {
+
+}
 
 image::GIF::~GIF() {
   printf("GIF DELETED\n");
@@ -199,11 +201,11 @@ void image::GIF::GIFDraw(GIFDRAW *pDraw) {
   memcpy(d, pDraw->pPixels, pDraw->iWidth * 2);
 }
 
-image::Image *image::GIF::Create() {
-  return new image::GIF();
+image::Image *image::GIF::Create(const char *path) {
+  return new image::GIF(path);
 }
 
-int image::GIF::Open(const char *path, void *buffer) {
+int image::GIF::Open(void *buffer) {
 #ifdef ESP_PLATFORM
   unsigned char ucPaletteType = BIG_ENDIAN_PIXELS;
 #else
@@ -224,7 +226,7 @@ int image::GIF::Open(const char *path, void *buffer) {
   _gif.pfnDraw = GIFDraw;
   _gif.pfnOpen = OpenFile;
   _gif.pfnClose = CloseFile;
-  _gif.GIFFile.fHandle = (*_gif.pfnOpen)(path, &_gif.GIFFile.iSize);
+  _gif.GIFFile.fHandle = (*_gif.pfnOpen)(_path, &_gif.GIFFile.iSize);
   if (_gif.GIFFile.fHandle == nullptr) {
     _gif.iError = GIF_FILE_NOT_OPEN;
     return -1;

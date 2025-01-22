@@ -15,17 +15,17 @@ namespace image {
 class GIF : public Image {
 
 public:
-    GIF();
+    GIF(const char *path);
 
     ~GIF() override;
 
-    int Open(const char *path, void *buffer) override;
+    int Open(void *buffer) override;
 
   frameReturn GetFrame(uint8_t *outBuf, int16_t x, int16_t y, int16_t width) override;
 
     std::pair<int16_t, int16_t> Size() final;
 
-    static Image * Create();
+    static Image * Create(const char *path);
 
     bool Animated() override {return true;};
 

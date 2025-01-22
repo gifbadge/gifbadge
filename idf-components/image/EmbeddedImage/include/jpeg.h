@@ -11,7 +11,7 @@ namespace image {
 
 class JPEG : public image::Image {
 public:
-    JPEG() = default;
+    JPEG(const char *path);
 
     ~JPEG() override;
 
@@ -19,16 +19,15 @@ public:
 
     std::pair<int16_t, int16_t> Size() override;
 
-    static Image* Create();
+    static Image* Create(const char *path);
 
-    int Open(const char *path, void *buffer) override;
+    int Open(void *buffer) override;
 
     const char * GetLastError() override;
 
 private:
     JPEGDEC jpeg;
     bool decoded = false;
-    char _path[255];
 };
 }
 

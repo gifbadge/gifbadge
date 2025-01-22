@@ -16,17 +16,16 @@ namespace image {
 class PNGImage : public image::Image {
 
 public:
-    PNGImage() = default;
-
+    explicit PNGImage(const char *path);
     ~PNGImage() override;
 
   frameReturn GetFrame(uint8_t *outBuf, int16_t x, int16_t y, int16_t width) override;
 
     std::pair<int16_t, int16_t> Size() override;
 
-    static Image *Create();
+    static Image *Create(const char *path);
 
-    int Open(const char *path, void *buffer) override;
+    int Open(void *buffer) override;
 
     int Open(uint8_t *bin, int size);
 
@@ -36,7 +35,6 @@ public:
 protected:
     PNG png;
     bool decoded = false;
-    char _path[255];
     static void PNGDraw(PNGDRAW *pDraw);
 };
 }

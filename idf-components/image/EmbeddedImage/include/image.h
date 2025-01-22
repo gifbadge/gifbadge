@@ -18,7 +18,7 @@ typedef std::pair<frameStatus, uint32_t> frameReturn;
 class Image {
 
  public:
-  Image() = default;
+    explicit Image(const char *path);
 
   virtual ~Image() = default;
 
@@ -45,7 +45,7 @@ class Image {
    * @param buffer
    * @return
    */
-  virtual int Open(const char *path, void *buffer) { return 0; };
+  virtual int Open(void *buffer) { return 0; };
 
   /**
    * check if the image is Animated
@@ -58,6 +58,9 @@ class Image {
    * @return decoder error as null terminated string
    */
   virtual const char *GetLastError() = 0;
+
+  protected:
+  char _path[255];
 };
 }
 
