@@ -3,11 +3,13 @@
 #include "jpeg.h"
 #include "png.h"
 #include "gif.h"
+#include <sys/stat.h>
 
-std::array<const char *, 4> extensionArray = {".gif", ".jpg", ".jpeg", ".png"};
+#include "bmp.h"
+
+std::array<const char *, 5> extensionArray = {".gif", ".jpg", ".jpeg", ".png", ".bmp"};
 std::span<const char *> extensions(extensionArray);
-std::array<image::Image*(*)(), 4> handlers = {image::GIF::Create, image::JPEG::Create, image::JPEG::Create, image::PNGImage::Create};
-std::array<image::Image*(*)(const char *path), 4> handlers = {image::GIF::Create, image::JPEG::Create, image::JPEG::Create, image::PNGImage::Create};
+std::array<image::Image*(*)(const char *path), 5> handlers = {image::GIF::Create, image::JPEG::Create, image::JPEG::Create, image::PNGImage::Create, image::bmpImage::Create};
 
 image::Image *ImageFactory(const char *path) {
   const char *ext = strrchr(path, '.');

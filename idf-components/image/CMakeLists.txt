@@ -8,6 +8,7 @@ SET(SRC "EmbeddedImage/image.cpp"
         "EmbeddedImage/jpeg.cpp"
         "EmbeddedImage/png.cpp"
         "EmbeddedImage/gif.cpp"
+        "EmbeddedImage/bmp.cpp"
         ${PNGdec_src}
         ${JPEGDEC_src}
 )
@@ -24,6 +25,7 @@ if (ESP_PLATFORM)
 
 
     target_compile_options(${COMPONENT_LIB} PRIVATE -D__LINUX__ -DARDUINO_ARCH_ESP32=1)
+    target_link_libraries(${COMPONENT_LIB} simplebmp)
 else()
     cmake_minimum_required(VERSION 3.1...3.29)
     project(Image VERSION 1.0 LANGUAGES C CXX ASM)

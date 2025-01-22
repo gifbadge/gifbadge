@@ -15,6 +15,7 @@ project(GifBadge LANGUAGES C CXX)
 add_subdirectory(lib/gifbadge_hal)
 add_subdirectory(lib/fileutil)
 add_subdirectory(lib/font_render)
+add_subdirectory(lib/simplebmp)
 add_subdirectory(external-deps/npmx)
 
 if (ESP_PLATFORM)
