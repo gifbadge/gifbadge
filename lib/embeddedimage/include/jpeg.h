@@ -32,11 +32,16 @@ class JPEG : public image::Image {
 
     const char * GetLastError() override;
 
+    bool resizable() override;
+
+    int resize(int16_t x, int16_t y) override;
+
 private:
     JPEGDEC jpeg;
     bool decoded = false;
     char _path[255];
     int _lastError = 0;
+    void *_buffer;
 };
 }
 
