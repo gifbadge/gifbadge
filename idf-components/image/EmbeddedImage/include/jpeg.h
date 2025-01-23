@@ -10,7 +10,10 @@
 namespace image {
 
 class JPEG : public image::Image {
-public:
+  public:
+    bool resizable() override;
+    int resize(int16_t x, int16_t y) override;
+
     JPEG(const char *path);
 
     ~JPEG() override;
@@ -28,6 +31,7 @@ public:
 private:
     JPEGDEC jpeg;
     bool decoded = false;
+    void *_buffer = nullptr;
 };
 }
 
