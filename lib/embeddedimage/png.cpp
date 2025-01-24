@@ -46,11 +46,7 @@ void image::PNGImage::PNGDraw(PNGDRAW *pDraw) {
     auto *buffer = (uint16_t *) config->buffer;
     uint32_t y = (pDraw->y+config->y) * config->width;
     uint16_t *line = &buffer[y+config->x];
-#ifdef ESP_PLATFORM
-  config->png->getLineAsRGB565(pDraw, line, PNG_RGB565_BIG_ENDIAN, 0xffffffff);
-#else
-  config->png->getLineAsRGB565(pDraw, line, PNG_RGB565_LITTLE_ENDIAN, 0xffffffff);
-#endif
+    config->png->getLineAsRGB565(pDraw, line, PNG_RGB565_LITTLE_ENDIAN, 0xffffffff);
 }
 
 const char * image::PNGImage::GetLastError() {

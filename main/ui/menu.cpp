@@ -55,9 +55,6 @@ static bool flush_ready() {
 }
 
 static void flush_cb(lv_disp_t *, const lv_area_t *area, uint8_t *color_map) {
-#ifdef ESP_PLATFORM
-  lv_draw_sw_rgb565_swap(color_map, cbData.display->size.first * cbData.display->size.second);
-#endif
   cbData.display->write(
       area->x1,
       area->y1,

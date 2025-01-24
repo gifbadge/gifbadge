@@ -142,11 +142,8 @@ image::Image *image::GIF::Create(screenResolution res) {
 }
 
 int image::GIF::Open(const char *path, void *buffer) {
-#ifdef ESP_PLATFORM
-  unsigned char ucPaletteType = BIG_ENDIAN_PIXELS;
-#else
   unsigned char ucPaletteType = LITTLE_ENDIAN_PIXELS;
-#endif
+
 
   memset(&_gif, 0, sizeof(_gif));
   if (ucPaletteType != GIF_PALETTE_RGB565_LE && ucPaletteType != GIF_PALETTE_RGB565_BE

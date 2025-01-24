@@ -162,8 +162,7 @@ void esp32::s3::full::v0_6::LateInit() {
   _card_detect = _pmic->GpioGet(0);
   _card_detect->GpioConfig(hal::gpio::GpioDirection::IN, hal::gpio::GpioPullMode::UP);
 
-  /*G3, G4, G5, R1, R2, R3, R4, R5, B1, B2, B3, B4, B5, G0, G1, G2 */
-  std::array<int, 16> rgb = {11, 12, 13, 3, 4, 5, 6, 7, 14, 15, 16, 17, 18, 8, 9, 10};
+  std::array<int, 16> rgb = { 3, 4, 5, 6, 7,8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18 };
   _display = new hal::display::esp32s3::display_st7701s(line_config, 2, 1, 45, 46, rgb);
 
 

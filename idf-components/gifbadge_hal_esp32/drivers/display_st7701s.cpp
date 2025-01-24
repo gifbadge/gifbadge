@@ -110,7 +110,7 @@ hal::display::esp32s3::display_st7701s::display_st7701s(spi_line_config_t line_c
   ESP_ERROR_CHECK(esp_lcd_panel_io_tx_param(io, 0xf0, (const uint8_t[]) {0x77, 0x01, 0x00, 0x00, 0x00}, 1));
 
   // Set color format
-  ESP_ERROR_CHECK(esp_lcd_panel_io_tx_param(io, LCD_CMD_MADCTL, (const uint8_t[]) {LCD_CMD_BGR_BIT}, 1));
+  // ESP_ERROR_CHECK(esp_lcd_panel_io_tx_param(io, LCD_CMD_MADCTL, (const uint8_t[]) {0x00, LCD_CMD_BGR_BIT}, 2));
 
   ESP_ERROR_CHECK(esp_lcd_panel_io_tx_param(io, LCD_CMD_COLMOD, (const uint8_t[]) {0x60}, 1));
 

@@ -102,8 +102,7 @@ void esp32::s3::full::v0_2v0_4::LateInit() {
   // _i2c = new I2C(I2C_NUM_0, GPIO_NUM_47, GPIO_NUM_48, 100 * 1000, false);
   _battery = new hal::battery::esp32s3::battery_max17048(bus_handle, GPIO_NUM_0);
 
-  /*G3, G4, G5, R1, R2, R3, R4, R5, B1, B2, B3, B4, B5, G0, G1, G2 */
-  std::array<int, 16> rgb = {11, 12, 13, 3, 4, 5, 6, 7, 14, 15, 16, 17, 18, 8, 9, 10};
+   std::array<int, 16> rgb = { 3, 4, 5, 6, 7,8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18 };
 //    uint8_t data = IO_EXPANDER_PIN_NUM_3;
 //    _i2c->write_reg(ESP_IO_EXPANDER_I2C_TCA9555_ADDRESS_000, 0x04, &data, 1);
   esp_io_expander_new_i2c_tca95xx_16bit(bus_handle, ESP_IO_EXPANDER_I2C_TCA9555_ADDRESS_000, &_io_expander);
