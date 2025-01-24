@@ -54,7 +54,7 @@ typedef int32_t (*seekfile)(JPEGFILE *pFile, int32_t iPosition);
 int image::JPEG::Open(void *buffer) {
   _buffer = buffer;
   int ret = jpeg.open(_path, bb2OpenFile, bb2CloseFile, (readfile)bb2ReadFile, (seekfile)bb2SeekFile, JPEGDraw);
-  jpeg.setPixelType(RGB565_BIG_ENDIAN);
+  jpeg.setPixelType(RGB565_LITTLE_ENDIAN);
   return ret==0; //Invert the return value
 }
 
@@ -62,7 +62,7 @@ image::frameReturn image::JPEG::GetFrame(uint8_t *outBuf, int16_t x, int16_t y, 
   if (decoded) {
     jpeg.close();
     jpeg.open(_path, bb2OpenFile, bb2CloseFile, (readfile)bb2ReadFile, (seekfile)bb2SeekFile, JPEGDraw);
-    jpeg.setPixelType(RGB565_BIG_ENDIAN);
+    jpeg.setPixelType(RGB565_LITTLE_ENDIAN);
   }
   decoded = true;
   pnguser config = {.png = nullptr, .buffer = outBuf, .x = x, .y = y, .width = width};
@@ -114,7 +114,7 @@ int JPEGResize(JPEGDRAW *pDraw){
 int image::JPEG::resize(int16_t x, int16_t y) {
   jpeg.close();
   jpeg.open(_path, bb2OpenFile, bb2CloseFile, (readfile)bb2ReadFile, (seekfile)bb2SeekFile, JPEGResize);
-  jpeg.setPixelType(RGB565_BIG_ENDIAN);
+  jpeg.setPixelType(RGB565_LITTLE_ENDIAN);
 
   auto *outBuf = static_cast<uint16_t *>(malloc(x*y*2));
   if (outBuf == nullptr) {

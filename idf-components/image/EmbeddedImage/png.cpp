@@ -111,21 +111,13 @@ void image::PNGImage::PNGDraw(PNGDRAW *pDraw) {
     auto *buffer = (uint16_t *) config->buffer;
     uint32_t y = (pDraw->y+config->y) * config->width;
     uint16_t *line = &buffer[y+config->x];
-#ifdef ESP_PLATFORM
-  config->png->getLineAsRGB565(pDraw, line, PNG_RGB565_BIG_ENDIAN, 0xffffffff);
-#else
-  config->png->getLineAsRGB565(pDraw, line, PNG_RGB565_LITTLE_ENDIAN, 0xffffffff);
-#endif
+    config->png->getLineAsRGB565(pDraw, line, PNG_RGB565_LITTLE_ENDIAN, 0xffffffff);
 }
 
 void image::PNGImage::PNGResize(PNGDRAW *pDraw) {
     auto *config = static_cast<pngresize *>(pDraw->pUser);
     if (config->buffer) {
-#ifdef ESP_PLATFORM
-        config->png->getLineAsRGB565(pDraw, static_cast<uint16_t *>(config->buffer), PNG_RGB565_BIG_ENDIAN, 0xffffffff);
-#else
-        config->png->getLineAsRGB565(pDraw, line, PNG_RGB565_LITTLE_ENDIAN, 0xffffffff);
-#endif
+        config->png->getLineAsRGB565(pDraw, static_cast<uint16_t *>(config->buffer), PNG_RGB565_LITTLE_ENDIAN, 0xffffffff);
         config->resize->line(pDraw->y, static_cast<uint16_t *>(config->buffer));
     }
 

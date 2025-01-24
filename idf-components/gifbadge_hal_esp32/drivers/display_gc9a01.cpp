@@ -57,8 +57,8 @@ hal::display::esp32s3::display_gc9a01::display_gc9a01(int mosi, int sck, int cs,
 
   esp_lcd_panel_dev_config_t panel_config = {
       .reset_gpio_num = reset,
-      .rgb_endian = LCD_RGB_ENDIAN_BGR,
-      .data_endian = LCD_RGB_DATA_ENDIAN_BIG,
+      .rgb_endian = LCD_RGB_ENDIAN_RGB,
+      .data_endian = LCD_RGB_DATA_ENDIAN_LITTLE,
       .bits_per_pixel = 16,
       .flags = {
           .reset_active_high = 0,
