@@ -1,3 +1,4 @@
+#include <cstring>
 #include <esp_vfs_fat.h>
 #include <driver/sdmmc_defs.h>
 #include <esp_task_wdt.h>
@@ -74,6 +75,13 @@ esp_err_t esp32::s3::esp32s3_sdmmc::mount(gpio_num_t clk,
                       width) == ESP_OK) {
     usb_init_mmc(usb_sense, &card);
     storageAvailable = true;
+    char str[12];
+    /* Get volume label of the default drive */
+    f_getlabel("", str, 0);
+    LOGI(TAG, "Volume Name: %s", str);
+    if (strlen(str) == 0) {
+      f_setlabel("GifBadge");
+    }
     return ESP_OK;
   } else {
     return ESP_FAIL;
