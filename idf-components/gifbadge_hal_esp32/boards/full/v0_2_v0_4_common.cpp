@@ -33,7 +33,57 @@ static void checkSDTimer(void *arg) {
 namespace Boards {
 
 esp32::s3::full::v0_2v0_4::v0_2v0_4() {
-  buffer = heap_caps_malloc(480 * 480 + 0x6100, MALLOC_CAP_INTERNAL);
+
+}
+
+hal::battery::Battery *esp32::s3::full::v0_2v0_4::GetBattery() {
+  return _battery;
+}
+
+hal::touch::Touch *esp32::s3::full::v0_2v0_4::GetTouch() {
+  return _touch;
+}
+
+hal::keys::Keys *esp32::s3::full::v0_2v0_4::GetKeys() {
+  return _keys;
+}
+
+hal::display::Display *esp32::s3::full::v0_2v0_4::GetDisplay() {
+  return _display;
+}
+
+hal::backlight::Backlight *esp32::s3::full::v0_2v0_4::GetBacklight() {
+  return _backlight;
+}
+
+void esp32::s3::full::v0_2v0_4::PowerOff() {
+  LOGI(TAG, "Poweroff");
+  esp32s3_sdmmc::PowerOff();
+  vTaskDelay(100 / portTICK_PERIOD_MS);
+  esp_io_expander_set_level(_io_expander, IO_EXPANDER_PIN_NUM_3, 1);
+
+}
+
+BoardPower esp32::s3::full::v0_2v0_4::PowerState() {
+  if (_vbus->VbusConnected()) {
+    return BOARD_POWER_NORMAL;
+  }
+  if (_battery->BatterySoc() < 12) {
+    if (_battery->BatterySoc() < 10) {
+      return BOARD_POWER_CRITICAL;
+    }
+    return BOARD_POWER_LOW;
+
+  }
+  return BOARD_POWER_NORMAL;
+}
+
+bool esp32::s3::full::v0_2v0_4::StorageReady() {
+  return checkSdState(_io_expander);
+}
+
+void esp32::s3::full::v0_2v0_4::LateInit() {
+ buffer = heap_caps_malloc(480 * 480 + 0x6100, MALLOC_CAP_INTERNAL);
   _config = new hal::config::esp32s3::Config_NVS();
   _i2c = new I2C(I2C_NUM_0, 47, 48, 100 * 1000, false);
   _battery = new hal::battery::esp32s3::battery_max17048(_i2c, GPIO_NUM_0);
@@ -104,56 +154,6 @@ esp32::s3::full::v0_2v0_4::v0_2v0_4() {
   ESP_ERROR_CHECK(esp_timer_create(&checkSdTimerArgs, &sdTimer));
   ESP_ERROR_CHECK(esp_timer_start_periodic(sdTimer, 500 * 1000));
   _vbus = new hal::vbus::esp32s3::b2_1_v0_2v0_4_vbus(GPIO_NUM_0, _io_expander, 8);
-}
-
-hal::battery::Battery *esp32::s3::full::v0_2v0_4::GetBattery() {
-  return _battery;
-}
-
-hal::touch::Touch *esp32::s3::full::v0_2v0_4::GetTouch() {
-  return _touch;
-}
-
-hal::keys::Keys *esp32::s3::full::v0_2v0_4::GetKeys() {
-  return _keys;
-}
-
-hal::display::Display *esp32::s3::full::v0_2v0_4::GetDisplay() {
-  return _display;
-}
-
-hal::backlight::Backlight *esp32::s3::full::v0_2v0_4::GetBacklight() {
-  return _backlight;
-}
-
-void esp32::s3::full::v0_2v0_4::PowerOff() {
-  LOGI(TAG, "Poweroff");
-  esp32s3_sdmmc::PowerOff();
-  vTaskDelay(100 / portTICK_PERIOD_MS);
-  esp_io_expander_set_level(_io_expander, IO_EXPANDER_PIN_NUM_3, 1);
-
-}
-
-BoardPower esp32::s3::full::v0_2v0_4::PowerState() {
-  if (_vbus->VbusConnected()) {
-    return BOARD_POWER_NORMAL;
-  }
-  if (_battery->BatterySoc() < 12) {
-    if (_battery->BatterySoc() < 10) {
-      return BOARD_POWER_CRITICAL;
-    }
-    return BOARD_POWER_LOW;
-
-  }
-  return BOARD_POWER_NORMAL;
-}
-
-bool esp32::s3::full::v0_2v0_4::StorageReady() {
-  return checkSdState(_io_expander);
-}
-
-void esp32::s3::full::v0_2v0_4::LateInit() {
-
 }
 hal::vbus::Vbus *esp32::s3::full::v0_2v0_4::GetVbus() {
   return _vbus;

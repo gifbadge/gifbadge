@@ -4,8 +4,10 @@
 namespace Boards::esp32::s3::full {
 
 class v0_2 : public Boards::esp32::s3::full::v0_2v0_4 {
- public:
-  v0_2();
+  public:
+    void LateInit() override;
+
+    v0_2() = default;
   ~v0_2() override = default;
 
   const char * Name() override;

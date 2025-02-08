@@ -24,7 +24,8 @@ void esp32::s3::full::v0_4::batteryTimer(void *args) {
   }
 }
 
-esp32::s3::full::v0_4::v0_4() {
+void esp32::s3::full::v0_4::LateInit() {
+  v0_2v0_4::LateInit();
   _batteryTimerArgs.battery = _battery;
   _batteryTimerArgs.io_expander = _io_expander;
 
@@ -35,6 +36,7 @@ esp32::s3::full::v0_4::v0_4() {
   esp_timer_handle_t batteryTimerHandle = nullptr;
   ESP_ERROR_CHECK(esp_timer_create(&batteryTimerSettings, &batteryTimerHandle));
   ESP_ERROR_CHECK(esp_timer_start_periodic(batteryTimerHandle, 500 * 1000));
+
 }
 
 const char *esp32::s3::full::v0_4::Name() {
