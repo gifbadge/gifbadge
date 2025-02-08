@@ -95,7 +95,7 @@ lv_obj_t *device_info() {
       lv_label_set_text(label, tmp_str);
     });
 
-    if(get_board()->GetBattery()->BatteryTemperature() != NAN){
+    if(!std::isnan(get_board()->GetBattery()->BatteryTemperature())){
       refresh_widget(cont_flex, [](lv_event_t *e){
         lv_obj_t *widget = lv_event_get_target_obj(e);
         lv_obj_t *label = lv_obj_get_child(widget, 0);
@@ -105,7 +105,7 @@ lv_obj_t *device_info() {
       });
     }
 
-    if(get_board()->GetBattery()->BatteryCurrent() != NAN){
+    if(!std::isnan(get_board()->GetBattery()->BatteryCurrent())){
       refresh_widget(cont_flex, [](lv_event_t *e){
         lv_obj_t *widget = lv_event_get_target_obj(e);
         lv_obj_t *label = lv_obj_get_child(widget, 0);
