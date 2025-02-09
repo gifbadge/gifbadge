@@ -16,10 +16,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        idf_ver: ["release-v5.2"]
+        idf_ver: ["release-v5.3"]
         idf_target: [{"target": "esp32s3", "config": "1_28"}, {"target": "esp32s3", "config": "2_1"}]
     runs-on: ubuntu-22.04
-    container: espressif/idf:release-v5.2
+    container: espressif/idf:release-v5.3
     steps:
       - uses: actions/checkout@v4
         with:
@@ -29,7 +29,7 @@ jobs:
           IDF_TARGET: ${{ matrix.idf_target.target }}
         shell: bash
         run: |
-          git config --global --add safe.directory /__w/gifbadge_software/gifbadge_software
+          git config --global --add safe.directory ${{ GITHUB_WORKSPACE }}
           . ${IDF_PATH}/export.sh
           SDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.${{ matrix.idf_target.config }}" idf.py set-target ${{ matrix.idf_target.target }}
           idf.py build
