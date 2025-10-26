@@ -39,6 +39,9 @@ Boards::Board *get_board() {
       case BOARD_2_1_V0_6:
         global_board = new Boards::esp32::s3::full::v0_6();
         break;
+      case BOARD_2_1_V0_7:
+          global_board = new Boards::esp32::s3::full::v0_6();
+        break;
       default:
         return nullptr;
     }
