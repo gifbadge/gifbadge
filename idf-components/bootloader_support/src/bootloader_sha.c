@@ -1,15 +1,75 @@
 /*
- * SPDX-FileCopyrightText: 2017-2021 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2025 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-#include "bootloader_sha.h"
+
+#include <assert.h>
 #include <stdbool.h>
 #include <string.h>
-#include <assert.h>
 #include <sys/param.h>
 
-#include "esp32/rom/sha.h"
+#include "bootloader_sha.h"
+#include "soc/soc_caps.h"
+#include "rom/sha.h"
+#include "sdkconfig.h"
+
+#if !CONFIG_IDF_TARGET_ESP32
+static SHA_CTX ctx;
+
+bootloader_sha256_handle_t bootloader_sha256_start()
+{
+    // Enable SHA hardware
+    ets_sha_enable();
+    ets_sha_init(&ctx, SHA2_256);
+    return &ctx; // Meaningless non-NULL value
+}
+
+void bootloader_sha256_data(bootloader_sha256_handle_t handle, const void *data, size_t data_len)
+{
+    assert(handle != NULL);
+    ets_sha_update(&ctx, data, data_len, false);
+}
+
+void bootloader_sha256_finish(bootloader_sha256_handle_t handle, uint8_t *digest)
+{
+    assert(handle != NULL);
+
+    if (digest == NULL) {
+        bzero(&ctx, sizeof(ctx));
+        return;
+    }
+    ets_sha_finish(&ctx, digest);
+}
+
+#if SOC_SHA_SUPPORT_SHA512
+bootloader_sha_handle_t bootloader_sha512_start(bool is384)
+{
+    // Enable SHA hardware
+    ets_sha_enable();
+    ets_sha_init(&ctx, is384 ? SHA2_384 : SHA2_512);
+    return &ctx; // Meaningless non-NULL value
+}
+
+void bootloader_sha512_data(bootloader_sha_handle_t handle, const void *data, size_t data_len)
+{
+    assert(handle != NULL);
+    ets_sha_update(&ctx, data, data_len, false);
+}
+
+void bootloader_sha512_finish(bootloader_sha_handle_t handle, uint8_t *digest)
+{
+    assert(handle != NULL);
+
+    if (digest == NULL) {
+        bzero(&ctx, sizeof(ctx));
+        return;
+    }
+    ets_sha_finish(&ctx, digest);
+}
+#endif /* SOC_SHA_SUPPORT_SHA512 */
+#else /* !CONFIG_IDF_TARGET_ESP32 */
+
 #include "soc/dport_reg.h"
 #include "soc/hwcrypto_periph.h"
 
@@ -114,3 +174,4 @@ void bootloader_sha256_finish(bootloader_sha256_handle_t handle, uint8_t *digest
     }
     asm volatile ("memw");
 }
+#endif /* CONFIG_IDF_TARGET_ESP32 */

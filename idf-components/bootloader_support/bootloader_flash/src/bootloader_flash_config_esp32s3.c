@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2020-2023 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2020-2024 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -39,6 +39,11 @@ void bootloader_flash_update_id()
 {
     esp_rom_spiflash_chip_t *chip = &rom_spiflash_legacy_data->chip;
     chip->device_id = bootloader_read_flash_id();
+}
+
+void bootloader_flash_update_size(uint32_t size)
+{
+    rom_spiflash_legacy_data->chip.chip_size = size;
 }
 
 void IRAM_ATTR bootloader_flash_cs_timing_config()
@@ -87,6 +92,7 @@ void IRAM_ATTR bootloader_flash_set_dummy_out(void)
     REG_SET_BIT(SPI_MEM_CTRL_REG(1), SPI_MEM_FDUMMY_OUT | SPI_MEM_D_POL | SPI_MEM_Q_POL);
 }
 
+//deprecated
 void IRAM_ATTR bootloader_flash_dummy_config(const esp_image_header_t *pfhdr)
 {
     bootloader_configure_spi_pins(1);
@@ -99,12 +105,12 @@ void IRAM_ATTR bootloader_configure_spi_pins(int drv)
 {
     const uint32_t spiconfig = esp_rom_efuse_get_flash_gpio_info();
     uint8_t wp_pin = esp_rom_efuse_get_flash_wp_gpio();
-    uint8_t clk_gpio_num = SPI_CLK_GPIO_NUM;
-    uint8_t q_gpio_num   = SPI_Q_GPIO_NUM;
-    uint8_t d_gpio_num   = SPI_D_GPIO_NUM;
-    uint8_t cs0_gpio_num = SPI_CS0_GPIO_NUM;
-    uint8_t hd_gpio_num  = SPI_HD_GPIO_NUM;
-    uint8_t wp_gpio_num  = SPI_WP_GPIO_NUM;
+    uint8_t clk_gpio_num = MSPI_IOMUX_PIN_NUM_CLK;
+    uint8_t q_gpio_num   = MSPI_IOMUX_PIN_NUM_MISO;
+    uint8_t d_gpio_num   = MSPI_IOMUX_PIN_NUM_MOSI;
+    uint8_t cs0_gpio_num = MSPI_IOMUX_PIN_NUM_CS0;
+    uint8_t hd_gpio_num  = MSPI_IOMUX_PIN_NUM_HD;
+    uint8_t wp_gpio_num  = MSPI_IOMUX_PIN_NUM_WP;
     if (spiconfig == 0) {
 
     } else {
@@ -159,12 +165,10 @@ static void update_flash_config(const esp_image_header_t *bootloader_hdr)
         size = 2;
     }
 
-    cache_hal_disable(CACHE_LL_LEVEL_EXT_MEM, CACHE_TYPE_ALL);
     // Set flash chip size
     esp_rom_spiflash_config_param(g_rom_flashchip.device_id, size * 0x100000, 0x10000, 0x1000, 0x100, 0xffff);
     // TODO: set mode
     // TODO: set frequency
-    cache_hal_enable(CACHE_LL_LEVEL_EXT_MEM, CACHE_TYPE_ALL);
 }
 
 static void print_flash_info(const esp_image_header_t *bootloader_hdr)
@@ -254,7 +258,8 @@ static void print_flash_info(const esp_image_header_t *bootloader_hdr)
 
 static void IRAM_ATTR bootloader_init_flash_configure(void)
 {
-    bootloader_flash_dummy_config(&bootloader_image_hdr);
+    bootloader_configure_spi_pins(1);
+    bootloader_flash_set_dummy_out();
     bootloader_flash_cs_timing_config();
 }
 
@@ -281,6 +286,9 @@ esp_err_t bootloader_init_spi_flash(void)
 #endif
 
     bootloader_spi_flash_resume();
+    if ((void*)bootloader_flash_unlock != (void*)bootloader_flash_unlock_default) {
+        ESP_EARLY_LOGD(TAG, "Using overridden bootloader_flash_unlock");
+    }
     bootloader_flash_unlock();
 
 #if CONFIG_ESPTOOLPY_FLASHMODE_QIO || CONFIG_ESPTOOLPY_FLASHMODE_QOUT
@@ -292,8 +300,87 @@ esp_err_t bootloader_init_spi_flash(void)
     bootloader_flash_32bits_address_map_enable(bootloader_flash_get_spi_mode());
 #endif
     print_flash_info(&bootloader_image_hdr);
+
+    cache_hal_disable(CACHE_LL_LEVEL_EXT_MEM, CACHE_TYPE_ALL);
     update_flash_config(&bootloader_image_hdr);
+    cache_hal_enable(CACHE_LL_LEVEL_EXT_MEM, CACHE_TYPE_ALL);
+
     //ensure the flash is write-protected
     bootloader_enable_wp();
     return ESP_OK;
 }
+
+#if CONFIG_APP_BUILD_TYPE_RAM && !CONFIG_APP_BUILD_TYPE_PURE_RAM_APP
+static void bootloader_flash_set_spi_mode(const esp_image_header_t* pfhdr)
+{
+    esp_rom_spiflash_read_mode_t mode;
+    switch(pfhdr->spi_mode) {
+    case ESP_IMAGE_SPI_MODE_QIO:
+        mode = ESP_ROM_SPIFLASH_QIO_MODE;
+        break;
+    case ESP_IMAGE_SPI_MODE_QOUT:
+        mode = ESP_ROM_SPIFLASH_QOUT_MODE;
+        break;
+    case ESP_IMAGE_SPI_MODE_DIO:
+        mode = ESP_ROM_SPIFLASH_DIO_MODE;
+        break;
+    case ESP_IMAGE_SPI_MODE_FAST_READ:
+        mode = ESP_ROM_SPIFLASH_FASTRD_MODE;
+        break;
+    case ESP_IMAGE_SPI_MODE_SLOW_READ:
+        mode = ESP_ROM_SPIFLASH_SLOWRD_MODE;
+        break;
+    default:
+        mode = ESP_ROM_SPIFLASH_DIO_MODE;
+    }
+    esp_rom_spiflash_config_readmode(mode);
+}
+
+void bootloader_flash_hardware_init(void)
+{
+    esp_rom_spiflash_attach(esp_rom_efuse_get_flash_gpio_info(), false);
+
+    //init cache hal
+    cache_hal_init();
+    //init mmu
+    mmu_hal_init();
+    // update flash ID
+    bootloader_flash_update_id();
+    // Check and run XMC startup flow
+    esp_err_t ret = bootloader_flash_xmc_startup();
+    assert(ret == ESP_OK);
+
+    /* Alternative of bootloader_init_spi_flash */
+    // RAM app doesn't have headers in the flash. Make a default one for it.
+    esp_image_header_t WORD_ALIGNED_ATTR hdr = {
+        .spi_mode = ESP_IMAGE_SPI_MODE_DIO,
+        .spi_speed = ESP_IMAGE_SPI_SPEED_DIV_2,
+        .spi_size = ESP_IMAGE_FLASH_SIZE_2MB,
+    };
+    bootloader_configure_spi_pins(1);
+    bootloader_flash_set_spi_mode(&hdr);
+    bootloader_flash_clock_config(&hdr);
+    bootloader_flash_set_dummy_out();
+    bootloader_flash_cs_timing_config();
+
+#if CONFIG_BOOTLOADER_FLASH_DC_AWARE
+    // Reset flash, clear volatile bits DC[0:1]. Make it work under default mode to boot.
+    bootloader_spi_flash_reset();
+#endif
+
+    bootloader_spi_flash_resume();
+    bootloader_flash_unlock();
+
+#if CONFIG_BOOTLOADER_CACHE_32BIT_ADDR_QUAD_FLASH || CONFIG_BOOTLOADER_CACHE_32BIT_ADDR_OCTAL_FLASH
+    bootloader_flash_32bits_address_map_enable(bootloader_flash_get_spi_mode());
+#endif
+
+    cache_hal_disable(CACHE_LL_LEVEL_EXT_MEM, CACHE_TYPE_ALL);
+    update_flash_config(&hdr);
+    cache_hal_enable(CACHE_LL_LEVEL_EXT_MEM, CACHE_TYPE_ALL);
+
+    //ensure the flash is write-protected
+    bootloader_enable_wp();
+
+}
+#endif //CONFIG_APP_BUILD_TYPE_RAM && !CONFIG_APP_BUILD_TYPE_PURE_RAM_APP

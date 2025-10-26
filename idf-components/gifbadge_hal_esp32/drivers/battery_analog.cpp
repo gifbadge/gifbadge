@@ -17,11 +17,11 @@ hal::battery::esp32s3::battery_analog::battery_analog(adc_channel_t) {
   adc_oneshot_unit_init_cfg_t
       init_config1 = {.unit_id = ADC_UNIT_1, .clk_src = ADC_RTC_CLK_SRC_DEFAULT, .ulp_mode = ADC_ULP_MODE_DISABLE,};
   ESP_ERROR_CHECK(adc_oneshot_new_unit(&init_config1, &adc_handle));
-  adc_oneshot_chan_cfg_t config = {.atten = ADC_ATTEN_DB_11, .bitwidth = ADC_BITWIDTH_DEFAULT,};
+  adc_oneshot_chan_cfg_t config = {.atten = ADC_ATTEN_DB_12, .bitwidth = ADC_BITWIDTH_DEFAULT,};
   ESP_ERROR_CHECK(adc_oneshot_config_channel(adc_handle, ADC_CHANNEL_9, &config));
   LOGI(TAG, "calibration scheme version is %s", "Curve Fitting");
   adc_cali_curve_fitting_config_t cali_config =
-      {.unit_id = ADC_UNIT_1, .chan = ADC_CHANNEL_9, .atten = ADC_ATTEN_DB_11, .bitwidth = ADC_BITWIDTH_DEFAULT,};
+      {.unit_id = ADC_UNIT_1, .chan = ADC_CHANNEL_9, .atten = ADC_ATTEN_DB_12, .bitwidth = ADC_BITWIDTH_DEFAULT,};
   ESP_ERROR_CHECK(adc_cali_create_scheme_curve_fitting(&cali_config, &calibration_scheme));
   int reading;
   int voltage;

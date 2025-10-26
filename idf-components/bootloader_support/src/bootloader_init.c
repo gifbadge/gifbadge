@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2015-2021 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2015-2025 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -14,16 +14,18 @@
 #include "bootloader_random.h"
 #include "bootloader_clock.h"
 #include "bootloader_common.h"
-#include "esp_flash_encrypt.h"
 #include "esp_cpu.h"
 #include "soc/rtc.h"
 #include "hal/wdt_hal.h"
 #include "hal/efuse_hal.h"
 #include "esp_bootloader_desc.h"
+#include "esp_rom_sys.h"
 
 static const char *TAG = "boot";
 
+#if !CONFIG_APP_BUILD_TYPE_RAM
 esp_image_header_t WORD_ALIGNED_ATTR bootloader_image_hdr;
+#endif
 
 void bootloader_clear_bss_section(void)
 {
@@ -33,7 +35,12 @@ void bootloader_clear_bss_section(void)
 esp_err_t bootloader_read_bootloader_header(void)
 {
     /* load bootloader image header */
-    if (bootloader_flash_read(ESP_BOOTLOADER_OFFSET, &bootloader_image_hdr, sizeof(esp_image_header_t), true) != ESP_OK) {
+#if SOC_RECOVERY_BOOTLOADER_SUPPORTED
+    const uint32_t bootloader_flash_offset = esp_rom_get_bootloader_offset();
+#else
+    const uint32_t bootloader_flash_offset = ESP_PRIMARY_BOOTLOADER_OFFSET;
+#endif
+    if (bootloader_flash_read(bootloader_flash_offset, &bootloader_image_hdr, sizeof(esp_image_header_t), true) != ESP_OK) {
         ESP_EARLY_LOGE(TAG, "failed to load bootloader image header!");
         return ESP_FAIL;
     }
@@ -42,10 +49,17 @@ esp_err_t bootloader_read_bootloader_header(void)
 
 esp_err_t bootloader_check_bootloader_validity(void)
 {
-    unsigned int revision = efuse_hal_chip_revision();
-    unsigned int major = revision / 100;
-    unsigned int minor = revision % 100;
-    ESP_EARLY_LOGI(TAG, "chip revision: v%d.%d", major, minor);
+    unsigned int chip_revision = efuse_hal_chip_revision();
+    unsigned int chip_major_rev = chip_revision / 100;
+    unsigned int chip_minor_rev = chip_revision % 100;
+    ESP_EARLY_LOGI(TAG, "chip revision: v%d.%d", chip_major_rev, chip_minor_rev);
+/* ESP32 doesn't have more memory and more efuse bits for block major version. */
+#if !CONFIG_IDF_TARGET_ESP32
+    unsigned int efuse_revision = efuse_hal_blk_version();
+    unsigned int efuse_major_rev = efuse_revision / 100;
+    unsigned int efuse_minor_rev = efuse_revision % 100;
+    ESP_EARLY_LOGI(TAG, "efuse block revision: v%d.%d", efuse_major_rev, efuse_minor_rev);
+#endif  // !CONFIG_IDF_TARGET_ESP32
     /* compare with the one set in bootloader image header */
     if (bootloader_common_check_chip_validity(&bootloader_image_hdr, ESP_IMAGE_BOOTLOADER) != ESP_OK) {
         return ESP_FAIL;
@@ -101,7 +115,7 @@ void bootloader_print_banner(void)
 #endif
     }
 
-#if CONFIG_FREERTOS_UNICORE
+#if CONFIG_ESP_SYSTEM_SINGLE_CORE_MODE
 #if (SOC_CPU_CORES_NUM > 1)
     ESP_EARLY_LOGW(TAG, "Unicore bootloader");
 #endif
