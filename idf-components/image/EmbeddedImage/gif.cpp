@@ -30,7 +30,7 @@ static void * prev_buffer = nullptr;
 
 static void *OpenFile(const char *fname, int32_t *pSize) {
   FILE *infile = fopen(fname, "r");
-  setvbuf(infile, nullptr, _IOFBF, 4096);
+  // setvbuf(infile, nullptr, _IOFBF, 4096);
 
   if (infile == nullptr) {
     printf("Couldn't open file %s\n", fname);

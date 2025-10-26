@@ -4,7 +4,7 @@
 
 void *bb2OpenFile(const char *fname, int32_t *pSize) {
     FILE *infile = fopen(fname, "r");
-    setvbuf(infile, nullptr, _IOFBF, 4096);
+    // setvbuf(infile, nullptr, _IOFBF, 4096);
 
     if (infile) {
         fseek(infile, 0, SEEK_END);
