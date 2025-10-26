@@ -13,8 +13,9 @@
 #define PICO_BUILD
 #include <AnimatedGIF.h>
 #define ALLOWS_UNALIGNED
-#undef LZW_HIGHWATER_TURBO
-#define LZW_HIGHWATER_TURBO ((LZW_BUF_SIZE_TURBO * 13) / 16)
+// #undef LZW_HIGHWATER_TURBO
+// #define LZW_HIGHWATER_TURBO ((LZW_BUF_SIZE_TURBO * 13) / 16)
+#include <esp_log_buffer.h>
 #include <gif.inl>
 
 struct mem_buf {
@@ -30,22 +31,29 @@ static void * prev_buffer = nullptr;
 static void *OpenFile(const char *fname, int32_t *pSize) {
   FILE *infile = fopen(fname, "r");
   setvbuf(infile, nullptr, _IOFBF, 4096);
+
+  if (infile == nullptr) {
+    printf("Couldn't open file %s\n", fname);
+  }
+
   struct stat stats{};
 
   if (fstat(fileno(infile), &stats) != 0) {
+    printf("Couldn't stat file\n");
     return nullptr;
   }
 
   *pSize = stats.st_size;
   auto *mem = static_cast<mem_buf *>(malloc(sizeof(mem_buf)));
 #ifdef ESP_PLATFORM
-  if (stats.st_size <= heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM)) {
+  if ((stats.st_size+480*480*3) <= heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM)) {
     mem->buf = static_cast<uint8_t *>(heap_caps_malloc(stats.st_size, MALLOC_CAP_SPIRAM));
   } else {
     printf("Not enough memory to buffer image\n");
     mem->buf = nullptr;
   }
   if (mem->buf == nullptr) {
+    printf("Couldn't allocate buffer\n");
   }
 #else
   mem->buf = nullptr;
@@ -133,13 +141,13 @@ int image::GIF::playFrame(bool bSync, int *delayMilliseconds, GIFUser *pUser)
   if (GIFParseInfo(&_gif, 0))
   {
     _gif.pUser = pUser;
-    if((_gif.iHeight != _gif.iCanvasHeight)|(_gif.iCanvasWidth != _gif.iWidth)){
-      auto *previous = static_cast<uint16_t *>(prev_buffer);
-      previous += pUser->y * pUser->width;
-      auto * current = (uint16_t *)pUser->buffer;
-      current += pUser->y * pUser->width;
-      memcpy(current, previous, _gif.iCanvasHeight*pUser->width*2);
-    }
+    // if((_gif.iHeight != _gif.iCanvasHeight)|(_gif.iCanvasWidth != _gif.iWidth)){
+    //   auto *previous = static_cast<uint16_t *>(prev_buffer);
+    //   previous += pUser->y * pUser->width;
+    //   auto * current = (uint16_t *)pUser->buffer;
+    //   current += pUser->y * pUser->width;
+    //   memcpy(current, previous, _gif.iCanvasHeight*pUser->width*2);
+    // }
     if (_gif.iError == GIF_EMPTY_FRAME) // don't try to decode it
       return 0;
     if (_gif.pTurboBuffer) {
@@ -166,6 +174,9 @@ int image::GIF::playFrame(bool bSync, int *delayMilliseconds, GIFUser *pUser)
   }
   if (delayMilliseconds) // if not NULL, return the frame delay time
     *delayMilliseconds = _gif.iFrameDelay;
+  if (!_gif.pfnDraw) {
+    memcpy(pUser->buffer, &_gif.pFrameBuffer[480 * 480], 480 * 480 * 2);
+  }
   return (_gif.GIFFile.iPos < _gif.GIFFile.iSize-10);
 } /* playFrame() */
 
@@ -221,7 +232,7 @@ int image::GIF::Open(const char *path, void *buffer) {
   _gif.iError = GIF_SUCCESS;
   _gif.pfnRead = ReadFile;
   _gif.pfnSeek = SeekFile;
-  _gif.pfnDraw = GIFDraw;
+  _gif.pfnDraw = nullptr;
   _gif.pfnOpen = OpenFile;
   _gif.pfnClose = CloseFile;
   _gif.GIFFile.fHandle = (*_gif.pfnOpen)(path, &_gif.GIFFile.iSize);
@@ -236,9 +247,14 @@ int image::GIF::Open(const char *path, void *buffer) {
     }
     // Allocate a little extra space for the current line
     // as RGB565 or RGB888
-    int iCanvasSize = _gif.iCanvasWidth * (_gif.iCanvasHeight + 3);
+    int iCanvasSize = 480*480 * 3 ;
 #ifdef ESP_PLATFORM
-    _gif.pFrameBuffer = (unsigned char *) heap_caps_malloc(iCanvasSize, MALLOC_CAP_SPIRAM);
+    if (iCanvasSize < heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM)) {
+      _gif.pFrameBuffer = (unsigned char *) heap_caps_malloc(iCanvasSize, MALLOC_CAP_SPIRAM);
+    } else {
+      _gif.pFrameBuffer = (unsigned char *) heap_caps_malloc(_gif.iCanvasWidth * (_gif.iCanvasHeight + 3), MALLOC_CAP_SPIRAM);
+      _gif.pfnDraw = GIFDraw;
+    }
 #else
     _gif.pFrameBuffer = (unsigned char *)malloc(iCanvasSize);
 #endif
