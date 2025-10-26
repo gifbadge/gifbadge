@@ -233,7 +233,7 @@ static void lv_file_list_constructor(const lv_obj_class_t *class_p, lv_obj_t *ob
   init_style(obj);
   explorer->icon_style = NULL;
 
-  lv_obj_add_event_cb(explorer, lv_file_list_pass_event, LV_EVENT_REFRESH, NULL);
+  lv_obj_add_event_cb((lv_obj_t *) explorer, lv_file_list_pass_event, LV_EVENT_REFRESH, NULL);
   lv_obj_add_event_cb(explorer->cont, lv_file_list_pass_event, LV_EVENT_REFRESH, NULL);
 
   LV_TRACE_OBJ_CREATE("finished");
