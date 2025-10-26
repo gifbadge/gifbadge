@@ -8,7 +8,7 @@
 #include "boards/mini/v0.h"
 #include "drivers/backlight_ledc.h"
 #include "hal_usb.h"
-#include "tusb_msc_storage.h"
+#include "tinyusb_msc.h"
 
 static const char *TAG = "board_v0";
 
@@ -71,14 +71,17 @@ const char *esp32::s3::mini::v0::Name() {
 }
 
 bool esp32::s3::mini::v0::UsbConnected() {
-  return tinyusb_msc_storage_in_use_by_usb_host();
+  // return tinyusb_msc_storage_in_use_by_usb_host();
+  //TODO: Fix this
+  return false;
 }
 void esp32::s3::mini::v0::LateInit() {
 
 }
 
 int esp32::s3::mini::v0::UsbCallBack(tusb_msc_callback_t callback) {
-  tinyusb_msc_register_callback(TINYUSB_MSC_EVENT_MOUNT_CHANGED, callback);
+  //TODO: Fix this
+  // tinyusb_msc_register_callback(TINYUSB_MSC_EVENT_MOUNT_CHANGED, callback);
   return 0;
 }
 

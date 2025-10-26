@@ -71,15 +71,15 @@ static void initLowBatteryTask() {
   xTimerStart(xTimerCreate("low_battery_handler", 10000/portTICK_PERIOD_MS, pdTRUE, nullptr, lowBatteryTask),0);
 }
 
-static void usbCall(tinyusb_msc_event_t *e){
+static void usbCall(tinyusb_msc_storage_handle_t handle, tinyusb_msc_event_t *e, void *arg){
   TaskHandle_t mainHandle = xTaskGetHandle("main");
-  LOGI(TAG, "USB Callback %d", e->mount_changed_data.is_mounted);
-  if(currentState == MAIN_NORMAL && !e->mount_changed_data.is_mounted){
+  LOGI(TAG, "USB Callback %d", e->mount_point == TINYUSB_MSC_STORAGE_MOUNT_USB);
+  if(currentState == MAIN_NORMAL && e->mount_point == TINYUSB_MSC_STORAGE_MOUNT_USB){
     currentState = MAIN_USB;
     TaskHandle_t display_task_handle = xTaskGetHandle("display_task");
     xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_NOTIFY_USB, eSetValueWithOverwrite);
     xTaskNotifyIndexed(mainHandle, 0, 0, eSetValueWithOverwrite);
-  } else if(e->mount_changed_data.is_mounted && currentState == MAIN_USB){
+  } else if(e->mount_point == TINYUSB_MSC_STORAGE_MOUNT_APP && currentState == MAIN_USB){
     currentState = MAIN_NORMAL;
     xTaskNotifyIndexed(mainHandle, 0, 0, eSetValueWithOverwrite);
   }

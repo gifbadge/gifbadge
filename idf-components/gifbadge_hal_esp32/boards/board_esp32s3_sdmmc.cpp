@@ -1,13 +1,18 @@
 #include <cstring>
+#include <esp_check.h>
 #include <esp_vfs_fat.h>
 #include <driver/sdmmc_defs.h>
 #include <esp_task_wdt.h>
+#include <sdmmc_cmd.h>
+#include <tinyusb.h>
+
 #include "boards/esp32s3_sdmmc.h"
-#include "hal_usb.h"
 #include "log.h"
-#include "tusb_msc_storage.h"
+#include "tinyusb_msc.h"
 
 static const char *TAG = "board_esp32s3_sdmmc";
+
+// #define USB_DISABLED
 
 namespace Boards {
 
@@ -21,14 +26,14 @@ StorageInfo esp32::s3::esp32s3_sdmmc::GetStorageInfo() {
 }
 
 void esp32::s3::esp32s3_sdmmc::Reset() {
-  if(tinyusb_msc_storage_unmount() != ESP_OK){
+  if(tinyusb_msc_delete_storage(storage_handle) != ESP_OK){
     LOGI(TAG, "Failed to unmount");
   }
   esp32s3::Reset();
 }
 
 void esp32::s3::esp32s3_sdmmc::PowerOff() {
-  if(tinyusb_msc_storage_unmount() != ESP_OK){
+  if(tinyusb_msc_delete_storage(storage_handle) != ESP_OK){
     LOGI(TAG, "Failed to unmount");
   }
 }
@@ -54,26 +59,140 @@ int esp32::s3::esp32s3_sdmmc::StorageFormat() {
   LOGI(TAG, "Format Done");
   return ret;
 }
-esp_err_t esp32::s3::esp32s3_sdmmc::mount(gpio_num_t clk,
-                                          gpio_num_t cmd,
-                                          gpio_num_t d0,
-                                          gpio_num_t d1,
-                                          gpio_num_t d2,
-                                          gpio_num_t d3,
-                                          gpio_num_t cd,
-                                          int width,
+
+#define _PID_MAP(itf, n) ((CFG_TUD_##itf) << (n))
+#define USB_TUSB_PID (0x4000 | _PID_MAP(CDC, 0) | _PID_MAP(MSC, 1) | _PID_MAP(HID, 2) | \
+_PID_MAP(MIDI, 3) ) //| _PID_MAP(AUDIO, 4) | _PID_MAP(VENDOR, 5) )
+
+esp_err_t init_sdmmc_slot(sdmmc_host_t *host,
+                           const sdmmc_slot_config_t *slot_config,
+                          sdmmc_card_t **card) {
+  esp_err_t ret = ESP_OK;
+  bool host_init = false;
+
+  LOGI(TAG, "Initializing SDCard");
+
+
+  // not using ff_memalloc here, as allocation in internal RAM is preferred
+  *card = (sdmmc_card_t *) malloc(sizeof(sdmmc_card_t));
+  ESP_GOTO_ON_FALSE(*card, ESP_ERR_NO_MEM, clean, TAG, "could not allocate new sdmmc_card_t");
+
+  ESP_GOTO_ON_ERROR((host->init)(), clean, TAG, "Host Config Init fail");
+  host_init = true;
+
+  ESP_GOTO_ON_ERROR(sdmmc_host_init_slot(host->slot, slot_config),
+                    clean,
+                    TAG,
+                    "Host init slot fail");
+
+  while (sdmmc_card_init(host, *card)) {
+    ESP_LOGE(TAG, "The detection pin of the slot is disconnected(Insert uSD card). Retrying...");
+    vTaskDelay(pdMS_TO_TICKS(3000));
+  }
+
+  // Card has been initialized, print its properties
+  sdmmc_card_print_info(stdout, *card);
+
+  return ESP_OK;
+
+  clean:
+  if (host_init) {
+    if (host->flags & SDMMC_HOST_FLAG_DEINIT_ARG) {
+      host->deinit_p(host->slot);
+    } else {
+      (*host->deinit)();
+    }
+  }
+  if (*card) {
+    free(*card);
+    *card = nullptr;
+  }
+  return ret;
+}
+
+esp_err_t mount_sdmmc_slot(const sdmmc_host_t *host,
+                           const sdmmc_slot_config_t *slot_config,
+                           sdmmc_card_t **card) {
+  esp_err_t ret = ESP_OK;
+
+  LOGI(TAG, "Initializing SDCard");
+
+  esp_vfs_fat_sdmmc_mount_config_t mount_config = {
+    .format_if_mount_failed = false, .max_files = 5, .allocation_unit_size = 16 * 1024,
+    .disk_status_check_enable = true, .use_one_fat = false
+  };
+  ret = esp_vfs_fat_sdmmc_mount("/data", host, slot_config, &mount_config, card);
+  sdmmc_card_print_info(stdout, *card);
+  return ret;
+
+}
+
+
+esp_err_t esp32::s3::esp32s3_sdmmc::mount(const gpio_num_t clk,
+                                          const gpio_num_t cmd,
+                                          const gpio_num_t d0,
+                                          const gpio_num_t d1,
+                                          const gpio_num_t d2,
+                                          const gpio_num_t d3,
+                                          const gpio_num_t cd,
+                                          const int width,
                                           gpio_num_t usb_sense) {
+  sdmmc_host_t host = SDMMC_HOST_DEFAULT();
+  host.max_freq_khz = SDMMC_FREQ_HIGHSPEED;
+
+  const sdmmc_slot_config_t slot_config = {
+    .clk = clk,
+    .cmd = cmd,
+    .d0 = d0,
+    .d1 = d1,
+    .d2 = d2,
+    .d3 = d3,
+    .d4 = GPIO_NUM_NC,
+    .d5 = GPIO_NUM_NC,
+    .d6 = GPIO_NUM_NC,
+    .d7 = GPIO_NUM_NC,
+    .cd = cd,
+    .wp = SDMMC_SLOT_NO_WP,
+    .width   = static_cast<uint8_t>(width),
+    .flags = 0,
+};
+
+
 #ifndef USB_DISABLED
-  if (init_sdmmc_slot(clk,
-                      cmd,
-                      d0,
-                      d1,
-                      d2,
-                      d3,
-                      cd,
-                      &card,
-                      width) == ESP_OK) {
-    usb_init_mmc(usb_sense, &card);
+  if (init_sdmmc_slot(&host, &slot_config, &card) == ESP_OK) {
+
+    const tinyusb_msc_driver_config_t usb_config = {
+      .user_flags = {.auto_mount_off = 0},
+      .callback = nullptr,
+      .callback_arg = nullptr
+    };
+
+    ESP_ERROR_CHECK(tinyusb_msc_install_driver(&usb_config));
+
+    const tinyusb_msc_storage_config_t config_sdmmc =
+    {
+      .medium = {.card = card},
+      .fat_fs = {
+        .base_path = storage_base_path,
+        .config = {
+          .format_if_mount_failed = false, .max_files = 5, .allocation_unit_size = 16 * 1024,
+          .disk_status_check_enable = true, .use_one_fat = false
+        },
+        .do_not_format = true, .format_flags = 0
+      },
+      .mount_point = TINYUSB_MSC_STORAGE_MOUNT_USB
+    };
+    ESP_ERROR_CHECK(tinyusb_msc_new_storage_sdmmc(&config_sdmmc, &storage_handle));
+
+    const tinyusb_config_t tusb_cfg =
+    {
+      .port = TINYUSB_PORT_FULL_SPEED_0,
+      .phy = {.skip_setup = false, .self_powered = true, .vbus_monitor_io = usb_sense},
+      .task = {.size = 1024, .priority = 5, .xCoreID = 0}, .descriptor = {}, .event_cb = {}, .event_arg = nullptr
+    };
+
+    ESP_ERROR_CHECK(tinyusb_driver_install(&tusb_cfg));
+    // usb_init_mmc(usb_sense, &card);
     storageAvailable = true;
     char str[12];
     /* Get volume label of the default drive */
@@ -83,19 +202,10 @@ esp_err_t esp32::s3::esp32s3_sdmmc::mount(gpio_num_t clk,
       f_setlabel("GifBadge");
     }
     return ESP_OK;
-  } else {
-    return ESP_FAIL;
   }
+  return ESP_FAIL;
 #else
-  return mount_sdmmc_slot(clk,
-                          cmd,
-                          d0,
-                          d1,
-                          d2,
-                          d3,
-                          cd,
-                          &card,
-                          width);
+  return mount_sdmmc_slot(&host, &slot_config, &card);
 #endif
 }
 
@@ -104,13 +214,15 @@ bool esp32::s3::esp32s3_sdmmc::UsbConnected() {
     return false;
   }
 #ifndef USB_DISABLED
-  return tinyusb_msc_storage_in_use_by_usb_host();
+  tinyusb_msc_mount_point_t mount_status;
+  tinyusb_msc_get_storage_mount_point(storage_handle, &mount_status);
+  return mount_status == TINYUSB_MSC_STORAGE_MOUNT_USB;
 #else
   return false;
 #endif
 }
 int esp32::s3::esp32s3_sdmmc::UsbCallBack(tusb_msc_callback_t callback) {
-  tinyusb_msc_register_callback(TINYUSB_MSC_EVENT_MOUNT_CHANGED, callback);
+  tinyusb_msc_set_storage_callback(callback, nullptr);
   return 0;
 }
 }

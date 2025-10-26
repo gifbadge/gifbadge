@@ -9,7 +9,7 @@
 #include "hal/storage.h"
 //#include "ota.h"
 #include "config.h"
-#include "tusb_msc_storage.h"
+#include "tinyusb_msc.h"
 #include "vbus.h"
 #include "charger.h"
 #include "battery.h"

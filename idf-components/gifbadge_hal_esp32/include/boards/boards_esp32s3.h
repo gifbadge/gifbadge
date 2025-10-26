@@ -15,6 +15,8 @@
 #include "drivers/keys_esp_io_expander.h"
 #include "driver/sdmmc_host.h"
 #include "drivers/config_nvs.h"
+#include "tinyusb_msc.h"
+
 
 namespace Boards::esp32::s3 {
 class esp32s3 : public Boards::Board {
@@ -40,6 +42,8 @@ public:
  esp_pm_lock_handle_t pmLockHandle = nullptr;
  hal::config::esp32s3::Config_NVS *_config;
  char serial[18];
+  tinyusb_msc_storage_handle_t storage_handle = nullptr;
+  char storage_base_path[6] = "/data";
 
  static void OtaInstallTask(void *arg);
   TaskHandle_t _ota_task_handle = nullptr;

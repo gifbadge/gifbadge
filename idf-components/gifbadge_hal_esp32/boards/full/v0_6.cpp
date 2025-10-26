@@ -11,7 +11,7 @@
 #include "esp_efuse_custom_table.h"
 
 
-#define USB_ENABLE
+// #define USB_ENABLE
 
 static const char *TAG = "Board::esp32::s3::full::v0_6";
 
@@ -189,6 +189,7 @@ hal::charger::Charger *esp32::s3::full::v0_6::GetCharger() {
 }
 void esp32::s3::full::v0_6::DebugInfo() {
   _pmic->DebugLog();
+  ESP_LOGI(TAG, "Free Heap: %d", esp_get_free_heap_size());
 }
 void esp32::s3::full::v0_6::VbusCallback(bool state) {
   LOGI(TAG, "Vbus connected: %s", state ? "True" : "False");

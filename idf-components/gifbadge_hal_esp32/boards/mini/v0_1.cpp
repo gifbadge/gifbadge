@@ -33,54 +33,7 @@ static void IRAM_ATTR usb_connected(void *) {
 namespace Boards {
 
 esp32::s3::mini::v0_1::v0_1() {
-  buffer = heap_caps_malloc(240 * 240 + 0x6100, MALLOC_CAP_INTERNAL);
-  _i2c = new I2C(I2C_NUM_0, 17, 18, 100 * 1000, false);
-  _battery = new hal::battery::esp32s3::battery_max17048(_i2c, GPIO_VBUS_DETECT);
-  _battery->BatteryInserted(); //Battery not removable. So set this
-  gpio_install_isr_service(0);
-  _keys = new hal::keys::esp32s3::keys_gpio(GPIO_NUM_0, GPIO_NUM_2, GPIO_NUM_1);
-  _display = new hal::display::esp32s3::display_gc9a01(35, 36, 34, 37, 38);
-  _backlight = new hal::backlight::esp32s3::backlight_ledc(GPIO_NUM_9, false, 0);
-  _backlight->setLevel(100);
 
-  esp_pm_config_t pm_config = {.max_freq_mhz = 240, .min_freq_mhz = 40, .light_sleep_enable = true};
-  esp_pm_configure(&pm_config);
-
-  esp_sleep_enable_gpio_wakeup();
-
-  esp_pm_lock_create(ESP_PM_CPU_FREQ_MAX, 0, "USB", &usb_pm);
-
-  gpio_pullup_en(GPIO_CARD_DETECT);
-  if (!gpio_get_level(GPIO_CARD_DETECT)) {
-    mount(GPIO_NUM_40, GPIO_NUM_39, GPIO_NUM_41, GPIO_NUM_42, GPIO_NUM_33, GPIO_NUM_47, GPIO_CARD_DETECT, 1, GPIO_NUM_0);
-  }
-
-  gpio_isr_handler_add(GPIO_CARD_DETECT, sdcard_removed, nullptr);
-  gpio_set_intr_type(GPIO_CARD_DETECT, GPIO_INTR_ANYEDGE);
-
-  gpio_config_t vbus_config = {};
-
-  vbus_config.intr_type = GPIO_INTR_ANYEDGE;
-  vbus_config.mode = GPIO_MODE_INPUT;
-  vbus_config.pin_bit_mask = (1ULL << GPIO_VBUS_DETECT);
-  vbus_config.pull_down_en = GPIO_PULLDOWN_DISABLE;
-  vbus_config.pull_up_en = GPIO_PULLUP_DISABLE;
-  gpio_config(&vbus_config);
-
-  gpio_isr_handler_add(GPIO_VBUS_DETECT, usb_connected, nullptr);
-  usb_connected(nullptr); //Trigger usb detection
-
-  //Shutdown pin
-  gpio_config_t io_conf = {};
-
-  io_conf.intr_type = GPIO_INTR_DISABLE;
-  io_conf.mode = GPIO_MODE_OUTPUT;
-  io_conf.pin_bit_mask = (1ULL << GPIO_SHUTDOWN);
-  io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
-  io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
-  gpio_config(&io_conf);
-  gpio_set_drive_capability(GPIO_SHUTDOWN, GPIO_DRIVE_CAP_MAX);
-  _vbus = new hal::vbus::esp32s3::VbusGpio(GPIO_VBUS_DETECT);
 }
 
 hal::battery::Battery *esp32::s3::mini::v0_1::GetBattery() {
@@ -137,7 +90,54 @@ const char *esp32::s3::mini::v0_1::Name() {
 }
 
 void esp32::s3::mini::v0_1::LateInit() {
+  // buffer = heap_caps_malloc(240 * 240 + 0x6100, MALLOC_CAP_INTERNAL);
+  _i2c = new I2C(I2C_NUM_0, 17, 18, 100 * 1000, false);
+  _battery = new hal::battery::esp32s3::battery_max17048(_i2c, GPIO_VBUS_DETECT);
+  _battery->BatteryInserted(); //Battery not removable. So set this
+  gpio_install_isr_service(0);
+  _keys = new hal::keys::esp32s3::keys_gpio(GPIO_NUM_0, GPIO_NUM_2, GPIO_NUM_1);
+  _display = new hal::display::esp32s3::display_gc9a01(35, 36, 34, 37, 38);
+  _backlight = new hal::backlight::esp32s3::backlight_ledc(GPIO_NUM_9, false, 0);
+  _backlight->setLevel(100);
 
+  esp_pm_config_t pm_config = {.max_freq_mhz = 240, .min_freq_mhz = 40, .light_sleep_enable = true};
+  esp_pm_configure(&pm_config);
+
+  esp_sleep_enable_gpio_wakeup();
+
+  esp_pm_lock_create(ESP_PM_CPU_FREQ_MAX, 0, "USB", &usb_pm);
+
+  gpio_pullup_en(GPIO_CARD_DETECT);
+  if (!gpio_get_level(GPIO_CARD_DETECT)) {
+    mount(GPIO_NUM_40, GPIO_NUM_39, GPIO_NUM_41, GPIO_NUM_42, GPIO_NUM_33, GPIO_NUM_47, GPIO_CARD_DETECT, 1, GPIO_NUM_0);
+  }
+
+  gpio_isr_handler_add(GPIO_CARD_DETECT, sdcard_removed, nullptr);
+  gpio_set_intr_type(GPIO_CARD_DETECT, GPIO_INTR_ANYEDGE);
+
+  gpio_config_t vbus_config = {};
+
+  vbus_config.intr_type = GPIO_INTR_ANYEDGE;
+  vbus_config.mode = GPIO_MODE_INPUT;
+  vbus_config.pin_bit_mask = (1ULL << GPIO_VBUS_DETECT);
+  vbus_config.pull_down_en = GPIO_PULLDOWN_DISABLE;
+  vbus_config.pull_up_en = GPIO_PULLUP_DISABLE;
+  gpio_config(&vbus_config);
+
+  gpio_isr_handler_add(GPIO_VBUS_DETECT, usb_connected, nullptr);
+  usb_connected(nullptr); //Trigger usb detection
+
+  //Shutdown pin
+  gpio_config_t io_conf = {};
+
+  io_conf.intr_type = GPIO_INTR_DISABLE;
+  io_conf.mode = GPIO_MODE_OUTPUT;
+  io_conf.pin_bit_mask = (1ULL << GPIO_SHUTDOWN);
+  io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
+  io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
+  gpio_config(&io_conf);
+  gpio_set_drive_capability(GPIO_SHUTDOWN, GPIO_DRIVE_CAP_MAX);
+  _vbus = new hal::vbus::esp32s3::VbusGpio(GPIO_VBUS_DETECT);
 }
 hal::vbus::Vbus *esp32::s3::mini::v0_1::GetVbus() {
   return _vbus;
