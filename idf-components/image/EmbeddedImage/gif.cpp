@@ -58,14 +58,7 @@ static int32_t ReadFile(GIFFILE *pFile, uint8_t *pBuf, int32_t iLen) {
 }
 
 static int32_t SeekFile(GIFFILE *pFile, int32_t iPosition) {
-  printf("SeekFile: current: %ld, new %ld\n",pFile->iPos, iPosition);
-  int32_t new_pos = iPosition - pFile->iPos;
-  if (new_pos < - 4096) {
-    openFile(open_path);
-  }
-  else {
-    seekFile(new_pos);
-  }
+  seekFile(iPosition);
   pFile->iPos = iPosition;
   return 0;
 }

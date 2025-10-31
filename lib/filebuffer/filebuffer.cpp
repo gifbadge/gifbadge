@@ -27,6 +27,8 @@ struct circular_buf_t {
   uint8_t *data;
   std::atomic<uint8_t *> write_pos;
   std::atomic<uint8_t *> read_pos;
+  int32_t file_pos;
+  char open_file[255] = "";
 };
 
 circular_buf_t cbuffer;
@@ -48,6 +50,7 @@ static size_t cbuffer_get_avail(const circular_buf_t *buffer) {
 static void cbuffer_reset(circular_buf_t *buffer) {
   buffer->write_pos = buffer->data;
   buffer->read_pos = buffer->data;
+  buffer->file_pos = 0;
 }
 
 static void cbuffer_init(circular_buf_t *buffer, size_t size) {
@@ -98,6 +101,7 @@ static size_t cbuffer_read(circular_buf_t *buffer, uint8_t *dest, size_t size) {
   buffer->read_pos.fetch_add(size);
   if (buffer->read_pos > buffer->data + BUFFER_SIZE)
     buffer->read_pos -= BUFFER_SIZE + 1;
+  buffer->file_pos += size;
   return size;
 }
 
@@ -124,7 +128,7 @@ void FileBufferTask(void *) {
     }
     option = xQueueReceive(FileQueue, &path, delay);
     if (option == pdPASS) {
-      printf("Received Path %s\n", path);
+      // printf("Received Path %s\n", path);
       if (fd > 0) {
         close(fd);
         fd = 0;
@@ -152,11 +156,10 @@ void FileBufferTask(void *) {
 }
 
 void openFile(const char *path) {
-  char _path[255];
-  strcpy(_path, path);
-  printf("Opening file %s\n", _path);
+  strcpy(cbuffer.open_file, path);
+  // printf("Opening file %s\n", cbuffer.open_file);
   xSemaphoreTake(lockSemaphore, portMAX_DELAY);
-  xQueueSend(FileQueue, &_path, 0);
+  xQueueSend(FileQueue, &cbuffer.open_file, 0);
 }
 
 void closeFile() {
@@ -167,7 +170,7 @@ void closeFile() {
 size_t readFile(uint8_t *pBuf, int32_t iLen) {
   xSemaphoreTake(lockSemaphore, portMAX_DELAY);
   while (cbuffer_get_avail(&cbuffer) < iLen) {
-    printf("Blocked on Read, Available: %d bytes \n", cbuffer_get_free(&cbuffer));
+    // printf("Blocked on Read, Available: %d bytes \n", cbuffer_get_free(&cbuffer));
     xSemaphoreTake(readSemaphore, portMAX_DELAY);
   }
   xSemaphoreGive(writeSemaphore);
@@ -176,5 +179,12 @@ size_t readFile(uint8_t *pBuf, int32_t iLen) {
 }
 
 void seekFile(int32_t pos) {
-  cbuffer.read_pos += pos;
+  int32_t new_pos = pos - cbuffer.file_pos;
+  if (new_pos < -BUFFER_CHUNK*2) {
+    openFile(cbuffer.open_file);
+  }
+  else {
+    cbuffer.read_pos += new_pos;
+    cbuffer.file_pos += new_pos;
+  }
 }
