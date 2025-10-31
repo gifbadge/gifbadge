@@ -2,7 +2,6 @@
 
 #include <AnimatedGIF.h>
 #include "image.h"
-#include "bitbank2.h"
 
 struct GIFUser{
     uint8_t *buffer;
@@ -33,7 +32,7 @@ public:
 
 
 private:
-    GIFIMAGE _gif;
+    GIFIMAGE _gif{};
     int playFrame(bool bSync, int *delayMilliseconds, GIFUser *pUser);
 
   static void GIFDraw(GIFDRAW *pDraw);

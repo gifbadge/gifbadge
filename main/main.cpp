@@ -11,6 +11,7 @@
 #include "hw_init.h"
 #include "ui/usb_connected.h"
 #include "input.h"
+#include "filebuffer.h"
 
 static const char *TAG = "MAIN";
 
@@ -111,6 +112,7 @@ extern "C" void app_main(void) {
   board->LateInit();
 
   TaskHandle_t display_task_handle = nullptr;
+  TaskHandle_t file_buffer_task = nullptr;
 
   dumpDebugTimerInit();
   board->BootInfo();
@@ -126,6 +128,7 @@ extern "C" void app_main(void) {
 #else
   xTaskCreate(display_task, "display_task", 5000, board, 2, &display_task_handle);
 #endif
+  xTaskCreatePinnedToCore(FileBufferTask, "file_buffer", 4000, nullptr, 2, &file_buffer_task, 0);
 
   initInputTimer(board);
 

@@ -1,6 +1,5 @@
 #include "gif.h"
 #include <string>
-#include "bitbank2.h"
 #include "image.h"
 
 #include <cstdio>
@@ -13,112 +12,62 @@
 #define PICO_BUILD
 #include <AnimatedGIF.h>
 #define ALLOWS_UNALIGNED
-// #undef LZW_HIGHWATER_TURBO
-// #define LZW_HIGHWATER_TURBO ((LZW_BUF_SIZE_TURBO * 13) / 16)
-#include <esp_log_buffer.h>
+#include <esp_log.h>
 #include <gif.inl>
+#include <filebuffer.h>
 
-struct mem_buf {
-  uint8_t *buf;
-  FILE *fp;
-  uint8_t *pos;
-  uint8_t *read;
-  size_t size;
-};
+char open_path[255] = "";
 
 static void * prev_buffer = nullptr;
 
+
 static void *OpenFile(const char *fname, int32_t *pSize) {
-  FILE *infile = fopen(fname, "r");
-  // setvbuf(infile, nullptr, _IOFBF, 4096);
+  strcpy(open_path, fname);
+   FILE *infile = fopen(fname, "r");
 
-  if (infile == nullptr) {
-    printf("Couldn't open file %s\n", fname);
-  }
+   if (infile == nullptr) {
+     printf("Couldn't open file %s\n", fname);
+   }
 
-  struct stat stats{};
+   struct stat stats{};
 
-  if (fstat(fileno(infile), &stats) != 0) {
-    printf("Couldn't stat file\n");
-    return nullptr;
-  }
+   if (fstat(fileno(infile), &stats) != 0) {
+     printf("Couldn't stat file\n");
+     return nullptr;
+   }
 
-  *pSize = stats.st_size;
-  auto *mem = static_cast<mem_buf *>(malloc(sizeof(mem_buf)));
-#ifdef ESP_PLATFORM
-  if ((stats.st_size+480*480*3) <= heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM)) {
-    mem->buf = static_cast<uint8_t *>(heap_caps_malloc(stats.st_size, MALLOC_CAP_SPIRAM));
-  } else {
-    printf("Not enough memory to buffer image\n");
-    mem->buf = nullptr;
-  }
-  if (mem->buf == nullptr) {
-    printf("Couldn't allocate buffer\n");
-  }
-#else
-  mem->buf = nullptr;
-#endif
-  mem->fp = infile;
-  mem->pos = mem->buf;
-  mem->read = mem->buf;
-  mem->size = stats.st_size;
+   *pSize = stats.st_size;
+  printf("File size: %ld\n", *pSize);
+  fclose(infile);
 
-  if (infile) {
-    return mem;
-  }
-  return nullptr;
+  openFile(fname);
+  return (void *)1;
 }
 
 static void CloseFile(void *pHandle) {
-  auto *mem = (mem_buf *) (pHandle);
-  fclose(mem->fp);
-  if (mem->buf != nullptr) {
-    free(mem->buf);
-  }
-  free(mem);
+  closeFile();
 }
 
 static int32_t ReadFile(GIFFILE *pFile, uint8_t *pBuf, int32_t iLen) {
   if (iLen <= 0) {
     return 0;
   }
-  int32_t iBytesRead;
-  iBytesRead = iLen;
-  auto *mem = (mem_buf *) (pFile->fHandle);
-  if (mem->buf == nullptr) {
-    iBytesRead = (int32_t) fread(pBuf, 1, iBytesRead, mem->fp);
-    pFile->iPos = ftell(mem->fp);
-    return iBytesRead;
-  }
-  if (mem->pos + iLen > mem->read) {
-    //We don't have enough in the buffer, read and add it
-    size_t bytes = fread(mem->read, 1, (mem->pos + iLen) - mem->read, mem->fp);
-    int32_t len = mem->read - mem->pos + bytes;
-    mem->read += bytes;
-    memcpy(pBuf, mem->pos, len);
-    mem->pos += len;
-    pFile->iPos = mem->pos - mem->buf;
-    return len;
-  } else {
-    //Already in the buffer, copy it out
-    memcpy(pBuf, mem->pos, iLen);
-    mem->pos += iLen;
-    pFile->iPos = mem->pos - mem->buf;
-    return iLen;
-  }
+  int32_t ret = readFile(pBuf, iLen);
+  pFile->iPos += ret;
+  return ret;
 }
 
 static int32_t SeekFile(GIFFILE *pFile, int32_t iPosition) {
-  auto *mem = (mem_buf *) (pFile->fHandle);
-  if (mem->buf == nullptr) {
-    fseek(mem->fp, iPosition, SEEK_SET);
-    pFile->iPos = (int32_t) ftell(mem->fp);
-    return pFile->iPos;
-  } else {
-    mem->pos = mem->buf + iPosition;
-    pFile->iPos = iPosition;
-    return iPosition;
+  printf("SeekFile: current: %ld, new %ld\n",pFile->iPos, iPosition);
+  int32_t new_pos = iPosition - pFile->iPos;
+  if (new_pos < - 4096) {
+    openFile(open_path);
   }
+  else {
+    seekFile(new_pos);
+  }
+  pFile->iPos = iPosition;
+  return 0;
 }
 
 image::GIF::GIF() = default;
@@ -141,13 +90,6 @@ int image::GIF::playFrame(bool bSync, int *delayMilliseconds, GIFUser *pUser)
   if (GIFParseInfo(&_gif, 0))
   {
     _gif.pUser = pUser;
-    // if((_gif.iHeight != _gif.iCanvasHeight)|(_gif.iCanvasWidth != _gif.iWidth)){
-    //   auto *previous = static_cast<uint16_t *>(prev_buffer);
-    //   previous += pUser->y * pUser->width;
-    //   auto * current = (uint16_t *)pUser->buffer;
-    //   current += pUser->y * pUser->width;
-    //   memcpy(current, previous, _gif.iCanvasHeight*pUser->width*2);
-    // }
     if (_gif.iError == GIF_EMPTY_FRAME) // don't try to decode it
       return 0;
     if (_gif.pTurboBuffer) {

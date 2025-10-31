@@ -16,6 +16,7 @@ add_subdirectory(lib/gifbadge_hal)
 add_subdirectory(lib/fileutil)
 add_subdirectory(lib/font_render)
 add_subdirectory(external-deps/npmx)
+add_subdirectory(lib/filebuffer)
 
 if (ESP_PLATFORM)
     if(EXISTS ${CMAKE_SOURCE_DIR}/config/esp32s3/lv_conf.h)

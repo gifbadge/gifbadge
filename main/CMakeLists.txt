@@ -26,7 +26,7 @@ if (ESP_PLATFORM)
             INCLUDE_DIRS "include" ${freertos_lib}
             REQUIRES gifbadge_hal_esp32 image lvgl esp_timer)
     target_compile_options(${COMPONENT_LIB} PRIVATE -D__LINUX__)
-    target_link_libraries(${COMPONENT_TARGET} FileUtil FontRender gifbadge_hal)
+    target_link_libraries(${COMPONENT_TARGET} FileUtil FontRender gifbadge_hal FileBuffer)
 
     #
 else ()
