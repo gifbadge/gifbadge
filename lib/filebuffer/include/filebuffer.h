@@ -5,12 +5,11 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-  void FileBufferTask(void *);
-  void openFile(const char *path);
-  void closeFile();
-  // void readFile(uint8_t *pBuf, int32_t iLen);
-  size_t readFile(uint8_t *pBuf, int32_t iLen);
-  void seekFile(int32_t pos);
+  [[noreturn]] void FileBufferTask(void *);
+  void filebuffer_open(const char *path);
+  void filebuffer_close();
+  int32_t filebuffer_read(uint8_t *pBuf, int32_t iLen);
+  void filebuffer_seek(int32_t pos);
 
 #ifdef __cplusplus
 }

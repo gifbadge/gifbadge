@@ -37,28 +37,27 @@ static void *OpenFile(const char *fname, int32_t *pSize) {
    }
 
    *pSize = stats.st_size;
-  printf("File size: %ld\n", *pSize);
   fclose(infile);
 
-  openFile(fname);
-  return (void *)1;
+  filebuffer_open(fname);
+  return reinterpret_cast<void *>(1);
 }
 
 static void CloseFile(void *pHandle) {
-  closeFile();
+  filebuffer_close();
 }
 
 static int32_t ReadFile(GIFFILE *pFile, uint8_t *pBuf, int32_t iLen) {
   if (iLen <= 0) {
     return 0;
   }
-  int32_t ret = readFile(pBuf, iLen);
+  const int32_t ret = filebuffer_read(pBuf, iLen);
   pFile->iPos += ret;
   return ret;
 }
 
 static int32_t SeekFile(GIFFILE *pFile, int32_t iPosition) {
-  seekFile(iPosition);
+  filebuffer_seek(iPosition);
   pFile->iPos = iPosition;
   return 0;
 }
@@ -72,16 +71,15 @@ image::GIF::~GIF() {
   (*_gif.pfnClose)(_gif.GIFFile.fHandle);
 }
 
-int image::GIF::playFrame(bool bSync, int *delayMilliseconds, GIFUser *pUser)
+int image::GIF::playFrame(int *delayMilliseconds, GIFUser *pUser)
 {
-  int rc;
-
   if (_gif.GIFFile.iPos >= _gif.GIFFile.iSize-1) // no more data exists
   {
     (*_gif.pfnSeek)(&_gif.GIFFile, 0); // seek to start
   }
   if (GIFParseInfo(&_gif, 0))
   {
+    int rc;
     _gif.pUser = pUser;
     if (_gif.iError == GIF_EMPTY_FRAME) // don't try to decode it
       return 0;
@@ -118,7 +116,7 @@ int image::GIF::playFrame(bool bSync, int *delayMilliseconds, GIFUser *pUser)
 image::frameReturn image::GIF::GetFrame(uint8_t *outBuf, int16_t x, int16_t y, int16_t width) {
   GIFUser gifuser = {outBuf, x, y, width};
   int frameDelay;
-  int ret = playFrame(false, &frameDelay, &gifuser);
+  int ret = playFrame(&frameDelay, &gifuser);
   prev_buffer = outBuf;
   if (ret == -1) {
     printf("GIF Error: %i\n", _gif.iError);
@@ -134,14 +132,11 @@ std::pair<int16_t, int16_t> image::GIF::Size() {
 }
 
 void image::GIF::GIFDraw(GIFDRAW *pDraw) {
-  int y;
-  uint16_t *d;
-
   auto *gifuser = static_cast<GIFUser *>(pDraw->pUser);
-  auto *buffer = (uint16_t *) gifuser->buffer;
+  auto *buffer = reinterpret_cast<uint16_t *>(gifuser->buffer);
 
-  y = pDraw->iY + pDraw->y + gifuser->y; // current line
-  d = &buffer[gifuser->x + pDraw->iX + (y * gifuser->width)];
+  int y = pDraw->iY + pDraw->y + gifuser->y; // current line
+  uint16_t *d = &buffer[gifuser->x + pDraw->iX + (y * gifuser->width)];
   memcpy(d, pDraw->pPixels, pDraw->iWidth * 2);
 }
 
@@ -178,16 +173,17 @@ int image::GIF::Open(const char *path, void *buffer) {
 
   if (GIFInit(&_gif)) {
     if (buffer) {
-      _gif.pTurboBuffer = (uint8_t *) buffer;
+      _gif.pTurboBuffer = static_cast<uint8_t *>(buffer);
     }
-    // Allocate a little extra space for the current line
-    // as RGB565 or RGB888
+
     int iCanvasSize = 480*480 * 3 ;
 #ifdef ESP_PLATFORM
     if (iCanvasSize < heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM)) {
-      _gif.pFrameBuffer = (unsigned char *) heap_caps_malloc(iCanvasSize, MALLOC_CAP_SPIRAM);
+      _gif.pFrameBuffer = static_cast<unsigned char *>(heap_caps_malloc(_gif.iCanvasWidth * _gif.iCanvasHeight * 3,
+                                                                        MALLOC_CAP_SPIRAM));
     } else {
-      _gif.pFrameBuffer = (unsigned char *) heap_caps_malloc(_gif.iCanvasWidth * (_gif.iCanvasHeight + 3), MALLOC_CAP_SPIRAM);
+      _gif.pFrameBuffer = static_cast<unsigned char *>(heap_caps_malloc(_gif.iCanvasWidth * (_gif.iCanvasHeight + 3),
+                                                                        MALLOC_CAP_SPIRAM));
       _gif.pfnDraw = GIFDraw;
     }
 #else
