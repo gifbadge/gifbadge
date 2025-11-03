@@ -188,7 +188,7 @@ esp_err_t esp32::s3::esp32s3_sdmmc::mount(const gpio_num_t clk,
     {
       .port = TINYUSB_PORT_FULL_SPEED_0,
       .phy = {.skip_setup = false, .self_powered = true, .vbus_monitor_io = usb_sense},
-      .task = {.size = 1024, .priority = 5, .xCoreID = 0}, .descriptor = {}, .event_cb = {}, .event_arg = nullptr
+      .task = {.size = 2000, .priority = 5, .xCoreID = 0}, .descriptor = {}, .event_cb = {}, .event_arg = nullptr
     };
 
     ESP_ERROR_CHECK(tinyusb_driver_install(&tusb_cfg));
