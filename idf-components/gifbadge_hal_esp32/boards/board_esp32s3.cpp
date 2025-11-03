@@ -132,7 +132,12 @@ OtaError esp32::s3::esp32s3::OtaValidate() {
 }
 void esp32::s3::esp32s3::OtaInstall() {
   if (!_ota_task_handle) {
-    xTaskCreate(OtaInstallTask, "task", 10000, this, 2, &_ota_task_handle);
+    //Free the turbo buffer, if present, so we are sure to have enough stack for the update task
+    if (TurboBuffer()) {
+      free(TurboBuffer());
+    }
+    ESP_LOGI(TAG, "Free Internal: %d", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
+    xTaskCreate(OtaInstallTask, "ota", 4000, this, 2, &_ota_task_handle);
   }
 }
 int esp32::s3::esp32s3::OtaStatus() {
