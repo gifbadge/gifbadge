@@ -8,11 +8,11 @@
 #include "esp_efuse_custom_table.h"
 #include "esp_app_format.h"
 #include "esp_ota.h"
+#include "../../../main/include/hw_init.h"
 
 static const char *TAG = "esp32::s3::esp32s3";
 
-namespace Boards{
-
+namespace Boards {
 esp32::s3::esp32s3::esp32s3() {
   esp_pm_lock_create(ESP_PM_CPU_FREQ_MAX, 0, "Board Lock", &pmLockHandle);
   _config = new hal::config::esp32s3::Config_NVS();
@@ -45,7 +45,7 @@ const char *esp32::s3::esp32s3::SwVersion() {
 char *esp32::s3::esp32s3::SerialNumber() {
   uint8_t mac[6] = {0};
   esp_efuse_mac_get_default(mac);
-  sprintf(serial, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0],mac[1],mac[2],mac[3],mac[4],mac[5]);
+  sprintf(serial, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
   return serial;
 }
 void esp32::s3::esp32s3::BootInfo() {
@@ -67,69 +67,77 @@ void esp32::s3::esp32s3::BootInfo() {
 }
 bool esp32::s3::esp32s3::OtaCheck() {
   struct stat buffer{};
-  if(stat("/data/ota.bin", &buffer) == 0){
-      LOGI("TAG", "OTA File Exists");
-      return true;
+  if (stat("/data/ota.bin", &buffer) == 0) {
+    LOGI("TAG", "OTA File Exists");
+    return true;
   }
   return false;
 }
-OtaError esp32::s3::esp32s3::OtaValidate() {
-  FILE *ota_file = fopen("/data/ota.bin", "r");
-  esp_image_header_t new_header_info;
-  esp_app_desc_t new_app_info;
-  esp_custom_app_desc_t new_custom_app_desc;
-  fread(&new_header_info, 1, sizeof(esp_image_header_t), ota_file);
-  fseek(ota_file, sizeof(esp_image_segment_header_t), SEEK_CUR);
-  fread(&new_app_info, 1, sizeof(esp_app_desc_t), ota_file);
-  fread(&new_custom_app_desc, 1, sizeof(new_custom_app_desc), ota_file);
-  fclose(ota_file);
 
+#define OTA_HEADER_SIZE (sizeof(esp_image_header_t)+ sizeof(esp_image_segment_header_t) + sizeof(esp_app_desc_t) + sizeof(esp_custom_app_desc_t))
+
+OtaError esp32::s3::esp32s3::OtaHeaderValidate(uint8_t const *data) {
+  OtaError ret = OtaError::OK;
+  auto *new_header_info = static_cast<esp_image_header_t *>(malloc(sizeof(esp_image_header_t)));
+  auto *new_app_info = static_cast<esp_app_desc_t *>(malloc(sizeof(esp_app_desc_t)));
+  auto *new_custom_app_desc = static_cast<esp_custom_app_desc_t *>(malloc(sizeof(esp_custom_app_desc_t)));
+  size_t pos = 0;
+  memcpy(new_header_info, data, sizeof(esp_image_header_t));
+  pos += sizeof(esp_image_header_t);
+  pos += sizeof(esp_image_segment_header_t);
+  memcpy(new_app_info, data + pos, sizeof(esp_app_desc_t));
+  pos += sizeof(esp_app_desc_t);
+  memcpy(new_custom_app_desc, data + pos, sizeof(esp_custom_app_desc_t));
+  pos += sizeof(esp_custom_app_desc_t);
+
+  LOGI(TAG, "Header Size %u", pos);
   LOGI(TAG, "New Firmware");
-  LOGI(TAG, "CHIPID: %i", new_header_info.chip_id);
-  LOGI(TAG, "Version: %s", new_app_info.version);
+  LOGI(TAG, "CHIPID: %i", new_header_info->chip_id);
+  LOGI(TAG, "Version: %s", new_app_info->version);
   LOGI(TAG, "Supports Boards:");
-  for (int x = 0; x < new_custom_app_desc.num_supported_boards; x++) {
-    LOGI(TAG, "%u", new_custom_app_desc.supported_boards[x]);
+  for (int x = 0; x < new_custom_app_desc->num_supported_boards; x++) {
+    LOGI(TAG, "%u", new_custom_app_desc->supported_boards[x]);
   }
 
-  if (new_header_info.chip_id != ESP_CHIP_ID_ESP32S3) {
-    return OtaError::WRONG_CHIP;
-  }
-
-  uint8_t board;
-  esp_efuse_read_field_blob(ESP_EFUSE_USER_DATA_BOARD, &board, 8);
-  bool supported_board = false;
-  for (int x = 0; x < new_custom_app_desc.num_supported_boards; x++) {
-    if (board == new_custom_app_desc.supported_boards[x]) {
-      supported_board = true;
-      break;
+  if (new_header_info->chip_id != ESP_CHIP_ID_ESP32S3) {
+    ret = OtaError::WRONG_CHIP;
+  } else {
+    uint8_t board;
+    esp_efuse_read_field_blob(ESP_EFUSE_USER_DATA_BOARD, &board, 8);
+    bool supported_board = false;
+    for (int x = 0; x < new_custom_app_desc->num_supported_boards; x++) {
+      if (board == new_custom_app_desc->supported_boards[x]) {
+        supported_board = true;
+        break;
+      }
+    }
+    if (!supported_board) {
+      ret = OtaError::WRONG_BOARD;
     }
   }
-  if (!supported_board) {
-    return OtaError::WRONG_BOARD;
-  }
 
-  const esp_partition_t *configured = esp_ota_get_boot_partition();
-  const esp_partition_t *running = esp_ota_get_running_partition();
-
-  if (configured != running) {
-    ESP_LOGW(TAG, "Configured OTA boot partition at offset 0x%08" PRIx32", but running from offset 0x%08" PRIx32,
-             configured->address, running->address);
-    ESP_LOGW(TAG, "(This can happen if either the OTA boot data or preferred boot image become corrupted somehow.)");
-  }
-  LOGI(TAG, "Running partition type %d subtype %d (offset 0x%08" PRIx32")",
-       running->type, running->subtype, running->address);
-  esp_app_desc_t running_app_info;
-
-  if (esp_ota_get_partition_description(running, &running_app_info) == ESP_OK) {
-    LOGI(TAG, "Running firmware version: %s", running_app_info.version);
-  }
-//  if (memcmp(running_app_info.version, new_app_info.version, sizeof(new_app_info.version)) == 0) {
-//    return OTA_SAME_VERSION;
-//  }
-
-  return OtaError::OK;
+  free(new_header_info);
+  free(new_app_info);
+  free(new_custom_app_desc);
+  return ret;
 }
+
+OtaError esp32::s3::esp32s3::OtaValidate() {
+  OtaError ret = OtaError::OK;
+  auto *ota_data = static_cast<uint8_t *>(malloc(OTA_HEADER_SIZE));
+  FILE *ota_file = fopen("/data/ota.bin", "r");
+  fread(ota_data, OTA_HEADER_SIZE, 1, ota_file);
+  fclose(ota_file);
+
+  OtaError valid = OtaHeaderValidate(ota_data);
+  if (valid != OtaError::OK) {
+    ret = valid;
+  }
+
+  free(ota_data);
+  return ret;
+}
+
 void esp32::s3::esp32s3::OtaInstall() {
   if (!_ota_task_handle) {
     //Free the turbo buffer, if present, so we are sure to have enough stack for the update task
@@ -198,17 +206,16 @@ void esp32::s3::esp32s3::OtaInstallTask(void *arg) {
 
   FILE *ota_file = fopen("/data/ota.bin", "r");
   static char *ota_buffer = static_cast<char *>(malloc(OTA_BUFFER_SIZE));
-  if(ota_buffer == nullptr){
-      board->_ota_status = -2;
+  if (ota_buffer == nullptr) {
+    board->_ota_status = -2;
   }
 
   size_t bytes_read;
 
   board->_ota_status = 0;
   while ((bytes_read = fread(ota_buffer, 1, OTA_BUFFER_SIZE, ota_file)) > 0) {
-
     //Update the progress on the display
-    int percent = static_cast<int>((100*ftell(ota_file) + ota_size/2)/ota_size);
+    int percent = static_cast<int>((100 * ftell(ota_file) + ota_size / 2) / ota_size);
     LOGI(TAG, "%%%d", percent);
     board->_ota_status = percent;
 
@@ -230,7 +237,7 @@ void esp32::s3::esp32s3::OtaInstallTask(void *arg) {
     } else {
       ESP_LOGE(TAG, "esp_ota_end failed (%s)!", esp_err_to_name(err));
     }
-    if(ota_buffer){
+    if (ota_buffer) {
       free(ota_buffer);
     }
     vTaskDelete(nullptr);
@@ -239,7 +246,7 @@ void esp32::s3::esp32s3::OtaInstallTask(void *arg) {
   err = esp_ota_set_boot_partition(update_partition);
   if (err != ESP_OK) {
     ESP_LOGE(TAG, "esp_ota_set_boot_partition failed (%s)!", esp_err_to_name(err));
-    if(ota_buffer){
+    if (ota_buffer) {
       free(ota_buffer);
     }
     vTaskDelete(nullptr);
@@ -247,5 +254,154 @@ void esp32::s3::esp32s3::OtaInstallTask(void *arg) {
   LOGI(TAG, "Prepare to restart system!");
   board->Reset();
 }
-
 }
+
+#ifdef CONFIG_TINYUSB_DFU_MODE_DFU
+#include <class/dfu/dfu_device.h>
+
+//--------------------------------------------------------------------+
+// DFU callbacks
+// Note: alt is used as the partition number, in order to support multiple partitions like FLASH, EEPROM, etc.
+//--------------------------------------------------------------------+
+
+// Invoked right before tud_dfu_download_cb() (state=DFU_DNBUSY) or tud_dfu_manifest_cb() (state=DFU_MANIFEST)
+// Application return timeout in milliseconds (bwPollTimeout) for the next download/manifest operation.
+// During this period, USB host won't try to communicate with us.
+uint32_t tud_dfu_get_timeout_cb(uint8_t alt, uint8_t state) {
+  if (state == DFU_DNBUSY) {
+    return 1;
+  } else if (state == DFU_MANIFEST) {
+    // since we don't buffer entire image and do any flashing in manifest stage
+    return 0;
+  }
+
+  return 0;
+}
+
+esp_ota_handle_t update_handle = 0;
+
+// Invoked when received DFU_DNLOAD (wLength>0) following by DFU_GETSTATUS (state=DFU_DNBUSY) requests
+// This callback could be returned before flashing op is complete (async).
+// Once finished flashing, application must call tud_dfu_finish_flashing()
+void tud_dfu_download_cb(uint8_t alt, uint16_t block_num, uint8_t const *data, uint16_t length) {
+  esp_err_t err;
+
+  LOGI(TAG, "Download BlockNum %u of length %u", block_num, length);
+  if (block_num == 0 && length >= OTA_HEADER_SIZE) {
+    const esp_partition_t *update_partition;
+
+    const esp_partition_t *configured = esp_ota_get_boot_partition();
+    const esp_partition_t *running = esp_ota_get_running_partition();
+
+    if (configured != running) {
+      ESP_LOGW(TAG,
+               "Configured OTA boot partition at offset 0x%08" PRIx32", but running from offset 0x%08" PRIx32,
+               configured->address,
+               running->address);
+      ESP_LOGW(TAG, "(This can happen if either the OTA boot data or preferred boot image become corrupted somehow.)");
+    }
+    LOGI(TAG,
+         "Running partition type %d subtype %d (offset 0x%08" PRIx32")",
+         running->type,
+         running->subtype,
+         running->address);
+
+    update_partition = esp_ota_get_next_update_partition(nullptr);
+    assert(update_partition != nullptr);
+    LOGI(TAG,
+         "Writing to partition subtype %d at offset 0x%" PRIx32,
+         update_partition->subtype,
+         update_partition->address);
+
+    Boards::OtaError validation_err = Boards::esp32::s3::esp32s3::OtaHeaderValidate(data);
+    if (validation_err != Boards::OtaError::OK) {
+      ESP_LOGE(TAG, "validate failed with %d", (int) validation_err);
+      tud_dfu_finish_flashing(DFU_STATUS_ERR_TARGET);
+      return;
+    }
+
+    err = esp_ota_begin(update_partition, 0, &update_handle);
+    if (err != ESP_OK) {
+      ESP_LOGE(TAG, "esp_ota_begin failed (%s)", esp_err_to_name(err));
+      tud_dfu_finish_flashing(DFU_STATUS_ERR_WRITE);
+      return;
+    }
+  }
+  err = esp_ota_write(update_handle, data, length);
+  if (err != ESP_OK) {
+    ESP_LOGE(TAG, "esp_ota_write failed (%s)!", esp_err_to_name(err));
+    esp_ota_abort(update_handle);
+    tud_dfu_finish_flashing(DFU_STATUS_ERR_WRITE);
+    return;
+  }
+
+  tud_dfu_finish_flashing(DFU_STATUS_OK);
+}
+
+// Invoked when download process is complete, received DFU_DNLOAD (wLength=0) following by DFU_GETSTATUS (state=Manifest)
+// Application can do checksum, or actual flashing if buffered entire image previously.
+// Once finished flashing, application must call tud_dfu_finish_flashing()
+void tud_dfu_manifest_cb(uint8_t alt) {
+  esp_err_t err;
+  ESP_LOGI(TAG, "Download completed, Verifying");
+
+  err = esp_ota_end(update_handle);
+  if (err != ESP_OK) {
+    if (err == ESP_ERR_OTA_VALIDATE_FAILED) {
+      ESP_LOGE(TAG, "Image validation failed, image is corrupted");
+      tud_dfu_finish_flashing(DFU_STATUS_ERR_VERIFY);
+      return;
+    }
+    ESP_LOGE(TAG, "esp_ota_end failed (%s)!", esp_err_to_name(err));
+    tud_dfu_finish_flashing(DFU_STATUS_ERR_VERIFY);
+    return;
+  }
+
+  err = esp_ota_set_boot_partition(esp_ota_get_next_update_partition(nullptr));
+  if (err != ESP_OK) {
+    ESP_LOGE(TAG, "esp_ota_set_boot_partition failed (%s)!", esp_err_to_name(err));
+    tud_dfu_finish_flashing(DFU_STATUS_ERR_VENDOR);
+    return;
+  }
+  LOGI(TAG, "Verify Success");
+
+  // flashing op for manifest is complete without error
+  // Application can perform checksum, should it fail, use appropriate status such as errVERIFY.
+  tud_dfu_finish_flashing(DFU_STATUS_OK);
+}
+
+const char *upload_image[2] =
+{
+  "Hello world from TinyUSB DFU! - Partition 0",
+  "Hello world from TinyUSB DFU! - Partition 1"
+};
+
+// Invoked when received DFU_UPLOAD request
+// Application must populate data with up to length bytes and
+// Return the number of written bytes
+uint16_t tud_dfu_upload_cb(uint8_t alt, uint16_t block_num, uint8_t *data, uint16_t length) {
+  (void) block_num;
+  (void) length;
+
+  LOGI(TAG, "Upload BlockNum %u of length %u", alt, block_num, length);
+
+  uint16_t const xfer_len = (uint16_t) strlen(upload_image[alt]);
+  memcpy(data, upload_image[alt], xfer_len);
+
+  return xfer_len;
+}
+
+// Invoked when the Host has terminated a download or upload transfer
+void tud_dfu_abort_cb(uint8_t alt) {
+  (void) alt;
+  LOGI(TAG, "Host aborted transfer");
+}
+
+// Invoked when a DFU_DETACH request is received
+void tud_dfu_detach_cb(void) {
+  LOGI(TAG, "Host detach, we should probably reboot");
+  LOGI(TAG, "Prepare to restart system!");
+  get_board()->Reset();
+}
+
+#endif

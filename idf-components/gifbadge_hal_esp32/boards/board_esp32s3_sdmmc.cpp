@@ -9,6 +9,7 @@
 #include "boards/esp32s3_sdmmc.h"
 #include "log.h"
 #include "tinyusb_msc.h"
+#include "boards/esp32s3_usb.h"
 
 static const char *TAG = "board_esp32s3_sdmmc";
 
@@ -59,10 +60,6 @@ int esp32::s3::esp32s3_sdmmc::StorageFormat() {
   LOGI(TAG, "Format Done");
   return ret;
 }
-
-#define _PID_MAP(itf, n) ((CFG_TUD_##itf) << (n))
-#define USB_TUSB_PID (0x4000 | _PID_MAP(CDC, 0) | _PID_MAP(MSC, 1) | _PID_MAP(HID, 2) | \
-_PID_MAP(MIDI, 3) ) //| _PID_MAP(AUDIO, 4) | _PID_MAP(VENDOR, 5) )
 
 esp_err_t init_sdmmc_slot(sdmmc_host_t *host,
                            const sdmmc_slot_config_t *slot_config,
@@ -160,8 +157,7 @@ esp_err_t esp32::s3::esp32s3_sdmmc::mount(const gpio_num_t clk,
 
 #ifndef USB_DISABLED
   if (init_sdmmc_slot(&host, &slot_config, &card) == ESP_OK) {
-
-    const tinyusb_msc_driver_config_t usb_config = {
+    constexpr tinyusb_msc_driver_config_t usb_config = {
       .user_flags = {.auto_mount_off = 0},
       .callback = nullptr,
       .callback_arg = nullptr
@@ -183,20 +179,12 @@ esp_err_t esp32::s3::esp32s3_sdmmc::mount(const gpio_num_t clk,
       .mount_point = TINYUSB_MSC_STORAGE_MOUNT_USB
     };
     ESP_ERROR_CHECK(tinyusb_msc_new_storage_sdmmc(&config_sdmmc, &storage_handle));
+    ESP_ERROR_CHECK(esp32s3_usb_init(usb_sense));
 
-    const tinyusb_config_t tusb_cfg =
-    {
-      .port = TINYUSB_PORT_FULL_SPEED_0,
-      .phy = {.skip_setup = false, .self_powered = true, .vbus_monitor_io = usb_sense},
-      .task = {.size = 2000, .priority = 5, .xCoreID = 0}, .descriptor = {}, .event_cb = {}, .event_arg = nullptr
-    };
-
-    ESP_ERROR_CHECK(tinyusb_driver_install(&tusb_cfg));
-    // usb_init_mmc(usb_sense, &card);
     storageAvailable = true;
     char str[12];
     /* Get volume label of the default drive */
-    f_getlabel("", str, 0);
+    f_getlabel("", str, nullptr);
     LOGI(TAG, "Volume Name: %s", str);
     if (strlen(str) == 0) {
       f_setlabel("GifBadge");

@@ -34,7 +34,8 @@ public:
   char *SerialNumber() override;
   void BootInfo() override;
   bool OtaCheck() override;
-  OtaError OtaValidate() override;
+ static OtaError OtaHeaderValidate(uint8_t const *data);
+ OtaError OtaValidate() override;
   void OtaInstall() override;
   int OtaStatus() override;
 
