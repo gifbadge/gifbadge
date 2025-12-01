@@ -22,7 +22,7 @@ if (ESP_PLATFORM)
     idf_component_register(SRCS ${SRC}
             INCLUDE_DIRS ${INCLUDE} REQUIRES esp-dsp)
 
-
+    add_compile_definitions(ALLOWS_UNALIGNED)
     target_compile_options(${COMPONENT_LIB} PRIVATE -D__LINUX__ -DARDUINO_ARCH_ESP32=1)
     target_link_libraries(${COMPONENT_LIB} FileBuffer)
 else()

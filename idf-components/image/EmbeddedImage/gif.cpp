@@ -11,7 +11,7 @@
 
 #define PICO_BUILD
 #include <AnimatedGIF.h>
-#define ALLOWS_UNALIGNED
+// #define ALLOWS_UNALIGNED
 #include <esp_log.h>
 #include <gif.inl>
 #include <filebuffer.h>
