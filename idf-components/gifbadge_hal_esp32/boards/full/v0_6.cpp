@@ -107,7 +107,7 @@ bool esp32::s3::full::v0_6::StorageReady() {
 }
 
 const char *esp32::s3::full::v0_6::Name() {
-  return "2.1\" 0.6";
+  return "2.1\" 0.6-0.7";
 }
 void esp32::s3::full::v0_6::LateInit() {
   buffer = heap_caps_malloc(480 * 480 + 0x6100, MALLOC_CAP_INTERNAL);
