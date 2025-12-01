@@ -52,3 +52,5 @@ public:
 
 };
 }
+
+char* lltoa(long long val, int base);
