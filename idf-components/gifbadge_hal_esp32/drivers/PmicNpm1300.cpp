@@ -167,9 +167,6 @@ void hal::pmic::esp32s3::PmicNpm1300::BatteryInserted() {
 hal::battery::Battery::State hal::pmic::esp32s3::PmicNpm1300::BatteryStatus() {
   uint8_t status;
   npmx_charger_status_get(npmx_charger_get(&_npmx_instance, 0), &status);
-  if(!(status & NPMX_CHARGER_STATUS_BATTERY_DETECTED_MASK)){
-    return State::NOT_PRESENT;
-  }
   if(_charge_error != Charger::ChargeError::NONE){
     return State::ERROR;
   }
@@ -178,6 +175,9 @@ hal::battery::Battery::State hal::pmic::esp32s3::PmicNpm1300::BatteryStatus() {
   }
   if(!VbusConnected()){
     return State::DISCHARGING;
+  }
+  if(!(status & NPMX_CHARGER_STATUS_BATTERY_DETECTED_MASK)){
+    return State::NOT_PRESENT;
   }
   return State::OK;
 }
