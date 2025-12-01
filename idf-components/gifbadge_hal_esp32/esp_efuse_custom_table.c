@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2017-2024 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2017-2025 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -9,7 +9,7 @@
 #include <assert.h>
 #include "esp_efuse_custom_table.h"
 
-// md5_digest_table 650aa5ec2de1235ea763d3e410569c28
+// md5_digest_table 1cc13c25161e1fe36796db43a91ab759
 // This file was generated from the file esp_efuse_custom_table.csv. DO NOT CHANGE THIS FILE MANUALLY.
 // If you want to change some fields, you need to change esp_efuse_custom_table.csv file
 // then run `efuse_common_table` or `efuse_custom_table` command it will generate this file.
@@ -23,6 +23,10 @@ static const esp_efuse_desc_t KEY0_SERIAL[] = {
     {EFUSE_BLK4, 0, 48}, 	 // Board Serial,
 };
 
+static const esp_efuse_desc_t KEY1_SERIAL[] = {
+    {EFUSE_BLK5, 0, 48}, 	 // Board Serial,
+};
+
 
 
 
@@ -34,5 +38,10 @@ const esp_efuse_desc_t* ESP_EFUSE_USER_DATA_BOARD[] = {
 
 const esp_efuse_desc_t* ESP_EFUSE_KEY0_SERIAL[] = {
     &KEY0_SERIAL[0],    		// Board Serial
+    NULL
+};
+
+const esp_efuse_desc_t* ESP_EFUSE_KEY1_SERIAL[] = {
+    &KEY1_SERIAL[0],    		// Board Serial
     NULL
 };

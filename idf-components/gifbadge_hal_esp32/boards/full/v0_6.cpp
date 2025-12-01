@@ -201,8 +201,11 @@ void esp32::s3::full::v0_6::VbusCallback(bool state) {
 }
 char *esp32::s3::full::v0_6::SerialNumber() {
   uint64_t sn;
-  esp_efuse_read_field_blob(ESP_EFUSE_KEY0_SERIAL, &sn, 64);
-  sprintf(serial, "%llu", sn);
+  esp_efuse_read_field_blob(ESP_EFUSE_KEY1_SERIAL, &sn, 64);
+  if (sn == 0x00) {
+    esp_efuse_read_field_blob(ESP_EFUSE_KEY0_SERIAL, &sn, 64);
+  }
+  sprintf(serial, "%s", lltoa(sn, 10));
   return serial;
 }
 }
