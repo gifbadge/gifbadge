@@ -115,9 +115,35 @@ static image::PNGImage * display_image_batt() {
 
 static std::pair<int16_t, int16_t> lastSize = {0,0};
 
-//#define FRAMETIME
+static char* lltoa(long long val, int base){
+
+  static char buf[64] = {0};
+
+  int i = 62;
+  int sign = (val < 0);
+  if(sign) val = -val;
+
+  if(val == 0) return "0";
+
+  for(; val && i ; --i, val /= base) {
+    buf[i] = "0123456789abcdef"[val % base];
+  }
+
+  if(sign) {
+    buf[i--] = '-';
+  }
+  return &buf[i+1];
+
+}
+
+
+#define FRAMETIME
 
 bool newImage = false;
+
+int64_t average_frame_delay = 0;
+int max_frame_delay = 0;
+int frame_count = 0;
 
 static image::frameReturn displayFile(std::unique_ptr<image::Image> &in, hal::display::Display *display) {
   int64_t start = millis();
@@ -141,10 +167,23 @@ static image::frameReturn displayFile(std::unique_ptr<image::Image> &in, hal::di
   }
   int calc_delay = status.second - static_cast<int>(millis() - start);
 #ifdef FRAMETIME
-  LOGI(TAG, "Frame Delay: %lu, calculated delay %i", status.second, calc_delay);
+  // LOGI(TAG, "Frame Delay: %lu, calculated delay %i", status.second, calc_delay);
+  frame_count += 1;
+  average_frame_delay += calc_delay;
+  if (calc_delay < max_frame_delay) {
+    max_frame_delay = calc_delay;
+  }
 #endif
   lastSize = in->Size();
   if(in->Animated()) {
+#ifdef FRAMETIME
+    if (status.first == image::frameStatus::END) {
+      LOGI(TAG, "Average Frame Delay: %s, Max Delay: %li", lltoa(average_frame_delay/frame_count, 10), max_frame_delay);
+      frame_count = 0;
+      average_frame_delay = 0;
+      max_frame_delay = 0;
+    }
+#endif
     return {status.first, (calc_delay > 0 ? calc_delay : 0)/portTICK_PERIOD_MS};
   }
   else{
@@ -220,6 +259,9 @@ static image::Image *openFile(const char *path, hal::display::Display *display) 
     return new image::ErrorImage(display->size, "Could not Display\n%s", path);
   }
   newImage = true;
+  frame_count = 0;
+  average_frame_delay = 0;
+  max_frame_delay = 0;
   return in;
 }
 
