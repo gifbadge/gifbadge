@@ -108,7 +108,7 @@ int image::GIF::playFrame(int *delayMilliseconds, GIFUser *pUser)
   if (delayMilliseconds) // if not NULL, return the frame delay time
     *delayMilliseconds = _gif.iFrameDelay;
   if (!_gif.pfnDraw) {
-    memcpy(pUser->buffer, &_gif.pFrameBuffer[480 * 480], 480 * 480 * 2);
+    memcpy(pUser->buffer, &_gif.pFrameBuffer[resolution.first * resolution.second], resolution.first * resolution.second * 2);
   }
   return (_gif.GIFFile.iPos < _gif.GIFFile.iSize-10);
 } /* playFrame() */
@@ -176,7 +176,7 @@ int image::GIF::Open(const char *path, void *buffer) {
       _gif.pTurboBuffer = static_cast<uint8_t *>(buffer);
     }
 
-    int iCanvasSize = 480*480 * 3 ;
+    int iCanvasSize = resolution.first*resolution.second * 3 ;
 #ifdef ESP_PLATFORM
     if (iCanvasSize < heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM)) {
       _gif.pFrameBuffer = static_cast<unsigned char *>(heap_caps_malloc(_gif.iCanvasWidth * _gif.iCanvasHeight * 3,
