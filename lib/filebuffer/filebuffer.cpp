@@ -12,7 +12,6 @@
 #include "freertos/task.h"
 #include <freertos/semphr.h>
 
-#define BUFFER_SIZE (2*1024*1024) // 1 Megabyte
 #define BUFFER_CHUNK (4096)
 #define ESP_PLATFORM
 
@@ -34,22 +33,23 @@ struct circular_buf_t {
   char open_file[255] = "";
   bool start_valid = false;
   volatile uint8_t * start_pos = nullptr;
+  size_t size = 0;
 };
 
 circular_buf_t cbuffer;
 
 static size_t cbuffer_get_free(const circular_buf_t *buffer) {
   if (buffer->write_pos == buffer->read_pos) {
-    return BUFFER_SIZE;
+    return buffer->size;
   }
   if (buffer->read_pos >= buffer->write_pos) {
     return buffer->read_pos - buffer->write_pos;
   }
-  return (buffer->read_pos + BUFFER_SIZE + 1) - buffer->write_pos;
+  return (buffer->read_pos + buffer->size + 1) - buffer->write_pos;
 }
 
 static size_t cbuffer_get_avail(const circular_buf_t *buffer) {
-  return BUFFER_SIZE - cbuffer_get_free(buffer);
+  return buffer->size - cbuffer_get_free(buffer);
 }
 
 static void cbuffer_reset(circular_buf_t *buffer) {
@@ -60,6 +60,7 @@ static void cbuffer_reset(circular_buf_t *buffer) {
 
 static void cbuffer_init(circular_buf_t *buffer, size_t size) {
   buffer->data = static_cast<uint8_t *>(heap_caps_malloc(size, MALLOC_CAP_SPIRAM));
+  buffer->size  = size;
   cbuffer_reset(buffer);
 }
 
@@ -67,7 +68,7 @@ static size_t cbuffer_put_file(circular_buf_t *buffer, size_t size) {
   size_t count = 0;
 
   if (buffer->write_pos >= buffer->read_pos) {
-    size_t end_free_segment = (buffer->data + BUFFER_SIZE) - buffer->write_pos + (buffer->read_pos == buffer->data ? 0 : 1);
+    size_t end_free_segment = (buffer->data + buffer->size) - buffer->write_pos + (buffer->read_pos == buffer->data ? 0 : 1);
 
     if (end_free_segment >= size)
     {
@@ -90,7 +91,7 @@ static int32_t cbuffer_read(circular_buf_t *buffer, uint8_t *dest, int32_t size)
   if (buffer->write_pos >= buffer->read_pos) {
     memcpy(dest, const_cast<uint8_t *>(buffer->read_pos), size);
   } else {
-    size_t end_data_segment = buffer->data + BUFFER_SIZE - buffer->read_pos + (buffer->read_pos == buffer->data ? 0 : 1);
+    size_t end_data_segment = buffer->data + buffer->size - buffer->read_pos + (buffer->read_pos == buffer->data ? 0 : 1);
     if (end_data_segment >= size)
     {
       memcpy(dest, const_cast<uint8_t *>(buffer->read_pos), size);
@@ -100,8 +101,8 @@ static int32_t cbuffer_read(circular_buf_t *buffer, uint8_t *dest, int32_t size)
     }
   }
   buffer->read_pos += size;
-  if (buffer->read_pos > buffer->data + BUFFER_SIZE)
-    buffer->read_pos -= BUFFER_SIZE + 1;
+  if (buffer->read_pos > buffer->data + buffer->size)
+    buffer->read_pos -= buffer->size + 1;
   buffer->file_pos += size;
   return size;
 }
@@ -125,14 +126,14 @@ void cbuffer_open(circular_buf_t *buffer, char *path) {
   }
 }
 
-[[noreturn]] void FileBufferTask(void *) {
+[[noreturn]] void FileBufferTask(void *params) {
   printf("Starting FileBuffer task");
   char path[255] = "";
   FileQueue = xQueueCreate(1, 255);
   readSemaphore = xSemaphoreCreateBinary();
   writeSemaphore = xSemaphoreCreateBinary();
   lockSemaphore = xSemaphoreCreateMutex();
-  cbuffer_init(&cbuffer, BUFFER_SIZE);
+  cbuffer_init(&cbuffer, *static_cast<size_t *>(params));
 
   BaseType_t option = errQUEUE_EMPTY;
   TickType_t delay;
@@ -153,7 +154,7 @@ void cbuffer_open(circular_buf_t *buffer, char *path) {
       if ((cbuffer_get_free(&cbuffer) - (BUFFER_CHUNK * 2)) >= BUFFER_CHUNK) {
         size_t count = cbuffer_put_file(&cbuffer, BUFFER_CHUNK);
         if (count < BUFFER_CHUNK) {
-          if (cbuffer.file_size > BUFFER_SIZE) {
+          if (cbuffer.file_size > cbuffer.size) {
             cbuffer.start_pos = cbuffer.write_pos;
             lseek(cbuffer.fd, 0, SEEK_SET);
             cbuffer_put_file(&cbuffer, BUFFER_CHUNK);
@@ -193,7 +194,7 @@ int32_t filebuffer_read(uint8_t *pBuf, const int32_t iLen) {
 
 void filebuffer_seek(int32_t pos) {
   int32_t new_pos = pos - cbuffer.file_pos;
-  if ((cbuffer.file_size > BUFFER_SIZE) && new_pos < -BUFFER_CHUNK*2) {
+  if ((cbuffer.file_size > cbuffer.size) && new_pos < -BUFFER_CHUNK*2) {
     if (cbuffer.start_valid) {
       cbuffer.read_pos = cbuffer.start_pos;
     } else {

@@ -13,6 +13,10 @@
 #include "input.h"
 #include "filebuffer.h"
 
+#ifdef ESP_PLATFORM
+#include <esp_psram.h>
+#endif
+
 static const char *TAG = "MAIN";
 
 TaskStatus_t tasks[20];
@@ -124,14 +128,24 @@ extern "C" void app_main(void) {
 
   initLowBatteryTask();
 
-  vTaskDelay(500 / portTICK_PERIOD_MS); //Let USB Settle
+  auto *buffer_size = static_cast<size_t *>(malloc(sizeof(size_t)));
+#ifdef ESP_PLATFORM
+  if (esp_psram_get_size() > 4*1024*1024) {
+    *buffer_size = 4*1024*1024;
+  }
+  else {
+    *buffer_size = 1*1024*1024;
+  }
+#else
+#endif
+
 
 #ifdef ESP_PLATFORM
   xTaskCreatePinnedToCore(display_task, "display_task", 4000, board, 2, &display_task_handle, 1);
-  xTaskCreatePinnedToCore(FileBufferTask, "file_buffer", 3000, nullptr, 2, &file_buffer_task, 0);
+  xTaskCreatePinnedToCore(FileBufferTask, "file_buffer", 3000, buffer_size, 2, &file_buffer_task, 0);
 #else
   xTaskCreate(display_task, "display_task", 5000, board, 2, &display_task_handle);
-  xTaskCreate(FileBufferTask, "file_buffer", 4000, nullptr, 2, &file_buffer_task);
+  xTaskCreate(FileBufferTask, "file_buffer", 4000, buffer_size, 2, &file_buffer_task);
 #endif
 
   initInputTimer(board);
