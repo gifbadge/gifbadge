@@ -15,10 +15,13 @@ enum class frameStatus {
   ERROR
 };
 typedef std::pair<frameStatus, uint32_t> frameReturn;
+typedef std::pair<int16_t, int16_t> screenResolution;
 class Image {
+  protected:
+  screenResolution resolution;
 
  public:
-  Image() = default;
+  explicit Image(screenResolution res) :resolution(res) {}
 
   virtual ~Image() = default;
 
@@ -63,4 +66,4 @@ class Image {
 
 extern std::array<const char *, 4> extensionArray;
 extern std::span<const char *> extensions;
-image::Image *ImageFactory(const char *path);
+image::Image *ImageFactory(image::screenResolution res, const char *path);

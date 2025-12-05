@@ -6,14 +6,14 @@
 
 std::array<const char *, 4> extensionArray = {".gif", ".jpg", ".jpeg", ".png"};
 std::span<const char *> extensions(extensionArray);
-std::array<image::Image*(*)(), 4> handlers = {image::GIF::Create, image::JPEG::Create, image::JPEG::Create, image::PNGImage::Create};
+std::array<image::Image*(*)(image::screenResolution res), 4> handlers = {image::GIF::Create, image::JPEG::Create, image::JPEG::Create, image::PNGImage::Create};
 
-image::Image *ImageFactory(const char *path) {
+image::Image *ImageFactory(image::screenResolution res, const char *path) {
   const char *ext = strrchr(path, '.');
   if(ext != nullptr) {
     for (int i = 0; i < extensionArray.size(); i++) {
       if (strcasecmp(extensionArray[i], ext) == 0) {
-        return handlers[i]();
+        return handlers[i](res);
       }
     }
   }

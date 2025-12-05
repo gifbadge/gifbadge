@@ -14,7 +14,7 @@ namespace image {
 class GIF : public Image {
 
 public:
-    GIF();
+    explicit GIF(screenResolution res);
 
     ~GIF() override;
 
@@ -24,7 +24,7 @@ public:
 
     std::pair<int16_t, int16_t> Size() final;
 
-    static Image * Create();
+    static Image * Create(screenResolution res);
 
     bool Animated() override {return true;};
 

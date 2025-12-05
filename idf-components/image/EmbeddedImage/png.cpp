@@ -12,8 +12,8 @@ std::pair<int16_t, int16_t> image::PNGImage::Size() {
     return {png.getWidth(), png.getHeight()};
 }
 
-image::Image *image::PNGImage::Create() {
-    return new PNGImage();
+image::Image *image::PNGImage::Create(screenResolution res) {
+    return new PNGImage(res);
 }
 
 typedef int32_t (*readfile)(PNGFILE *pFile, uint8_t *pBuf, int32_t iLen);

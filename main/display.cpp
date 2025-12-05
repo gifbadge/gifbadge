@@ -34,47 +34,45 @@ namespace image {
  */
 class ErrorImage : public image::Image {
  public:
-  ErrorImage(std::pair<int16_t, int16_t> size, const char *error)
-      : _width(size.first), _height(size.second), _error("") {
+  ErrorImage(screenResolution size, const char *error)
+      : Image(size), _error("") {
     if (error != nullptr) {
       strcpy(_error, error);
     }
   }
 
   template<typename ... Args>
-  ErrorImage(std::pair<int16_t, int16_t> size, const char *fmt, Args &&... args)
-      : _width(size.first), _height(size.second), _error("") {
+  ErrorImage(screenResolution size, const char *fmt, Args &&... args)
+      : Image(size), _error("") {
     snprintf(_error, sizeof(_error) - 1, fmt, std::forward<Args>(args) ...);
   };
 
   frameReturn GetFrame(uint8_t *outBuf, int16_t x, int16_t y, int16_t width) override {
-    memset(outBuf, 255, _width * _height * 2);
-    render_text_centered(_width, _height, 10, _error, outBuf);
+    memset(outBuf, 255, resolution.first * resolution.second * 2);
+    render_text_centered(resolution.first, resolution.second, 10, _error, outBuf);
     return {frameStatus::OK, _delay};
   }
   std::pair<int16_t, int16_t> Size() override {
-    return {_width, _height};
+    return resolution;
   }
   const char *GetLastError() override {
     return nullptr;
   }
  protected:
-  int16_t _width;
-  int16_t _height;
   char _error[255];
   int _delay = 1000;
 };
 
 class NoImage : public ErrorImage {
  public:
-  explicit NoImage(std::pair<int16_t, int16_t> size) : ErrorImage(size, nullptr) {
+  explicit NoImage(screenResolution size) : ErrorImage(size, nullptr) {
     strcpy(_error, "No Image");
   }
 };
 
 class TooLargeImage : public ErrorImage {
  public:
-  TooLargeImage(std::pair<int16_t, int16_t> size, const char *path) : ErrorImage(size, nullptr) {
+  TooLargeImage(screenResolution size, const char *path) : ErrorImage(size, nullptr) {
     sprintf(_error, "Image too Large\n%s", path);
   }
 };
@@ -100,7 +98,7 @@ class OTAImage : public ErrorImage {
 
 class NoStorageImage : public ErrorImage {
  public:
-  explicit NoStorageImage(std::pair<int16_t, int16_t> size) : ErrorImage(size, nullptr) {
+  explicit NoStorageImage(screenResolution size) : ErrorImage(size, nullptr) {
     strcpy(_error, "No SDCARD");
   }
 };
@@ -108,7 +106,7 @@ class NoStorageImage : public ErrorImage {
 
 static image::PNGImage * display_image_batt() {
   LOGI(TAG, "Displaying Low Battery");
-  auto *png = new image::PNGImage;
+  auto *png = new image::PNGImage(get_board()->GetDisplay()->size);
   png->Open((uint8_t *) low_batt_png, sizeof(low_batt_png));
   return png;
 }
@@ -242,7 +240,7 @@ static int get_file(char *path) {
 }
 
 static image::Image *openFile(const char *path, hal::display::Display *display) {
-  image::Image *in = ImageFactory(path);
+  image::Image *in = ImageFactory(get_board()->GetDisplay()->size, path);
   if (in) {
     if (in->Open(path, get_board()->TurboBuffer()) != 0) {
       const char *lastError = in->GetLastError();

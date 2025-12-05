@@ -16,7 +16,7 @@ namespace image {
 class PNGImage : public image::Image {
 
 public:
-    PNGImage() = default;
+    explicit PNGImage(screenResolution res): Image(res) {};
 
     ~PNGImage() override;
 
@@ -24,7 +24,7 @@ public:
 
     std::pair<int16_t, int16_t> Size() override;
 
-    static Image *Create();
+    static Image *Create(screenResolution res);
 
     int Open(const char *path, void *buffer) override;
 
@@ -34,9 +34,9 @@ public:
 
 
 protected:
-    PNG png;
+    PNG png{};
     bool decoded = false;
-    char _path[255];
+    char _path[255]{};
     static void PNGDraw(PNGDRAW *pDraw);
 };
 }

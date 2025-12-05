@@ -14,8 +14,8 @@ std::pair<int16_t, int16_t> image::JPEG::Size() {
     return {jpeg.getWidth(), jpeg.getHeight()};
 }
 
-image::Image *image::JPEG::Create() {
-    return new image::JPEG();
+image::Image *image::JPEG::Create(screenResolution res) {
+    return new image::JPEG(res);
 }
 
 int JPEGDraw(JPEGDRAW *pDraw){

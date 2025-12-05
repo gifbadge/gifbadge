@@ -62,7 +62,7 @@ static int32_t SeekFile(GIFFILE *pFile, int32_t iPosition) {
   return 0;
 }
 
-image::GIF::GIF() = default;
+image::GIF::GIF(screenResolution res):Image(res) {};
 
 image::GIF::~GIF() {
   printf("GIF DELETED\n");
@@ -140,8 +140,8 @@ void image::GIF::GIFDraw(GIFDRAW *pDraw) {
   memcpy(d, pDraw->pPixels, pDraw->iWidth * 2);
 }
 
-image::Image *image::GIF::Create() {
-  return new image::GIF();
+image::Image *image::GIF::Create(screenResolution res) {
+  return new image::GIF(res);
 }
 
 int image::GIF::Open(const char *path, void *buffer) {
