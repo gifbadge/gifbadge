@@ -150,6 +150,8 @@ extern "C" void app_main(void) {
 
   initInputTimer(board);
 
+  vTaskDelay(500 / portTICK_PERIOD_MS); //Let USB Settle
+
   if (!board->StorageReady()) {
     xTaskNotifyIndexed(display_task_handle, 0, DISPLAY_NO_STORAGE, eSetValueWithOverwrite);
     while (true){
