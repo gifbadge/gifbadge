@@ -1,5 +1,7 @@
 #include "boards/esp32s3_usb.h"
 #include <tinyusb.h>
+#include <tinyusb_cdc_acm.h>
+
 #include "../../../main/include/hw_init.h"
 
 
@@ -144,6 +146,18 @@ constexpr uint8_t descriptor_fs_cfg[] = {
 };
 
 esp_err_t esp32s3_usb_init(gpio_num_t usb_sense) {
+#if CFG_TUD_CDC
+
+  constexpr tinyusb_config_cdcacm_t acm_cfg = {
+    .cdc_port = TINYUSB_CDC_ACM_0,
+    .callback_rx = nullptr,
+    .callback_rx_wanted_char = nullptr,
+    .callback_line_state_changed = nullptr,
+    .callback_line_coding_changed = nullptr
+};
+  tinyusb_cdcacm_init(&acm_cfg);
+#endif
+
   int str_count = 0;
 
   const char *descriptor_str[] = {
