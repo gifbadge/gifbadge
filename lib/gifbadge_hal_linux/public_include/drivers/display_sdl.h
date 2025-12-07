@@ -1,17 +1,15 @@
 #pragma once
 
 #include "hal/display.h"
-#include "display.h"
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
-#include <SDL2/SDL_timer.h>
-#include <semaphore>
 #include <semaphore.h>
 
-namespace hal::display::linux {
+namespace hal::display::oslinux {
 
 class display_sdl : public hal::display::Display {
  public:
+  void clear() override;
+
   display_sdl();
   ~display_sdl() override = default;
 
@@ -30,6 +28,8 @@ class display_sdl : public hal::display::Display {
   sem_t mutex;
   flushCallback_t _callback = nullptr;
 };
+
+void display_sdl_init();
 
 extern display_sdl *displaySdl;
 

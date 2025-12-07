@@ -1,4 +1,7 @@
 #include "FreeRTOS.h"
+#ifndef ESP_PLATFORM
+#include "timers.h"
+#endif
 
 #include "portable_time.h"
 #include "log.h"
@@ -106,6 +109,7 @@ class NoStorageImage : public ErrorImage {
 
 static image::PNGImage * display_image_batt() {
   LOGI(TAG, "Displaying Low Battery");
+  vTaskDelay(1000/portTICK_PERIOD_MS);
   auto *png = new image::PNGImage(get_board()->GetDisplay()->size);
   png->Open((uint8_t *) low_batt_png, sizeof(low_batt_png));
   return png;
@@ -353,6 +357,7 @@ void display_task(void *params) {
       switch (option) {
         case DISPLAY_FILE:
           LOGI(TAG, "DISPLAY_FILE");
+          redraw = false;
           if (!valid_image_file(current_file, extensions)) {
             config->getPath(current_file);
           }
@@ -405,6 +410,7 @@ void display_task(void *params) {
           redraw = true;
           break;
         case DISPLAY_NOTIFY_USB:
+          in.reset();
           closedir_sorted(&dir);
           dir.dirptr = nullptr;
           break;
@@ -424,8 +430,10 @@ void display_task(void *params) {
     }
 
     if (redraw) {
+      LOGI(TAG, "Redraw == true");
       // Something has changed in the configuration, reopen the configured file.
       config->getPath(current_file);
+      in.reset();
       in.reset(openFileUpdatePath(current_file, display));
       slideShowStart(config);
       redraw = false;
@@ -449,6 +457,7 @@ void display_task(void *params) {
           next_prev(in, current_file, config, display, 1);
           continue;
         }
+        LOGI(TAG, "Error Displaying File\n%s\n%s", current_file, in->GetLastError());
         in = std::make_unique<image::ErrorImage>(display->size,
                                                  "Error Displaying File\n%s\n%s",
                                                  current_file,

@@ -35,5 +35,6 @@ else()
     set_property(TARGET image PROPERTY C_EXTENSIONS ON)
     set_property(TARGET image PROPERTY CXX_STANDARD 23)
     set_property(TARGET image PROPERTY CXX_EXTENSIONS ON)
+    target_link_libraries(image PRIVATE FileBuffer)
 
 endif ()

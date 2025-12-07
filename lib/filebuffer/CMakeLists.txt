@@ -21,6 +21,7 @@ if(ESP_PLATFORM)
     target_compile_definitions(FileBuffer PUBLIC ESP_PLATFORM=1)
 
 else ()
+    target_link_libraries(FileBuffer PRIVATE freertos_kernel)
 #    include(CTest)
 #    add_subdirectory(test)
 #    target_compile_options(FileBuffer PUBLIC -g -fprofile-arcs -ftest-coverage)

@@ -25,7 +25,6 @@ void dumpDebugFunc(TimerHandle_t) {
   auto *args = get_board();
   args->PmLock();
   args->DebugInfo();
-
 #ifdef ESP_PLATFORM
   ESP_LOGI(TAG, "Free PSRAM: %d", heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
   ESP_LOGI(TAG, "Free Internal: %d", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
@@ -82,6 +81,7 @@ static void initLowBatteryTask() {
   xTimerStart(xTimerCreate("low_battery_handler", 10000/portTICK_PERIOD_MS, pdTRUE, nullptr, lowBatteryTask),0);
 }
 
+#ifdef ESP_PLATFORM
 static void usbCall(tinyusb_msc_storage_handle_t handle, tinyusb_msc_event_t *e, void *arg){
   TaskHandle_t mainHandle = xTaskGetHandle("main");
   LOGI(TAG, "USB Callback %d", e->mount_point == TINYUSB_MSC_STORAGE_MOUNT_USB);
@@ -95,6 +95,7 @@ static void usbCall(tinyusb_msc_storage_handle_t handle, tinyusb_msc_event_t *e,
     xTaskNotifyIndexed(mainHandle, 0, 0, eSetValueWithOverwrite);
   }
 }
+#endif
 
 
 
@@ -140,6 +141,7 @@ extern "C" void app_main(void) {
     *buffer_size = 1*1024*1024;
   }
 #else
+  *buffer_size = 2*1024*1024;
 #endif
 
 
@@ -165,7 +167,10 @@ extern "C" void app_main(void) {
   MAIN_STATES oldState = MAIN_NONE;
   TaskHandle_t lvglHandle = xTaskGetHandle("LVGL");
 
+#ifdef ESP_PLATFORM
   board->UsbCallBack(&usbCall);
+#endif
+
   if(board->UsbConnected()){
     currentState = MAIN_USB;
   } else {
@@ -213,16 +218,20 @@ extern "C" void app_main(void) {
   }
 
 }
-
+#ifdef ESP_PLATFORM
 IRAM_ATTR void vApplicationTickHook() {
   lv_tick(nullptr);
 }
+#else
+void vApplicationTickHook() {
+  lv_tick(nullptr);
+}
+#endif
+
 
 #ifndef ESP_PLATFORM
 
-void vLoggingPrintf( const char * pcFormat,
-                     ... )
-{
+extern "C" void vLoggingPrintf(const char *pcFormat, ...) {
   va_list arg;
 
   va_start( arg, pcFormat );
@@ -324,7 +333,7 @@ void vApplicationStackOverflowHook( TaskHandle_t pxTask,
 #include <unistd.h>
 #include <sys/stat.h>
 
-extern "C" int main(void) {
+extern "C" [[noreturn]] int main(void) {
   //chroot the process, so it's closer to being on the device for paths, etc
   char path[255];
   getcwd(path, sizeof(path));
@@ -334,19 +343,23 @@ extern "C" int main(void) {
   chdir("/");
   mkdir("/data", 0700);
 
-  displaySdl = new display_sdl();
+  // hal::display::oslinux::display_sdl_init();
   console_init();
   console_print("test\n");
 //  signal( SIGINT, handle_sigint );
-    xTaskCreate((void (*)(void*))app_main, "app_main", 10000, NULL, 1, NULL);
+    xTaskCreate((void (*)(void*))app_main, "app_main", 10000, nullptr, 1, nullptr);
   std::thread schedular([](){
     vTaskStartScheduler();
   });
 
-  while(1){
-    displaySdl->update();
-    if(get_board()->getKeys()) {
-      dynamic_cast<keys_sdl *>(get_board()->getKeys())->poll();
+  while(true){
+    // auto *display = dynamic_cast<hal::display::oslinux::display_sdl *>(get_board()->GetDisplay());
+    // display->update();
+    get_board()->DebugInfo();
+    auto *keys = dynamic_cast<hal::keys::oslinux::keys_sdl *>(get_board()->GetKeys());
+
+    if(keys) {
+     keys->poll();
     }
     usleep(1000);
   }

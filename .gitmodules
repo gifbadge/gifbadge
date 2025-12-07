@@ -22,3 +22,6 @@
 [submodule "non-idf-components/npmx/npmx"]
 	path = external-deps/npmx/npmx
 	url = https://github.com/NordicSemiconductor/npmx.git
+[submodule "external-deps/lvgl"]
+	path = external-deps/lvgl
+	url = https://github.com/lvgl/lvgl.git

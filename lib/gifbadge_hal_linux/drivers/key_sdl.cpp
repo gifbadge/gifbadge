@@ -2,21 +2,22 @@
 #include "drivers/key_sdl.h"
 #include "portable_time.h"
 #include "log.h"
-#include "keys.h"
+#include "hal/keys.h"
 #include <array>
 
-std::array<std::pair<SDL_Scancode, hal::keys::EVENT_CODE>, 3> keys = {{
-                                                               {SDL_SCANCODE_DOWN, KEY_DOWN},
-                                                               {SDL_SCANCODE_UP, KEY_UP},
-                                                               {SDL_SCANCODE_SPACE, KEY_ENTER},
-                                                           }};
-
-keys_sdl::keys_sdl() {
-  _debounce_states[KEY_UP] = hal::keys::debounce_state{false, false, 0};
-  _debounce_states[KEY_DOWN] = hal::keys::debounce_state{false, false, 0};
-  _debounce_states[KEY_ENTER] = hal::keys::debounce_state{false, false, 0};
+hal::keys::oslinux::keys_sdl::keys_sdl() {
+  _debounce_states[hal::keys::KEY_UP] = hal::keys::debounce_state{false, false, 0};
+  _debounce_states[hal::keys::KEY_DOWN] = hal::keys::debounce_state{false, false, 0};
+  _debounce_states[hal::keys::KEY_ENTER] = hal::keys::debounce_state{false, false, 0};
 }
-void keys_sdl::poll() {
+
+void hal::keys::oslinux::keys_sdl::poll() {
+  std::array<std::pair<SDL_Scancode, hal::keys::EVENT_CODE>, 3> keys = {{
+    {SDL_SCANCODE_DOWN, hal::keys::KEY_DOWN},
+    {SDL_SCANCODE_UP, hal::keys::KEY_UP},
+    {SDL_SCANCODE_SPACE, hal::keys::KEY_ENTER},
+}};
+
   auto time = millis();
 
   SDL_Event event;
@@ -40,7 +41,7 @@ void keys_sdl::poll() {
   }
   last = time;
 }
-hal::keys::EVENT_STATE *keys_sdl::read() {
+hal::keys::EVENT_STATE *hal::keys::oslinux::keys_sdl::read() {
   for (int b = 0; b < KEY_MAX; b++) {
     hal::keys::EVENT_STATE state = key_debounce_is_pressed(&_debounce_states[b]) ? STATE_PRESSED : STATE_RELEASED;
     if (state == STATE_PRESSED && last_state[b] == state) {

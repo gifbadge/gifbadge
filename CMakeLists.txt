@@ -16,18 +16,17 @@ add_subdirectory(lib/gifbadge_hal)
 add_subdirectory(lib/fileutil)
 add_subdirectory(lib/font_render)
 add_subdirectory(external-deps/npmx)
-add_subdirectory(lib/filebuffer)
 
 if (ESP_PLATFORM)
     if(EXISTS ${CMAKE_SOURCE_DIR}/config/esp32s3/lv_conf.h)
         message(LV_CONF_PATH=${CMAKE_SOURCE_DIR}/config/esp32s3/lv_conf.h)
         idf_build_set_property(COMPILE_OPTIONS "-I${CMAKE_SOURCE_DIR}/config/esp32s3" APPEND)
     endif ()
+    add_subdirectory(lib/filebuffer)
 #    idf_build_set_property()
 #    target_compile_options(mbedcrypto PRIVATE "-Wno-maybe-uninitialized")
 #    target_compile_options(mbedtls PRIVATE "-DMBEDTLS_ECP_LIGHT=1")
 else()
-
     add_compile_options( -D__linux__)
     #FreeRTOS stuff
     set( NO_TRACING 1 )
@@ -44,9 +43,9 @@ else()
         add_compile_options( -fsanitize=address -fsanitize=alignment )
     endif()
 
-    if( SANITIZE_LEAK )
+#    if( SANITIZE_LEAK )
         add_compile_options( -fsanitize=leak )
-    endif()
+#    endif()
 
     # Add the freertos_config for FreeRTOS-Kernel
     add_library( freertos_config INTERFACE )
@@ -61,6 +60,7 @@ else()
     # Select the native compile PORT
     set( FREERTOS_PORT "GCC_POSIX" CACHE STRING "" FORCE)
 
+    set(FREERTOS_CONFIG_FILE_DIRECTORY "${CMAKE_SOURCE_DIR}/" CACHE STRING "")
     # Adding the FreeRTOS-Kernel subdirectory
     add_subdirectory(external-deps/FreeRTOS-Kernel)
 
@@ -77,10 +77,20 @@ else()
 
     add_subdirectory(main)
     add_subdirectory(idf-components/image)
+    add_subdirectory(lib/filebuffer)
     add_subdirectory(lib/gifbadge_hal_linux)
-    add_subdirectory(idf-components/lvgl__lvgl)
+    set(LV_CONF_PATH
+            "${CMAKE_SOURCE_DIR}/main/include/lv_conf_linux.h"
+            CACHE STRING "" FORCE)
+    set(LV_BUILD_CONF_PATH
+            "${CMAKE_SOURCE_DIR}/main/include/lv_conf_linux.h"
+            CACHE STRING "" FORCE)
+    message(LV_CONF_PATH=${CMAKE_SOURCE_DIR}/main/include/lv_conf_linux.h)
+    add_subdirectory(external-deps/lvgl)
+#    target_compile_options(lvgl PUBLIC -DLV_CONF_PATH=\"${CMAKE_SOURCE_DIR}/main/include/lv_conf_linux.h\")
     target_compile_options(lvgl PUBLIC -DLV_CONF_PATH=${CMAKE_SOURCE_DIR}/main/include/lv_conf_linux.h)
-    target_link_libraries(GifBadge gifbadge_hal gifbadge_hal_linux freertos_kernel image FileUtil FontRender lvgl ${SDL2_LIBRARIES})
+
+    target_link_libraries(GifBadge gifbadge_hal gifbadge_hal_linux freertos_kernel image FileUtil FontRender FileBuffer lvgl ${SDL2_LIBRARIES})
     set_property(TARGET GifBadge PROPERTY CXX_STANDARD 23)
     target_compile_options(GifBadge PRIVATE -fanalyzer)
     set(C_STANDARD 11)

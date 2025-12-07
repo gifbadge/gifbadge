@@ -9,7 +9,9 @@
 #include "hal/storage.h"
 //#include "ota.h"
 #include "config.h"
+#ifdef ESP_PLATFORM
 #include "tinyusb_msc.h"
+#endif
 #include "vbus.h"
 #include "charger.h"
 #include "battery.h"
@@ -178,6 +180,7 @@ class Board {
    */
   virtual bool UsbConnected() = 0;
 
+#ifdef ESP_PLATFORM
   /**
    * Register a callback for USB Connect/Disconnect.
    * If the callback had been already registered, it will be overwritten
@@ -185,6 +188,7 @@ class Board {
    * @return 0 if successful
    */
   virtual int UsbCallBack(tusb_msc_callback_t callback) = 0;
+#endif
 
   /**
    * The name of current board

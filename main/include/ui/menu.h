@@ -4,6 +4,10 @@
 #include "task.h"
 #include <semphr.h>
 
+#ifndef ESP_PLATFORM
+#include "timers.h"
+#endif
+
 
 #include "log.h"
 #include <lvgl.h>
@@ -46,5 +50,10 @@ void destroy_screens();
 
 typedef lv_obj_t *(*MenuType)();
 
+#ifdef ESP_PLATFORM
 IRAM_ATTR void lv_tick(TimerHandle_t);
+#else
+void lv_tick(TimerHandle_t);
+#endif
+
 

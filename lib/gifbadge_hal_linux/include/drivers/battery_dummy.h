@@ -2,7 +2,7 @@
 
 #include <hal/battery.h>
 
-namespace hal::battery::linux {
+namespace hal::battery::oslinux {
 class battery_dummy final : public hal::battery::Battery {
  public:
   battery_dummy();

@@ -2,9 +2,8 @@
 
 
 #include "hal/keys.h"
-#include "keys.h"
 
-namespace hal::keys::linux {
+namespace hal::keys::oslinux {
 class keys_sdl : public hal::keys::Keys {
  public:
   keys_sdl();
