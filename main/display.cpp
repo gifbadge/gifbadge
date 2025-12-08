@@ -153,7 +153,7 @@ static image::frameReturn displayFile(std::unique_ptr<image::Image> &in, hal::di
       display->clear(); //Only need to clear the screen if the image won't fill it, and the last image was bigger
       newImage = false;
     }
-    xOffset = static_cast<int16_t>((display->size.first / 2) - (in->Size().first / 2));
+    xOffset = static_cast<int16_t>((display->size.first / 2) - ((in->Size().first +1) / 2));
     yOffset = static_cast<int16_t>((display->size.second / 2) - ((in->Size().second + 1) / 2));
   }
   status = in->GetFrame(display->buffer, xOffset, yOffset, display->size.first);
