@@ -426,6 +426,7 @@ void display_task(void *params) {
     if (redraw) {
       // Something has changed in the configuration, reopen the configured file.
       config->getPath(current_file);
+      in.reset();
       in.reset(openFileUpdatePath(current_file, display));
       slideShowStart(config);
       redraw = false;
