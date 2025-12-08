@@ -40,7 +40,6 @@ if (ESP_PLATFORM)
             esp_io_expander_tca95xx_16bit
             tinyusb
             esp_tinyusb
-            esp_io_expander_cat9532
             esp_adc
             nvs_flash
             efuse

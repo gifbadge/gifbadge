@@ -5,7 +5,6 @@
 #include <driver/sdmmc_defs.h>
 #include <driver/rtc_io.h>
 #include <esp_sleep.h>
-#include "esp_io_expander_cat9532.h"
 #include "drivers/keys_esp_io_expander.h"
 #include "drivers/esp_io_expander_gpio.h"
 #include "esp_efuse_custom_table.h"
