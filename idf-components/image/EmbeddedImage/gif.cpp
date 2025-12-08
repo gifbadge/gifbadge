@@ -110,7 +110,18 @@ int image::GIF::playFrame(int *delayMilliseconds, GIFUser *pUser)
   if (delayMilliseconds) // if not NULL, return the frame delay time
     *delayMilliseconds = _gif.iFrameDelay;
   if (!_gif.pfnDraw) {
-    memcpy(pUser->buffer, &_gif.pFrameBuffer[resolution.first * resolution.second], resolution.first * resolution.second * 2);
+    if (pUser->x > 0 || pUser->y > 0) {
+      // Handle cases where the GIF is smaller than the screen resolution
+      auto *buffer = reinterpret_cast<uint16_t *>(pUser->buffer);
+      for (int i = 0; i < _gif.iCanvasHeight; i++) {
+        int write_offset =  resolution.second*(i+pUser->y)+pUser->x;
+        int read_offset = (_gif.iCanvasWidth * _gif.iCanvasHeight)+(_gif.iCanvasWidth*i*2);
+        memcpy(&buffer[write_offset] , &_gif.pFrameBuffer[read_offset], _gif.iCanvasWidth * 2);
+      }
+    } else {
+      // GIF matches screen resolution
+      memcpy(pUser->buffer, &_gif.pFrameBuffer[resolution.first * resolution.second], resolution.first * resolution.second * 2);
+    }
   }
   return (_gif.GIFFile.iPos < _gif.GIFFile.iSize-10);
 } /* playFrame() */
