@@ -3,17 +3,25 @@
 #include <stdatomic.h>
 #include <cstdio>
 #include <cstring>
-#include <esp_heap_caps.h>
-#include <mutex>
-#include <sys/stat.h>
-#include <fcntl.h>
+#ifdef ESP_PLATFORM
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
 #include "freertos/task.h"
 #include <freertos/semphr.h>
+#include <esp_heap_caps.h>
+#else
+#include "FreeRTOS.h"
+#include "queue.h"
+#include "task.h"
+#include <semphr.h>
+#include <cstdlib>
+#endif
+#include <mutex>
+#include <sys/stat.h>
+#include <fcntl.h>
+
 
 #define BUFFER_CHUNK (4096)
-#define ESP_PLATFORM
 
 TaskHandle_t file_buffer_task = nullptr;
 
@@ -59,7 +67,13 @@ static void cbuffer_reset(circular_buf_t *buffer) {
 }
 
 static void cbuffer_init(circular_buf_t *buffer, size_t size) {
-  buffer->data = static_cast<uint8_t *>(heap_caps_malloc(size, MALLOC_CAP_SPIRAM));
+#ifdef ESP_PLATFORM
+  buffer->data = static_cast<uint8_t *>(heap_caps_malloc(size+1, MALLOC_CAP_SPIRAM));
+#else
+  buffer->data = static_cast<uint8_t *>(malloc(size+1));
+#endif
+  memset(buffer->data, 0, size);
+
   buffer->size  = size;
   cbuffer_reset(buffer);
 }
@@ -121,7 +135,7 @@ void cbuffer_open(circular_buf_t *buffer, char *path) {
       struct stat buf{};
       fstat(buffer->fd, &buf);
       buffer->file_size = buf.st_size;
-      printf("Opened %s size %d\n", path, buffer->file_size);
+      printf("Opened %s size %lu\n", path, buffer->file_size);
     }
   }
 }

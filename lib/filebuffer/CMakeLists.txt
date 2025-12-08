@@ -18,6 +18,7 @@ target_compile_options(FileBuffer PUBLIC -D_GNU_SOURCE)
 if(ESP_PLATFORM)
     target_link_libraries(FileBuffer PRIVATE idf::newlib)
     target_link_libraries(FileBuffer PRIVATE idf::freertos)
+    target_compile_definitions(FileBuffer PUBLIC ESP_PLATFORM=1)
 
 else ()
 #    include(CTest)
