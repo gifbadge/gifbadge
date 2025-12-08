@@ -3,6 +3,8 @@
 #include "hal/display.h"
 #include <SDL2/SDL.h>
 #include <semaphore.h>
+#include "FreeRTOS.h"
+#include "task.h"
 
 namespace hal::display::oslinux {
 
@@ -27,6 +29,7 @@ class display_sdl : public hal::display::Display {
 
   sem_t mutex;
   flushCallback_t _callback = nullptr;
+  TaskHandle_t _refreshTask;
 };
 
 void display_sdl_init();

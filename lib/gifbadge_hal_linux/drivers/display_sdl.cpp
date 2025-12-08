@@ -4,6 +4,15 @@
 
 hal::display::oslinux::display_sdl *displaySdl = nullptr;
 
+static void display_refresh(void *args) {
+  auto *display = static_cast<hal::display::oslinux::display_sdl *>(args);
+  while (true) {
+    display->update();
+    vTaskDelay(30/portTICK_RATE_MS);
+  }
+
+}
+
 hal::display::oslinux::display_sdl::display_sdl() {
   sem_init(&mutex, 0, 1);
   size = {480, 480};
@@ -27,8 +36,7 @@ hal::display::oslinux::display_sdl::display_sdl() {
 
 //  window_surface = SDL_GetWindowSurface(win);
 //  surface = SDL_CreateRGBSurfaceWithFormat(0, 480, 480, 16, SDL_PIXELFORMAT_BGR565);
-
-
+  xTaskCreate(display_refresh, "display_refresh", 4000, this, 2, &_refreshTask);
 }
 bool hal::display::oslinux::display_sdl::onColorTransDone(flushCallback_t callback) {
   _callback = callback;
@@ -62,7 +70,6 @@ void hal::display::oslinux::display_sdl::write(int x_start, int y_start, int x_e
 }
 void hal::display::oslinux::display_sdl::update() {
   if(sem_trywait(&mutex) != -1) {
-    printf("Update called\n");
     void *data;
     int pitch;
 //  SDL_GL_MakeCurrent(win, context);
