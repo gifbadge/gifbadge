@@ -40,12 +40,15 @@ else()
     endif()
 
     if( SANITIZE_ADDRESS )
-        add_compile_options( -fsanitize=address -fsanitize=alignment )
+#        add_compile_options( -fsanitize=address -fsanitize=alignment )
+#    add_link_options(-fsanitize=address -fsanitize=alignment)
+    add_compile_options( -fsanitize=address  )
+    add_link_options(-fsanitize=address)
     endif()
 
-#    if( SANITIZE_LEAK )
+    if( SANITIZE_LEAK )
         add_compile_options( -fsanitize=leak )
-#    endif()
+    endif()
 
     # Add the freertos_config for FreeRTOS-Kernel
     add_library( freertos_config INTERFACE )
