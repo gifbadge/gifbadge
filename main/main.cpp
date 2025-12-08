@@ -231,13 +231,13 @@ void vApplicationTickHook() {
 
 #ifndef ESP_PLATFORM
 
-extern "C" void vLoggingPrintf(const char *pcFormat, ...) {
-  va_list arg;
-
-  va_start( arg, pcFormat );
-  vprintf( pcFormat, arg );
-  va_end( arg );
-}
+// extern "C" void vLoggingPrintf(const char *pcFormat, ...) {
+//   va_list arg;
+//
+//   va_start( arg, pcFormat );
+//   vprintf( pcFormat, arg );
+//   va_end( arg );
+// }
 
 void vApplicationIdleHook( void )
 {
@@ -351,18 +351,19 @@ extern "C" [[noreturn]] int main(void) {
   std::thread schedular([](){
     vTaskStartScheduler();
   });
+  schedular.join();
 
-  while(true){
-    // auto *display = dynamic_cast<hal::display::oslinux::display_sdl *>(get_board()->GetDisplay());
-    // display->update();
-    get_board()->DebugInfo();
-    auto *keys = dynamic_cast<hal::keys::oslinux::keys_sdl *>(get_board()->GetKeys());
-
-    if(keys) {
-     keys->poll();
-    }
-    usleep(1000);
-  }
+  // while(true){
+  //   // auto *display = dynamic_cast<hal::display::oslinux::display_sdl *>(get_board()->GetDisplay());
+  //   // display->update();
+  //   // get_board()->DebugInfo();
+  //   // auto *keys = dynamic_cast<hal::keys::oslinux::keys_sdl *>(get_board()->GetKeys());
+  //
+  //   // if(keys) {
+  //   // keys->poll();
+  //   // }
+  //   usleep(1000);
+  // }
 
 }
 
