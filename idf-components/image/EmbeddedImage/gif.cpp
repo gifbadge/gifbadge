@@ -66,8 +66,10 @@ image::GIF::GIF(screenResolution res):Image(res) {};
 
 image::GIF::~GIF() {
   printf("GIF DELETED\n");
-  free(_gif.pFrameBuffer);
-  _gif.pFrameBuffer = nullptr;
+  if (_gif.pFrameBuffer != nullptr) {
+    free(_gif.pFrameBuffer);
+    _gif.pFrameBuffer = nullptr;
+  }
   (*_gif.pfnClose)(_gif.GIFFile.fHandle);
 }
 
