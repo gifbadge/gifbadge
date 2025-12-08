@@ -1,6 +1,8 @@
 #include "boards/esp32s3_usb.h"
 #include <tinyusb.h>
+#if CFG_TUD_CDC
 #include <tinyusb_cdc_acm.h>
+#endif
 
 #include "../../../main/include/hw_init.h"
 

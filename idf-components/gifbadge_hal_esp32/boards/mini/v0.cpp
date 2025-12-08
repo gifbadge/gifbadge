@@ -10,8 +10,11 @@
 #include <esp_flash_spi_init.h>
 #include <log.h>
 #include <tinyusb.h>
+#if CFG_TUD_CDC
 #include <tinyusb_cdc_acm.h>
 #include <tinyusb_console.h>
+#endif
+
 #include <boards/esp32s3_usb.h>
 
 #include "drivers/backlight_ledc.h"
@@ -157,7 +160,9 @@ void esp32::s3::mini::v0::LateInit() {
   ESP_ERROR_CHECK(tinyusb_msc_new_storage_spiflash(&config_spi, &storage_handle));
 
   esp32s3_usb_init(GPIO_NUM_NC);
+#if CFG_TUD_CDC
   tinyusb_console_init(TINYUSB_CDC_ACM_0);
+#endif
 
   esp_pm_config_t pm_config = {.max_freq_mhz = 240, .min_freq_mhz = 240, .light_sleep_enable = false};
   esp_pm_configure(&pm_config);
