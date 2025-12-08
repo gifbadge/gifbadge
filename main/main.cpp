@@ -26,8 +26,11 @@ void dumpDebugFunc(TimerHandle_t) {
   args->PmLock();
   args->DebugInfo();
 
+#ifdef ESP_PLATFORM
   ESP_LOGI(TAG, "Free PSRAM: %d", heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
   ESP_LOGI(TAG, "Free Internal: %d", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
+  ESP_LOGI(TAG, "Largest Free Block for DMA: %d", heap_caps_get_largest_free_block(MALLOC_CAP_DMA));
+#endif
   unsigned int count = uxTaskGetSystemState(tasks, 20, nullptr);
   for (unsigned int i = 0; i < count; i++) {
     LOGI(TAG, "%s Highwater: %lu", tasks[i].pcTaskName, tasks[i].usStackHighWaterMark);
