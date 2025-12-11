@@ -5,9 +5,6 @@
 #include <cstdio>
 #include <sys/stat.h>
 #include <cstring>
-#ifdef ESP_PLATFORM
-#include <esp_heap_caps.h>
-#endif
 
 #define PICO_BUILD
 #include <AnimatedGIF.h>
@@ -189,19 +186,11 @@ int image::GIF::Open(const char *path, void *buffer) {
       _gif.pTurboBuffer = static_cast<uint8_t *>(buffer);
     }
 
-    int iCanvasSize = resolution.first*resolution.second * 3 ;
-#ifdef ESP_PLATFORM
-    if (iCanvasSize < heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM)) {
-      _gif.pFrameBuffer = static_cast<unsigned char *>(heap_caps_malloc(_gif.iCanvasWidth * _gif.iCanvasHeight * 3,
-                                                                        MALLOC_CAP_SPIRAM));
-    } else {
-      _gif.pFrameBuffer = static_cast<unsigned char *>(heap_caps_malloc(_gif.iCanvasWidth * (_gif.iCanvasHeight + 3),
-                                                                        MALLOC_CAP_SPIRAM));
+    _gif.pFrameBuffer = static_cast<unsigned char *>(malloc(_gif.iCanvasWidth * _gif.iCanvasHeight * 3));
+    if (_gif.pFrameBuffer == nullptr) {
+      _gif.pFrameBuffer = static_cast<unsigned char *>(malloc(_gif.iCanvasWidth * (_gif.iCanvasHeight + 3)));
       _gif.pfnDraw = GIFDraw;
     }
-#else
-    _gif.pFrameBuffer = (unsigned char *)malloc(iCanvasSize);
-#endif
     if (_gif.pFrameBuffer == nullptr) {
       _gif.iError = GIF_ERROR_MEMORY;
       return -1;
