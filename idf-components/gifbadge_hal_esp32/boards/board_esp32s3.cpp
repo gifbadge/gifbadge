@@ -55,8 +55,11 @@ void esp32s3::BootInfo() {
   const esp_partition_t *running = esp_ota_get_running_partition();
 
   LOGI(TAG, "Total Application Partitions: %d", esp_ota_get_app_partition_count());
-  LOGI(TAG, "Running partition type %d subtype %d (offset 0x%08" PRIx32 ")",
-       running->type, running->subtype, running->address);
+  LOGI(TAG,
+       "Running partition type %d subtype %d (offset 0x%08" PRIx32 ")",
+       running->type,
+       running->subtype,
+       running->address);
 
   esp_app_desc_t boot_app_info;
   if (esp_ota_get_partition_description(configured, &boot_app_info) == ESP_OK) {
@@ -256,8 +259,8 @@ void esp32s3::OtaInstallTask(void *arg) {
   LOGI(TAG, "Prepare to restart system!");
   board->Reset();
 }
-  size_t esp32s3::MemorySize() {
-    return esp_psram_get_size();
+size_t esp32s3::MemorySize() {
+  return esp_psram_get_size();
 }
 }
 
@@ -411,23 +414,21 @@ void tud_dfu_detach_cb(void) {
 
 #endif
 
-char* lltoa(long long val, int base){
-
+char *lltoa(long long val, int base) {
   static char buf[64] = {0};
 
   int i = 62;
   int sign = (val < 0);
-  if(sign) val = -val;
+  if (sign) val = -val;
 
-  if(val == 0) return "0";
+  if (val == 0) return "0";
 
-  for(; val && i ; --i, val /= base) {
+  for (; val && i; --i, val /= base) {
     buf[i] = "0123456789abcdef"[val % base];
   }
 
-  if(sign) {
+  if (sign) {
     buf[i--] = '-';
   }
-  return &buf[i+1];
-
+  return &buf[i + 1];
 }
