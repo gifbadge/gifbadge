@@ -221,7 +221,7 @@ void esp32s3::OtaInstallTask(void *arg) {
     LOGI(TAG, "%%%d", percent);
     board->_ota_status = percent;
 
-    err = esp_ota_write(update_handle, (const void *) ota_buffer, bytes_read);
+    err = esp_ota_write(update_handle, ota_buffer, bytes_read);
     if (err != ESP_OK) {
       ESP_LOGE(TAG, "esp_ota_write failed (%s)!", esp_err_to_name(err));
       esp_ota_abort(update_handle);
@@ -390,7 +390,7 @@ uint16_t tud_dfu_upload_cb(uint8_t alt, uint16_t block_num, uint8_t *data, uint1
 
   LOGI(TAG, "Upload BlockNum %u of length %u", alt, block_num, length);
 
-  uint16_t const xfer_len = (uint16_t) strlen(upload_image[alt]);
+  auto const xfer_len = static_cast<uint16_t>(strlen(upload_image[alt]));
   memcpy(data, upload_image[alt], xfer_len);
 
   return xfer_len;
