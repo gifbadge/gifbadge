@@ -6,8 +6,6 @@
 #include "ui/menu.h"
 #include "display.h"
 
-#include "ota.h"
-
 #include "hw_init.h"
 #include "ui/usb_connected.h"
 #include "input.h"
