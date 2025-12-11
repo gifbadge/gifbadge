@@ -81,6 +81,15 @@ bool esp32::s3::full::v0_2v0_4::StorageReady() {
   return checkSdState(_io_expander);
 }
 
+//Work Around for broken USB connection detection
+IRAM_ATTR void vbusISR(void *) {
+  if (gpio_get_level(GPIO_NUM_0)) {
+    esp_rom_gpio_connect_in_signal(GPIO_MATRIX_CONST_ONE_INPUT, USB_SRP_BVALID_IN_IDX, false);
+  } else {
+    esp_rom_gpio_connect_in_signal(GPIO_MATRIX_CONST_ZERO_INPUT, USB_SRP_BVALID_IN_IDX, false);
+  }
+}
+
 void esp32::s3::full::v0_2v0_4::LateInit() {
  buffer = heap_caps_malloc(480 * 480 + 0x6100, MALLOC_CAP_INTERNAL);
   _config = new hal::config::esp32s3::Config_NVS();
@@ -138,7 +147,7 @@ void esp32::s3::full::v0_2v0_4::LateInit() {
   gpio_config(&vbus_config);
 
   if (checkSdState(_io_expander)) {
-    mount(GPIO_NUM_40, GPIO_NUM_41, GPIO_NUM_39, GPIO_NUM_38, GPIO_NUM_44, GPIO_NUM_42, GPIO_NUM_NC, 4, GPIO_NUM_0);
+    mount(GPIO_NUM_40, GPIO_NUM_41, GPIO_NUM_39, GPIO_NUM_38, GPIO_NUM_44, GPIO_NUM_42, GPIO_NUM_NC, 4, GPIO_NUM_NC);
   }
 
   sdState = checkSdState(_io_expander);
@@ -153,6 +162,11 @@ void esp32::s3::full::v0_2v0_4::LateInit() {
   ESP_ERROR_CHECK(esp_timer_create(&checkSdTimerArgs, &sdTimer));
   ESP_ERROR_CHECK(esp_timer_start_periodic(sdTimer, 500 * 1000));
   _vbus = new hal::vbus::esp32s3::b2_1_v0_2v0_4_vbus(GPIO_NUM_0, _io_expander, 8);
+
+  //Work Around for broken USB connection detection
+  gpio_install_isr_service(ESP_INTR_FLAG_EDGE);
+  gpio_isr_handler_add(GPIO_NUM_0, vbusISR, this);
+  vbusISR(nullptr);
 }
 hal::vbus::Vbus *esp32::s3::full::v0_2v0_4::GetVbus() {
   return _vbus;
