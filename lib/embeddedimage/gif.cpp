@@ -9,6 +9,7 @@
 #define PICO_BUILD
 #include <AnimatedGIF.h>
 // #define ALLOWS_UNALIGNED
+#include <esp_heap_caps.h>
 #include <esp_log.h>
 #include <gif.inl>
 #include <filebuffer.h>
@@ -185,9 +186,13 @@ int image::GIF::Open(const char *path, void *buffer) {
     if (buffer) {
       _gif.pTurboBuffer = static_cast<uint8_t *>(buffer);
     }
+    else {
+      printf("Turbo Buffer is null\n");
+    }
 
     _gif.pFrameBuffer = static_cast<unsigned char *>(malloc(_gif.iCanvasWidth * _gif.iCanvasHeight * 3));
     if (_gif.pFrameBuffer == nullptr) {
+      printf("Malloc full sized buffer failed. Falling back to row buffer\n");
       _gif.pFrameBuffer = static_cast<unsigned char *>(malloc(_gif.iCanvasWidth * (_gif.iCanvasHeight + 3)));
       _gif.pfnDraw = GIFDraw;
     }
