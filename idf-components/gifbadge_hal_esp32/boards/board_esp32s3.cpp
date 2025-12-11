@@ -414,7 +414,7 @@ void tud_dfu_detach_cb(void) {
 
 #endif
 
-char *lltoa(long long val, int base) {
+const char *lltoa(long long val, int base) {
   static char buf[64] = {0};
 
   int i = 62;

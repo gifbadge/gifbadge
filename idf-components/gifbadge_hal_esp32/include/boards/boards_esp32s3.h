@@ -41,4 +41,4 @@ class esp32s3 : public Board {
 };
 }
 
-char *lltoa(long long val, int base);
+const char *lltoa(long long val, int base);
