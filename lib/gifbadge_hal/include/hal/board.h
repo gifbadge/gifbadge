@@ -237,6 +237,12 @@ class Board {
    */
   virtual WakeupSource BootReason() {return WakeupSource::KEY;};
 
+  /**
+ * The amount of the memory available for use on this board
+ * @return amount of memory in bytes
+ */
+  virtual size_t MemorySize() { return 4*1024*1024;};
+
 };
 }
 

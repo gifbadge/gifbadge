@@ -20,8 +20,10 @@
 
 namespace Boards::esp32::s3 {
 class esp32s3 : public Boards::Board {
-public:
- esp32s3();
+ public:
+  size_t MemorySize() override;
+
+  esp32s3();
  ~esp32s3() override = default;
 
  void PmLock() override;

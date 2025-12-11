@@ -8,6 +8,7 @@
 #include "esp_efuse_custom_table.h"
 #include "esp_app_format.h"
 #include "esp_ota.h"
+#include "esp_psram.h"
 #include "../../../main/include/hw_init.h"
 
 static const char *TAG = "esp32::s3::esp32s3";
@@ -34,9 +35,10 @@ hal::config::Config *esp32::s3::esp32s3::GetConfig() {
 }
 
 void esp32::s3::esp32s3::DebugInfo() {
-//  esp_pm_dump_locks(stdout);
-//  heap_caps_print_heap_info(MALLOC_CAP_INTERNAL);
-//  heap_caps_print_heap_info(MALLOC_CAP_SPIRAM);
+  ESP_LOGI(TAG, "Free Heap: %d", esp_get_free_heap_size());
+  ESP_LOGI(TAG, "Free PSRAM: %d", heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
+  ESP_LOGI(TAG, "Free Internal: %d", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
+  ESP_LOGI(TAG, "Largest Free Block for DMA: %d", heap_caps_get_largest_free_block(MALLOC_CAP_DMA));
 }
 
 const char *esp32::s3::esp32s3::SwVersion() {
@@ -253,6 +255,9 @@ void esp32::s3::esp32s3::OtaInstallTask(void *arg) {
   }
   LOGI(TAG, "Prepare to restart system!");
   board->Reset();
+}
+  size_t esp32::s3::esp32s3::MemorySize() {
+    return esp_psram_get_size();
 }
 }
 
