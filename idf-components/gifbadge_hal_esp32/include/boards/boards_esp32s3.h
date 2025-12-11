@@ -19,7 +19,7 @@
 
 
 namespace Boards::esp32::s3 {
-class esp32s3 : public Boards::Board {
+class esp32s3 : public Board {
  public:
   size_t MemorySize() override;
 

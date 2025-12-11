@@ -191,8 +191,8 @@ void esp32s3::OtaInstallTask(void *arg) {
        update_partition->subtype,
        update_partition->address);
 
-  Boards::OtaError validation_err = board->OtaValidate();
-  if (validation_err != Boards::OtaError::OK) {
+  OtaError validation_err = board->OtaValidate();
+  if (validation_err != OtaError::OK) {
     ESP_LOGE(TAG, "validate failed with %d", (int) validation_err);
     vTaskDelete(nullptr);
   }
