@@ -86,7 +86,7 @@ static void usbCall(tinyusb_msc_storage_handle_t handle, tinyusb_msc_event_t *e,
 
 
 
-extern "C" void app_main(void) {
+extern "C" [[noreturn]] void app_main(void) {
   Boards::Board *board = get_board();
   switch(board->BootReason()){
 
