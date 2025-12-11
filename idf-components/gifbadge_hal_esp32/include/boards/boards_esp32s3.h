@@ -32,7 +32,7 @@ class esp32s3 : public Board {
  protected:
  esp_pm_lock_handle_t pmLockHandle = nullptr;
  hal::config::esp32s3::Config_NVS *_config;
- char serial[18];
+ char serial[18] = {0};
   tinyusb_msc_storage_handle_t storage_handle = nullptr;
   char storage_base_path[6] = "/data";
 
