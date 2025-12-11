@@ -254,7 +254,7 @@ static image::Image *openFile(const char *path, hal::display::Display *display) 
       return new image::TooLargeImage(display->size, path);
     }
   } else {
-    return new image::ErrorImage(display->size, "Could not Display\n%s", path);
+    return new image::ErrorImage(display->size, "Unsupported File\n%s", path);
   }
   newImage = true;
   frame_count = 0;
