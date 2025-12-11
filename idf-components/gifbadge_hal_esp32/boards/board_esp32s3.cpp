@@ -13,44 +13,44 @@
 
 static const char *TAG = "esp32::s3::esp32s3";
 
-namespace Boards {
-esp32::s3::esp32s3::esp32s3() {
+namespace Boards::esp32::s3 {
+esp32s3::esp32s3() {
   esp_pm_lock_create(ESP_PM_CPU_FREQ_MAX, 0, "Board Lock", &pmLockHandle);
   _config = new hal::config::esp32s3::Config_NVS();
 }
-void esp32::s3::esp32s3::Reset() {
+void esp32s3::Reset() {
   esp_restart();
 }
 
-void esp32::s3::esp32s3::PmLock() {
+void esp32s3::PmLock() {
   esp_pm_lock_acquire(pmLockHandle);
 }
 
-void esp32::s3::esp32s3::PmRelease() {
+void esp32s3::PmRelease() {
   esp_pm_lock_release(pmLockHandle);
 }
 
-hal::config::Config *esp32::s3::esp32s3::GetConfig() {
+hal::config::Config *esp32s3::GetConfig() {
   return _config;
 }
 
-void esp32::s3::esp32s3::DebugInfo() {
+void esp32s3::DebugInfo() {
   ESP_LOGI(TAG, "Free Heap: %d", esp_get_free_heap_size());
   ESP_LOGI(TAG, "Free PSRAM: %d", heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
   ESP_LOGI(TAG, "Free Internal: %d", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
   ESP_LOGI(TAG, "Largest Free Block for DMA: %d", heap_caps_get_largest_free_block(MALLOC_CAP_DMA));
 }
 
-const char *esp32::s3::esp32s3::SwVersion() {
+const char *esp32s3::SwVersion() {
   return esp_app_get_description()->version;
 }
-char *esp32::s3::esp32s3::SerialNumber() {
+char *esp32s3::SerialNumber() {
   uint8_t mac[6] = {0};
   esp_efuse_mac_get_default(mac);
   sprintf(serial, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
   return serial;
 }
-void esp32::s3::esp32s3::BootInfo() {
+void esp32s3::BootInfo() {
   const esp_partition_t *configured = esp_ota_get_boot_partition();
   const esp_partition_t *running = esp_ota_get_running_partition();
 
@@ -67,7 +67,7 @@ void esp32::s3::esp32s3::BootInfo() {
     LOGI(TAG, "Running firmware version: %s", running_app_info.version);
   }
 }
-bool esp32::s3::esp32s3::OtaCheck() {
+bool esp32s3::OtaCheck() {
   struct stat buffer{};
   if (stat("/data/ota.bin", &buffer) == 0) {
     LOGI("TAG", "OTA File Exists");
@@ -78,7 +78,7 @@ bool esp32::s3::esp32s3::OtaCheck() {
 
 #define OTA_HEADER_SIZE (sizeof(esp_image_header_t)+ sizeof(esp_image_segment_header_t) + sizeof(esp_app_desc_t) + sizeof(esp_custom_app_desc_t))
 
-OtaError esp32::s3::esp32s3::OtaHeaderValidate(uint8_t const *data) {
+OtaError esp32s3::OtaHeaderValidate(uint8_t const *data) {
   OtaError ret = OtaError::OK;
   auto *new_header_info = static_cast<esp_image_header_t *>(malloc(sizeof(esp_image_header_t)));
   auto *new_app_info = static_cast<esp_app_desc_t *>(malloc(sizeof(esp_app_desc_t)));
@@ -124,7 +124,7 @@ OtaError esp32::s3::esp32s3::OtaHeaderValidate(uint8_t const *data) {
   return ret;
 }
 
-OtaError esp32::s3::esp32s3::OtaValidate() {
+OtaError esp32s3::OtaValidate() {
   OtaError ret = OtaError::OK;
   auto *ota_data = static_cast<uint8_t *>(malloc(OTA_HEADER_SIZE));
   FILE *ota_file = fopen("/data/ota.bin", "r");
@@ -140,7 +140,7 @@ OtaError esp32::s3::esp32s3::OtaValidate() {
   return ret;
 }
 
-void esp32::s3::esp32s3::OtaInstall() {
+void esp32s3::OtaInstall() {
   if (!_ota_task_handle) {
     //Free the turbo buffer, if present, so we are sure to have enough stack for the update task
     if (TurboBuffer()) {
@@ -150,11 +150,11 @@ void esp32::s3::esp32s3::OtaInstall() {
     xTaskCreate(OtaInstallTask, "ota", 4000, this, 2, &_ota_task_handle);
   }
 }
-int esp32::s3::esp32s3::OtaStatus() {
+int esp32s3::OtaStatus() {
   return _ota_status;
 }
 
-void esp32::s3::esp32s3::OtaInstallTask(void *arg) {
+void esp32s3::OtaInstallTask(void *arg) {
   esp_err_t err;
   auto *board = static_cast<esp32s3 *>(arg);
 
@@ -256,7 +256,7 @@ void esp32::s3::esp32s3::OtaInstallTask(void *arg) {
   LOGI(TAG, "Prepare to restart system!");
   board->Reset();
 }
-  size_t esp32::s3::esp32s3::MemorySize() {
+  size_t esp32s3::MemorySize() {
     return esp_psram_get_size();
 }
 }
