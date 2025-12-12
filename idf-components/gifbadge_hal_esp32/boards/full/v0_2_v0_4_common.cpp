@@ -82,12 +82,8 @@ bool esp32::s3::full::v0_2v0_4::StorageReady() {
 }
 
 //Work Around for broken USB connection detection
-IRAM_ATTR void vbusISR(void *) {
-  if (gpio_get_level(GPIO_NUM_0)) {
-    esp_rom_gpio_connect_in_signal(GPIO_MATRIX_CONST_ONE_INPUT, USB_SRP_BVALID_IN_IDX, false);
-  } else {
-    esp_rom_gpio_connect_in_signal(GPIO_MATRIX_CONST_ZERO_INPUT, USB_SRP_BVALID_IN_IDX, false);
-  }
+void vbusISR(void *) {
+  esp32::s3::esp32s3::VbusHandler(gpio_get_level(GPIO_NUM_0));
 }
 
 void esp32::s3::full::v0_2v0_4::LateInit() {

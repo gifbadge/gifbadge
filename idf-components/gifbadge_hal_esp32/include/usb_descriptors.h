@@ -1,11 +1,4 @@
-#include "boards/esp32s3_usb.h"
-#include <tinyusb.h>
-#if CFG_TUD_CDC
-#include <tinyusb_cdc_acm.h>
-#endif
-
-#include "../../../main/include/hw_init.h"
-
+#pragma once
 
 #define _PID_MAP(itf, n) ((CFG_TUD_##itf) << (n))
 #define USB_TUSB_PID (0x4000 | _PID_MAP(CDC, 0) | _PID_MAP(MSC, 1) | _PID_MAP(HID, 2) | \
@@ -146,54 +139,3 @@ constexpr uint8_t descriptor_fs_cfg[] = {
 
   TUD_DFU_DESCRIPTOR(ITF_NUM_DFU_MODE, 1, STRID_DFU_INTERFACE, DFU_FUNC_ATTRS, 1000, CFG_TUD_DFU_XFER_BUFSIZE)
 };
-
-esp_err_t esp32s3_usb_init(gpio_num_t usb_sense) {
-#if CFG_TUD_CDC
-
-  constexpr tinyusb_config_cdcacm_t acm_cfg = {
-    .cdc_port = TINYUSB_CDC_ACM_0,
-    .callback_rx = nullptr,
-    .callback_rx_wanted_char = nullptr,
-    .callback_line_state_changed = nullptr,
-    .callback_line_coding_changed = nullptr
-};
-  tinyusb_cdcacm_init(&acm_cfg);
-#endif
-
-  int str_count = 0;
-
-  const char *descriptor_str[] = {
-    // array of pointer to string descriptors
-    (char[]){0x09, 0x04},                // 0: is supported language is English (0x0409)
-    "GifBadge", // 1: Manufacturer
-    get_board()->Name(),      // 2: Product
-    get_board()->SerialNumber(),       // 3: Serials, should use chip ID
-
-  #if CONFIG_TINYUSB_CDC_ENABLED
-    CONFIG_TINYUSB_DESC_CDC_STRING,          // 4: CDC Interface
-  #endif
-
-  #if CONFIG_TINYUSB_MSC_ENABLED
-    "GifBadge Storage",          // 5: MSC Interface
-  #endif
-    "FLASH",
-    nullptr                                     // NULL: Must be last. Indicates end of array
-  };
-
-  while (descriptor_str[++str_count] != nullptr){}
-
-  const tinyusb_config_t tusb_cfg =
-  {
-    .port = TINYUSB_PORT_FULL_SPEED_0,
-    .phy = {.skip_setup = false, .self_powered = true, .vbus_monitor_io = usb_sense},
-    .task = {.size = 4096, .priority = 5, .xCoreID = 0}, .descriptor = {
-      .device = &descriptor_dev,
-      .qualifier = nullptr,
-      .string = descriptor_str,
-      .string_count = str_count,
-      .full_speed_config = descriptor_fs_cfg,
-      .high_speed_config = nullptr,
-    }, .event_cb = {}, .event_arg = nullptr
-  };
-  return tinyusb_driver_install(&tusb_cfg);
-}

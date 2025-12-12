@@ -167,7 +167,7 @@ void esp32::s3::full::v0_6::LateInit() {
     _card_detect->GpioInt(hal::gpio::GpioIntDirection::FALLING, esp_restart);
   }
 
-  _pmic->VbusConnectedCallback(VbusCallback);
+  _pmic->VbusConnectedCallback(VbusHandler);
 
 
 }
@@ -190,14 +190,6 @@ hal::charger::Charger *esp32::s3::full::v0_6::GetCharger() {
 void esp32::s3::full::v0_6::DebugInfo() {
   _pmic->DebugLog();
   esp32s3_sdmmc::DebugInfo();
-}
-void esp32::s3::full::v0_6::VbusCallback(bool state) {
-  LOGI(TAG, "Vbus connected: %s", state ? "True" : "False");
-  if (state) {
-    esp_rom_gpio_connect_in_signal(GPIO_MATRIX_CONST_ONE_INPUT, USB_SRP_BVALID_IN_IDX, false);
-  } else {
-    esp_rom_gpio_connect_in_signal(GPIO_MATRIX_CONST_ZERO_INPUT, USB_SRP_BVALID_IN_IDX, false);
-  }
 }
 char *esp32::s3::full::v0_6::SerialNumber() {
   uint64_t sn;

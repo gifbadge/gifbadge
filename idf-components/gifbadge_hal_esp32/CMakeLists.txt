@@ -8,7 +8,6 @@ if (ESP_PLATFORM)
             "boards/board_data.c"
             "boards/board_esp32s3.cpp"
             "boards/board_esp32s3_sdmmc.cpp"
-            "boards/esp32s3_usb.cpp"
             "boards/mini/v0.cpp"
             "boards/full/v0_2_v0_4_common.cpp"
             "boards/full/v0_6.cpp"

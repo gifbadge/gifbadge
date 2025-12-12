@@ -15,8 +15,6 @@
 #include <tinyusb_console.h>
 #endif
 
-#include <boards/esp32s3_usb.h>
-
 #include "drivers/backlight_ledc.h"
 #include "hal_usb.h"
 #include "tinyusb_msc.h"

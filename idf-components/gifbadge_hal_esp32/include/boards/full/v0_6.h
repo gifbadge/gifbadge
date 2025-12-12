@@ -56,6 +56,5 @@ class v0_6 : public Boards::esp32::s3::esp32s3_sdmmc {
   hal::gpio::Gpio *_card_detect = nullptr;
   hal::pmic::esp32s3::PmicNpm1300Led *_vbus_led = nullptr;
   hal::pmic::esp32s3::PmicNpm1300Led *_charge_led = nullptr;
-  static void VbusCallback(bool state);
 };
 }

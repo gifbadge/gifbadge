@@ -2,6 +2,8 @@
 #include <esp_pm.h>
 #include <esp_mac.h>
 #include <esp_ota_ops.h>
+#include <tinyusb.h>
+#include <soc/gpio_sig_map.h>
 #include <sys/stat.h>
 #include "boards/boards_esp32s3.h"
 #include "log.h"
@@ -10,6 +12,10 @@
 #include "esp_ota.h"
 #include "esp_psram.h"
 #include "../../../main/include/hw_init.h"
+#include "usb_descriptors.h"
+#if CFG_TUD_CDC
+#include <tinyusb_cdc_acm.h>
+#endif
 
 static const char *TAG = "esp32::s3::esp32s3";
 
@@ -262,6 +268,65 @@ void esp32s3::OtaInstallTask(void *arg) {
 size_t esp32s3::MemorySize() {
   return esp_psram_get_size();
 }
+esp_err_t esp32s3::esp32s3_usb_init(gpio_num_t usb_sense) {
+#if CFG_TUD_CDC
+
+  constexpr tinyusb_config_cdcacm_t acm_cfg = {
+    .cdc_port = TINYUSB_CDC_ACM_0,
+    .callback_rx = nullptr,
+    .callback_rx_wanted_char = nullptr,
+    .callback_line_state_changed = nullptr,
+    .callback_line_coding_changed = nullptr
+};
+  tinyusb_cdcacm_init(&acm_cfg);
+#endif
+
+  int str_count = 0;
+
+  const char *descriptor_str[] = {
+    // array of pointer to string descriptors
+    (char[]){0x09, 0x04},                // 0: is supported language is English (0x0409)
+    "GifBadge", // 1: Manufacturer
+    Name(),      // 2: Product
+    SerialNumber(),       // 3: Serials
+
+  #if CONFIG_TINYUSB_CDC_ENABLED
+    CONFIG_TINYUSB_DESC_CDC_STRING,          // 4: CDC Interface
+  #endif
+
+  #if CONFIG_TINYUSB_MSC_ENABLED
+    "GifBadge Storage",          // 5: MSC Interface
+  #endif
+    "FLASH",
+    nullptr                                     // NULL: Must be last. Indicates end of array
+  };
+
+  while (descriptor_str[++str_count] != nullptr){}
+
+  const tinyusb_config_t tusb_cfg =
+  {
+    .port = TINYUSB_PORT_FULL_SPEED_0,
+    .phy = {.skip_setup = false, .self_powered = true, .vbus_monitor_io = usb_sense},
+    .task = {.size = 4096, .priority = 5, .xCoreID = 0}, .descriptor = {
+      .device = &descriptor_dev,
+      .qualifier = nullptr,
+      .string = descriptor_str,
+      .string_count = str_count,
+      .full_speed_config = descriptor_fs_cfg,
+      .high_speed_config = nullptr,
+    }, .event_cb = {}, .event_arg = nullptr
+  };
+  return tinyusb_driver_install(&tusb_cfg);
+}
+
+void esp32s3::VbusHandler(bool state) {
+  if (state) {
+    esp_rom_gpio_connect_in_signal(GPIO_MATRIX_CONST_ONE_INPUT, USB_SRP_BVALID_IN_IDX, false);
+  } else {
+    esp_rom_gpio_connect_in_signal(GPIO_MATRIX_CONST_ZERO_INPUT, USB_SRP_BVALID_IN_IDX, false);
+  }
+}
+
 }
 
 #ifdef CONFIG_TINYUSB_DFU_MODE_DFU
