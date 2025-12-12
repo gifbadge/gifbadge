@@ -2,7 +2,6 @@
 
 #include <esp_pm.h>
 #include "log.h"
-#include <driver/sdmmc_defs.h>
 #include "esp_io_expander.h"
 #include "drivers/keys_esp_io_expander.h"
 #include "esp_io_expander_tca95xx_16bit.h"
