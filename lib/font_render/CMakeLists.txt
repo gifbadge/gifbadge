@@ -8,6 +8,10 @@ if (NOT ESP_PLATFORM)
     include(CTest)
     add_subdirectory(test)
 #    target_compile_options(FontRender PUBLIC -g -fprofile-arcs -ftest-coverage)
+else ()
+    set(ESP_COMPILE_OPTIONS -ffunction-sections -fdata-sections -O2 -Wwrite-strings -fno-jump-tables -fno-tree-switch-conversion -fstrict-volatile-bitfields -mdisable-hardware-atomics -gdwarf-4 -ggdb $<$<COMPILE_LANGUAGE:CXX>:-fno-exceptions -fno-rtti -fuse-cxa-atexit>)
+    target_compile_options(FontRender PUBLIC ${ESP_COMPILE_OPTIONS})
+    target_link_options(FontRender PUBLIC ${ESP_COMPILE_OPTIONS})
 endif()
 
 
