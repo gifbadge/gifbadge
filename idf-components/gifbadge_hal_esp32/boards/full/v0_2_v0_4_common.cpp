@@ -105,7 +105,7 @@ void esp32::s3::full::v0_2v0_4::LateInit() {
 
   esp_io_expander_set_dir(_io_expander, IO_EXPANDER_PIN_NUM_2, IO_EXPANDER_OUTPUT);
   esp_io_expander_set_level(_io_expander, IO_EXPANDER_PIN_NUM_2, 0);
-  vTaskDelay(pdMS_TO_TICKS(10));
+  vTaskDelay(50/portTICK_PERIOD_MS);
   esp_io_expander_set_level(_io_expander, IO_EXPANDER_PIN_NUM_2, 1);
 
   spi_line_config_t line_config = {
