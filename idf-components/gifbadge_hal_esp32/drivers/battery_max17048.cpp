@@ -2,14 +2,25 @@
 
 #include "log.h"
 #include <esp_timer.h>
+#include <driver/gpio.h>
+#include <driver/i2c_master.h>
 
 static const char *TAG = "battery_max17048";
 
-hal::battery::esp32s3::battery_max17048::battery_max17048(I2C *i2c, gpio_num_t vbus_pin)
-    : _i2c(i2c), _vbus_pin(vbus_pin) {
-  uint8_t data[2];
-  _i2c->read_reg(0x36, 0x08, data, 2);
-  LOGI(TAG, "MAX17048 Version %u %u", data[0], data[1]);
+hal::battery::esp32s3::battery_max17048::battery_max17048(i2c_master_bus_handle_t i2c, gpio_num_t vbus_pin)
+    : i2c_master(i2c), _vbus_pin(vbus_pin) {
+  i2c_device_config_t dev_cfg = {
+    .dev_addr_length = I2C_ADDR_BIT_LEN_7,
+    .device_address = 0x36,
+    .scl_speed_hz = 400000,
+    .scl_wait_us = 0,
+    .flags = {.disable_ack_check = true} //MAX17048 may be powered off of battery VDD, and may be unstable, resulting in NAKs
+  };
+  ESP_ERROR_CHECK(i2c_master_bus_add_device(i2c, &dev_cfg, &i2c_handle));
+  uint8_t data_in[2];
+  uint8_t data_out = 0x08;
+  ESP_ERROR_CHECK(i2c_master_transmit_receive(i2c_handle, &data_out, 1 ,data_in, 2, 100));
+  LOGI(TAG, "MAX17048 Version %u %u", data_in[0], data_in[1]);
   const esp_timer_create_args_t battery_timer_args = {
       .callback = [](void *params) {
         auto bat = (battery_max17048 *) params;
@@ -27,13 +38,16 @@ hal::battery::esp32s3::battery_max17048::battery_max17048(I2C *i2c, gpio_num_t v
 }
 
 void hal::battery::esp32s3::battery_max17048::poll() {
-  uint8_t d[2];
-  _i2c->read_reg(0x36, 0x02, d, 2);
-  _voltage = ((static_cast<uint16_t>(d[0] << 8) | d[1]) * 78.125) / 1000000;
-  _i2c->read_reg(0x36, 0x04, d, 2);
-  _soc = static_cast<int>((static_cast<uint16_t>(d[0] << 8) | d[1]) / 256.00);
-  _i2c->read_reg(0x36, 0x16, d, 2);
-  _rate = (static_cast<int16_t>(d[0] << 8) | d[1]) * 0.208;
+  uint8_t data_in[2];
+  uint8_t data_out = 0x02;
+  ESP_ERROR_CHECK(i2c_master_transmit_receive(i2c_handle, &data_out, 1 ,data_in, 2, 100));
+  _voltage = ((static_cast<uint16_t>(data_in[0] << 8) | data_in[1]) * 78.125) / 1000000;
+  data_out = 0x04;
+  ESP_ERROR_CHECK(i2c_master_transmit_receive(i2c_handle, &data_out, 1 ,data_in, 2, 100));
+  _soc = static_cast<int>((static_cast<uint16_t>(data_in[0] << 8) | data_in[1]) / 256.00);
+  data_out = 0x16;
+  ESP_ERROR_CHECK(i2c_master_transmit_receive(i2c_handle, &data_out, 1 ,data_in, 2, 100));
+  _rate = (static_cast<int16_t>(data_in[0] << 8) | data_in[1]) * 0.208;
 }
 
 double hal::battery::esp32s3::battery_max17048::BatteryVoltage() {
@@ -51,8 +65,8 @@ void hal::battery::esp32s3::battery_max17048::BatteryRemoved() {
 void hal::battery::esp32s3::battery_max17048::BatteryInserted() {
   // Quickstart. so the MAX17048 restarts it's SOC algorythm.
   //Prevents erroneous readings if battery is swapped while charging
-  uint8_t cmd[] = {0x80, 0x00};
-  _i2c->write_reg(0x36, 0x06, cmd, 2);
+  uint8_t cmd[] = {0x06, 0x80, 0x00};
+  ESP_ERROR_CHECK(i2c_master_transmit(i2c_handle, cmd, sizeof(cmd) , 100));
   present = true;
 }
 

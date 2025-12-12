@@ -4,7 +4,7 @@
 
 #include <hal/battery.h>
 #include <esp_timer.h>
-#include "i2c.h"
+#include <driver/i2c_types.h>
 #include "hal/keys.h"
 #include "npmx_backend.h"
 #include "npmx_instance.h"
@@ -67,7 +67,7 @@ class PmicNpm1300Led : public gpio::Gpio {
 
 class PmicNpm1300 final : public hal::battery::Battery, public hal::charger::Charger, public hal::vbus::Vbus {
  public:
-  explicit PmicNpm1300(I2C *, gpio_num_t gpio_int);
+  explicit PmicNpm1300(i2c_master_bus_handle_t i2c, gpio_num_t gpio_int);
   ~PmicNpm1300() final = default;
 
   void Init();
@@ -132,7 +132,7 @@ class PmicNpm1300 final : public hal::battery::Battery, public hal::charger::Cha
   void DebugLog();
 
  private:
-  I2C *_i2c;
+  i2c_master_dev_handle_t i2c_handle = nullptr;
   double _voltage = 0;
   int _soc = 0;
   double _rate = 0;

@@ -1,6 +1,8 @@
 #include "boards/full/v0_2_v0_4_common.h"
 
 #include <esp_pm.h>
+#include <driver/i2c_master.h>
+
 #include "log.h"
 #include "esp_io_expander.h"
 #include "drivers/keys_esp_io_expander.h"
@@ -88,17 +90,26 @@ void vbusISR(void *) {
 void esp32::s3::full::v0_2v0_4::LateInit() {
  buffer = heap_caps_malloc(480 * 480 + 0x6100, MALLOC_CAP_INTERNAL);
   _config = new hal::config::esp32s3::Config_NVS();
-  _i2c = new I2C(I2C_NUM_0, 47, 48, 100 * 1000, false);
-  _battery = new hal::battery::esp32s3::battery_max17048(_i2c, GPIO_NUM_0);
+  i2c_master_bus_config_t i2c_mst_config = {
+    .i2c_port = I2C_NUM_0,
+    .sda_io_num = GPIO_NUM_47,
+    .scl_io_num = GPIO_NUM_48,
+    .clk_source = I2C_CLK_SRC_RC_FAST,
+    .glitch_ignore_cnt = 7,
+    .flags = {.enable_internal_pullup = false},
+  };
+  ESP_ERROR_CHECK(i2c_new_master_bus(&i2c_mst_config, &bus_handle));
+  // _i2c = new I2C(I2C_NUM_0, GPIO_NUM_47, GPIO_NUM_48, 100 * 1000, false);
+  _battery = new hal::battery::esp32s3::battery_max17048(bus_handle, GPIO_NUM_0);
+
   /*G3, G4, G5, R1, R2, R3, R4, R5, B1, B2, B3, B4, B5, G0, G1, G2 */
   std::array<int, 16> rgb = {11, 12, 13, 3, 4, 5, 6, 7, 14, 15, 16, 17, 18, 8, 9, 10};
 //    uint8_t data = IO_EXPANDER_PIN_NUM_3;
 //    _i2c->write_reg(ESP_IO_EXPANDER_I2C_TCA9555_ADDRESS_000, 0x04, &data, 1);
-  esp_io_expander_new_i2c_tca95xx_16bit(I2C_NUM_0, ESP_IO_EXPANDER_I2C_TCA9555_ADDRESS_000, &_io_expander);
+  esp_io_expander_new_i2c_tca95xx_16bit(bus_handle, ESP_IO_EXPANDER_I2C_TCA9555_ADDRESS_000, &_io_expander);
   //Turn of the shutdown pin output on the IO Expander before setting the direction to output.
   //Failure to do so results in turning the device off
-  uint8_t data = 0xF7;
-  _i2c->write_reg(ESP_IO_EXPANDER_I2C_TCA9555_ADDRESS_000, 0x02, &data, 1);
+  _io_expander->write_output_reg(_io_expander, 0xFFF7);
   esp_io_expander_set_dir(_io_expander, IO_EXPANDER_PIN_NUM_3, IO_EXPANDER_OUTPUT);
   esp_io_expander_set_level(_io_expander, IO_EXPANDER_PIN_NUM_3, 0);
 
@@ -122,11 +133,11 @@ void esp32::s3::full::v0_2v0_4::LateInit() {
                           IO_EXPANDER_PIN_NUM_14 | IO_EXPANDER_PIN_NUM_12 | IO_EXPANDER_PIN_NUM_13,
                           IO_EXPANDER_INPUT);
   esp_io_expander_print_state(_io_expander);
-  _keys = new hal::keys::esp32s3::keys_esp_io_expander(_io_expander, _i2c, 14, 12, 13);
+  _keys = new hal::keys::esp32s3::keys_esp_io_expander(_io_expander, 14, 12, 13);
 
   _backlight = new hal::backlight::esp32s3::backlight_ledc(GPIO_NUM_21, false, 0);
   _backlight->setLevel(_config->getBacklight() * 10);
-  _touch = new hal::touch::esp32s3::touch_ft5x06(_i2c);
+  _touch = new hal::touch::esp32s3::touch_ft5x06(bus_handle);
 
   //TODO: Check if we can use DFS with the RGB LCD
   esp_pm_config_t pm_config = {.max_freq_mhz = 240, .min_freq_mhz = 80, .light_sleep_enable = false};

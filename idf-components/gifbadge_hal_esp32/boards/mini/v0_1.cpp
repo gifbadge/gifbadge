@@ -4,6 +4,7 @@
 #include <esp_task_wdt.h>
 #include <esp_sleep.h>
 #include "boards/mini/v0_1.h"
+#include <driver/i2c_master.h>
 #include "drivers/display_gc9a01.h"
 #include "driver/gpio.h"
 #include "drivers/config_nvs.h"
@@ -91,8 +92,16 @@ const char *esp32::s3::mini::v0_1::Name() {
 
 void esp32::s3::mini::v0_1::LateInit() {
   // buffer = heap_caps_malloc(240 * 240 + 0x6100, MALLOC_CAP_INTERNAL);
-  _i2c = new I2C(I2C_NUM_0, 17, 18, 100 * 1000, false);
-  _battery = new hal::battery::esp32s3::battery_max17048(_i2c, GPIO_VBUS_DETECT);
+  i2c_master_bus_config_t i2c_mst_config = {
+    .i2c_port = I2C_NUM_0,
+    .sda_io_num = GPIO_NUM_17,
+    .scl_io_num = GPIO_NUM_18,
+    .clk_source = I2C_CLK_SRC_DEFAULT,
+    .glitch_ignore_cnt = 7,
+    .flags = {.enable_internal_pullup = false},
+  };
+  ESP_ERROR_CHECK(i2c_new_master_bus(&i2c_mst_config, &bus_handle));
+  _battery = new hal::battery::esp32s3::battery_max17048(bus_handle, GPIO_VBUS_DETECT);
   _battery->BatteryInserted(); //Battery not removable. So set this
   gpio_install_isr_service(0);
   _keys = new hal::keys::esp32s3::keys_gpio(GPIO_NUM_0, GPIO_NUM_2, GPIO_NUM_1);

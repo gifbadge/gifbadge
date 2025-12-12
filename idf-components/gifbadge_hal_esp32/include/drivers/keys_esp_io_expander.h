@@ -4,13 +4,11 @@
 #include <hal/keys.h>
 #include "esp_io_expander.h"
 #include <esp_timer.h>
-#include "i2c.h"
 
 namespace hal::keys::esp32s3 {
 class keys_esp_io_expander : public hal::keys::Keys {
  public:
   keys_esp_io_expander(esp_io_expander_handle_t io_expander,
-                       I2C *i2c,
                        int up,
                        int down,
                        int enter);
@@ -24,7 +22,6 @@ class keys_esp_io_expander : public hal::keys::Keys {
 
  private:
   esp_io_expander_handle_t _io_expander;
-  I2C *_i2c;
   int buttonConfig[KEY_MAX] = {};
   uint32_t lastLevels = 0;
 

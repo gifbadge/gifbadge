@@ -42,7 +42,7 @@ class v0_6 : public Boards::esp32::s3::esp32s3_sdmmc {
   void DebugInfo() override;
 
  protected:
-  I2C *_i2c;
+  i2c_master_bus_handle_t bus_handle = nullptr;
   hal::keys::esp32s3::KeysGeneric *_keys;
   hal::display::esp32s3::display_st7701s *_display;
   hal::backlight::esp32s3::backlight_ledc *_backlight;

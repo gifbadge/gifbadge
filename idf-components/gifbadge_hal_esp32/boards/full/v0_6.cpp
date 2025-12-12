@@ -5,6 +5,8 @@
 #include <driver/sdmmc_defs.h>
 #include <driver/rtc_io.h>
 #include <esp_sleep.h>
+#include <driver/i2c_master.h>
+
 #include "drivers/keys_esp_io_expander.h"
 #include "drivers/esp_io_expander_gpio.h"
 #include "esp_efuse_custom_table.h"
@@ -23,10 +25,21 @@ namespace Boards {
 esp32::s3::full::v0_6::v0_6() {
   _config = new hal::config::esp32s3::Config_NVS();
   gpio_install_isr_service(0);
-  _i2c = new I2C(I2C_NUM_0, 47, 48, 100 * 1000, false);
+
+  i2c_master_bus_config_t i2c_mst_config = {
+    .i2c_port = I2C_NUM_0,
+    .sda_io_num = GPIO_NUM_47,
+    .scl_io_num = GPIO_NUM_48,
+    .clk_source = I2C_CLK_SRC_DEFAULT,
+    .glitch_ignore_cnt = 7,
+    .flags = {.enable_internal_pullup = false},
+  };
+  ESP_ERROR_CHECK(i2c_new_master_bus(&i2c_mst_config, &bus_handle));
+
+  // _i2c = new I2C(I2C_NUM_0, 47, 48, 100 * 1000, false);
 
   //Initialize the PMIC, and start the battery charging
-  _pmic = new hal::pmic::esp32s3::PmicNpm1300(_i2c, GPIO_NUM_21);
+  _pmic = new hal::pmic::esp32s3::PmicNpm1300(bus_handle, GPIO_NUM_21);
 
   //Enable Battery charging
   _pmic->ChargeDisable();
@@ -117,7 +130,7 @@ void esp32::s3::full::v0_6::LateInit() {
   _pmic->Buck1Set(3300);
 
   _backlight = new hal::backlight::esp32s3::backlight_ledc(GPIO_NUM_0, true, 0);
-  _touch = new hal::touch::esp32s3::touch_ft5x06(_i2c);
+  _touch = new hal::touch::esp32s3::touch_ft5x06(bus_handle);
 
   _cs = _pmic->GpioGet(1);
   _cs->GpioConfig(hal::gpio::GpioDirection::OUT, hal::gpio::GpioPullMode::NONE);

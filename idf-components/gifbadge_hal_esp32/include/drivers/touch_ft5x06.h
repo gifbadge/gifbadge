@@ -1,8 +1,8 @@
 #pragma once
 #include <memory>
+#include <driver/i2c_types.h>
 
 #include <hal/touch.h>
-#include "i2c.h"
 
 #define FT5x06_DEVICE_MODE      (0x00)
 #define FT5x06_GESTURE_ID       (0x01)
@@ -62,12 +62,12 @@
 namespace hal::touch::esp32s3 {
 class touch_ft5x06 final : public hal::touch::Touch {
  public:
-  explicit touch_ft5x06(I2C *bus);
+  explicit touch_ft5x06(i2c_master_bus_handle_t bus);
   ~touch_ft5x06() override = default;
 
   std::pair<int16_t, int16_t> read() override;
  private:
-  I2C *_bus;
+  i2c_master_dev_handle_t i2c_handle = nullptr;
 };
 }
 
