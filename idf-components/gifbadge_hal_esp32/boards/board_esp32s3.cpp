@@ -393,7 +393,7 @@ void tud_dfu_download_cb(uint8_t alt, uint16_t block_num, uint8_t const *data, u
       return;
     }
 
-    err = esp_ota_begin(update_partition, 0, &update_handle);
+    err = esp_ota_begin(update_partition, OTA_WITH_SEQUENTIAL_WRITES, &update_handle);
     if (err != ESP_OK) {
       ESP_LOGE(TAG, "esp_ota_begin failed (%s)", esp_err_to_name(err));
       tud_dfu_finish_flashing(DFU_STATUS_ERR_WRITE);
