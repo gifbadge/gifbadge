@@ -1,6 +1,5 @@
 if (ESP_PLATFORM)
     idf_component_register(SRCS
-            "hal_usb.cpp"
             "drivers/touch_ft5x06.cpp"
             "drivers/battery_analog.cpp"
             "drivers/battery_max17048.cpp"
