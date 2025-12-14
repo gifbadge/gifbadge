@@ -71,68 +71,56 @@ image::GIF::~GIF() {
   (*_gif.pfnClose)(_gif.GIFFile.fHandle);
 }
 
-int image::GIF::playFrame(int *delayMilliseconds, GIFUser *pUser)
-{
-  if (_gif.GIFFile.iPos >= _gif.GIFFile.iSize-1) // no more data exists
+image::frameReturn image::GIF::GetFrame(uint8_t *outBuf, int16_t x, int16_t y, int16_t width) {
+  GIFUser gifuser = {outBuf, x, y, width};
+  int frameDelay;
+  if (_gif.GIFFile.iPos >= _gif.GIFFile.iSize - 1) // no more data exists
   {
     (*_gif.pfnSeek)(&_gif.GIFFile, 0); // seek to start
   }
-  if (GIFParseInfo(&_gif, 0))
-  {
+  // int ret = playFrame(&frameDelay, &gifuser);
+  if (GIFParseInfo(&_gif, 0)) {
     int rc;
-    _gif.pUser = pUser;
+    _gif.pUser = &gifuser;
     if (_gif.iError == GIF_EMPTY_FRAME) // don't try to decode it
-      return 0;
+      return {frameStatus::OK, frameDelay};
     if (_gif.pTurboBuffer) {
       rc = DecodeLZWTurbo(&_gif, 0);
     } else {
       rc = DecodeLZW(&_gif, 0);
     }
     if (rc != 0) // problem
-      return -1;
-  }
-  else
-  {
+      return {frameStatus::ERROR, 0};
+  } else {
     // The file is "malformed" in that there is a bunch of non-image data after
     // the last frame. Return as if all is well, though if needed getLastError()
     // can be used to see if a frame was actually processed:
     // GIF_SUCCESS -> frame processed, GIF_EMPTY_FRAME -> no frame processed
-    if (_gif.iError == GIF_EMPTY_FRAME)
-    {
-      if (delayMilliseconds)
-        *delayMilliseconds = 0;
-      return 0;
+    if (_gif.iError == GIF_EMPTY_FRAME) {
+      return {frameStatus::END, 0};
     }
-    return -1; // error parsing the frame info, we may be at the end of the file
+    return {frameStatus::ERROR, 0}; // error parsing the frame info, we may be at the end of the file
   }
-  if (delayMilliseconds) // if not NULL, return the frame delay time
-    *delayMilliseconds = _gif.iFrameDelay;
+  frameDelay = _gif.iFrameDelay;
   if (!_gif.pfnDraw) {
-    if (pUser->x > 0 || pUser->y > 0) {
+    if (x > 0 || y > 0) {
       // Handle cases where the GIF is smaller than the screen resolution
-      auto *buffer = reinterpret_cast<uint16_t *>(pUser->buffer);
+      auto *buffer = reinterpret_cast<uint16_t *>(outBuf);
       for (int i = 0; i < _gif.iCanvasHeight; i++) {
-        int write_offset =  resolution.second*(i+pUser->y)+pUser->x;
-        int read_offset = (_gif.iCanvasWidth * _gif.iCanvasHeight)+(_gif.iCanvasWidth*i*2);
-        memcpy(&buffer[write_offset] , &_gif.pFrameBuffer[read_offset], _gif.iCanvasWidth * 2);
+        int write_offset = resolution.second * (i + y) + x;
+        int read_offset = (_gif.iCanvasWidth * _gif.iCanvasHeight) + (_gif.iCanvasWidth * i * 2);
+        memcpy(&buffer[write_offset], &_gif.pFrameBuffer[read_offset], _gif.iCanvasWidth * 2);
       }
     } else {
       // GIF matches screen resolution
-      memcpy(pUser->buffer, &_gif.pFrameBuffer[resolution.first * resolution.second], resolution.first * resolution.second * 2);
+      memcpy(outBuf,
+             &_gif.pFrameBuffer[resolution.first * resolution.second],
+             resolution.first * resolution.second * 2);
     }
   }
-  return (_gif.GIFFile.iPos < _gif.GIFFile.iSize-10);
-} /* playFrame() */
 
-image::frameReturn image::GIF::GetFrame(uint8_t *outBuf, int16_t x, int16_t y, int16_t width) {
-  GIFUser gifuser = {outBuf, x, y, width};
-  int frameDelay;
-  int ret = playFrame(&frameDelay, &gifuser);
   prev_buffer = outBuf;
-  if (ret == -1) {
-    printf("GIF Error: %i\n", _gif.iError);
-    return {frameStatus::ERROR, 0};
-  } else if (ret == 0) {
+  if (_gif.GIFFile.iPos < _gif.GIFFile.iSize - 10 == false) {
     return {frameStatus::END, frameDelay};
   }
   return {frameStatus::OK, frameDelay};

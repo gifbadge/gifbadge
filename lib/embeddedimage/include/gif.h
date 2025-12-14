@@ -33,7 +33,6 @@ public:
 
 private:
     GIFIMAGE _gif{};
-    int playFrame(int *delayMilliseconds, GIFUser *pUser);
 
   static void GIFDraw(GIFDRAW *pDraw);
     int32_t width = 0; //GIF width, needed for GIFDraw
