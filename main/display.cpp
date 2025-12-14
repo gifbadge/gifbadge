@@ -140,8 +140,11 @@ static char* lltoa(long long val, int base){
 bool newImage = false;
 
 int64_t average_frame_delay = 0;
+int64_t average_frame_time = 0;
 int max_frame_delay = 0;
 int frame_count = 0;
+float last_fps = 0;
+bool looped = false;
 
 static image::frameReturn displayFile(std::unique_ptr<image::Image> &in, hal::display::Display *display) {
   int64_t start = millis();
@@ -163,11 +166,13 @@ static image::frameReturn displayFile(std::unique_ptr<image::Image> &in, hal::di
   } else {
     display->write(0, 0, display->size.first, display->size.second, display->buffer);
   }
-  int calc_delay = status.second - static_cast<int>(millis() - start);
+  int frameTime = static_cast<int>(millis() - start);
+  int calc_delay = status.second - frameTime;
 #ifdef FRAMETIME
   // LOGI(TAG, "Frame Delay: %lu, calculated delay %i", status.second, calc_delay);
   frame_count += 1;
   average_frame_delay += calc_delay;
+  average_frame_time += frameTime + (calc_delay > 0 ? calc_delay : 0) ;
   if (calc_delay < max_frame_delay) {
     max_frame_delay = calc_delay;
   }
@@ -176,10 +181,16 @@ static image::frameReturn displayFile(std::unique_ptr<image::Image> &in, hal::di
   if(in->Animated()) {
 #ifdef FRAMETIME
     if (status.first == image::frameStatus::END) {
+      if (looped) {
+        last_fps = 1000.00/(static_cast<float>(average_frame_time)/frame_count);
+        LOGI(TAG, "Average FPS: %f", last_fps);
+      }
       LOGI(TAG, "Average Frame Delay: %s, Max Delay: %li", lltoa(average_frame_delay/frame_count, 10), max_frame_delay);
       frame_count = 0;
+      average_frame_time = 0;
       average_frame_delay = 0;
       max_frame_delay = 0;
+      looped = true;
     }
 #endif
     return {status.first, (calc_delay > 0 ? calc_delay : 0)/portTICK_PERIOD_MS};
@@ -260,6 +271,8 @@ static image::Image *openFile(const char *path, hal::display::Display *display) 
   frame_count = 0;
   average_frame_delay = 0;
   max_frame_delay = 0;
+  last_fps = 0;
+  looped = false;
   return in;
 }
 

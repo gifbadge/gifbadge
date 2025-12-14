@@ -107,6 +107,15 @@ void main_menu() {
     lv_obj_add_event_cb(slider, BacklightSliderExitCallback, LV_EVENT_RELEASED, backlight_button);
     lv_slider_set_value(slider, get_board()->GetConfig()->getBacklight(), LV_ANIM_OFF);
 
+    if (last_fps > 0) {
+      lv_obj_t *fps = lv_file_list_add(main_menu, nullptr);
+      lv_obj_add_style(fps, &menu_font_style, LV_PART_MAIN);
+      lv_obj_t *fps_text = lv_label_create(fps);
+      char fps_text_str[64];
+      snprintf(fps_text_str, 63, "GIF FPS: %.0f", last_fps);
+      lv_label_set_text(fps_text, fps_text_str);
+    }
+
     subMenu(main_menu, "File Select", &FileOptions);
     subMenu(main_menu, "Storage", &storage_menu);
     subMenu(main_menu, "Device Info", &device_info);

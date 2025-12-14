@@ -29,3 +29,5 @@ enum DISPLAY_OPTIONS {
 };
 
 void display_task(void *params);
+
+extern float last_fps;
