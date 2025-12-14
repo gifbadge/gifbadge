@@ -21,7 +21,7 @@
 #include <fcntl.h>
 
 
-#define BUFFER_CHUNK (4096)
+#define BUFFER_CHUNK (256)
 
 TaskHandle_t file_buffer_task = nullptr;
 
