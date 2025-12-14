@@ -7,7 +7,7 @@ cmake_minimum_required(VERSION 3.24)
 
 if (ESP_PLATFORM)
     set(COMPONENT_DIRS "$ENV{IDF_PATH}/components" "${CMAKE_SOURCE_DIR}/idf-components" "${CMAKE_SOURCE_DIR}/managed_components" "${CMAKE_SOURCE_DIR}/main")
-    set(COMPONENTS "esp32" "esp_gdbstub" "esptool_py" "main" "log")
+    set(COMPONENTS "esp32" "esptool_py" "main" "log")
     include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 endif ()
 

@@ -44,7 +44,14 @@ if (ESP_PLATFORM)
             sdmmc
             app_update
             esp_lcd_gc9a01
-            esp_lcd_panel_io_additions)
+            esp_lcd_panel_io_additions
+            esp_driver_i2c
+            esp_driver_gpio
+            esp_driver_ledc
+            esp_driver_spi
+            esp_driver_sdmmc
+    )
     target_link_libraries(${COMPONENT_LIB} PUBLIC "-u custom_app_desc")
-    target_link_libraries(${COMPONENT_LIB} PUBLIC gifbadge_hal npmx)
+    target_link_libraries(${COMPONENT_LIB} PRIVATE gifbadge_hal npmx)
+
 endif ()
