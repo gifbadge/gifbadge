@@ -8,19 +8,22 @@ set(ESP_COMPILE_OPTIONS -ffunction-sections -fdata-sections -O2 -Wwrite-strings 
 
 add_library(PNGdec ${PNGdec_src})
 target_include_directories(PNGdec PUBLIC "${CMAKE_SOURCE_DIR}/external-deps/PNGdec/src")
+target_compile_options(PNGdec PRIVATE -D__LINUX__)
 if (ESP_PLATFORM)
-    target_compile_options(PNGdec PRIVATE -D__LINUX__ -DARDUINO_ARCH_ESP32=1)
+    target_compile_options(PNGdec PRIVATE -DARDUINO_ARCH_ESP32=1)
     target_link_libraries(PNGdec PRIVATE idf::newlib)
     target_link_libraries(PNGdec PRIVATE idf::espressif__esp-dsp)
     target_compile_options(PNGdec PUBLIC ${ESP_COMPILE_OPTIONS})
     target_link_options(PNGdec    PUBLIC ${ESP_COMPILE_OPTIONS})
-
+else()
+    target_precompile_headers(PNGdec PUBLIC <stdint.h>) # Work around this being missing in PNGdec's includes
 endif ()
 
 add_library(JPEGDEC ${JPEGDEC_src})
 target_include_directories(JPEGDEC PUBLIC "${CMAKE_SOURCE_DIR}/external-deps/JPEGDEC/src")
+target_compile_options(JPEGDEC PRIVATE -D__LINUX__)
 if (ESP_PLATFORM)
-    target_compile_options(JPEGDEC PRIVATE -D__LINUX__ -DARDUINO_ARCH_ESP32=1)
+    target_compile_options(JPEGDEC PRIVATE -DARDUINO_ARCH_ESP32=1)
     target_link_libraries(JPEGDEC PRIVATE idf::newlib)
     target_link_libraries(JPEGDEC PRIVATE idf::espressif__esp-dsp)
     target_compile_options(JPEGDEC PUBLIC ${ESP_COMPILE_OPTIONS})

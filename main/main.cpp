@@ -19,10 +19,10 @@ void dumpDebugFunc(TimerHandle_t) {
   auto *args = get_board();
   args->PmLock();
   args->DebugInfo();
-  unsigned int count = uxTaskGetSystemState(tasks, 20, nullptr);
-  for (unsigned int i = 0; i < count; i++) {
-    LOGI(TAG, "%s Highwater: %lu", tasks[i].pcTaskName, tasks[i].usStackHighWaterMark);
-  }
+  // unsigned int count = uxTaskGetSystemState(tasks, 20, nullptr);
+  // for (unsigned int i = 0; i < count; i++) {
+  //   LOGI(TAG, "%s Highwater: %lu", tasks[i].pcTaskName, tasks[i].usStackHighWaterMark);
+  // }
   args->PmRelease();
 
 }

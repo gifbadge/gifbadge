@@ -382,6 +382,9 @@
 /* Use `float` as `lv_value_precise_t` */
 #define LV_USE_FLOAT            0
 
+/*Include `lvgl_private.h` in `lvgl.h` to access internal data and functions by default*/
+#define LV_USE_PRIVATE_API		1
+
 /*==================
  *   FONT USAGE
  *===================*/
