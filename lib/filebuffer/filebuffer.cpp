@@ -22,6 +22,7 @@
 
 
 #define BUFFER_CHUNK (256)
+#define BUFFER_KEEP_SIZE (BUFFER_CHUNK*8)
 
 TaskHandle_t file_buffer_task = nullptr;
 
@@ -128,6 +129,7 @@ void cbuffer_open(circular_buf_t *buffer, char *path) {
   }
   cbuffer_reset(&cbuffer);
   if (strlen(path) > 0) {
+    strcpy(cbuffer.open_file, path);
     buffer->fd = open(path, O_RDONLY);
     if (buffer->fd == -1) {
       printf("Couldn't open file %s: %s\n", path, strerror(errno));
@@ -151,11 +153,17 @@ void cbuffer_open(circular_buf_t *buffer, char *path) {
 
   BaseType_t option = errQUEUE_EMPTY;
   TickType_t delay;
+  bool should_sleep = false;
   while (true) {
-    if (cbuffer_get_free(&cbuffer) - BUFFER_CHUNK * 2 >= BUFFER_CHUNK && cbuffer.fd > 0) {
-      delay = 0;
+    if (should_sleep) {
+      should_sleep = false;
+      delay = portMAX_DELAY;
     } else {
-      delay = 50 / portTICK_PERIOD_MS;
+      if (cbuffer_get_free(&cbuffer) - BUFFER_KEEP_SIZE >= BUFFER_CHUNK && cbuffer.fd > 0) {
+        delay = 0;
+      } else {
+        delay = 50 / portTICK_PERIOD_MS;
+      }
     }
     option = xQueueReceive(FileQueue, &path, delay);
     if (option == pdPASS) {
@@ -165,53 +173,59 @@ void cbuffer_open(circular_buf_t *buffer, char *path) {
       xSemaphoreGive(lockSemaphore);
     }
     if (cbuffer.fd > 0) {
-      if ((cbuffer_get_free(&cbuffer) - (BUFFER_CHUNK * 2)) >= BUFFER_CHUNK) {
-        size_t count = cbuffer_put_file(&cbuffer, BUFFER_CHUNK);
-        if (count < BUFFER_CHUNK) {
-          if (cbuffer.file_size > cbuffer.size) {
-            cbuffer.start_pos = cbuffer.write_pos;
-            lseek(cbuffer.fd, 0, SEEK_SET);
-            cbuffer_put_file(&cbuffer, BUFFER_CHUNK);
-            cbuffer.start_valid = true;
-          } else {
-            xQueuePeek(FileQueue, &path, portMAX_DELAY);
+      if (xSemaphoreTake(lockSemaphore, 0) == pdTRUE) {
+        if ((cbuffer_get_free(&cbuffer) - (BUFFER_KEEP_SIZE)) >= BUFFER_CHUNK) {
+          size_t count = cbuffer_put_file(&cbuffer, BUFFER_CHUNK);
+          if (count < BUFFER_CHUNK) {
+            if (cbuffer.file_size > cbuffer.size) {
+              cbuffer.start_pos = cbuffer.write_pos;
+              lseek(cbuffer.fd, 0, SEEK_SET);
+              cbuffer_put_file(&cbuffer, BUFFER_CHUNK);
+              cbuffer.start_valid = true;
+            } else {
+              should_sleep = true;
+            }
           }
+          xSemaphoreGive(readSemaphore);
+        } else {
+          xSemaphoreTake(writeSemaphore, 50 / portTICK_PERIOD_MS);
         }
-        xSemaphoreGive(readSemaphore);
-      } else {
-        xSemaphoreTake(writeSemaphore, 50 / portTICK_PERIOD_MS);
+        xSemaphoreGive(lockSemaphore);
       }
     }
   }
 }
 
 void filebuffer_open(const char *path) {
-  strcpy(cbuffer.open_file, path);
+  char _path[255] = "";
+  strcpy(_path, path);
   xSemaphoreTake(lockSemaphore, portMAX_DELAY);
-  xQueueSend(FileQueue, &cbuffer.open_file, 0);
+  xQueueSend(FileQueue, path, 0);
 }
 
 void filebuffer_close() {
   constexpr char path[255] = "";
+  xSemaphoreTake(lockSemaphore, portMAX_DELAY);
   xQueueSend(FileQueue, &path, 0);
 }
 
 int32_t filebuffer_read(uint8_t *pBuf, const int32_t iLen) {
-  xSemaphoreTake(lockSemaphore, portMAX_DELAY);
   while (cbuffer_get_avail(&cbuffer) < iLen) {
     xSemaphoreTake(readSemaphore, 2 / portTICK_PERIOD_MS);
   }
   xSemaphoreGive(writeSemaphore);
-  xSemaphoreGive(lockSemaphore);
   return cbuffer_read(&cbuffer, pBuf, iLen);
 }
 
 void filebuffer_seek(int32_t pos) {
+  xSemaphoreTake(lockSemaphore, portMAX_DELAY);
   int32_t new_pos = pos - cbuffer.file_pos;
-  if ((cbuffer.file_size > cbuffer.size) && new_pos < -BUFFER_CHUNK*2) {
+  if ((cbuffer.file_size > cbuffer.size) && new_pos < -BUFFER_KEEP_SIZE) {
     if (cbuffer.start_valid) {
       cbuffer.read_pos = cbuffer.start_pos;
     } else {
+      constexpr char path[255] = "";
+      xQueueSend(FileQueue, &path, 0);
       filebuffer_open(cbuffer.open_file);
     }
     cbuffer.start_valid = false;
@@ -221,4 +235,5 @@ void filebuffer_seek(int32_t pos) {
     cbuffer.read_pos += new_pos;
     cbuffer.file_pos += new_pos;
   }
+  xSemaphoreGive(lockSemaphore);
 }
