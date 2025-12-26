@@ -1,6 +1,7 @@
 #pragma once
 
-
+#include "FreeRTOS.h"
+#include "task.h"
 #include "hal/keys.h"
 
 namespace hal::keys::oslinux {
@@ -20,6 +21,8 @@ class keys_sdl : public hal::keys::Keys {
   hal::keys::debounce_state _debounce_states[KEY_MAX];
   hal::keys::debounce_config _debounce_config = {0, 0};
   hal::keys::EVENT_STATE _currentState[KEY_MAX];
+  TaskHandle_t _refreshTask;
+
 
 
   long last;

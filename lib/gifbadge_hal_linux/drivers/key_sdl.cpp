@@ -4,11 +4,23 @@
 #include "log.h"
 #include "hal/keys.h"
 #include <array>
+#include "FreeRTOS.h"
+#include "task.h"
+
+static void keys_refresh(void *args) {
+  auto *keys = static_cast<hal::keys::oslinux::keys_sdl *>(args);
+  while (true) {
+    keys->poll();
+    vTaskDelay(30/portTICK_RATE_MS);
+  }
+
+}
 
 hal::keys::oslinux::keys_sdl::keys_sdl() {
   _debounce_states[hal::keys::KEY_UP] = hal::keys::debounce_state{false, false, 0};
   _debounce_states[hal::keys::KEY_DOWN] = hal::keys::debounce_state{false, false, 0};
   _debounce_states[hal::keys::KEY_ENTER] = hal::keys::debounce_state{false, false, 0};
+  xTaskCreate(keys_refresh, "keys_refresh", 4000, this, 2, &_refreshTask);
 }
 
 void hal::keys::oslinux::keys_sdl::poll() {
