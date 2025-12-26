@@ -5,6 +5,7 @@
 #include <esp_timer.h>
 #include <soc/gpio_sig_map.h>
 #include <cmath>
+#include <driver/i2c_master.h>
 
 static const char *TAG = "PmicNpm1300";
 
@@ -19,19 +20,29 @@ static void npmx_timer(void *arg) {
 }
 
 npmx_error_t npmx_write(void *p_context, uint32_t register_address, uint8_t *p_data, size_t num_of_bytes) {
-  auto i2c = static_cast<I2C *>(p_context);
+  auto i2c = static_cast<i2c_master_dev_handle_t>(p_context);
 //  LOGI(TAG, "npm1300 i2c write %lx bytes %u", register_address, num_of_bytes);
 //  for (int i = 0; i < num_of_bytes; i++) {
 //    LOGI(TAG, "%x", p_data[i]);
 //  }
-  i2c->write_reg16(0x6b, static_cast<uint16_t>(register_address), p_data, num_of_bytes);
+  auto *to_write = static_cast<uint8_t *>(malloc(num_of_bytes + 2));
+  assert(to_write != nullptr);
+  to_write[0] = (static_cast<uint16_t>(register_address) >> 8);
+  to_write[1] = (static_cast<uint16_t>(register_address) &0x00FF);
+  memcpy(&to_write[2], p_data, num_of_bytes);
+  i2c_master_transmit(i2c, to_write, num_of_bytes + 2, 100);
+  free(to_write);
+
   return NPMX_SUCCESS;
 }
 
 npmx_error_t npmx_read(void *p_context, uint32_t register_address, uint8_t *p_data, size_t num_of_bytes) {
-  auto i2c = static_cast<I2C *>(p_context);
+  auto i2c = static_cast<i2c_master_dev_handle_t>(p_context);
 //  LOGI(TAG, "npm1300 i2c read %lx bytes %u", register_address, num_of_bytes);
-  i2c->read_reg16(0x6b, static_cast<uint16_t>(register_address), p_data, num_of_bytes);
+  uint8_t reg8[2];
+  reg8[0] = (static_cast<uint16_t>(register_address) >> 8)&0xFF;
+  reg8[1] = (static_cast<uint16_t>(register_address) &0xFF);
+  i2c_master_transmit_receive(i2c, reg8, 2, p_data, num_of_bytes, 100);
 //  for (int i = 0; i < num_of_bytes; i++) {
 //    LOGI(TAG, "%x", p_data[i]);
 //  }
@@ -110,9 +121,15 @@ static Boards::WakeupSource get_wakeup(npmx_instance_t *pm){
   return wakeup;
 }
 
-hal::pmic::esp32s3::PmicNpm1300::PmicNpm1300(I2C *i2c, gpio_num_t gpio_int)
-    : _i2c(i2c), _gpio_int(gpio_int), _npmx_backend(npmx_write, npmx_read, i2c) {
-
+hal::pmic::esp32s3::PmicNpm1300::PmicNpm1300(i2c_master_bus_handle_t i2c, gpio_num_t gpio_int)
+    : _gpio_int(gpio_int) {
+  i2c_device_config_t dev_cfg = {
+    .dev_addr_length = I2C_ADDR_BIT_LEN_7,
+    .device_address = 0x6b,
+    .scl_speed_hz = 100000,
+  };
+  ESP_ERROR_CHECK(i2c_master_bus_add_device(i2c, &dev_cfg, &i2c_handle));
+  _npmx_backend = {npmx_write, npmx_read, i2c_handle};
   if (npmx_core_init(&_npmx_instance, &_npmx_backend, npmx_callback, false) != NPMX_SUCCESS) {
     LOGI(TAG, "Unable to init npmx device");
   }

@@ -6,16 +6,10 @@
 #include "ui/menu.h"
 #include "display.h"
 
-#include "ota.h"
-
 #include "hw_init.h"
 #include "ui/usb_connected.h"
 #include "input.h"
 #include "filebuffer.h"
-
-#ifdef ESP_PLATFORM
-#include <esp_psram.h>
-#endif
 
 static const char *TAG = "MAIN";
 
@@ -25,11 +19,6 @@ void dumpDebugFunc(TimerHandle_t) {
   auto *args = get_board();
   args->PmLock();
   args->DebugInfo();
-#ifdef ESP_PLATFORM
-  ESP_LOGI(TAG, "Free PSRAM: %d", heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
-  ESP_LOGI(TAG, "Free Internal: %d", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
-  ESP_LOGI(TAG, "Largest Free Block for DMA: %d", heap_caps_get_largest_free_block(MALLOC_CAP_DMA));
-#endif
   unsigned int count = uxTaskGetSystemState(tasks, 20, nullptr);
   for (unsigned int i = 0; i < count; i++) {
     LOGI(TAG, "%s Highwater: %lu", tasks[i].pcTaskName, tasks[i].usStackHighWaterMark);
@@ -99,7 +88,7 @@ static void usbCall(tinyusb_msc_storage_handle_t handle, tinyusb_msc_event_t *e,
 
 
 
-extern "C" void app_main(void) {
+extern "C" [[noreturn]] void app_main(void) {
   Boards::Board *board = get_board();
   switch(board->BootReason()){
 
@@ -132,25 +121,21 @@ extern "C" void app_main(void) {
 
   initLowBatteryTask();
 
-  auto *buffer_size = static_cast<size_t *>(malloc(sizeof(size_t)));
-#ifdef ESP_PLATFORM
-  if (esp_psram_get_size() > 4*1024*1024) {
-    *buffer_size = 4*1024*1024;
+  size_t buffer_size = 0;
+  if (board->MemorySize() > 4*1024*1024) {
+    buffer_size = 4*1024*1024;
   }
   else {
-    *buffer_size = 1*1024*1024;
+    buffer_size = 1*1024*1024;
   }
-#else
-  *buffer_size = 2*1024*1024;
-#endif
 
 
 #ifdef ESP_PLATFORM
   xTaskCreatePinnedToCore(display_task, "display_task", 4000, board, 2, &display_task_handle, 1);
-  xTaskCreatePinnedToCore(FileBufferTask, "file_buffer", 3000, buffer_size, 2, &file_buffer_task, 0);
+  xTaskCreatePinnedToCore(FileBufferTask, "file_buffer", 3000, &buffer_size, 2, &file_buffer_task, 0);
 #else
   xTaskCreate(display_task, "display_task", 5000, board, 2, &display_task_handle);
-  xTaskCreate(FileBufferTask, "file_buffer", 4000, buffer_size, 2, &file_buffer_task);
+  xTaskCreate(FileBufferTask, "file_buffer", 4000, &buffer_size, 2, &file_buffer_task);
 #endif
 
   initInputTimer(board);

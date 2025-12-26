@@ -1,14 +1,15 @@
 #pragma once
 
 #include <memory>
-
+#include <driver/i2c_types.h>
 #include <hal/battery.h>
-#include "i2c.h"
+#include <soc/gpio_num.h>
+
 
 namespace hal::battery::esp32s3 {
 class battery_max17048 final : public hal::battery::Battery {
  public:
-  explicit battery_max17048(I2C *, gpio_num_t vbus_pin);
+  explicit battery_max17048(i2c_master_bus_handle_t, gpio_num_t vbus_pin);
   ~battery_max17048() final = default;
 
   void poll();
@@ -24,7 +25,8 @@ class battery_max17048 final : public hal::battery::Battery {
   State BatteryStatus() override;
 
  private:
-  I2C *_i2c;
+  i2c_master_bus_handle_t i2c_master;
+  i2c_master_dev_handle_t i2c_handle = nullptr;
   double _voltage = 0;
   int _soc = 0;
   double _rate = 0;

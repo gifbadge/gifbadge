@@ -40,7 +40,7 @@ class v0_1 : public esp32s3_sdmmc {
 
  private:
   hal::battery::esp32s3::battery_max17048 *_battery;
-  I2C *_i2c;
+  i2c_master_bus_handle_t bus_handle = nullptr;
   hal::keys::esp32s3::keys_gpio * _keys;
   hal::display::esp32s3::display_gc9a01 * _display;
   hal::backlight::esp32s3::backlight_ledc * _backlight;

@@ -15,10 +15,7 @@
 #include <tinyusb_console.h>
 #endif
 
-#include <boards/esp32s3_usb.h>
-
 #include "drivers/backlight_ledc.h"
-#include "hal_usb.h"
 #include "tinyusb_msc.h"
 
 static const char *TAG = "board_v0";
@@ -26,7 +23,6 @@ static const char *TAG = "board_v0";
 namespace Boards {
 
 esp32::s3::mini::v0::v0() {
-  _i2c = new I2C(I2C_NUM_0, 21, 18, 100 * 1000, false);
   _battery = new hal::battery::esp32s3::battery_analog(ADC_CHANNEL_9);
   gpio_install_isr_service(0);
   _keys = new hal::keys::esp32s3::keys_gpio(GPIO_NUM_43, GPIO_NUM_44, GPIO_NUM_0);
@@ -135,7 +131,6 @@ void esp32::s3::mini::v0::LateInit() {
 
   const esp_partition_t *fat_partition = int_ext_flash_hw(39, 41, 40, 42);
   ESP_ERROR_CHECK(wl_mount(fat_partition, &wl_handle));
-  ESP_ERROR_CHECK(init_ext_flash(39, 41, 40, 42, &wl_handle));
 
   const esp_vfs_fat_mount_config_t mount_config = {
       .format_if_mount_failed = true,

@@ -1,14 +1,11 @@
 if (ESP_PLATFORM)
     idf_component_register(SRCS
-            "i2c.cpp"
-            "hal_usb.cpp"
             "drivers/touch_ft5x06.cpp"
             "drivers/battery_analog.cpp"
             "drivers/battery_max17048.cpp"
             "boards/board_data.c"
             "boards/board_esp32s3.cpp"
             "boards/board_esp32s3_sdmmc.cpp"
-            "boards/esp32s3_usb.cpp"
             "boards/mini/v0.cpp"
             "boards/full/v0_2_v0_4_common.cpp"
             "boards/full/v0_6.cpp"
@@ -40,7 +37,6 @@ if (ESP_PLATFORM)
             esp_io_expander_tca95xx_16bit
             tinyusb
             esp_tinyusb
-            esp_io_expander_cat9532
             esp_adc
             nvs_flash
             efuse
@@ -48,7 +44,14 @@ if (ESP_PLATFORM)
             sdmmc
             app_update
             esp_lcd_gc9a01
-            esp_lcd_panel_io_additions)
+            esp_lcd_panel_io_additions
+            esp_driver_i2c
+            esp_driver_gpio
+            esp_driver_ledc
+            esp_driver_spi
+            esp_driver_sdmmc
+    )
     target_link_libraries(${COMPONENT_LIB} PUBLIC "-u custom_app_desc")
-    target_link_libraries(${COMPONENT_LIB} PUBLIC gifbadge_hal npmx)
+    target_link_libraries(${COMPONENT_LIB} PRIVATE gifbadge_hal npmx)
+
 endif ()

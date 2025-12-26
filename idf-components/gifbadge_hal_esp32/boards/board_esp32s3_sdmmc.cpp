@@ -9,7 +9,6 @@
 #include "boards/esp32s3_sdmmc.h"
 #include "log.h"
 #include "tinyusb_msc.h"
-#include "boards/esp32s3_usb.h"
 
 static const char *TAG = "board_esp32s3_sdmmc";
 

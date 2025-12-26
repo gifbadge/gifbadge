@@ -24,9 +24,9 @@ if (ESP_PLATFORM)
     idf_component_register(SRCS
             ${SRC}
             INCLUDE_DIRS "include" ${freertos_lib}
-            REQUIRES gifbadge_hal_esp32 image lvgl esp_timer)
+            REQUIRES gifbadge_hal_esp32 lvgl esp_timer)
     target_compile_options(${COMPONENT_LIB} PRIVATE -D__LINUX__)
-    target_link_libraries(${COMPONENT_TARGET} FileUtil FontRender gifbadge_hal FileBuffer)
+    target_link_libraries(${COMPONENT_TARGET} PRIVATE FileUtil FontRender FileBuffer EmbeddedImage gifbadge_hal)
 
     #
 else ()

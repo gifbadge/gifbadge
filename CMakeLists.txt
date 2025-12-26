@@ -7,7 +7,7 @@ cmake_minimum_required(VERSION 3.24)
 
 if (ESP_PLATFORM)
     set(COMPONENT_DIRS "$ENV{IDF_PATH}/components" "${CMAKE_SOURCE_DIR}/idf-components" "${CMAKE_SOURCE_DIR}/managed_components" "${CMAKE_SOURCE_DIR}/main")
-    set(COMPONENTS "esp32" "esp_gdbstub" "esptool_py" "main" "log")
+    set(COMPONENTS "esp32" "esptool_py" "main" "log")
     include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 endif ()
 
@@ -16,17 +16,19 @@ add_subdirectory(lib/gifbadge_hal)
 add_subdirectory(lib/fileutil)
 add_subdirectory(lib/font_render)
 add_subdirectory(external-deps/npmx)
+add_subdirectory(lib/filebuffer)
+add_subdirectory(lib/embeddedimage)
 
 if (ESP_PLATFORM)
     if(EXISTS ${CMAKE_SOURCE_DIR}/config/esp32s3/lv_conf.h)
         message(LV_CONF_PATH=${CMAKE_SOURCE_DIR}/config/esp32s3/lv_conf.h)
         idf_build_set_property(COMPILE_OPTIONS "-I${CMAKE_SOURCE_DIR}/config/esp32s3" APPEND)
     endif ()
-    add_subdirectory(lib/filebuffer)
 #    idf_build_set_property()
 #    target_compile_options(mbedcrypto PRIVATE "-Wno-maybe-uninitialized")
 #    target_compile_options(mbedtls PRIVATE "-DMBEDTLS_ECP_LIGHT=1")
 else()
+
     add_compile_options( -D__linux__)
     #FreeRTOS stuff
     set( NO_TRACING 1 )
@@ -79,8 +81,6 @@ else()
     include_directories(${SDL2_INCLUDE_DIRS})
 
     add_subdirectory(main)
-    add_subdirectory(idf-components/image)
-    add_subdirectory(lib/filebuffer)
     add_subdirectory(lib/gifbadge_hal_linux)
     set(LV_CONF_PATH
             "${CMAKE_SOURCE_DIR}/main/include/lv_conf_linux.h"

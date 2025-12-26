@@ -2,59 +2,70 @@
 #include <esp_pm.h>
 #include <esp_mac.h>
 #include <esp_ota_ops.h>
+#include <tinyusb.h>
+#include <soc/gpio_sig_map.h>
 #include <sys/stat.h>
 #include "boards/boards_esp32s3.h"
 #include "log.h"
 #include "esp_efuse_custom_table.h"
 #include "esp_app_format.h"
 #include "esp_ota.h"
+#include "esp_psram.h"
 #include "../../../main/include/hw_init.h"
+#include "usb_descriptors.h"
+#if CFG_TUD_CDC
+#include <tinyusb_cdc_acm.h>
+#endif
 
 static const char *TAG = "esp32::s3::esp32s3";
 
-namespace Boards {
-esp32::s3::esp32s3::esp32s3() {
+namespace Boards::esp32::s3 {
+esp32s3::esp32s3() {
   esp_pm_lock_create(ESP_PM_CPU_FREQ_MAX, 0, "Board Lock", &pmLockHandle);
   _config = new hal::config::esp32s3::Config_NVS();
 }
-void esp32::s3::esp32s3::Reset() {
+void esp32s3::Reset() {
   esp_restart();
 }
 
-void esp32::s3::esp32s3::PmLock() {
+void esp32s3::PmLock() {
   esp_pm_lock_acquire(pmLockHandle);
 }
 
-void esp32::s3::esp32s3::PmRelease() {
+void esp32s3::PmRelease() {
   esp_pm_lock_release(pmLockHandle);
 }
 
-hal::config::Config *esp32::s3::esp32s3::GetConfig() {
+hal::config::Config *esp32s3::GetConfig() {
   return _config;
 }
 
-void esp32::s3::esp32s3::DebugInfo() {
-//  esp_pm_dump_locks(stdout);
-//  heap_caps_print_heap_info(MALLOC_CAP_INTERNAL);
-//  heap_caps_print_heap_info(MALLOC_CAP_SPIRAM);
+void esp32s3::DebugInfo() {
+  ESP_LOGI(TAG, "Free Heap: %d", esp_get_free_heap_size());
+  ESP_LOGI(TAG, "Free PSRAM: %d", heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
+  ESP_LOGI(TAG, "Free Internal: %d", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
+  ESP_LOGI(TAG, "Largest Free Block for DMA: %d", heap_caps_get_largest_free_block(MALLOC_CAP_DMA));
 }
 
-const char *esp32::s3::esp32s3::SwVersion() {
+const char *esp32s3::SwVersion() {
   return esp_app_get_description()->version;
 }
-char *esp32::s3::esp32s3::SerialNumber() {
+char *esp32s3::SerialNumber() {
   uint8_t mac[6] = {0};
   esp_efuse_mac_get_default(mac);
   sprintf(serial, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
   return serial;
 }
-void esp32::s3::esp32s3::BootInfo() {
+void esp32s3::BootInfo() {
   const esp_partition_t *configured = esp_ota_get_boot_partition();
   const esp_partition_t *running = esp_ota_get_running_partition();
 
   LOGI(TAG, "Total Application Partitions: %d", esp_ota_get_app_partition_count());
-  LOGI(TAG, "Running partition type %d subtype %d (offset 0x%08" PRIx32 ")",
-       running->type, running->subtype, running->address);
+  LOGI(TAG,
+       "Running partition type %d subtype %d (offset 0x%08" PRIx32 ")",
+       running->type,
+       running->subtype,
+       running->address);
 
   esp_app_desc_t boot_app_info;
   if (esp_ota_get_partition_description(configured, &boot_app_info) == ESP_OK) {
@@ -65,7 +76,7 @@ void esp32::s3::esp32s3::BootInfo() {
     LOGI(TAG, "Running firmware version: %s", running_app_info.version);
   }
 }
-bool esp32::s3::esp32s3::OtaCheck() {
+bool esp32s3::OtaCheck() {
   struct stat buffer{};
   if (stat("/data/ota.bin", &buffer) == 0) {
     LOGI("TAG", "OTA File Exists");
@@ -76,7 +87,7 @@ bool esp32::s3::esp32s3::OtaCheck() {
 
 #define OTA_HEADER_SIZE (sizeof(esp_image_header_t)+ sizeof(esp_image_segment_header_t) + sizeof(esp_app_desc_t) + sizeof(esp_custom_app_desc_t))
 
-OtaError esp32::s3::esp32s3::OtaHeaderValidate(uint8_t const *data) {
+OtaError esp32s3::OtaHeaderValidate(uint8_t const *data) {
   OtaError ret = OtaError::OK;
   auto *new_header_info = static_cast<esp_image_header_t *>(malloc(sizeof(esp_image_header_t)));
   auto *new_app_info = static_cast<esp_app_desc_t *>(malloc(sizeof(esp_app_desc_t)));
@@ -122,7 +133,7 @@ OtaError esp32::s3::esp32s3::OtaHeaderValidate(uint8_t const *data) {
   return ret;
 }
 
-OtaError esp32::s3::esp32s3::OtaValidate() {
+OtaError esp32s3::OtaValidate() {
   OtaError ret = OtaError::OK;
   auto *ota_data = static_cast<uint8_t *>(malloc(OTA_HEADER_SIZE));
   FILE *ota_file = fopen("/data/ota.bin", "r");
@@ -138,7 +149,7 @@ OtaError esp32::s3::esp32s3::OtaValidate() {
   return ret;
 }
 
-void esp32::s3::esp32s3::OtaInstall() {
+void esp32s3::OtaInstall() {
   if (!_ota_task_handle) {
     //Free the turbo buffer, if present, so we are sure to have enough stack for the update task
     if (TurboBuffer()) {
@@ -148,11 +159,11 @@ void esp32::s3::esp32s3::OtaInstall() {
     xTaskCreate(OtaInstallTask, "ota", 4000, this, 2, &_ota_task_handle);
   }
 }
-int esp32::s3::esp32s3::OtaStatus() {
+int esp32s3::OtaStatus() {
   return _ota_status;
 }
 
-void esp32::s3::esp32s3::OtaInstallTask(void *arg) {
+void esp32s3::OtaInstallTask(void *arg) {
   esp_err_t err;
   auto *board = static_cast<esp32s3 *>(arg);
 
@@ -189,8 +200,8 @@ void esp32::s3::esp32s3::OtaInstallTask(void *arg) {
        update_partition->subtype,
        update_partition->address);
 
-  Boards::OtaError validation_err = board->OtaValidate();
-  if (validation_err != Boards::OtaError::OK) {
+  OtaError validation_err = board->OtaValidate();
+  if (validation_err != OtaError::OK) {
     ESP_LOGE(TAG, "validate failed with %d", (int) validation_err);
     vTaskDelete(nullptr);
   }
@@ -219,7 +230,7 @@ void esp32::s3::esp32s3::OtaInstallTask(void *arg) {
     LOGI(TAG, "%%%d", percent);
     board->_ota_status = percent;
 
-    err = esp_ota_write(update_handle, (const void *) ota_buffer, bytes_read);
+    err = esp_ota_write(update_handle, ota_buffer, bytes_read);
     if (err != ESP_OK) {
       ESP_LOGE(TAG, "esp_ota_write failed (%s)!", esp_err_to_name(err));
       esp_ota_abort(update_handle);
@@ -254,6 +265,68 @@ void esp32::s3::esp32s3::OtaInstallTask(void *arg) {
   LOGI(TAG, "Prepare to restart system!");
   board->Reset();
 }
+size_t esp32s3::MemorySize() {
+  return esp_psram_get_size();
+}
+esp_err_t esp32s3::esp32s3_usb_init(gpio_num_t usb_sense) {
+#if CFG_TUD_CDC
+
+  constexpr tinyusb_config_cdcacm_t acm_cfg = {
+    .cdc_port = TINYUSB_CDC_ACM_0,
+    .callback_rx = nullptr,
+    .callback_rx_wanted_char = nullptr,
+    .callback_line_state_changed = nullptr,
+    .callback_line_coding_changed = nullptr
+};
+  tinyusb_cdcacm_init(&acm_cfg);
+#endif
+
+  int str_count = 0;
+
+  const char *descriptor_str[] = {
+    // array of pointer to string descriptors
+    (char[]){0x09, 0x04},                // 0: is supported language is English (0x0409)
+    "GifBadge", // 1: Manufacturer
+    Name(),      // 2: Product
+    SerialNumber(),       // 3: Serials
+
+  #if CONFIG_TINYUSB_CDC_ENABLED
+    CONFIG_TINYUSB_DESC_CDC_STRING,          // 4: CDC Interface
+  #endif
+
+  #if CONFIG_TINYUSB_MSC_ENABLED
+    "GifBadge Storage",          // 5: MSC Interface
+  #endif
+    "FLASH",
+    nullptr                                     // NULL: Must be last. Indicates end of array
+  };
+
+  while (descriptor_str[++str_count] != nullptr){}
+
+  const tinyusb_config_t tusb_cfg =
+  {
+    .port = TINYUSB_PORT_FULL_SPEED_0,
+    .phy = {.skip_setup = false, .self_powered = true, .vbus_monitor_io = usb_sense},
+    .task = {.size = 4096, .priority = 5, .xCoreID = 0}, .descriptor = {
+      .device = &descriptor_dev,
+      .qualifier = nullptr,
+      .string = descriptor_str,
+      .string_count = str_count,
+      .full_speed_config = descriptor_fs_cfg,
+      .high_speed_config = nullptr,
+    }, .event_cb = {}, .event_arg = nullptr
+  };
+  return tinyusb_driver_install(&tusb_cfg);
+}
+
+void esp32s3::VbusHandler(bool state) {
+  if (state) {
+    esp_rom_gpio_connect_in_signal(GPIO_MATRIX_CONST_ONE_INPUT, USB_SRP_BVALID_IN_IDX, false);
+  } else {
+    esp_rom_gpio_connect_in_signal(GPIO_MATRIX_CONST_ZERO_INPUT, USB_SRP_BVALID_IN_IDX, false);
+  }
+}
+
 }
 
 #ifdef CONFIG_TINYUSB_DFU_MODE_DFU
@@ -320,7 +393,7 @@ void tud_dfu_download_cb(uint8_t alt, uint16_t block_num, uint8_t const *data, u
       return;
     }
 
-    err = esp_ota_begin(update_partition, 0, &update_handle);
+    err = esp_ota_begin(update_partition, OTA_WITH_SEQUENTIAL_WRITES, &update_handle);
     if (err != ESP_OK) {
       ESP_LOGE(TAG, "esp_ota_begin failed (%s)", esp_err_to_name(err));
       tud_dfu_finish_flashing(DFU_STATUS_ERR_WRITE);
@@ -385,7 +458,7 @@ uint16_t tud_dfu_upload_cb(uint8_t alt, uint16_t block_num, uint8_t *data, uint1
 
   LOGI(TAG, "Upload BlockNum %u of length %u", alt, block_num, length);
 
-  uint16_t const xfer_len = (uint16_t) strlen(upload_image[alt]);
+  auto const xfer_len = static_cast<uint16_t>(strlen(upload_image[alt]));
   memcpy(data, upload_image[alt], xfer_len);
 
   return xfer_len;
@@ -406,23 +479,21 @@ void tud_dfu_detach_cb(void) {
 
 #endif
 
-char* lltoa(long long val, int base){
-
+const char *lltoa(long long val, int base) {
   static char buf[64] = {0};
 
   int i = 62;
   int sign = (val < 0);
-  if(sign) val = -val;
+  if (sign) val = -val;
 
-  if(val == 0) return "0";
+  if (val == 0) return "0";
 
-  for(; val && i ; --i, val /= base) {
+  for (; val && i; --i, val /= base) {
     buf[i] = "0123456789abcdef"[val % base];
   }
 
-  if(sign) {
+  if (sign) {
     buf[i--] = '-';
   }
-  return &buf[i+1];
-
+  return &buf[i + 1];
 }

@@ -202,11 +202,11 @@ void lvgl_init(Boards::Board *board) {
 
 #ifdef ESP_PLATFORM
   // tickHandle = xTimerCreate("lvglTick", 5/portTICK_PERIOD_MS, pdTRUE, nullptr, lv_tick);
-  auto *xTaskBuffer =  static_cast<StaticTask_t *>(heap_caps_malloc(sizeof(StaticTask_t), MALLOC_CAP_SPIRAM));
-  auto *xStack = static_cast<StackType_t *>(heap_caps_malloc(7*1024, MALLOC_CAP_SPIRAM));
-
-  lvgl_task = xTaskCreateStatic(task, "LVGL", 7*1024, nullptr, LVGL_TASK_PRIORITY, xStack, xTaskBuffer);
-  // xTaskCreate(task, "LVGL", 5*1024, nullptr, LVGL_TASK_PRIORITY, &lvgl_task);
+  // auto *xTaskBuffer =  static_cast<StaticTask_t *>(heap_caps_malloc(sizeof(StaticTask_t), MALLOC_CAP_SPIRAM));
+  // auto *xStack = static_cast<StackType_t *>(heap_caps_malloc(7*1024, MALLOC_CAP_SPIRAM));
+  //
+  // lvgl_task = xTaskCreateStatic(task, "LVGL", 7*1024, nullptr, LVGL_TASK_PRIORITY, xStack, xTaskBuffer);
+  xTaskCreate(task, "LVGL", 7*1024, nullptr, LVGL_TASK_PRIORITY, &lvgl_task);
 #else
   xTaskCreate(task, "LVGL", 7*1024, nullptr, LVGL_TASK_PRIORITY, &lvgl_task);
 #endif

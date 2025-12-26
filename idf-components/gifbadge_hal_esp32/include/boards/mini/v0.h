@@ -9,7 +9,6 @@
 #include "drivers/keys_gpio.h"
 #include "drivers/display_gc9a01.h"
 #include "drivers/config_nvs.h"
-#include "i2c.h"
 #include "boards/boards_esp32s3.h"
 
 namespace Boards::esp32::s3::mini {
@@ -36,7 +35,6 @@ class v0 : public esp32s3 {
 
  private:
   hal::battery::esp32s3::battery_analog *_battery;
-  I2C *_i2c;
   hal::keys::esp32s3::keys_gpio *_keys;
   hal::display::esp32s3::display_gc9a01 *_display;
   hal::backlight::Backlight *_backlight;
