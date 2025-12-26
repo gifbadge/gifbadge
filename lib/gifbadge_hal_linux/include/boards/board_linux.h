@@ -46,7 +46,7 @@ class board_linux : public Boards::Board {
   StorageInfo GetStorageInfo() override;
   int StorageFormat() override { return 0; };
   const char * Name() override;
-  void * TurboBuffer() override {return nullptr;};
+  void * TurboBuffer() override {return _buffer;};
   hal::config::Config *GetConfig() override;
   void DebugInfo() override;
   bool UsbConnected() override;
@@ -57,5 +57,6 @@ class board_linux : public Boards::Board {
   hal::display::oslinux::display_sdl *_display;
   hal::config::oslinux::Config_Mem *_config;
   hal::keys::oslinux::keys_sdl *_keys;
+  void *_buffer = nullptr;
 
 };

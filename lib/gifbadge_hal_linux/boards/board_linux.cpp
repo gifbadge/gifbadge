@@ -87,6 +87,8 @@ Boards::WakeupSource board_linux::BootReason() {
   return Board::BootReason();
 }
 void board_linux::LateInit() {
+  _buffer = malloc(480 * 480 + 0x6100);
+
 }
 void board_linux::Reset() {
 }
