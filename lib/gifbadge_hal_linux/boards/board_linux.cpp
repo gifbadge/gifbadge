@@ -6,17 +6,18 @@
 #include "hal/keys.h"
 #include "hal/touch.h"
 #include "drivers/backlight_dummy.h"
+#include "drivers/display_sdl.h"
 
 board_linux::board_linux() {
   _backlight = new hal::backlight::oslinux::backlight_dummy();
   assert(_backlight != nullptr);
   _battery = new hal::battery::oslinux::battery_dummy();
   assert(_battery != nullptr);
-  _display = new hal::display::oslinux::display_sdl();
+  _display = displaySdl;
   assert(_display != nullptr);
   _config = new hal::config::oslinux::Config_Mem();
   assert(_config != nullptr);
-  _keys = new hal::keys::oslinux::keys_sdl();
+  _keys = keysSdl;
   assert(_keys != nullptr);
 
 

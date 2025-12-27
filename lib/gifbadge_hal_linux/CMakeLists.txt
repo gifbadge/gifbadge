@@ -5,5 +5,5 @@ target_include_directories(gifbadge_hal_linux PUBLIC public_include)
 target_include_directories(gifbadge_hal_linux PRIVATE include)
 target_link_libraries(gifbadge_hal_linux PUBLIC gifbadge_hal)
 target_link_libraries(gifbadge_hal_linux PRIVATE freertos_kernel)
-target_link_libraries(gifbadge_hal_linux PRIVATE ${SDL2_LIBRARIES})
+target_link_libraries(gifbadge_hal_linux PRIVATE ${SDL3_LIBRARIES})
 

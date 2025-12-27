@@ -1,4 +1,4 @@
-#include <SDL_events.h>
+#include <SDL3/SDL_events.h>
 #include "drivers/key_sdl.h"
 #include "portable_time.h"
 #include "log.h"
@@ -7,20 +7,12 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
-static void keys_refresh(void *args) {
-  auto *keys = static_cast<hal::keys::oslinux::keys_sdl *>(args);
-  while (true) {
-    keys->poll();
-    vTaskDelay(30/portTICK_RATE_MS);
-  }
-
-}
+hal::keys::oslinux::keys_sdl *keysSdl;
 
 hal::keys::oslinux::keys_sdl::keys_sdl() {
   _debounce_states[hal::keys::KEY_UP] = hal::keys::debounce_state{false, false, 0};
   _debounce_states[hal::keys::KEY_DOWN] = hal::keys::debounce_state{false, false, 0};
   _debounce_states[hal::keys::KEY_ENTER] = hal::keys::debounce_state{false, false, 0};
-  xTaskCreate(keys_refresh, "keys_refresh", 4000, this, 2, &_refreshTask);
 }
 
 void hal::keys::oslinux::keys_sdl::poll() {
@@ -39,12 +31,12 @@ void hal::keys::oslinux::keys_sdl::poll() {
   /* that occurs.                                                  */
   while (SDL_PollEvent(&event)) {
     /* We are only worried about SDL_KEYDOWN and SDL_KEYUP events */
-    if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
+    if (event.type == SDL_EVENT_KEY_DOWN || event.type == SDL_EVENT_KEY_UP) {
       for (auto keycode : keys) {
-        if (event.key.keysym.scancode == keycode.first) {
+        if (event.key.scancode == keycode.first) {
           LOGI("key_sdl", "key %i", keycode.first);
           key_debounce_update(&_debounce_states[keycode.second],
-                              event.type == SDL_KEYDOWN,
+                              event.type == SDL_EVENT_KEY_DOWN,
                               static_cast<int>(time - last),
                               &_debounce_config);
         }
@@ -64,4 +56,9 @@ hal::keys::EVENT_STATE *hal::keys::oslinux::keys_sdl::read() {
     }
   }
   return _currentState;
+}
+
+hal::keys::oslinux::keys_sdl *keys_sdl_init() {
+  keysSdl = new hal::keys::oslinux::keys_sdl();
+  return keysSdl;
 }

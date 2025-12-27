@@ -29,3 +29,7 @@ class keys_sdl : public hal::keys::Keys {
 
 };
 }
+
+hal::keys::oslinux::keys_sdl *keys_sdl_init();
+
+extern hal::keys::oslinux::keys_sdl *keysSdl;
