@@ -47,7 +47,7 @@ void hal::display::oslinux::display_sdl::update() {
     SDL_LockTexture(pixels, nullptr, &data, &pitch);
 
     memcpy(data, buffer, 480 * 480 * 2);
-    
+
     SDL_UnlockTexture(pixels);
 
     // copy to window
