@@ -155,6 +155,18 @@ void cbuffer_open(circular_buf_t *buffer, char *path) {
   TickType_t delay;
   bool should_sleep = false;
   while (true) {
+    uint32_t notify_option;
+    xTaskNotifyWaitIndexed(0, 0, 0xffffffff, &notify_option, 0);
+    switch (notify_option) {
+      case FILEBUFFER_STOP:
+        if (cbuffer.fd > 0) {
+          close(cbuffer.fd);
+        }
+        free(cbuffer.data);
+        vTaskDelete(nullptr);
+      default:
+        break;
+    }
     if (should_sleep) {
       should_sleep = false;
       delay = portMAX_DELAY;
