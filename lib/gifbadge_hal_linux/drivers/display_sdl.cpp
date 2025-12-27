@@ -29,6 +29,10 @@ hal::display::oslinux::display_sdl::~display_sdl() {
   SDL_DestroyRenderer(renderer);
   SDL_DestroyWindow(win);
   SDL_Quit();
+  if (buffer != nullptr) {
+    free(buffer);
+  }
+  sem_destroy(&mutex);
 }
 bool hal::display::oslinux::display_sdl::onColorTransDone(flushCallback_t callback) {
   _callback = callback;
