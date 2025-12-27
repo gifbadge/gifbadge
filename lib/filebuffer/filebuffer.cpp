@@ -143,7 +143,7 @@ void cbuffer_open(circular_buf_t *buffer, char *path) {
 }
 
 [[noreturn]] void FileBufferTask(void *params) {
-  printf("Starting FileBuffer task");
+  printf("Starting FileBuffer task\n");
   char path[255] = "";
   FileQueue = xQueueCreate(1, 255);
   readSemaphore = xSemaphoreCreateBinary();
