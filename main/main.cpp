@@ -319,7 +319,19 @@ void vApplicationStackOverflowHook( TaskHandle_t pxTask,
 
 bool running = true;
 
-extern "C" [[noreturn]] int main(void) {
+void die(void *) {
+  xTaskNotifyIndexed(xTaskGetHandle("display_task"), 0, DISPLAY_STOP, eSetValueWithOverwrite);
+  xTaskNotifyIndexed(xTaskGetHandle("file_buffer"), 0, FILEBUFFER_STOP, eSetValueWithOverwrite);
+  vTaskDelay(1000/portTICK_PERIOD_MS);
+  vTaskEndScheduler();
+}
+
+void handle_sigint(int) {
+  running = false;
+  xTaskCreate(die, "die", 10000, nullptr, 1, nullptr);
+}
+
+extern "C" int main(void) {
   //chroot the process, so it's closer to being on the device for paths, etc
   char path[255];
   getcwd(path, sizeof(path));
@@ -329,10 +341,10 @@ extern "C" [[noreturn]] int main(void) {
   chdir("/");
   mkdir("/data", 0700);
 
-  // hal::display::oslinux::display_sdl_init();
   console_init();
   console_print("test\n");
-//  signal( SIGINT, handle_sigint );
+  signal( SIGINT, handle_sigint );
+  signal( SIGTERM, handle_sigint );
   auto display = display_sdl_init();
   auto keys = keys_sdl_init();
     xTaskCreate((void (*)(void*))app_main, "app_main", 10000, nullptr, 1, nullptr);
