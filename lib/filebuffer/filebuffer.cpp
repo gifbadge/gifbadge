@@ -20,6 +20,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#define MAX_FILE_LEN 128
 
 #define BUFFER_CHUNK (256)
 #define BUFFER_KEEP_SIZE (BUFFER_CHUNK*8)
@@ -39,7 +40,7 @@ struct circular_buf_t {
   int32_t file_pos = 0;
   size_t file_size = 0;
   int fd = 0;
-  char open_file[255] = "";
+  char open_file[MAX_FILE_LEN+1] = "";
   bool start_valid = false;
   volatile uint8_t * start_pos = nullptr;
   size_t size = 0;
@@ -129,7 +130,7 @@ void cbuffer_open(circular_buf_t *buffer, char *path) {
   }
   cbuffer_reset(&cbuffer);
   if (strlen(path) > 0) {
-    strcpy(cbuffer.open_file, path);
+    strncpy(cbuffer.open_file, path, MAX_FILE_LEN);
     buffer->fd = open(path, O_RDONLY);
     if (buffer->fd == -1) {
       printf("Couldn't open file %s: %s\n", path, strerror(errno));
@@ -144,8 +145,8 @@ void cbuffer_open(circular_buf_t *buffer, char *path) {
 
 [[noreturn]] void FileBufferTask(void *params) {
   printf("Starting FileBuffer task\n");
-  char path[255] = "";
-  FileQueue = xQueueCreate(1, 255);
+  char path[MAX_FILE_LEN+1] = "";
+  FileQueue = xQueueCreate(1, MAX_FILE_LEN+1);
   readSemaphore = xSemaphoreCreateBinary();
   writeSemaphore = xSemaphoreCreateBinary();
   lockSemaphore = xSemaphoreCreateMutex();
@@ -209,14 +210,12 @@ void cbuffer_open(circular_buf_t *buffer, char *path) {
 }
 
 void filebuffer_open(const char *path) {
-  char _path[255] = "";
-  strcpy(_path, path);
   xSemaphoreTake(lockSemaphore, portMAX_DELAY);
   xQueueSend(FileQueue, path, 0);
 }
 
 void filebuffer_close() {
-  constexpr char path[255] = "";
+  constexpr char path[MAX_FILE_LEN+1] = "";
   xSemaphoreTake(lockSemaphore, portMAX_DELAY);
   xQueueSend(FileQueue, &path, 0);
 }
@@ -236,7 +235,7 @@ void filebuffer_seek(int32_t pos) {
     if (cbuffer.start_valid) {
       cbuffer.read_pos = cbuffer.start_pos;
     } else {
-      constexpr char path[255] = "";
+      constexpr char path[MAX_FILE_LEN+1] = "";
       xQueueSend(FileQueue, &path, 0);
       filebuffer_open(cbuffer.open_file);
     }
