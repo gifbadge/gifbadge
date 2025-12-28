@@ -259,16 +259,33 @@ static int get_file(char *path) {
 static image::Image *openFile(const char *path, hal::display::Display *display) {
   image::Image *in = ImageFactory(get_board()->GetDisplay()->size, path);
   if (in) {
-    if (in->Open(path, get_board()->TurboBuffer()) != 0) {
+    if (in->Open(get_board()->TurboBuffer()) != 0) {
       const char *lastError = in->GetLastError();
       delete in;
       return new image::ErrorImage(display->size, "Error Displaying File\n%s\n%s", path, lastError);
     }
     printf("%s x: %i y: %i\n", path, in->Size().first, in->Size().second);
     auto size = in->Size();
-    if (size > display->size) {
+    if (size > display->size && in->resizable() == false) {
       delete in;
       return new image::TooLargeImage(display->size, path);
+    }
+    if(size > display->size && in->resizable() == true) {
+      auto *resizing = new image::ResizingImage(display->size);
+      resizing->GetFrame(display->buffer, 0, 0, display->size.first);
+      display->write(0, 0, display->size.first, display->size.second, display->buffer);
+      delete resizing;
+      if (in->resize(display->size.first, display->size.second) != 0) {
+        delete in;
+        return new image::ErrorImage(display->size, "Error Resizing File\n%s", path);
+      }
+      delete in;
+      in = ImageFactory(get_board()->GetDisplay()->size, path);
+      if (in->Open(get_board()->TurboBuffer()) != 0) {
+        const char *lastError = in->GetLastError();
+        delete in;
+        return new image::ErrorImage(display->size, "Error Displaying File\n%s\n%s", path, lastError);
+      }
     }
   } else {
     return new image::ErrorImage(display->size, "Unsupported File\n%s", path);

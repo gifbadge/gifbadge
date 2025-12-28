@@ -20,8 +20,8 @@ std::pair<int16_t, int16_t> image::JPEG::Size() {
     return {jpeg.getWidth(), jpeg.getHeight()};
 }
 
-image::Image *image::JPEG::Create(screenResolution res) {
-    return new image::JPEG(res);
+image::Image *image::JPEG::Create(screenResolution res, const char *path) {
+    return new image::JPEG(res, path);
 }
 
 int JPEGDraw(JPEGDRAW *pDraw){
@@ -41,9 +41,8 @@ return 1;
 typedef int32_t (*readfile)(JPEGFILE *pFile, uint8_t *pBuf, int32_t iLen);
 typedef int32_t (*seekfile)(JPEGFILE *pFile, int32_t iPosition);
 
-int image::JPEG::Open(const char *path, void *buffer) {
-  strncpy(_path, path, sizeof(_path));
-  int ret = jpeg.open(path, bb2OpenFile, bb2CloseFile, (readfile)bb2ReadFile, (seekfile)bb2SeekFile, JPEGDraw);
+int image::JPEG::Open(void *buffer) {
+  int ret = jpeg.open(_path, bb2OpenFile, bb2CloseFile, (readfile)bb2ReadFile, (seekfile)bb2SeekFile, JPEGDraw);
   jpeg.setPixelType(RGB565_LITTLE_ENDIAN);
   if (jpeg.getJPEGType() == JPEG_MODE_PROGRESSIVE) {
     // We don't want to support Progressive JPEGs. JPEGDec only supports reading their thumbnails

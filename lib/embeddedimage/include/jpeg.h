@@ -16,8 +16,9 @@
 namespace image {
 
 class JPEG : public image::Image {
-public:
-    JPEG(screenResolution res): Image(res) {};
+  public:
+
+    JPEG(screenResolution res, const char *path): Image(res, path) {};
 
     ~JPEG() override;
 
@@ -25,9 +26,9 @@ public:
 
     std::pair<int16_t, int16_t> Size() override;
 
-    static Image* Create(screenResolution res);
+    static Image* Create(screenResolution res, const char *path);
 
-    int Open(const char *path, void *buffer) override;
+    int Open(void *buffer) override;
 
     const char * GetLastError() override;
 
