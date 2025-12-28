@@ -19,10 +19,10 @@ void dumpDebugFunc(TimerHandle_t) {
   auto *args = get_board();
   args->PmLock();
   args->DebugInfo();
-  unsigned int count = uxTaskGetSystemState(tasks, 20, nullptr);
-  for (unsigned int i = 0; i < count; i++) {
-    LOGI(TAG, "%s Highwater: %lu", tasks[i].pcTaskName, tasks[i].usStackHighWaterMark);
-  }
+  // unsigned int count = uxTaskGetSystemState(tasks, 20, nullptr);
+  // for (unsigned int i = 0; i < count; i++) {
+  //   LOGI(TAG, "%s Highwater: %lu", tasks[i].pcTaskName, tasks[i].usStackHighWaterMark);
+  // }
   args->PmRelease();
 
 }
@@ -70,6 +70,7 @@ static void initLowBatteryTask() {
   xTimerStart(xTimerCreate("low_battery_handler", 10000/portTICK_PERIOD_MS, pdTRUE, nullptr, lowBatteryTask),0);
 }
 
+#ifdef ESP_PLATFORM
 static void usbCall(tinyusb_msc_storage_handle_t handle, tinyusb_msc_event_t *e, void *arg){
   TaskHandle_t mainHandle = xTaskGetHandle("main");
   LOGI(TAG, "USB Callback %d", e->mount_point == TINYUSB_MSC_STORAGE_MOUNT_USB);
@@ -83,6 +84,7 @@ static void usbCall(tinyusb_msc_storage_handle_t handle, tinyusb_msc_event_t *e,
     xTaskNotifyIndexed(mainHandle, 0, 0, eSetValueWithOverwrite);
   }
 }
+#endif
 
 
 
@@ -150,7 +152,10 @@ extern "C" [[noreturn]] void app_main(void) {
   MAIN_STATES oldState = MAIN_NONE;
   TaskHandle_t lvglHandle = xTaskGetHandle("LVGL");
 
+#ifdef ESP_PLATFORM
   board->UsbCallBack(&usbCall);
+#endif
+
   if(board->UsbConnected()){
     currentState = MAIN_USB;
   } else {
@@ -198,22 +203,32 @@ extern "C" [[noreturn]] void app_main(void) {
   }
 
 }
-
+#ifdef ESP_PLATFORM
 IRAM_ATTR void vApplicationTickHook() {
   lv_tick(nullptr);
 }
+#else
+void vApplicationTickHook() {
+  lv_tick(nullptr);
+}
+#endif
+
 
 #ifndef ESP_PLATFORM
+#include <thread>
+#include "drivers/display_sdl.h"
+#include "drivers/key_sdl.h"
+#include <unistd.h>
+#include <sys/stat.h>
+#include <csignal>
 
-void vLoggingPrintf( const char * pcFormat,
-                     ... )
-{
-  va_list arg;
-
-  va_start( arg, pcFormat );
-  vprintf( pcFormat, arg );
-  va_end( arg );
-}
+// extern "C" void vLoggingPrintf(const char *pcFormat, ...) {
+//   va_list arg;
+//
+//   va_start( arg, pcFormat );
+//   vprintf( pcFormat, arg );
+//   va_end( arg );
+// }
 
 void vApplicationIdleHook( void )
 {
@@ -228,7 +243,7 @@ void vApplicationIdleHook( void )
    * allocated by the kernel to any task that has since deleted itself. */
 
 
-  usleep( 15000 );
+  // usleep( 15000 );
 }
 
 void vAssertCalled( const char * const pcFileName,
@@ -302,12 +317,19 @@ void vApplicationStackOverflowHook( TaskHandle_t pxTask,
   vAssertCalled( __FILE__, __LINE__ );
 }
 
-#include <thread>
-#include "drivers/display_sdl.h"
-#include "drivers/key_sdl.h"
-#include <SDL_events.h>
-#include <unistd.h>
-#include <sys/stat.h>
+bool running = true;
+
+void die(void *) {
+  xTaskNotifyIndexed(xTaskGetHandle("display_task"), 0, DISPLAY_STOP, eSetValueWithOverwrite);
+  xTaskNotifyIndexed(xTaskGetHandle("file_buffer"), 0, FILEBUFFER_STOP, eSetValueWithOverwrite);
+  vTaskDelay(1000/portTICK_PERIOD_MS);
+  vTaskEndScheduler();
+}
+
+void handle_sigint(int) {
+  running = false;
+  xTaskCreate(die, "die", 10000, nullptr, 1, nullptr);
+}
 
 extern "C" int main(void) {
   //chroot the process, so it's closer to being on the device for paths, etc
@@ -319,23 +341,25 @@ extern "C" int main(void) {
   chdir("/");
   mkdir("/data", 0700);
 
-  displaySdl = new display_sdl();
   console_init();
   console_print("test\n");
-//  signal( SIGINT, handle_sigint );
-    xTaskCreate((void (*)(void*))app_main, "app_main", 10000, NULL, 1, NULL);
+  signal( SIGINT, handle_sigint );
+  signal( SIGTERM, handle_sigint );
+  auto display = display_sdl_init();
+  auto keys = keys_sdl_init();
+    xTaskCreate((void (*)(void*))app_main, "app_main", 10000, nullptr, 1, nullptr);
   std::thread schedular([](){
     vTaskStartScheduler();
   });
-
-  while(1){
-    displaySdl->update();
-    if(get_board()->getKeys()) {
-      dynamic_cast<keys_sdl *>(get_board()->getKeys())->poll();
-    }
-    usleep(1000);
+  // sleep(10);
+  // handle_sigint(0);
+  while (running) {
+    display->update();
+    keys->poll();
+    usleep(30*1000);
   }
-
+  schedular.join();
+  return 0;
 }
 
 #endif

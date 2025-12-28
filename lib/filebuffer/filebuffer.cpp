@@ -20,8 +20,10 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#define MAX_FILE_LEN 128
 
 #define BUFFER_CHUNK (256)
+#define BUFFER_KEEP_SIZE (BUFFER_CHUNK*8)
 
 TaskHandle_t file_buffer_task = nullptr;
 
@@ -38,7 +40,7 @@ struct circular_buf_t {
   int32_t file_pos = 0;
   size_t file_size = 0;
   int fd = 0;
-  char open_file[255] = "";
+  char open_file[MAX_FILE_LEN+1] = "";
   bool start_valid = false;
   volatile uint8_t * start_pos = nullptr;
   size_t size = 0;
@@ -128,6 +130,7 @@ void cbuffer_open(circular_buf_t *buffer, char *path) {
   }
   cbuffer_reset(&cbuffer);
   if (strlen(path) > 0) {
+    strncpy(cbuffer.open_file, path, MAX_FILE_LEN);
     buffer->fd = open(path, O_RDONLY);
     if (buffer->fd == -1) {
       printf("Couldn't open file %s: %s\n", path, strerror(errno));
@@ -141,9 +144,9 @@ void cbuffer_open(circular_buf_t *buffer, char *path) {
 }
 
 [[noreturn]] void FileBufferTask(void *params) {
-  printf("Starting FileBuffer task");
-  char path[255] = "";
-  FileQueue = xQueueCreate(1, 255);
+  printf("Starting FileBuffer task\n");
+  char path[MAX_FILE_LEN+1] = "";
+  FileQueue = xQueueCreate(1, MAX_FILE_LEN+1);
   readSemaphore = xSemaphoreCreateBinary();
   writeSemaphore = xSemaphoreCreateBinary();
   lockSemaphore = xSemaphoreCreateMutex();
@@ -151,11 +154,29 @@ void cbuffer_open(circular_buf_t *buffer, char *path) {
 
   BaseType_t option = errQUEUE_EMPTY;
   TickType_t delay;
+  bool should_sleep = false;
   while (true) {
-    if (cbuffer_get_free(&cbuffer) - BUFFER_CHUNK * 2 >= BUFFER_CHUNK && cbuffer.fd > 0) {
-      delay = 0;
+    uint32_t notify_option;
+    xTaskNotifyWaitIndexed(0, 0, 0xffffffff, &notify_option, 0);
+    switch (notify_option) {
+      case FILEBUFFER_STOP:
+        if (cbuffer.fd > 0) {
+          close(cbuffer.fd);
+        }
+        free(cbuffer.data);
+        vTaskDelete(nullptr);
+      default:
+        break;
+    }
+    if (should_sleep) {
+      should_sleep = false;
+      delay = portMAX_DELAY;
     } else {
-      delay = 50 / portTICK_PERIOD_MS;
+      if (cbuffer_get_free(&cbuffer) - BUFFER_KEEP_SIZE >= BUFFER_CHUNK && cbuffer.fd > 0) {
+        delay = 0;
+      } else {
+        delay = 50 / portTICK_PERIOD_MS;
+      }
     }
     option = xQueueReceive(FileQueue, &path, delay);
     if (option == pdPASS) {
@@ -165,53 +186,57 @@ void cbuffer_open(circular_buf_t *buffer, char *path) {
       xSemaphoreGive(lockSemaphore);
     }
     if (cbuffer.fd > 0) {
-      if ((cbuffer_get_free(&cbuffer) - (BUFFER_CHUNK * 2)) >= BUFFER_CHUNK) {
-        size_t count = cbuffer_put_file(&cbuffer, BUFFER_CHUNK);
-        if (count < BUFFER_CHUNK) {
-          if (cbuffer.file_size > cbuffer.size) {
-            cbuffer.start_pos = cbuffer.write_pos;
-            lseek(cbuffer.fd, 0, SEEK_SET);
-            cbuffer_put_file(&cbuffer, BUFFER_CHUNK);
-            cbuffer.start_valid = true;
-          } else {
-            xQueuePeek(FileQueue, &path, portMAX_DELAY);
+      if (xSemaphoreTake(lockSemaphore, 0) == pdTRUE) {
+        if ((cbuffer_get_free(&cbuffer) - (BUFFER_KEEP_SIZE)) >= BUFFER_CHUNK) {
+          size_t count = cbuffer_put_file(&cbuffer, BUFFER_CHUNK);
+          if (count < BUFFER_CHUNK) {
+            if (cbuffer.file_size > cbuffer.size) {
+              cbuffer.start_pos = cbuffer.write_pos;
+              lseek(cbuffer.fd, 0, SEEK_SET);
+              cbuffer_put_file(&cbuffer, BUFFER_CHUNK);
+              cbuffer.start_valid = true;
+            } else {
+              should_sleep = true;
+            }
           }
+          xSemaphoreGive(readSemaphore);
+        } else {
+          xSemaphoreTake(writeSemaphore, 50 / portTICK_PERIOD_MS);
         }
-        xSemaphoreGive(readSemaphore);
-      } else {
-        xSemaphoreTake(writeSemaphore, 50 / portTICK_PERIOD_MS);
+        xSemaphoreGive(lockSemaphore);
       }
     }
   }
 }
 
 void filebuffer_open(const char *path) {
-  strcpy(cbuffer.open_file, path);
   xSemaphoreTake(lockSemaphore, portMAX_DELAY);
-  xQueueSend(FileQueue, &cbuffer.open_file, 0);
+  xQueueSend(FileQueue, path, 0);
 }
 
 void filebuffer_close() {
-  constexpr char path[255] = "";
+  constexpr char path[MAX_FILE_LEN+1] = "";
+  xSemaphoreTake(lockSemaphore, portMAX_DELAY);
   xQueueSend(FileQueue, &path, 0);
 }
 
 int32_t filebuffer_read(uint8_t *pBuf, const int32_t iLen) {
-  xSemaphoreTake(lockSemaphore, portMAX_DELAY);
   while (cbuffer_get_avail(&cbuffer) < iLen) {
     xSemaphoreTake(readSemaphore, 2 / portTICK_PERIOD_MS);
   }
   xSemaphoreGive(writeSemaphore);
-  xSemaphoreGive(lockSemaphore);
   return cbuffer_read(&cbuffer, pBuf, iLen);
 }
 
 void filebuffer_seek(int32_t pos) {
+  xSemaphoreTake(lockSemaphore, portMAX_DELAY);
   int32_t new_pos = pos - cbuffer.file_pos;
-  if ((cbuffer.file_size > cbuffer.size) && new_pos < -BUFFER_CHUNK*2) {
+  if ((cbuffer.file_size > cbuffer.size) && new_pos < -BUFFER_KEEP_SIZE) {
     if (cbuffer.start_valid) {
       cbuffer.read_pos = cbuffer.start_pos;
     } else {
+      constexpr char path[MAX_FILE_LEN+1] = "";
+      xQueueSend(FileQueue, &path, 0);
       filebuffer_open(cbuffer.open_file);
     }
     cbuffer.start_valid = false;
@@ -221,4 +246,5 @@ void filebuffer_seek(int32_t pos) {
     cbuffer.read_pos += new_pos;
     cbuffer.file_pos += new_pos;
   }
+  xSemaphoreGive(lockSemaphore);
 }

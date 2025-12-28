@@ -426,6 +426,10 @@ void display_task(void *params) {
         case DISPLAY_ADVANCE:
           advance = true;
           break;
+        case DISPLAY_STOP:
+          xTimerDelete(slideShowTimer, 0);
+          in.reset();
+          vTaskDelete(nullptr);
         default:
           break;
       }

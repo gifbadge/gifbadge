@@ -5,6 +5,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+  enum FILEBUFFER_OPTIONS {
+    FILEBUFFER_NONE,
+    FILEBUFFER_STOP
+  };
   [[noreturn]] void FileBufferTask(void *);
   void filebuffer_open(const char *path);
   void filebuffer_close();

@@ -25,3 +25,6 @@
 [submodule "idf-components/tinyusb"]
 	path = idf-components/tinyusb
 	url = https://github.com/gifbadge/tinyusb.git
+[submodule "external-deps/lvgl"]
+	path = external-deps/lvgl
+	url = https://github.com/lvgl/lvgl.git

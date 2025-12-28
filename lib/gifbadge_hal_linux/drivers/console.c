@@ -60,7 +60,7 @@ void console_print(const char * tag, const char * fmt,
   va_start( vargs, fmt );
 
   xSemaphoreTake( xStdioMutex, portMAX_DELAY );
-  char *fmt_tmp = malloc(strlen(fmt)+strlen(tag)+2);
+  char *fmt_tmp = malloc(strlen(fmt)+strlen(tag)+3);
   sprintf(fmt_tmp, "%s %s\n",tag, fmt);
 
   vprintf( fmt_tmp, vargs );

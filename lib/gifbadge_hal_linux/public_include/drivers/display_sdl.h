@@ -1,36 +1,40 @@
 #pragma once
 
 #include "hal/display.h"
-#include "display.h"
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
-#include <SDL2/SDL_timer.h>
-#include <semaphore>
+#include <SDL3/SDL.h>
 #include <semaphore.h>
+#include "FreeRTOS.h"
+#include "task.h"
 
-namespace hal::display::linux {
+namespace hal::display::oslinux {
 
 class display_sdl : public hal::display::Display {
  public:
+  void clear() override;
+
   display_sdl();
-  ~display_sdl() override = default;
+  ~display_sdl() override;
 
   bool onColorTransDone(flushCallback_t) override;
   void write(int x_start, int y_start, int x_end, int y_end, const void *color_data) override;
   void update();
  private:
-  SDL_Window* win;
-  SDL_Renderer * renderer;
-  SDL_Surface* surface;
-  SDL_Texture* tex;
-  SDL_Surface *window_surface;
-  SDL_Texture* pixels;
-  SDL_GLContext context;
+  SDL_Window* win = nullptr;
+  SDL_Renderer * renderer = nullptr;
+  SDL_Surface* surface = nullptr;
+  SDL_Texture* tex = nullptr;
+  SDL_Surface *window_surface = nullptr;
+  SDL_Texture* pixels = nullptr;
+  SDL_GLContext context = nullptr;
 
   sem_t mutex;
   flushCallback_t _callback = nullptr;
 };
 
-extern display_sdl *displaySdl;
+
+
 
 }
+hal::display::oslinux::display_sdl *display_sdl_init();
+
+extern hal::display::oslinux::display_sdl *displaySdl;

@@ -2,7 +2,7 @@
 #include <memory>
 #include "hal/config.h"
 
-namespace hal::config::linux {
+namespace hal::config::oslinux {
 class Config_Mem: public Config {
  public:
   Config_Mem();

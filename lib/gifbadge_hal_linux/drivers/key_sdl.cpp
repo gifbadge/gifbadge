@@ -1,22 +1,27 @@
-#include <SDL_events.h>
+#include <SDL3/SDL_events.h>
 #include "drivers/key_sdl.h"
 #include "portable_time.h"
 #include "log.h"
-#include "keys.h"
+#include "hal/keys.h"
 #include <array>
+#include "FreeRTOS.h"
+#include "task.h"
 
-std::array<std::pair<SDL_Scancode, hal::keys::EVENT_CODE>, 3> keys = {{
-                                                               {SDL_SCANCODE_DOWN, KEY_DOWN},
-                                                               {SDL_SCANCODE_UP, KEY_UP},
-                                                               {SDL_SCANCODE_SPACE, KEY_ENTER},
-                                                           }};
+hal::keys::oslinux::keys_sdl *keysSdl;
 
-keys_sdl::keys_sdl() {
-  _debounce_states[KEY_UP] = hal::keys::debounce_state{false, false, 0};
-  _debounce_states[KEY_DOWN] = hal::keys::debounce_state{false, false, 0};
-  _debounce_states[KEY_ENTER] = hal::keys::debounce_state{false, false, 0};
+hal::keys::oslinux::keys_sdl::keys_sdl() {
+  _debounce_states[hal::keys::KEY_UP] = hal::keys::debounce_state{false, false, 0};
+  _debounce_states[hal::keys::KEY_DOWN] = hal::keys::debounce_state{false, false, 0};
+  _debounce_states[hal::keys::KEY_ENTER] = hal::keys::debounce_state{false, false, 0};
 }
-void keys_sdl::poll() {
+
+void hal::keys::oslinux::keys_sdl::poll() {
+  std::array<std::pair<SDL_Scancode, hal::keys::EVENT_CODE>, 3> keys = {{
+    {SDL_SCANCODE_DOWN, hal::keys::KEY_DOWN},
+    {SDL_SCANCODE_UP, hal::keys::KEY_UP},
+    {SDL_SCANCODE_SPACE, hal::keys::KEY_ENTER},
+}};
+
   auto time = millis();
 
   SDL_Event event;
@@ -26,12 +31,12 @@ void keys_sdl::poll() {
   /* that occurs.                                                  */
   while (SDL_PollEvent(&event)) {
     /* We are only worried about SDL_KEYDOWN and SDL_KEYUP events */
-    if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
+    if (event.type == SDL_EVENT_KEY_DOWN || event.type == SDL_EVENT_KEY_UP) {
       for (auto keycode : keys) {
-        if (event.key.keysym.scancode == keycode.first) {
+        if (event.key.scancode == keycode.first) {
           LOGI("key_sdl", "key %i", keycode.first);
           key_debounce_update(&_debounce_states[keycode.second],
-                              event.type == SDL_KEYDOWN,
+                              event.type == SDL_EVENT_KEY_DOWN,
                               static_cast<int>(time - last),
                               &_debounce_config);
         }
@@ -40,7 +45,7 @@ void keys_sdl::poll() {
   }
   last = time;
 }
-hal::keys::EVENT_STATE *keys_sdl::read() {
+hal::keys::EVENT_STATE *hal::keys::oslinux::keys_sdl::read() {
   for (int b = 0; b < KEY_MAX; b++) {
     hal::keys::EVENT_STATE state = key_debounce_is_pressed(&_debounce_states[b]) ? STATE_PRESSED : STATE_RELEASED;
     if (state == STATE_PRESSED && last_state[b] == state) {
@@ -51,4 +56,9 @@ hal::keys::EVENT_STATE *keys_sdl::read() {
     }
   }
   return _currentState;
+}
+
+hal::keys::oslinux::keys_sdl *keys_sdl_init() {
+  keysSdl = new hal::keys::oslinux::keys_sdl();
+  return keysSdl;
 }

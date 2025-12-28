@@ -1,66 +1,101 @@
 #include <cassert>
 #include "boards/board_linux.h"
-#include "backlight.h"
-#include "battery.h"
-#include "display.h"
-#include "keys.h"
-#include "touch.h"
-#include "backlight_dummy.h"
+#include "hal/backlight.h"
+#include "hal/battery.h"
+#include "hal/display.h"
+#include "hal/keys.h"
+#include "hal/touch.h"
+#include "drivers/backlight_dummy.h"
+#include "drivers/display_sdl.h"
 
 board_linux::board_linux() {
-  _backlight = new hal::backlight::_linux::backlight_dummy();
+  _backlight = new hal::backlight::oslinux::backlight_dummy();
   assert(_backlight != nullptr);
-  _battery = new battery_dummy();
+  _battery = new hal::battery::oslinux::battery_dummy();
   assert(_battery != nullptr);
   _display = displaySdl;
   assert(_display != nullptr);
-  _config = new Config_Mem();
+  _config = new hal::config::oslinux::Config_Mem();
   assert(_config != nullptr);
-  _keys = new keys_sdl();
+  _keys = keysSdl;
   assert(_keys != nullptr);
 
 
 
 }
-hal::battery::Battery *board_linux::getBattery() {
+hal::battery::Battery *board_linux::GetBattery() {
   return _battery;
 }
-hal::touch::Touch *board_linux::getTouch() {
+hal::touch::Touch *board_linux::GetTouch() {
   return nullptr;
 }
-hal::keys::Keys *board_linux::getKeys() {
+hal::keys::Keys *board_linux::GetKeys() {
   return _keys;
 }
-hal::display::Display *board_linux::getDisplay() {
+hal::display::Display *board_linux::GetDisplay() {
   return _display;
 }
-hal::backlight::Backlight *board_linux::getBacklight() {
+hal::backlight::Backlight *board_linux::GetBacklight() {
   return _backlight;
 }
-void board_linux::powerOff() {
+hal::vbus::Vbus * board_linux::GetVbus() {
+  return Board::GetVbus();
+}
+void board_linux::PowerOff() {
 
 }
-BOARD_POWER board_linux::powerState() {
-  return BOARD_POWER_NORMAL;
+Boards::BoardPower board_linux::PowerState() {
+  return Boards::BOARD_POWER_NORMAL;
 }
-bool board_linux::storageReady() {
+bool board_linux::StorageReady() {
   return true;
 }
-StorageInfo board_linux::storageInfo() {
+StorageInfo board_linux::GetStorageInfo() {
   return StorageInfo();
 }
-const char *board_linux::name() {
+const char *board_linux::Name() {
   return "Linux";
 }
-bool board_linux::powerConnected() {
-  return true;
-}
-Config *board_linux::getConfig() {
+hal::config::Config *board_linux::GetConfig() {
   return _config;
 }
-void board_linux::debugInfo() {
+void board_linux::DebugInfo() {
+  _display->update();
+}
+bool board_linux::UsbConnected() {
+  return false;
+}
+
+hal::charger::Charger * board_linux::GetCharger() {
+  return Board::GetCharger();
+}
+void board_linux::BootInfo() {
+  Board::BootInfo();
+}
+bool board_linux::OtaCheck() {
+  return Board::OtaCheck();
+}
+Boards::OtaError board_linux::OtaValidate() {
+  return Board::OtaValidate();
+}
+void board_linux::OtaInstall() {
+  Board::OtaInstall();
+}
+int board_linux::OtaStatus() {
+  return Board::OtaStatus();
+}
+Boards::WakeupSource board_linux::BootReason() {
+  return Board::BootReason();
+}
+void board_linux::LateInit() {
+  _buffer = malloc(480 * 480 + 0x6100);
 
 }
-bool board_linux::usbConnected() {
-  return false;
+void board_linux::Reset() {
+}
+const char * board_linux::SwVersion() {
+  return "Blah";
+}
+char * board_linux::SerialNumber() {
+  return "None";
 }

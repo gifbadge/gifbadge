@@ -26,6 +26,7 @@ enum DISPLAY_OPTIONS {
   DISPLAY_NOTIFY_CHANGE = 9,
   DISPLAY_NOTIFY_USB = 10,
   DISPLAY_ADVANCE = 11,
+  DISPLAY_STOP = 12,
 };
 
 void display_task(void *params);

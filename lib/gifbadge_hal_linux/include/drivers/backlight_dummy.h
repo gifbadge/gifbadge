@@ -2,7 +2,7 @@
 
 #include "hal/backlight.h"
 
-namespace hal::backlight::linux {
+namespace hal::backlight::oslinux {
 class backlight_dummy : public hal::backlight::Backlight {
  public:
   backlight_dummy();
