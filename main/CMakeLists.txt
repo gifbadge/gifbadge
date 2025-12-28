@@ -17,6 +17,7 @@ SET(SRC "main.cpp"
         "ui/storage.cpp"
         "ui/usb_connected.cpp"
         "ui/device_info.cpp"
+        "ui/help.cpp"
 )
 
 if (ESP_PLATFORM)

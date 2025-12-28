@@ -11,6 +11,7 @@
 #include "ui/storage.h"
 #include "hw_init.h"
 #include "ui/device_info.h"
+#include "ui/help.h"
 
 static lv_obj_t * exit_callback() {
   TaskHandle_t handle = xTaskGetHandle("LVGL");
@@ -26,6 +27,12 @@ static void BacklightSliderExitCallback(lv_event_t *e) {
 
 static lv_obj_t *ShutdownCallback() {
   get_board()->PowerOff();
+  return nullptr;
+}
+
+static lv_obj_t * help_callback() {
+  // TaskHandle_t handle = xTaskGetHandle("LVGL");
+  // xTaskNotifyIndexed(handle, 0, LVGL_STOP, eSetValueWithOverwrite);
   return nullptr;
 }
 
@@ -120,6 +127,7 @@ void main_menu() {
     subMenu(main_menu, "Storage", &storage_menu);
     subMenu(main_menu, "Device Info", &device_info);
     subMenu(main_menu, "Shutdown", &ShutdownCallback);
+    subMenu(main_menu, "Help", &help);
     subMenu(main_menu, "Exit", &exit_callback);
 
     lv_obj_add_event_cb(scr, mainMenuCleanup, LV_EVENT_DELETE, lv_group_get_default());
