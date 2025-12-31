@@ -7,6 +7,7 @@
 #include <array>
 #include "image.h"
 #include <fcntl.h>
+#include <sys/stat.h>
 #include "jpeg.h"
 #include "png.h"
 #include "gif.h"
@@ -28,14 +29,22 @@ void CachedPath(const char *path, char *cachepath) {
 }
 
 image::Image *ImageFactory(image::screenResolution res, const char *path) {
-  int fd = open(path, O_RDONLY);
+  char cachepath[255];
+  CachedPath(path, cachepath);
+  strcat(cachepath, ".bmp");
+  struct stat sb{};
+  if (stat(cachepath, &sb) != 0) {
+    strcpy(cachepath, path);
+  };
+
+  int fd = open(cachepath, O_RDONLY);
   char buffer[10];
   read(fd, buffer, 9);
   close(fd);
   buffer[9] = 0;
   for (int i = 0; i < magicArray.size(); i++) {
     if (strncmp(magicArray[i], buffer, strlen(magicArray[i])) == 0) {
-      return handlers[i](res, path);
+      return handlers[i](res, cachepath);
     }
   }
   return nullptr;
