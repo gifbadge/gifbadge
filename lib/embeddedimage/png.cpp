@@ -98,24 +98,26 @@ image::frameReturn image::PNGImage::GetFrame(uint8_t *outBuf, int16_t x, int16_t
     }
     decoded = true;
     pnguser config = {.png = &png, .buffer = outBuf, .x = x, .y = y, .width = width};
-    png.decode((void *) &config, 0);
+    png.decode((void *) &config, PNG_FAST_PALETTE);
     return {image::frameStatus::END, 0};
 }
 
-void image::PNGImage::PNGDraw(PNGDRAW *pDraw) {
+int image::PNGImage::PNGDraw(PNGDRAW *pDraw) {
     auto *config = (pnguser *) pDraw->pUser;
     auto *buffer = (uint16_t *) config->buffer;
     uint32_t y = (pDraw->y+config->y) * config->width;
     uint16_t *line = &buffer[y+config->x];
     config->png->getLineAsRGB565(pDraw, line, PNG_RGB565_LITTLE_ENDIAN, 0xffffffff);
+    return 1;
 }
 
-void image::PNGImage::PNGResize(PNGDRAW *pDraw) {
+int image::PNGImage::PNGResize(PNGDRAW *pDraw) {
     auto *config = static_cast<pngresize *>(pDraw->pUser);
     if (config->buffer) {
         config->png->getLineAsRGB565(pDraw, static_cast<uint16_t *>(config->buffer), PNG_RGB565_LITTLE_ENDIAN, 0xffffffff);
         config->resize->line(pDraw->y, static_cast<uint16_t *>(config->buffer));
     }
+    return 1;
 
 }
 

@@ -44,8 +44,8 @@ class PNGImage : public image::Image {
 protected:
     PNG png{};
     bool decoded = false;
-    static void PNGDraw(PNGDRAW *pDraw);
-    static void PNGResize(PNGDRAW *pDraw);
+    static int PNGDraw(PNGDRAW *pDraw);
+    static int PNGResize(PNGDRAW *pDraw);
     void *_buffer = nullptr;
 };
 }
