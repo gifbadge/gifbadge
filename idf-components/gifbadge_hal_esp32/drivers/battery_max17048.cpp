@@ -29,7 +29,7 @@ hal::battery::esp32s3::battery_max17048::battery_max17048(i2c_master_bus_handle_
   LOGI(TAG, "MAX17048 Version %u %u", data_in[0], data_in[1]);
   const esp_timer_create_args_t battery_timer_args = {
       .callback = [](void *params) {
-        auto bat = (battery_max17048 *) params;
+        auto bat = static_cast<battery_max17048 *>(params);
         bat->poll();
       },
       .arg = this,

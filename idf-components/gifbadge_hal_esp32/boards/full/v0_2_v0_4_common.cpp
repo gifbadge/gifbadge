@@ -30,7 +30,7 @@ static bool checkSdState(esp_io_expander_handle_t io_expander) {
 static bool sdState;
 
 static void checkSDTimer(void *arg) {
-  auto io_expander = (esp_io_expander_handle_t) arg;
+  auto io_expander = static_cast<esp_io_expander_handle_t>(arg);
   if (checkSdState(io_expander) != sdState) {
     esp_restart();
   }

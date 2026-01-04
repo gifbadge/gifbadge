@@ -76,7 +76,7 @@ esp_err_t init_sdmmc_slot(sdmmc_host_t *host,
 
 
   // not using ff_memalloc here, as allocation in internal RAM is preferred
-  *card = (sdmmc_card_t *) malloc(sizeof(sdmmc_card_t));
+  *card = static_cast<sdmmc_card_t *>(malloc(sizeof(sdmmc_card_t)));
   ESP_GOTO_ON_FALSE(*card, ESP_ERR_NO_MEM, clean, TAG, "could not allocate new sdmmc_card_t");
 
   ESP_GOTO_ON_ERROR((host->init)(), clean, TAG, "Host Config Init fail");

@@ -51,7 +51,7 @@ esp_err_t esp_io_expander_new_gpio(hal::gpio::Gpio *gpio, esp_io_expander_handle
   ESP_RETURN_ON_FALSE(gpio != nullptr, ESP_ERR_INVALID_ARG, TAG, "Invalid gpio");
   ESP_RETURN_ON_FALSE(handle, ESP_ERR_INVALID_ARG, TAG, "Invalid handle");
 
-  auto *tca = (esp_io_expander_gpio_t *)calloc(1, sizeof(esp_io_expander_gpio_t));
+  auto *tca = static_cast<esp_io_expander_gpio_t *>(calloc(1, sizeof(esp_io_expander_gpio_t)));
   ESP_RETURN_ON_FALSE(tca, ESP_ERR_NO_MEM, TAG, "Malloc failed");
 
   tca->gpio = gpio;

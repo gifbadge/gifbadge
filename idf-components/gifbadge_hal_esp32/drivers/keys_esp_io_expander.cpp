@@ -11,7 +11,7 @@
 static const char *TAG = "keys_esp_io_expander";
 
 static void pollKeys(void *args) {
-  auto *keys = (hal::keys::esp32s3::keys_esp_io_expander *) args;
+  auto *keys = static_cast<hal::keys::esp32s3::keys_esp_io_expander *>(args);
   keys->poll();
 }
 

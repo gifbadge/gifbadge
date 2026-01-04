@@ -11,7 +11,7 @@
 static const char *TAG = "keys_generic";
 
 static void pollKeys(void *args) {
-  auto *keys = (hal::keys::esp32s3::KeysGeneric *) args;
+  auto *keys = static_cast<hal::keys::esp32s3::KeysGeneric *>(args);
   keys->poll();
 }
 

@@ -37,7 +37,7 @@ hal::battery::esp32s3::battery_analog::battery_analog(adc_channel_t) {
   LOGI(TAG, "Initial Voltage: %f", smoothed_voltage * 2);
   alpha = 0.05;
   const esp_timer_create_args_t battery_timer_args = {.callback = [](void *params) {
-    auto bat = (hal::battery::esp32s3::battery_analog *) params;
+    auto bat = static_cast<hal::battery::esp32s3::battery_analog *>(params);
     bat->poll();
   }, .arg = this, .dispatch_method = ESP_TIMER_TASK, .name = "battery_analog", .skip_unhandled_events = true};
   esp_timer_handle_t battery_handler_handle = nullptr;
