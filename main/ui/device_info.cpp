@@ -1,3 +1,9 @@
+/*******************************************************************************
+ * Copyright (c) 2026 GifBadge
+ *
+ * SPDX-License-Identifier:   GPL-3.0-or-later
+ ******************************************************************************/
+
 #include "ui/device_info.h"
 #include "ui/menu.h"
 #include "ui/device_group.h"

@@ -1,3 +1,9 @@
+/*******************************************************************************
+ * Copyright (c) 2026 GifBadge
+ *
+ * SPDX-License-Identifier:   GPL-3.0-or-later
+ ******************************************************************************/
+
 #include <driver/gpio.h>
 #include "drivers/vbus_gpio.h"
 

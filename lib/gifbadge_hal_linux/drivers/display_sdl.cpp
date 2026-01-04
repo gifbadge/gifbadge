@@ -1,3 +1,9 @@
+/*******************************************************************************
+ * Copyright (c) 2026 GifBadge
+ *
+ * SPDX-License-Identifier:   GPL-3.0-or-later
+ ******************************************************************************/
+
 #include <cstdlib>
 #include "drivers/display_sdl.h"
 

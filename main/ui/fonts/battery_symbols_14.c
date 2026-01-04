@@ -1,4 +1,10 @@
 /*******************************************************************************
+ * Copyright (c) 2026 GifBadge
+ *
+ * SPDX-License-Identifier:   GPL-3.0-or-later
+ ******************************************************************************/
+
+/*******************************************************************************
  * Size: 14 px
  * Bpp: 1
  * Opts: --bpp 1 --size 14 --format lvgl --lv-include lvgl.h --font MaterialSymbolsOutlined[FILL,GRAD,opsz,wght]-Filled.ttf -r0xea0b,0xf22f,0xe5cd --no-compress -o ui/fonts/battery_symbols_14.c

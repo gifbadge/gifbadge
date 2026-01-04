@@ -1,3 +1,9 @@
+/*******************************************************************************
+ * Copyright (c) 2026 GifBadge
+ *
+ * SPDX-License-Identifier:   GPL-3.0-or-later
+ ******************************************************************************/
+
 #include <SDL3/SDL_events.h>
 #include "drivers/key_sdl.h"
 #include "portable_time.h"

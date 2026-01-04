@@ -1,3 +1,9 @@
+/*******************************************************************************
+ * Copyright (c) 2026 GifBadge
+ *
+ * SPDX-License-Identifier:   GPL-3.0-or-later
+ ******************************************************************************/
+
 #pragma once
 #include "../../drivers/battery_max17048.h"
 #include "../../drivers/keys_esp_io_expander.h"

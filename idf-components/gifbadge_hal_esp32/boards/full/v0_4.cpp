@@ -1,3 +1,9 @@
+/*******************************************************************************
+ * Copyright (c) 2026 GifBadge
+ *
+ * SPDX-License-Identifier:   GPL-3.0-or-later
+ ******************************************************************************/
+
 #include <driver/sdmmc_defs.h>
 #include "boards/full/v0_4.h"
 #include "esp_io_expander.h"

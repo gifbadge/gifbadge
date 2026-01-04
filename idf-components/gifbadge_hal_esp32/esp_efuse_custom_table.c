@@ -1,8 +1,8 @@
-/*
- * SPDX-FileCopyrightText: 2017-2025 Espressif Systems (Shanghai) CO LTD
+/*******************************************************************************
+ * Copyright (c) 2026 GifBadge
  *
- * SPDX-License-Identifier: Apache-2.0
- */
+ * SPDX-License-Identifier:   GPL-3.0-or-later
+ ******************************************************************************/
 
 #include "sdkconfig.h"
 #include "esp_efuse.h"

@@ -1,8 +1,8 @@
-/*
- * SPDX-FileCopyrightText: 2015-2023 Espressif Systems (Shanghai) CO LTD
+/*******************************************************************************
+ * Copyright (c) 2026 GifBadge
  *
- * SPDX-License-Identifier: Apache-2.0
- */
+ * SPDX-License-Identifier:   GPL-3.0-or-later
+ ******************************************************************************/
 
 #include <inttypes.h>
 #include <stdlib.h>

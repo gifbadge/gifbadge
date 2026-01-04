@@ -1,3 +1,9 @@
+/*******************************************************************************
+ * Copyright (c) 2026 GifBadge
+ *
+ * SPDX-License-Identifier:   GPL-3.0-or-later
+ ******************************************************************************/
+
 #include "drivers/battery_dummy.h"
 #include "hal/battery.h"
 hal::battery::oslinux::battery_dummy::battery_dummy() = default;

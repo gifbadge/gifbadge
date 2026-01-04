@@ -1,3 +1,9 @@
+/*******************************************************************************
+ * Copyright (c) 2026 GifBadge
+ *
+ * SPDX-License-Identifier:   GPL-3.0-or-later
+ ******************************************************************************/
+
 #ifndef LVGL_FILE_SELECT_H
 #define LVGL_FILE_SELECT_H
 #include <lvgl.h>

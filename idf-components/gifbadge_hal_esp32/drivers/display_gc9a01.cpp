@@ -1,3 +1,9 @@
+/*******************************************************************************
+ * Copyright (c) 2026 GifBadge
+ *
+ * SPDX-License-Identifier:   GPL-3.0-or-later
+ ******************************************************************************/
+
 #include <driver/spi_master.h>
 #include <esp_lcd_panel_vendor.h>
 #include <esp_lcd_panel_ops.h>

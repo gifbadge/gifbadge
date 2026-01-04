@@ -1,3 +1,9 @@
+/*******************************************************************************
+ * Copyright (c) 2026 GifBadge
+ *
+ * SPDX-License-Identifier:   GPL-3.0-or-later
+ ******************************************************************************/
+
 #include "drivers/backlight_dummy.h"
 
 hal::backlight::oslinux::backlight_dummy::backlight_dummy() {
