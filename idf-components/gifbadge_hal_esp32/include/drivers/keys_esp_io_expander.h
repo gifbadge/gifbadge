@@ -4,6 +4,7 @@
 #include <hal/keys.h>
 #include "esp_io_expander.h"
 #include <esp_timer.h>
+#include "debounce.h"
 
 namespace hal::keys::esp32s3 {
 class keys_esp_io_expander : public hal::keys::Keys {
@@ -25,8 +26,8 @@ class keys_esp_io_expander : public hal::keys::Keys {
   int buttonConfig[KEY_MAX] = {};
   uint32_t lastLevels = 0;
 
-  debounce_state _debounce_states[KEY_MAX] = {};
-  debounce_config _debounce_config = {10, 10};
+  zmk_debounce_state _debounce_states[KEY_MAX] = {};
+  zmk_debounce_config _debounce_config = {10, 10};
   esp_timer_handle_t keyTimer = nullptr;
   EVENT_STATE _currentState[KEY_MAX] = {};
 

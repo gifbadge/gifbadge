@@ -10,9 +10,9 @@
 hal::keys::oslinux::keys_sdl *keysSdl;
 
 hal::keys::oslinux::keys_sdl::keys_sdl() {
-  _debounce_states[hal::keys::KEY_UP] = hal::keys::debounce_state{false, false, 0};
-  _debounce_states[hal::keys::KEY_DOWN] = hal::keys::debounce_state{false, false, 0};
-  _debounce_states[hal::keys::KEY_ENTER] = hal::keys::debounce_state{false, false, 0};
+  _debounce_states[hal::keys::KEY_UP] = zmk_debounce_state{false, false, 0};
+  _debounce_states[hal::keys::KEY_DOWN] = zmk_debounce_state{false, false, 0};
+  _debounce_states[hal::keys::KEY_ENTER] = zmk_debounce_state{false, false, 0};
 }
 
 void hal::keys::oslinux::keys_sdl::poll() {
@@ -35,7 +35,7 @@ void hal::keys::oslinux::keys_sdl::poll() {
       for (auto keycode : keys) {
         if (event.key.scancode == keycode.first) {
           LOGI("key_sdl", "key %i", keycode.first);
-          key_debounce_update(&_debounce_states[keycode.second],
+          zmk_debounce_update(&_debounce_states[keycode.second],
                               event.type == SDL_EVENT_KEY_DOWN,
                               static_cast<int>(time - last),
                               &_debounce_config);
@@ -47,7 +47,7 @@ void hal::keys::oslinux::keys_sdl::poll() {
 }
 hal::keys::EVENT_STATE *hal::keys::oslinux::keys_sdl::read() {
   for (int b = 0; b < KEY_MAX; b++) {
-    hal::keys::EVENT_STATE state = key_debounce_is_pressed(&_debounce_states[b]) ? STATE_PRESSED : STATE_RELEASED;
+    hal::keys::EVENT_STATE state = zmk_debounce_is_pressed(&_debounce_states[b]) ? STATE_PRESSED : STATE_RELEASED;
     if (state == STATE_PRESSED && last_state[b] == state) {
       _currentState[b] = STATE_HELD;
     } else {

@@ -53,5 +53,7 @@ if (ESP_PLATFORM)
     )
     target_link_libraries(${COMPONENT_LIB} PUBLIC "-u custom_app_desc")
     target_link_libraries(${COMPONENT_LIB} PRIVATE gifbadge_hal npmx)
+    target_link_libraries(${COMPONENT_LIB} PUBLIC zmk_debounce)
+
 
 endif ()

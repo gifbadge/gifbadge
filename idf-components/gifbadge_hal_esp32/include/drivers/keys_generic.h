@@ -2,6 +2,7 @@
 
 #include "hal/keys.h"
 #include "hal/gpio.h"
+#include "debounce.h"
 
 namespace hal::keys::esp32s3 {
 class KeysGeneric: public hal::keys::Keys{
@@ -13,8 +14,8 @@ class KeysGeneric: public hal::keys::Keys{
 
  private:
   gpio::Gpio *_keys[KEY_MAX];
-  debounce_state _debounce_states[KEY_MAX];
-  debounce_config _debounce_config = {50, 50};
+  zmk_debounce_state _debounce_states[KEY_MAX];
+  zmk_debounce_config _debounce_config = {50, 50};
   EVENT_STATE _currentState[KEY_MAX];
   long long last;
   esp_timer_handle_t keyTimer = nullptr;

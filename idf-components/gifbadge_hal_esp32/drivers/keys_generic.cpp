@@ -12,7 +12,7 @@ static void pollKeys(void *args) {
 hal::keys::EVENT_STATE *hal::keys::esp32s3::KeysGeneric::read() {
   for (int b = 0; b < hal::keys::KEY_MAX; b++) {
     if (_keys[b] != nullptr) {
-      hal::keys::EVENT_STATE state = key_debounce_is_pressed(&_debounce_states[b]) ? hal::keys::STATE_PRESSED : hal::keys::STATE_RELEASED;
+      hal::keys::EVENT_STATE state = zmk_debounce_is_pressed(&_debounce_states[b]) ? hal::keys::STATE_PRESSED : hal::keys::STATE_RELEASED;
       if (state == hal::keys::STATE_PRESSED && last_state[b] == state) {
         _currentState[b] = hal::keys::STATE_HELD;
       } else {
@@ -33,9 +33,9 @@ hal::keys::esp32s3::KeysGeneric::KeysGeneric(hal::gpio::Gpio *up, hal::gpio::Gpi
   _keys[hal::keys::KEY_DOWN] = down,
   _keys[hal::keys::KEY_ENTER] = enter;
 
-  _debounce_states[hal::keys::KEY_UP] = debounce_state{false, false, 0};
-  _debounce_states[hal::keys::KEY_DOWN] = debounce_state{false, false, 0};
-  _debounce_states[hal::keys::KEY_ENTER] = debounce_state{false, false, 0};
+  _debounce_states[hal::keys::KEY_UP] = zmk_debounce_state{false, false, 0};
+  _debounce_states[hal::keys::KEY_DOWN] = zmk_debounce_state{false, false, 0};
+  _debounce_states[hal::keys::KEY_ENTER] = zmk_debounce_state{false, false, 0};
 
   last = esp_timer_get_time() / 1000;
 
@@ -57,8 +57,8 @@ void hal::keys::esp32s3::KeysGeneric::poll() {
   for (int b = 0; b < hal::keys::KEY_MAX; b++) {
     if (_keys[b] != nullptr) {
       bool state = _keys[b]->GpioRead();
-      key_debounce_update(&_debounce_states[b], state == 0, static_cast<int>(time - last), &_debounce_config);
-      if (key_debounce_get_changed(&_debounce_states[b])) {
+      zmk_debounce_update(&_debounce_states[b], state == 0, static_cast<int>(time - last), &_debounce_config);
+      if (zmk_debounce_get_changed(&_debounce_states[b])) {
         LOGI(TAG, "%i changed", b);
       }
     }

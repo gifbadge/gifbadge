@@ -67,6 +67,7 @@ add_subdirectory(external-deps/npmx)
 add_subdirectory(lib/filebuffer)
 add_subdirectory(lib/embeddedimage)
 add_subdirectory(lib/simplebmp)
+add_subdirectory(lib/zmk_debounce)
 
 if (ESP_PLATFORM)
     if(EXISTS ${CMAKE_SOURCE_DIR}/config/esp32s3/lv_conf.h)
