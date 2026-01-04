@@ -33,6 +33,7 @@ hal::backlight::esp32s3::backlight_ledc::backlight_ledc(gpio_num_t gpio, bool in
       .timer_sel      = LEDC_TIMER_0,
       .duty           = 0, // Set duty to 0%
       .hpoint         = 0,
+      .sleep_mode     = LEDC_SLEEP_MODE_KEEP_ALIVE,
       .flags          = {.output_invert = invert}
   };
   ESP_ERROR_CHECK(ledc_channel_config(&ledc_channel));
