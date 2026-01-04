@@ -40,10 +40,10 @@ class v0 : public esp32s3 {
   void LateInit() override;
 
  private:
-  hal::battery::esp32s3::battery_analog *_battery;
-  hal::keys::esp32s3::keys_gpio *_keys;
-  hal::display::esp32s3::display_gc9a01 *_display;
-  hal::backlight::Backlight *_backlight;
+  hal::battery::esp32s3::battery_analog *_battery = nullptr;
+  hal::keys::esp32s3::keys_gpio *_keys = nullptr;
+  hal::display::esp32s3::display_gc9a01 *_display = nullptr;
+  hal::backlight::Backlight *_backlight = nullptr;
   int UsbCallBack(tusb_msc_callback_t callback);
 };
 }

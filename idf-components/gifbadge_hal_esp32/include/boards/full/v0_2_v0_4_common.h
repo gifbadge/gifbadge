@@ -56,15 +56,15 @@ class v0_2v0_4 : public Boards::esp32::s3::esp32s3_sdmmc {
   hal::vbus::Vbus *GetVbus() override;;
 
  protected:
-  hal::keys::esp32s3::keys_esp_io_expander *_keys;
-  hal::display::esp32s3::display_st7701s *_display;
-  hal::backlight::esp32s3::backlight_ledc *_backlight;
-  hal::touch::esp32s3::touch_ft5x06 *_touch;
-  hal::vbus::esp32s3::b2_1_v0_2v0_4_vbus *_vbus;
+  hal::keys::esp32s3::keys_esp_io_expander *_keys = nullptr;
+  hal::display::esp32s3::display_st7701s *_display = nullptr;
+  hal::backlight::esp32s3::backlight_ledc *_backlight = nullptr;
+  hal::touch::esp32s3::touch_ft5x06 *_touch = nullptr;
+  hal::vbus::esp32s3::b2_1_v0_2v0_4_vbus *_vbus = nullptr;
   bool _usbConnected = false;
 
-  void *buffer;
-  hal::battery::esp32s3::battery_max17048 *_battery;
+  void *buffer = nullptr;
+  hal::battery::esp32s3::battery_max17048 *_battery = nullptr;
   esp_io_expander_handle_t _io_expander = nullptr;
   i2c_master_bus_handle_t bus_handle = nullptr;
 };

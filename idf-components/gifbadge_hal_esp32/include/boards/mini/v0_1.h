@@ -45,13 +45,13 @@ class v0_1 : public esp32s3_sdmmc {
   hal::vbus::Vbus *GetVbus() override;;
 
  private:
-  hal::battery::esp32s3::battery_max17048 *_battery;
+  hal::battery::esp32s3::battery_max17048 *_battery = nullptr;
   i2c_master_bus_handle_t bus_handle = nullptr;
-  hal::keys::esp32s3::keys_gpio * _keys;
-  hal::display::esp32s3::display_gc9a01 * _display;
-  hal::backlight::esp32s3::backlight_ledc * _backlight;
-  hal::touch::esp32s3::touch_ft5x06 * _touch;
-  void *buffer;
-  hal::vbus::esp32s3::VbusGpio *_vbus;
+  hal::keys::esp32s3::keys_gpio * _keys = nullptr;
+  hal::display::esp32s3::display_gc9a01 * _display = nullptr;
+  hal::backlight::esp32s3::backlight_ledc * _backlight = nullptr;
+  hal::touch::esp32s3::touch_ft5x06 * _touch = nullptr;
+  void *buffer = nullptr;
+  hal::vbus::esp32s3::VbusGpio *_vbus = nullptr;
 };
 }

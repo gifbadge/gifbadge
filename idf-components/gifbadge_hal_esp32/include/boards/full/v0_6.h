@@ -49,14 +49,14 @@ class v0_6 : public Boards::esp32::s3::esp32s3_sdmmc {
 
  protected:
   i2c_master_bus_handle_t bus_handle = nullptr;
-  hal::keys::esp32s3::KeysGeneric *_keys;
-  hal::display::esp32s3::display_st7701s *_display;
-  hal::backlight::esp32s3::backlight_ledc *_backlight;
-  hal::touch::esp32s3::touch_ft5x06 *_touch;
+  hal::keys::esp32s3::KeysGeneric *_keys = nullptr;
+  hal::display::esp32s3::display_st7701s *_display = nullptr;
+  hal::backlight::esp32s3::backlight_ledc *_backlight = nullptr;
+  hal::touch::esp32s3::touch_ft5x06 *_touch = nullptr;
   bool _usbConnected = false;
-  hal::pmic::esp32s3::PmicNpm1300 *_pmic;
+  hal::pmic::esp32s3::PmicNpm1300 *_pmic = nullptr;
 
-  void *buffer;
+  void *buffer = nullptr;
   esp_io_expander_handle_t _io_expander = nullptr;
   hal::gpio::Gpio *_cs = nullptr;
   hal::gpio::Gpio *_card_detect = nullptr;
