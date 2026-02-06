@@ -1,5 +1,11 @@
+/*******************************************************************************
+ * Copyright (c) 2026 GifBadge
+ *
+ * SPDX-License-Identifier:   GPL-3.0-or-later
+ ******************************************************************************/
+
 #include <malloc.h>
-#include "unity/unity.h"
+#include "unity.h"
 #include "font_render.h"
 
 void test_render_font(void) {

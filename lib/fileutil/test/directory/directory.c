@@ -6,7 +6,7 @@
 
 #include <string.h>
 #include <sys/stat.h>
-#include "unity/unity.h"
+#include "unity.h"
 #include "directory.h"
 
 static int reject_a(const char *path, const char *file) {
