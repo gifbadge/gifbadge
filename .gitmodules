@@ -28,3 +28,6 @@
 [submodule "external-deps/lvgl"]
 	path = external-deps/lvgl
 	url = https://github.com/lvgl/lvgl.git
+[submodule "external-deps/Unity"]
+	path = external-deps/Unity
+	url = https://github.com/ThrowTheSwitch/Unity.git
