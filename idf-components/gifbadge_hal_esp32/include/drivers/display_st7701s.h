@@ -22,7 +22,7 @@ class display_st7701s : public hal::display::Display {
   ~display_st7701s() override = default;
 
   bool onColorTransDone(flushCallback_t) override;
-  void write(int x_start, int y_start, int x_end, int y_end, const void *color_data) override;
+  void write(int x_start, int y_start, int x_end, int y_end, void *color_data) override;
   void clear();
  private:
   size_t fb_number = 2;

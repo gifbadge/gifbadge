@@ -63,8 +63,9 @@ hal::display::esp32s3::display_gc9a01::display_gc9a01(int mosi, int sck, int cs,
 
   esp_lcd_panel_dev_config_t panel_config = {
       .reset_gpio_num = reset,
-      .rgb_endian = LCD_RGB_ENDIAN_RGB,
-      .data_endian = LCD_RGB_DATA_ENDIAN_LITTLE,
+      .rgb_endian = LCD_RGB_ENDIAN_BGR,
+      // .rgb_ele_order = LCD_RGB_ELEMENT_ORDER_RGB,
+      .data_endian = LCD_RGB_DATA_ENDIAN_BIG,
       .bits_per_pixel = 16,
       .flags = {
           .reset_active_high = 0,
@@ -107,8 +108,55 @@ bool hal::display::esp32s3::display_gc9a01::onColorTransDone(flushCallback_t cal
   return true;
 }
 
-void hal::display::esp32s3::display_gc9a01::write(int x_start, int y_start, int x_end, int y_end,
-                                                  const void *color_data) {
+
+void lv_draw_sw_rgb565_swap(void * buf, uint32_t buf_size_px)
+{
+  //Adapted from lvgl src/draw/sw/lv_draw_sw_utils.c
+  auto * buf16 = static_cast<uint16_t *>(buf);
+
+  /*2 pixels will be processed later, so handle 1 pixel alignment*/
+  if(reinterpret_cast<uintptr_t>(buf16) & 0x2) {
+    buf16[0] = ((buf16[0] & 0xff00) >> 8) | ((buf16[0] & 0x00ff) << 8);
+    buf16++;
+    buf_size_px--;
+  }
+
+  auto * buf32 = reinterpret_cast<uint32_t *>(buf16);
+  uint32_t u32_cnt = buf_size_px / 2;
+
+  while(u32_cnt >= 8) {
+    buf32[0] = ((buf32[0] & 0xff00ff00) >> 8) | ((buf32[0] & 0x00ff00ff) << 8);
+    buf32[1] = ((buf32[1] & 0xff00ff00) >> 8) | ((buf32[1] & 0x00ff00ff) << 8);
+    buf32[2] = ((buf32[2] & 0xff00ff00) >> 8) | ((buf32[2] & 0x00ff00ff) << 8);
+    buf32[3] = ((buf32[3] & 0xff00ff00) >> 8) | ((buf32[3] & 0x00ff00ff) << 8);
+    buf32[4] = ((buf32[4] & 0xff00ff00) >> 8) | ((buf32[4] & 0x00ff00ff) << 8);
+    buf32[5] = ((buf32[5] & 0xff00ff00) >> 8) | ((buf32[5] & 0x00ff00ff) << 8);
+    buf32[6] = ((buf32[6] & 0xff00ff00) >> 8) | ((buf32[6] & 0x00ff00ff) << 8);
+    buf32[7] = ((buf32[7] & 0xff00ff00) >> 8) | ((buf32[7] & 0x00ff00ff) << 8);
+    buf32 += 8;
+    u32_cnt -= 8;
+  }
+
+  while(u32_cnt) {
+    *buf32 = ((*buf32 & 0xff00ff00) >> 8) | ((*buf32 & 0x00ff00ff) << 8);
+    buf32++;
+    u32_cnt--;
+  }
+
+  /*Process the last pixel if needed*/
+  if(buf_size_px & 0x1) {
+    uint32_t e = buf_size_px - 1;
+    buf16[e] = ((buf16[e] & 0xff00) >> 8) | ((buf16[e] & 0x00ff) << 8);
+  }
+
+}
+
+void hal::display::esp32s3::display_gc9a01::write(int x_start,
+                                                  int y_start,
+                                                  int x_end,
+                                                  int y_end,
+                                                  void *color_data) {
+  lv_draw_sw_rgb565_swap(color_data, 240*240);
   esp_lcd_panel_draw_bitmap(panel_handle, x_start, y_start, x_end, y_end, color_data);
 }
 
