@@ -14,7 +14,6 @@
 #include "simplebmp.h"
 
 image::PNGImage::~PNGImage() {
-    printf("PNG DELETED\n");
     png.close();
 }
 
@@ -118,7 +117,6 @@ int image::PNGImage::PNGResize(PNGDRAW *pDraw) {
         config->resize->line(pDraw->y, static_cast<uint16_t *>(config->buffer));
     }
     return 1;
-
 }
 
 const char * image::PNGImage::GetLastError() {

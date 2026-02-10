@@ -21,7 +21,6 @@ bool image::JPEG::resizable() {
 }
 
 image::JPEG::~JPEG() {
-  printf("JPEG DELETED\n");
   jpeg.close();
 }
 

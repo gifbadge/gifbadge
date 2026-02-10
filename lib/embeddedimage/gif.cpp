@@ -67,7 +67,6 @@ static int32_t SeekFile(GIFFILE *pFile, int32_t iPosition) {
 image::GIF::GIF(screenResolution res, const char *path):Image(res, path) {};
 
 image::GIF::~GIF() {
-  printf("GIF DELETED\n");
   if (_gif.pFrameBuffer != nullptr) {
     free(_gif.pFrameBuffer);
     _gif.pFrameBuffer = nullptr;
