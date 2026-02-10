@@ -35,6 +35,11 @@ if(NOT ESP_PLATFORM)
         add_compile_options( -fsanitize=leak )
     endif()
 
+#    if(COVERAGE)
+        add_compile_options(--coverage)
+        add_link_options(--coverage)
+#    endif ()
+
     # Add the freertos_config for FreeRTOS-Kernel
     add_library( freertos_config INTERFACE )
 
@@ -58,6 +63,7 @@ if(NOT ESP_PLATFORM)
             $<IF:${NO_TRACING},,-Wno-pointer-to-int-cast>
     )
     #End of FreeRTOS stuff
+    enable_testing()
 endif ()
 
 add_subdirectory(lib/gifbadge_hal)
