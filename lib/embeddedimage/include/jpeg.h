@@ -39,7 +39,6 @@ class JPEG : public image::Image {
 private:
     JPEGDEC jpeg;
     bool decoded = false;
-    char _path[255];
     int _lastError = 0;
     void *_buffer;
 };
