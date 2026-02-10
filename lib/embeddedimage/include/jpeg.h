@@ -35,6 +35,7 @@ private:
     JPEGDEC jpeg;
     bool decoded = false;
     char _path[255];
+    int _lastError = 0;
 };
 }
 

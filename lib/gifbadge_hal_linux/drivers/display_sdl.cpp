@@ -44,7 +44,7 @@ bool hal::display::oslinux::display_sdl::onColorTransDone(flushCallback_t callba
   _callback = callback;
   return false;
 }
-void hal::display::oslinux::display_sdl::write(int x_start, int y_start, int x_end, int y_end, const void *color_data) {
+void hal::display::oslinux::display_sdl::write(int x_start, int y_start, int x_end, int y_end, void *color_data) {
   if (color_data != buffer) {
     memcpy(buffer, color_data, 480 * 480 * 2);
   }

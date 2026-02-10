@@ -22,7 +22,7 @@ class display_sdl : public hal::display::Display {
   ~display_sdl() override;
 
   bool onColorTransDone(flushCallback_t) override;
-  void write(int x_start, int y_start, int x_end, int y_end, const void *color_data) override;
+  void write(int x_start, int y_start, int x_end, int y_end, void *color_data) override;
   void update();
  private:
   SDL_Window* win = nullptr;

@@ -5,7 +5,7 @@
  ******************************************************************************/
 
 #include <sys/stat.h>
-#include "unity/unity.h"
+#include "unity.h"
 #include "file.h"
 
 void test_is_file() {

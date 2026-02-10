@@ -35,6 +35,11 @@ if(NOT ESP_PLATFORM)
         add_compile_options( -fsanitize=leak )
     endif()
 
+#    if(COVERAGE)
+        add_compile_options(--coverage)
+        add_link_options(--coverage)
+#    endif ()
+
     # Add the freertos_config for FreeRTOS-Kernel
     add_library( freertos_config INTERFACE )
 
@@ -58,6 +63,7 @@ if(NOT ESP_PLATFORM)
             $<IF:${NO_TRACING},,-Wno-pointer-to-int-cast>
     )
     #End of FreeRTOS stuff
+    enable_testing()
 endif ()
 
 add_subdirectory(lib/gifbadge_hal)
@@ -99,6 +105,8 @@ else()
     target_link_libraries(GifBadge gifbadge_hal gifbadge_hal_linux freertos_kernel EmbeddedImage FileUtil FontRender FileBuffer lvgl ${SDL3_LIBRARIES})
     set_property(TARGET GifBadge PROPERTY CXX_STANDARD 23)
     target_compile_options(GifBadge PRIVATE -fanalyzer)
+    add_library(unity STATIC ${CMAKE_SOURCE_DIR}/external-deps/Unity/src/unity.c)
+    target_include_directories(unity PUBLIC ${CMAKE_SOURCE_DIR}/external-deps/Unity/src/)
     set(C_STANDARD 11)
     set(CMAKE_CXX_STANDARD 23)
     set(C_EXTENSIONS ON)

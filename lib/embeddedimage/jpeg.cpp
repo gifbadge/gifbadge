@@ -45,6 +45,12 @@ int image::JPEG::Open(const char *path, void *buffer) {
   strncpy(_path, path, sizeof(_path));
   int ret = jpeg.open(path, bb2OpenFile, bb2CloseFile, (readfile)bb2ReadFile, (seekfile)bb2SeekFile, JPEGDraw);
   jpeg.setPixelType(RGB565_LITTLE_ENDIAN);
+  if (jpeg.getJPEGType() == JPEG_MODE_PROGRESSIVE) {
+    // We don't want to support Progressive JPEGs. JPEGDec only supports reading their thumbnails
+    _lastError = 255;
+    return 1;
+  }
+  _lastError = jpeg.getJPEGType();
   return ret==0; //Invert the return value
 }
 
@@ -58,11 +64,12 @@ image::frameReturn image::JPEG::GetFrame(uint8_t *outBuf, int16_t x, int16_t y, 
   pnguser config = {.png = nullptr, .buffer = outBuf, .x = x, .y = y, .width = width};
   jpeg.setUserPointer(&config);
   jpeg.decode(0, 0, 0);
+  _lastError = jpeg.getLastError();
   return {image::frameStatus::END, 0};
 }
 
 const char * image::JPEG::GetLastError() {
-    switch(jpeg.getLastError()){
+    switch(_lastError){
       case JPEG_SUCCESS:
         return "JPEG_SUCCESS";
       case JPEG_INVALID_PARAMETER:
@@ -73,6 +80,8 @@ const char * image::JPEG::GetLastError() {
         return "JPEG_UNSUPPORTED_FEATURE";
       case JPEG_INVALID_FILE:
         return "JPEG_INVALID_FILE";
+      case 255:
+        return "JPEG_PROGRESSIVE_NOT_SUPPORTED";
       default:
         return "UNKNOWN";
     };
