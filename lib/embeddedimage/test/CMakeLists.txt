@@ -15,11 +15,11 @@ set_property(TARGET test_embedded_image PROPERTY C_EXTENSIONS ON)
 set_property(TARGET test_embedded_image PROPERTY CXX_STANDARD 23)
 set_property(TARGET test_embedded_image PROPERTY CXX_EXTENSIONS ON)
 
-
 target_link_libraries(test_embedded_image
         EmbeddedImage
         unity
         gcov
+        freertos_kernel
 )
 
 add_test(NAME embedded_image_test COMMAND test_embedded_image WORKING_DIRECTORY .)

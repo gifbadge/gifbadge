@@ -7,6 +7,15 @@
 #include <unity.h>
 #include "test_png.h"
 #include "test_jpeg.h"
+#include "FreeRTOS.h"
+#include "task.h"
+
+void vApplicationStackOverflowHook( TaskHandle_t pxTask,
+                                    char * pcTaskName ) {
+}
+void vApplicationTickHook() {}
+void vApplicationMallocFailedHook( void )
+{}
 
 void setUp(void) {
 }
