@@ -1,5 +1,12 @@
-#pragma once
+/*******************************************************************************
+ * Copyright (c) 2026 GifBadge
+ *
+ * SPDX-License-Identifier:   GPL-3.0-or-later
+ ******************************************************************************/
 
+#pragma once
+#include <stdint.h>
+#include <utility>
 #include "fpm/include/fpm/fixed.hpp"
 #include "fpm/include/fpm/math.hpp"
 
@@ -21,9 +28,10 @@ class Resize {
   uint16_t output_height;
   fixedpt ratio;
   int output_y = 0;
-  std::array<rowdata, 2> rows = {{{-1,}, {-1,}}};
+    rowdata *rows = nullptr;
   public:
   Resize(uint16_t _input_width, uint16_t _input_height, uint16_t _output_width, uint16_t _output_height, uint16_t* _output);
+  ~Resize();
 
   [[nodiscard]] std::pair<int, int> calc_needed_rows(int y) const;
   void line(int input_y, const uint16_t *buf);

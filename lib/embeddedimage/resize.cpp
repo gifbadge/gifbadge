@@ -1,3 +1,9 @@
+/*******************************************************************************
+ * Copyright (c) 2026 GifBadge
+ *
+ * SPDX-License-Identifier:   GPL-3.0-or-later
+ ******************************************************************************/
+
 #include "resize.h"
 
 #include <cstdio>
@@ -38,12 +44,17 @@ Resize::Resize(uint16_t _input_width,
                uint16_t *_output): output(_output), input_width(_input_width), input_height(_input_height),
                                    output_width(_output_width),
                                    output_height(_output_height) {
+  rows = static_cast<rowdata *>(malloc(sizeof(rowdata)*2));
   if (input_width > input_height) {
     ratio = static_cast<fixedpt>(input_width) / static_cast<fixedpt>(output_width);
   } else {
     ratio = static_cast<fixedpt>(input_height) / static_cast<fixedpt>(output_height);
   }
   printf("Resizing image from x:%d y:%d to x:%d y:%d\n", input_width, input_height, output_width, output_height);
+}
+
+Resize::~Resize() {
+  free(rows);
 }
 
 [[nodiscard]] std::pair<int, int> Resize::calc_needed_rows(int y) const {
@@ -81,14 +92,13 @@ void Resize::line(const int input_y, const uint16_t *buf) {
 
     const weight y_weight = static_cast<weight>(ratio * y) - y_l;
 
-    for (int i = 0; auto [line, data] : rows) {
-      if (line == y_h) {
+    for (int i = 0; i < 2; i++) {
+      if (rows[i].line == y_h) {
         row_h = i;
       }
-      if (line == y_l) {
+      if (rows[i].line == y_l) {
         row_l = i;
       }
-      i++;
     }
     if (row_l == -1 || row_h == -1) {
       return;
