@@ -77,11 +77,14 @@ class Image {
 
     /**
      *
+     * @param outBuf
+     * @param x_start
+     * @param y_start
      * @param x
      * @param y
      * @return
      */
-    virtual int resize(int16_t x, int16_t y) { return -1; };
+    virtual int resize(uint8_t *outBuf, int16_t x_start, int16_t y_start, int16_t x, int16_t y) { return -1; };
 
   protected:
   char _path[255] = {};

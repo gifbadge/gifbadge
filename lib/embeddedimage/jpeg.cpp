@@ -118,16 +118,13 @@ int JPEGResize(JPEGDRAW *pDraw){
   return 1;
 }
 
-int image::JPEG::resize(int16_t x, int16_t y) {
+int image::JPEG::resize(uint8_t *outBuf, int16_t x_start, int16_t y_start, int16_t x, int16_t y) {
   jpeg.close();
   jpeg.open(_path, bb2OpenFile, bb2CloseFile, reinterpret_cast<readfile>(bb2ReadFile), reinterpret_cast<seekfile>(bb2SeekFile), JPEGResize);
   jpeg.setPixelType(RGB565_LITTLE_ENDIAN);
+  memset(outBuf, 0, sizeof(x*y*2));
 
-  auto *outBuf = static_cast<uint16_t *>(malloc(x*y*2));
-  if (outBuf == nullptr) {
-    return -1;
-  }
-  Resize resize(jpeg.getWidth(), jpeg.getHeight(), x, y, outBuf);
+  Resize resize(jpeg.getWidth(), jpeg.getHeight(), x, y, reinterpret_cast<uint16_t *>(outBuf));
   decoded = true;
   jpgresize config = {static_cast<uint16_t *>(_buffer), jpeg.getWidth(), jpeg.getHeight(), &resize, 0};
   jpeg.setUserPointer(&config);
@@ -155,6 +152,5 @@ int image::JPEG::resize(int16_t x, int16_t y) {
   bmp_write_header(&bmp, fo);
   bmp_write(&bmp, reinterpret_cast<uint8_t *>(outBuf), fo);
   fclose(fo);
-  free(outBuf);
   return 0;
   }

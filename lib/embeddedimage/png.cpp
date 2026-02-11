@@ -45,14 +45,10 @@ struct pngresize {
     void *buffer;
 } ;
 
-int image::PNGImage::resize(int16_t x, int16_t y) {
+int image::PNGImage::resize(uint8_t *outBuf, int16_t x_start, int16_t y_start, int16_t x, int16_t y) {
     png.close();
     png.open(_path, bb2OpenFile, bb2CloseFile, (readfile)bb2ReadFile, (seekfile)bb2SeekFile, PNGResize);
-    uint16_t *outBuf = static_cast<uint16_t *>(malloc(x*y*2));
-    if (outBuf == nullptr) {
-        return -1;
-    }
-    Resize resize(png.getWidth(), png.getHeight(), x, y, outBuf);
+    Resize resize(png.getWidth(), png.getHeight(), x, y, reinterpret_cast<uint16_t *>(outBuf));
     decoded = true;
     pngresize config = {&png, &resize, _buffer};
     png.decode((void *) &config, 0);
@@ -74,13 +70,11 @@ int image::PNGImage::resize(int16_t x, int16_t y) {
     strcat(cachepath, ".bmp");
     FILE *fo = fopen(cachepath, "wb");
     if (fo == nullptr) {
-        free(outBuf);
         return -1;
     }
     bmp_write_header(&bmp, fo);
     bmp_write(&bmp, reinterpret_cast<uint8_t *>(outBuf), fo);
     fclose(fo);
-    free(outBuf);
     return 0;
 }
 bool image::PNGImage::resizable() {

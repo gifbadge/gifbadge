@@ -34,7 +34,7 @@ class JPEG : public image::Image {
 
     bool resizable() override;
 
-    int resize(int16_t x, int16_t y) override;
+    int resize(uint8_t *outBuf, int16_t x_start, int16_t y_start, int16_t x, int16_t y) override;
 
 private:
     JPEGDEC jpeg;
