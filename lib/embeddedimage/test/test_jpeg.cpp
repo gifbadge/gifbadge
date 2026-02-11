@@ -12,6 +12,7 @@
 #include "testdata/480x480.h"
 #include "testdata/240x240on480x480jpeg.h"
 #include "testdata/437x437on480x480.h"
+#include "testdata/480x480jpeg_resized_240x240.h"
 
 #include <filesystem>
 
@@ -72,6 +73,34 @@ void test_jpeg_437_on_480() {
   TEST_ASSERT_EQUAL(0, img->Open(nullptr));
   TEST_ASSERT_EQUAL(image::frameStatus::END, img->GetFrame(frame, 0, 0, 480).first);
   TEST_ASSERT_EQUAL(0, memcmp(png437on480.pixel_data, frame, sizeof(480*480*2)));
+  free(frame);
+  delete img;
+}
+
+void test_jpeg_480_on_240() {
+  auto *frame = static_cast<uint8_t *>(malloc(240*240*2));
+  memset(frame, 0, 240*240*2);
+  auto img = new image::JPEG({240, 240}, (file_path/std::filesystem::path("480x480.jpeg")).c_str());
+
+  auto *buffer = static_cast<uint8_t *>(malloc(4*1024*1024));
+  TEST_ASSERT_EQUAL(0, img->Open( buffer));
+  TEST_ASSERT_EQUAL(-1, img->resize(frame, 0, 0, 240, 240)); //Expect this to fail since we can't write the output file
+  TEST_ASSERT_EQUAL(0, memcmp(jpeg480x480resized240x240.pixel_data, frame, sizeof(240*240*2)));
+  free(buffer);
+  free(frame);
+  delete img;
+}
+
+void test_jpeg_720_on_240() {
+  auto *frame = static_cast<uint8_t *>(malloc(240*240*2));
+  memset(frame, 0, 240*240*2);
+  auto img = new image::JPEG({240, 240}, (file_path/std::filesystem::path("720x720.jpeg")).c_str());
+
+  auto *buffer = static_cast<uint8_t *>(malloc(4*1024*1024));
+  TEST_ASSERT_EQUAL(0, img->Open( buffer));
+  TEST_ASSERT_EQUAL(-1, img->resize(frame, 0, 0, 240, 240)); //Expect this to fail since we can't write the output file
+  TEST_ASSERT_EQUAL(0, memcmp(jpeg480x480resized240x240.pixel_data, frame, sizeof(240*240*2)));
+  free(buffer);
   free(frame);
   delete img;
 }

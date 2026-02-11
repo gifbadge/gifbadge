@@ -1,5 +1,5 @@
 add_executable(test_embedded_image
-        test_png.cpp test_jpeg.cpp main.cpp
+        test_png.cpp test_jpeg.cpp test_resize.cpp main.cpp
 )
 
 target_include_directories(test_embedded_image PUBLIC ${CMAKE_CURRENT_LIST_DIR})

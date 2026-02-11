@@ -4,12 +4,6 @@
  * SPDX-License-Identifier:   GPL-3.0-or-later
  ******************************************************************************/
 
-#pragma once
-
-void test_jpeg_480_open();
-void test_jpeg_480_redraw();
-void test_jpeg_480_progressive_open();
-void test_jpeg_240_on_480();
-void test_jpeg_437_on_480();
-void test_jpeg_480_on_240();
-void test_jpeg_720_on_240();
+//
+// Created by silverchris on 2026-02-10.
+//
