@@ -84,7 +84,7 @@ void test_jpeg_480_on_240() {
 
   auto *buffer = static_cast<uint8_t *>(malloc(4*1024*1024));
   TEST_ASSERT_EQUAL(0, img->Open( buffer));
-  TEST_ASSERT_EQUAL(-1, img->resize(frame, 0, 0, 240, 240)); //Expect this to fail since we can't write the output file
+  TEST_ASSERT_EQUAL(0, img->resize(frame, 0, 0, 240, 240));
   TEST_ASSERT_EQUAL(0, memcmp(jpeg480x480resized240x240.pixel_data, frame, sizeof(240*240*2)));
   free(buffer);
   free(frame);
@@ -98,7 +98,7 @@ void test_jpeg_720_on_240() {
 
   auto *buffer = static_cast<uint8_t *>(malloc(4*1024*1024));
   TEST_ASSERT_EQUAL(0, img->Open( buffer));
-  TEST_ASSERT_EQUAL(-1, img->resize(frame, 0, 0, 240, 240)); //Expect this to fail since we can't write the output file
+  TEST_ASSERT_EQUAL(0, img->resize(frame, 0, 0, 240, 240));
   TEST_ASSERT_EQUAL(0, memcmp(jpeg480x480resized240x240.pixel_data, frame, sizeof(240*240*2)));
   free(buffer);
   free(frame);

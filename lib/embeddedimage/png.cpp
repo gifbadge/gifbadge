@@ -51,31 +51,7 @@ int image::PNGImage::resize(uint8_t *outBuf, int16_t x_start, int16_t y_start, i
     Resize resize(png.getWidth(), png.getHeight(), x, y, reinterpret_cast<uint16_t *>(outBuf));
     decoded = true;
     pngresize config = {&png, &resize, _buffer};
-    png.decode((void *) &config, 0);
-    BMP bmp;
-    bmp.width = x;
-    bmp.height = y;
-    bmp.planes = 1;
-    bmp.bits = 16;
-    bmp.compression = BMP_BITFIELDS;
-    bmp.colors = 0;
-    bmp.importantcolors = 0;
-    bmp.header_size = 124;
-    bmp.imagesize = bmp.width * bmp.height * 2;
-    bmp.red_mask = 0xF800;
-    bmp.green_mask = 0x07E0;
-    bmp.blue_mask = 0x001F;
-    char cachepath[255];
-    CachedPath(_path, cachepath);
-    strcat(cachepath, ".bmp");
-    FILE *fo = fopen(cachepath, "wb");
-    if (fo == nullptr) {
-        return -1;
-    }
-    bmp_write_header(&bmp, fo);
-    bmp_write(&bmp, reinterpret_cast<uint8_t *>(outBuf), fo);
-    fclose(fo);
-    return 0;
+    return png.decode((void *) &config, 0);
 }
 bool image::PNGImage::resizable() {
     if (_buffer) {

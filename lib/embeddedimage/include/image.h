@@ -94,5 +94,3 @@ class Image {
 extern std::array<const char *, 5> extensionArray;
 extern std::span<const char *> extensions;
 image::Image *ImageFactory(image::screenResolution res, const char *path);
-
-void CachedPath(const char *path, char *cachepath);

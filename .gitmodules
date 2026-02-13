@@ -31,3 +31,6 @@
 [submodule "external-deps/Unity"]
 	path = external-deps/Unity
 	url = https://github.com/ThrowTheSwitch/Unity.git
+[submodule "external-deps/md5-c"]
+	path = external-deps/md5-c
+	url = https://github.com/MilchRatchet/md5-c.git

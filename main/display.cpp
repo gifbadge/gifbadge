@@ -23,7 +23,9 @@
 #include "directory.h"
 #include "file.h"
 #include "dirname.h"
+#include "hash_path.h"
 #include "hw_init.h"
+#include "simplebmp.h"
 
 static const char *TAG = "DISPLAY";
 
@@ -265,7 +267,20 @@ static int get_file(char *path) {
 }
 
 static image::Image *openFile(const char *path, hal::display::Display *display) {
-  image::Image *in = ImageFactory(get_board()->GetDisplay()->size, path);
+  image::Image *in = nullptr;
+  uint8_t result[16];
+  hash_path(path, result);
+  char cache_path[128] = "/data/.cache/";
+  for(unsigned int i = 0; i < 16; ++i){
+    sprintf(cache_path+13+(i*2),"%02x", result[i]);
+  }
+  strcat(cache_path, ".bmp");
+  if (is_file(cache_path)) {
+    in = ImageFactory(get_board()->GetDisplay()->size, cache_path);
+  }
+  else {
+    in = ImageFactory(get_board()->GetDisplay()->size, path);
+  }
   if (in) {
     if (in->Open(get_board()->TurboBuffer()) != 0) {
       const char *lastError = in->GetLastError();
@@ -287,8 +302,29 @@ static image::Image *openFile(const char *path, hal::display::Display *display) 
         delete in;
         return new image::ErrorImage(display->size, "Error Resizing File\n%s", path);
       }
+      BMP bmp;
+      bmp.width = get_board()->GetDisplay()->size.first;
+      bmp.height = get_board()->GetDisplay()->size.second;
+      bmp.planes = 1;
+      bmp.bits = 16;
+      bmp.compression = BMP_BITFIELDS;
+      bmp.colors = 0;
+      bmp.importantcolors = 0;
+      bmp.header_size = 124;
+      bmp.imagesize = bmp.width * bmp.height * 2;
+      bmp.red_mask = 0xF800;
+      bmp.green_mask = 0x07E0;
+      bmp.blue_mask = 0x001F;
+      FILE *fo = fopen(cache_path, "wb");
+      if (fo == nullptr) {
+        delete in;
+        return new image::ErrorImage(display->size, "Error Saving Resized Image\n%s", path);
+      }
+      bmp_write_header(&bmp, fo);
+      bmp_write(&bmp, display->buffer, fo);
+      fclose(fo);
       delete in;
-      in = ImageFactory(get_board()->GetDisplay()->size, path);
+      in = ImageFactory(get_board()->GetDisplay()->size, cache_path);
       if (in->Open(get_board()->TurboBuffer()) != 0) {
         const char *lastError = in->GetLastError();
         delete in;

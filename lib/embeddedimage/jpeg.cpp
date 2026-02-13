@@ -128,29 +128,5 @@ int image::JPEG::resize(uint8_t *outBuf, int16_t x_start, int16_t y_start, int16
   decoded = true;
   jpgresize config = {static_cast<uint16_t *>(_buffer), jpeg.getWidth(), jpeg.getHeight(), &resize, 0};
   jpeg.setUserPointer(&config);
-  jpeg.decode(0, 0, 0);
-  BMP bmp;
-  bmp.width = x;
-  bmp.height = y;
-  bmp.planes = 1;
-  bmp.bits = 16;
-  bmp.compression = BMP_BITFIELDS;
-  bmp.colors = 0;
-  bmp.importantcolors = 0;
-  bmp.header_size = 124;
-  bmp.imagesize = bmp.width * bmp.height * 2;
-  bmp.red_mask = 0xF800;
-  bmp.green_mask = 0x07E0;
-  bmp.blue_mask = 0x001F;
-  char cachepath[255];
-  CachedPath(_path, cachepath);
-  strcat(cachepath, ".bmp");
-  FILE *fo = fopen(cachepath, "wb");
-  if (fo == nullptr) {
-    return -1;
-  }
-  bmp_write_header(&bmp, fo);
-  bmp_write(&bmp, reinterpret_cast<uint8_t *>(outBuf), fo);
-  fclose(fo);
-  return 0;
+  return jpeg.decode(0, 0, 0)==0;
   }
