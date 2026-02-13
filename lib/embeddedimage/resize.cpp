@@ -107,10 +107,10 @@ void Resize::line(const int input_y, const uint16_t *buf) {
     for (int x = 0; x < output_width; x++) {
       int x_l = static_cast<int>(fpm::floor(ratio * x));
       x_l = std::max(0, x_l);
-      x_l = std::min(input_height - 1, x_l);
+      x_l = std::min(input_width - 1, x_l);
       int x_h = static_cast<int>(fpm::ceil(ratio * x));
       x_h = std::max(0, x_h);
-      x_h = std::min(input_height - 1, x_h);
+      x_h = std::min(input_width - 1, x_h);
 
       const weight x_weight = static_cast<weight>(ratio * x) - x_l;
 
