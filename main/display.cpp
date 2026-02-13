@@ -266,15 +266,23 @@ static int get_file(char *path) {
   return -1;
 }
 
-static image::Image *openFile(const char *path, hal::display::Display *display) {
-  image::Image *in = nullptr;
+static void get_cache(const char *path, char *cache_path) {
+  strcpy(cache_path, get_board()->GetStoragePath());
+  strcat(cache_path, "/.cache/");
   uint8_t result[16];
   hash_path(path, result);
-  char cache_path[128] = "/data/.cache/";
   for(unsigned int i = 0; i < 16; ++i){
-    sprintf(cache_path+13+(i*2),"%02x", result[i]);
+    char v[3];
+    sprintf(v,"%02x", result[i]);
+    strcat(cache_path, v);
   }
   strcat(cache_path, ".bmp");
+}
+
+static image::Image *openFile(const char *path, hal::display::Display *display) {
+  image::Image *in = nullptr;
+  char cache_path[128] = "";
+  get_cache(path, cache_path);
   if (is_file(cache_path)) {
     in = ImageFactory(get_board()->GetDisplay()->size, cache_path);
   }
