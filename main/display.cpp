@@ -298,6 +298,7 @@ static image::Image *openFile(const char *path, hal::display::Display *display) 
       resizing->GetFrame(display->buffer, 0, 0, display->size.first);
       display->write(0, 0, display->size.first, display->size.second, display->buffer);
       delete resizing;
+      memset(display->buffer, 0, display->size.first*display->size.second*2);
       if (in->resize(display->buffer, 0, 0, display->size.first, display->size.second) != 0) {
         delete in;
         return new image::ErrorImage(display->size, "Error Resizing File\n%s", path);
