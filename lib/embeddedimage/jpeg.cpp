@@ -124,7 +124,7 @@ int image::JPEG::resize(uint8_t *outBuf, int16_t x_start, int16_t y_start, int16
   jpeg.setPixelType(RGB565_LITTLE_ENDIAN);
   memset(outBuf, 0, sizeof(x*y*2));
 
-  Resize resize(jpeg.getWidth(), jpeg.getHeight(), x, y, reinterpret_cast<uint16_t *>(outBuf));
+  Resize resize(jpeg.getWidth(), jpeg.getHeight(), x, y, reinterpret_cast<uint16_t *>(outBuf), static_cast<uint8_t *>(_buffer)+64*1024);
   decoded = true;
   jpgresize config = {static_cast<uint16_t *>(_buffer), jpeg.getWidth(), jpeg.getHeight(), &resize, 0};
   jpeg.setUserPointer(&config);

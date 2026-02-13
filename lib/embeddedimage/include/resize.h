@@ -32,8 +32,7 @@ class Resize {
   int output_y = 0;
     rowdata *rows = nullptr;
   public:
-  Resize(uint16_t _input_width, uint16_t _input_height, uint16_t _output_width, uint16_t _output_height, uint16_t* _output);
-  ~Resize();
+  Resize(uint16_t _input_width, uint16_t _input_height, uint16_t _output_width, uint16_t _output_height, uint16_t* _output, void *buffer);
   int xOffset = 0;
   int yOffset = 0;
 

@@ -41,10 +41,12 @@ Resize::Resize(uint16_t _input_width,
                uint16_t _input_height,
                uint16_t _output_width,
                uint16_t _output_height,
-               uint16_t *_output): output(_output), input_width(_input_width), input_height(_input_height),
+               uint16_t *_output,
+               void *buffer): output(_output), input_width(_input_width), input_height(_input_height),
                                    frame_width(_output_width),
                                    frame_height(_output_height) {
-  rows = static_cast<rowdata *>(malloc(sizeof(rowdata)*2));
+  rows = static_cast<rowdata *>(buffer);
+  memset(rows, 0, sizeof(rowdata));
   if (input_width > input_height) {
     ratio = static_cast<fixedpt>(input_width) / static_cast<fixedpt>(frame_width);
   } else {
@@ -60,10 +62,6 @@ Resize::Resize(uint16_t _input_width,
   yOffset = static_cast<int16_t>((_output_height / 2) - ((resize_height+ 1) / 2));
 
   printf("Resizing image from x:%d y:%d to x:%d y:%d\n", input_width, input_height, resize_width, resize_height);
-}
-
-Resize::~Resize() {
-  free(rows);
 }
 
 [[nodiscard]] std::pair<int, int> Resize::calc_needed_rows(int y) const {

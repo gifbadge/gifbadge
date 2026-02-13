@@ -48,7 +48,7 @@ struct pngresize {
 int image::PNGImage::resize(uint8_t *outBuf, int16_t x_start, int16_t y_start, int16_t x, int16_t y) {
     png.close();
     png.open(_path, bb2OpenFile, bb2CloseFile, (readfile)bb2ReadFile, (seekfile)bb2SeekFile, PNGResize);
-    Resize resize(png.getWidth(), png.getHeight(), x, y, reinterpret_cast<uint16_t *>(outBuf));
+    Resize resize(png.getWidth(), png.getHeight(), x, y, reinterpret_cast<uint16_t *>(outBuf), static_cast<uint8_t *>(_buffer)+64*1024);
     decoded = true;
     pngresize config = {&png, &resize, _buffer};
     return png.decode((void *) &config, 0);
