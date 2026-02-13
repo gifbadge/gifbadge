@@ -301,6 +301,36 @@ bool check_cache(const char *path, const char *cache_path) {
   return false;
 }
 
+int save_cache(const char *path, const char *cache_path, const uint8_t *buffer) {
+  BMP bmp;
+  bmp.width = get_board()->GetDisplay()->size.first;
+  bmp.height = get_board()->GetDisplay()->size.second;
+  bmp.planes = 1;
+  bmp.bits = 16;
+  bmp.compression = BMP_BITFIELDS;
+  bmp.colors = 0;
+  bmp.importantcolors = 0;
+  bmp.header_size = 124;
+  bmp.imagesize = bmp.width * bmp.height * 2;
+  bmp.red_mask = 0xF800;
+  bmp.green_mask = 0x07E0;
+  bmp.blue_mask = 0x001F;
+  FILE *fo = fopen(cache_path, "wb");
+  if (fo == nullptr) {
+    return -1;
+  }
+  bmp_write_header(&bmp, fo);
+  bmp_write(&bmp, buffer, fo);
+  fclose(fo);
+  struct stat f;
+  utimbuf new_times;
+  stat(path, &f);
+  new_times.actime = f.st_atime; /* keep atime unchanged */
+  new_times.modtime = f.st_mtime; /* set mtime to current time */
+  utime(cache_path, &new_times);
+  return 0;
+}
+
 static image::Image *openFile(const char *path, hal::display::Display *display) {
   image::Image *in = nullptr;
   char cache_path[128] = "";
@@ -333,33 +363,9 @@ static image::Image *openFile(const char *path, hal::display::Display *display) 
         delete in;
         return new image::ErrorImage(display->size, "Error Resizing File\n%s", path);
       }
-      BMP bmp;
-      bmp.width = get_board()->GetDisplay()->size.first;
-      bmp.height = get_board()->GetDisplay()->size.second;
-      bmp.planes = 1;
-      bmp.bits = 16;
-      bmp.compression = BMP_BITFIELDS;
-      bmp.colors = 0;
-      bmp.importantcolors = 0;
-      bmp.header_size = 124;
-      bmp.imagesize = bmp.width * bmp.height * 2;
-      bmp.red_mask = 0xF800;
-      bmp.green_mask = 0x07E0;
-      bmp.blue_mask = 0x001F;
-      FILE *fo = fopen(cache_path, "wb");
-      if (fo == nullptr) {
-        delete in;
+      if (save_cache(path, cache_path, display->buffer) != 0) {
         return new image::ErrorImage(display->size, "Error Saving Resized Image\n%s", path);
       }
-      bmp_write_header(&bmp, fo);
-      bmp_write(&bmp, display->buffer, fo);
-      fclose(fo);
-      struct stat f;
-      utimbuf new_times;
-      stat(path, &f);
-      new_times.actime = f.st_atime; /* keep atime unchanged */
-      new_times.modtime = f.st_mtime; /* set mtime to current time */
-      utime(cache_path, &new_times);
 
       delete in;
       in = ImageFactory(get_board()->GetDisplay()->size, cache_path);
