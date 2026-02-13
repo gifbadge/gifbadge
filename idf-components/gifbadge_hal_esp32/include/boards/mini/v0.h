@@ -34,6 +34,7 @@ class v0 : public esp32s3 {
   bool StorageReady() override { return true; };
   StorageInfo GetStorageInfo() override;
   int StorageFormat() override { return ESP_OK; };
+  const char *GetStoragePath() override { return "/data"; };
   const char *Name() override;
   void *TurboBuffer() override { return nullptr; };
   bool UsbConnected() override;

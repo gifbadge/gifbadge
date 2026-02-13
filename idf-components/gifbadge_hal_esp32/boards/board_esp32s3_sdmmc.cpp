@@ -66,8 +66,12 @@ int esp32::s3::esp32s3_sdmmc::StorageFormat() {
   return ret;
 }
 
+const char *esp32::s3::esp32s3_sdmmc::GetStoragePath() {
+  return "/data";
+}
+
 esp_err_t init_sdmmc_slot(sdmmc_host_t *host,
-                           const sdmmc_slot_config_t *slot_config,
+                          const sdmmc_slot_config_t *slot_config,
                           sdmmc_card_t **card) {
   esp_err_t ret = ESP_OK;
   bool host_init = false;

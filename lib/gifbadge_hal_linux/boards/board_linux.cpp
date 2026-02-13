@@ -6,6 +6,9 @@
 
 #include <cassert>
 #include "boards/board_linux.h"
+
+#include <unistd.h>
+
 #include "hal/backlight.h"
 #include "hal/battery.h"
 #include "hal/display.h"
@@ -25,6 +28,8 @@ board_linux::board_linux() {
   assert(_config != nullptr);
   _keys = keysSdl;
   assert(_keys != nullptr);
+
+  getcwd(_storagePath, 128);
 
 
 
@@ -59,6 +64,11 @@ bool board_linux::StorageReady() {
 StorageInfo board_linux::GetStorageInfo() {
   return StorageInfo();
 }
+
+const char * board_linux::GetStoragePath() {
+  return _storagePath;
+}
+
 const char *board_linux::Name() {
   return "Linux";
 }

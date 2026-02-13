@@ -19,6 +19,7 @@ namespace Boards::esp32::s3 {
   bool UsbConnected() override;
   StorageInfo GetStorageInfo() override;
   int StorageFormat() override;
+  const char *GetStoragePath() override;
   void Reset() override;
   int UsbCallBack(tusb_msc_callback_t callback) override;
 
