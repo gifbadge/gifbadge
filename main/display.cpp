@@ -13,6 +13,8 @@
 
 #include "display.h"
 #include <memory>
+#include <sys/stat.h>
+
 #include "image.h"
 #include "png.h"
 #include "images/low_batt_png.h"
@@ -26,6 +28,7 @@
 #include "hash_path.h"
 #include "hw_init.h"
 #include "simplebmp.h"
+#include <utime.h>
 
 static const char *TAG = "DISPLAY";
 
@@ -278,12 +281,31 @@ static void get_cache(const char *path, char *cache_path) {
   }
   strcat(cache_path, ".bmp");
 }
+/**
+ * Checks if a cache file exists and is still current
+ * @param path
+ * @param cache_path
+ * @return true if cache file is valid, otherwise false
+ */
+bool check_cache(const char *path, const char *cache_path) {
+  if (is_file(cache_path)) {
+    struct stat original;
+    stat(path, &original);
+    struct stat cache;
+    stat(cache_path, &cache);
+    if (original.st_mtime != cache.st_mtime) {
+      return false;
+    }
+    return true;
+  }
+  return false;
+}
 
 static image::Image *openFile(const char *path, hal::display::Display *display) {
   image::Image *in = nullptr;
   char cache_path[128] = "";
   get_cache(path, cache_path);
-  if (is_file(cache_path)) {
+  if (check_cache(path, cache_path)) {
     in = ImageFactory(get_board()->GetDisplay()->size, cache_path);
   }
   else {
@@ -332,6 +354,13 @@ static image::Image *openFile(const char *path, hal::display::Display *display) 
       bmp_write_header(&bmp, fo);
       bmp_write(&bmp, display->buffer, fo);
       fclose(fo);
+      struct stat f;
+      utimbuf new_times;
+      stat(path, &f);
+      new_times.actime = f.st_atime; /* keep atime unchanged */
+      new_times.modtime = f.st_mtime; /* set mtime to current time */
+      utime(cache_path, &new_times);
+
       delete in;
       in = ImageFactory(get_board()->GetDisplay()->size, cache_path);
       if (in->Open(get_board()->TurboBuffer()) != 0) {
