@@ -42,15 +42,24 @@ Resize::Resize(uint16_t _input_width,
                uint16_t _output_width,
                uint16_t _output_height,
                uint16_t *_output): output(_output), input_width(_input_width), input_height(_input_height),
-                                   output_width(_output_width),
-                                   output_height(_output_height) {
+                                   frame_width(_output_width),
+                                   frame_height(_output_height) {
   rows = static_cast<rowdata *>(malloc(sizeof(rowdata)*2));
   if (input_width > input_height) {
-    ratio = static_cast<fixedpt>(input_width) / static_cast<fixedpt>(output_width);
+    ratio = static_cast<fixedpt>(input_width) / static_cast<fixedpt>(frame_width);
   } else {
-    ratio = static_cast<fixedpt>(input_height) / static_cast<fixedpt>(output_height);
+    ratio = static_cast<fixedpt>(input_height) / static_cast<fixedpt>(frame_height);
   }
-  printf("Resizing image from x:%d y:%d to x:%d y:%d\n", input_width, input_height, output_width, output_height);
+
+  //Maintain aspect ratio
+  resize_width = static_cast<uint16_t>(fpm::round(input_width / ratio));
+  resize_height = static_cast<uint16_t>(fpm::round(input_height / ratio));
+
+  //Position in middle of frame
+  xOffset = static_cast<int16_t>((_output_width / 2) - ((resize_width +1) / 2));
+  yOffset = static_cast<int16_t>((_output_height / 2) - ((resize_height+ 1) / 2));
+
+  printf("Resizing image from x:%d y:%d to x:%d y:%d\n", input_width, input_height, resize_width, resize_height);
 }
 
 Resize::~Resize() {
@@ -84,7 +93,7 @@ void Resize::line(const int input_y, const uint16_t *buf) {
     return;
   }
 
-  for (int y = output_y; y < output_height; y++) {
+  for (int y = output_y; y < resize_height; y++) {
     int row_l = -1;
     int row_h = -1;
 
@@ -104,7 +113,7 @@ void Resize::line(const int input_y, const uint16_t *buf) {
       return;
     }
 
-    for (int x = 0; x < output_width; x++) {
+    for (int x = 0; x < resize_width; x++) {
       int x_l = static_cast<int>(fpm::floor(ratio * x));
       x_l = std::max(0, x_l);
       x_l = std::min(input_width - 1, x_l);
@@ -119,7 +128,7 @@ void Resize::line(const int input_y, const uint16_t *buf) {
       const uint16_t c = rows[row_h].data[x_l];
       const uint16_t d = rows[row_h].data[x_h];
 
-      output[(y * output_width) + x] = interpolate_rgb565(a, b, c, d, x_weight, y_weight);
+      output[(y+yOffset) * frame_width + x+xOffset] = interpolate_rgb565(a, b, c, d, x_weight, y_weight);
     }
 
     output_y = y + 1;
