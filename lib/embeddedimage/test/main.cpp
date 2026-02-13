@@ -40,5 +40,6 @@ int main() {
   RUN_TEST(test_jpeg_437_on_480);
   RUN_TEST(test_jpeg_480_on_240);
   RUN_TEST(test_jpeg_720_on_240);
+  RUN_TEST(test_png_960x720_on_480);
   return UNITY_END();
 }

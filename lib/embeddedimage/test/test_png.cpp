@@ -13,6 +13,7 @@
 #include "testdata/240x240on480x480.h"
 #include "testdata/437x437on480x480.h"
 #include "testdata/480x480png_resized_240x240.h"
+#include "testdata/960x480_resized_480x360.h"
 
 #include <filesystem>
 
@@ -98,6 +99,20 @@ void test_png_720_on_240() {
   TEST_ASSERT_EQUAL(0, img->Open( buffer));
   TEST_ASSERT_EQUAL(0, img->resize(frame, 0, 0, 240, 240));
   TEST_ASSERT_EQUAL(0, memcmp(png480x480resized240x240.pixel_data, frame, sizeof(240*240*2)));
+  free(buffer);
+  free(frame);
+  delete img;
+}
+
+void test_png_960x720_on_480() {
+  auto *frame = static_cast<uint8_t *>(malloc(480*480*2));
+  memset(frame, 0, 480*480*2);
+  auto img = new image::PNGImage({480, 480}, (file_path/std::filesystem::path("960x720.png")).c_str());
+
+  auto *buffer = static_cast<uint8_t *>(malloc(480 * 480 + 0x6100));
+  TEST_ASSERT_EQUAL(0, img->Open( buffer));
+  TEST_ASSERT_EQUAL(0, img->resize(frame, 0, 0, 480, 480));
+  TEST_ASSERT_EQUAL(0, memcmp(png960x720resized480x360.pixel_data, frame, sizeof(480*480*2)));
   free(buffer);
   free(frame);
   delete img;

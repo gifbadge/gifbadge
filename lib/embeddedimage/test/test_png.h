@@ -13,3 +13,4 @@ void test_png_240_on_480();
 void test_png_437_on_480();
 void test_png_480_on_240();
 void test_png_720_on_240();
+void test_png_960x720_on_480();
