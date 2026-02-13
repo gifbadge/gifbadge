@@ -81,7 +81,7 @@ void test_png_480_on_240() {
   memset(frame, 0, 240*240*2);
   auto img = new image::PNGImage({240, 240}, (file_path/std::filesystem::path("480x480.png")).c_str());
 
-  auto *buffer = static_cast<uint8_t *>(malloc(4*1024*1024));
+  auto *buffer = static_cast<uint8_t *>(malloc(480 * 480 + 0x6100));
   TEST_ASSERT_EQUAL(0, img->Open( buffer));
   TEST_ASSERT_EQUAL(0, img->resize(frame, 0, 0, 240, 240));
   TEST_ASSERT_EQUAL(0, memcmp(png480x480resized240x240.pixel_data, frame, sizeof(240*240*2)));
@@ -95,7 +95,7 @@ void test_png_720_on_240() {
   memset(frame, 0, 240*240*2);
   auto img = new image::PNGImage({240, 240}, (file_path/std::filesystem::path("720x720.png")).c_str());
 
-  auto *buffer = static_cast<uint8_t *>(malloc(4*1024*1024));
+  auto *buffer = static_cast<uint8_t *>(malloc(480 * 480 + 0x6100));
   TEST_ASSERT_EQUAL(0, img->Open( buffer));
   TEST_ASSERT_EQUAL(0, img->resize(frame, 0, 0, 240, 240));
   TEST_ASSERT_EQUAL(0, memcmp(png480x480resized240x240.pixel_data, frame, sizeof(240*240*2)));
