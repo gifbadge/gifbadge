@@ -16,10 +16,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        idf_ver: ["release-v5.3"]
+        idf_ver: ["release-v5.5"]
         idf_target: [{"target": "esp32s3", "config": "1_28"}, {"target": "esp32s3", "config": "2_1"}]
     runs-on: ubuntu-22.04
-    container: espressif/idf:release-v5.3
+    container: espressif/idf:release-v5.5
     steps:
       - uses: actions/checkout@v4
         with:
