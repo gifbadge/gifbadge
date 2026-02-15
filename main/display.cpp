@@ -125,13 +125,13 @@ class ResizingImage: public image::ErrorImage {
 static image::PNGImage * display_image_batt() {
   LOGI(TAG, "Displaying Low Battery");
   auto *png = new image::PNGImage(get_board()->GetDisplay()->size);
-  png->Open((uint8_t *) low_batt_png, sizeof(low_batt_png));
+  png->Open(const_cast<uint8_t *>(low_batt_png), sizeof(low_batt_png));
   return png;
 }
 
 static std::pair<int16_t, int16_t> lastSize = {0,0};
 
-static char* lltoa(long long val, int base){
+static const char* lltoa(long long val, int base){
 
   static char buf[64] = {0};
 
@@ -183,7 +183,7 @@ static image::frameReturn displayFile(std::unique_ptr<image::Image> &in, hal::di
     display->write(0, 0, display->size.first, display->size.second, display->buffer);
   }
   int frameTime = static_cast<int>(millis() - start);
-  int calc_delay = status.second - frameTime;
+  int calc_delay = static_cast<int>(status.second) - frameTime;
   // LOGI(TAG, "Frame Delay: %lu, calculated delay %i", status.second, calc_delay);
   frame_count += 1;
   average_frame_delay += calc_delay;
@@ -195,7 +195,7 @@ static image::frameReturn displayFile(std::unique_ptr<image::Image> &in, hal::di
   if(in->Animated()) {
     if (status.first == image::frameStatus::END) {
       if (looped) {
-        last_fps = 1000.00/(static_cast<float>(average_frame_time)/frame_count);
+        last_fps = 1000.00f/(static_cast<float>(average_frame_time)/static_cast<float>(frame_count));
         LOGI(TAG, "Average FPS: %f", last_fps);
       }
       LOGI(TAG, "Average Frame Delay: %s, Max Delay: %li", lltoa(average_frame_delay/frame_count, 10), max_frame_delay);
@@ -267,9 +267,9 @@ static void get_cache(const char *path, char *cache_path) {
   strcat(cache_path, "/.cache/");
   uint8_t result[16];
   hash_path(path, result);
-  for(unsigned int i = 0; i < 16; ++i){
+  for(const uint8_t i : result){
     char v[3];
-    sprintf(v,"%02x", result[i]);
+    sprintf(v,"%02x", i);
     strcat(cache_path, v);
   }
   strcat(cache_path, ".jpeg");
@@ -282,9 +282,9 @@ static void get_cache(const char *path, char *cache_path) {
  */
 bool check_cache(const char *path, const char *cache_path) {
   if (is_file(cache_path)) {
-    struct stat original;
+    struct stat original{};
     stat(path, &original);
-    struct stat cache;
+    struct stat cache{};
     stat(cache_path, &cache);
     if (original.st_mtime != cache.st_mtime) {
       return false;
@@ -296,17 +296,17 @@ bool check_cache(const char *path, const char *cache_path) {
 
 
 static int32_t jpeg_read(JPEGE_FILE *p, uint8_t *buffer, int32_t length) {
-  auto f = static_cast<FILE *>(p->fHandle);
+  const auto f = static_cast<FILE *>(p->fHandle);
   return static_cast<int32_t>(fread(buffer, 1,length, f));
 }
 
 static int32_t jpeg_write(JPEGE_FILE *p, uint8_t *buffer, int32_t length) {
-  auto f = static_cast<FILE *>(p->fHandle);
+  const auto f = static_cast<FILE *>(p->fHandle);
   return static_cast<int32_t>(fwrite(buffer, 1, length, f));
 }
 
 static int32_t jpeg_seek(JPEGE_FILE *p, int32_t position) {
-  auto f = static_cast<FILE *>(p->fHandle);
+  const auto f = static_cast<FILE *>(p->fHandle);
   fseek(f, position, SEEK_SET);
   return ftell(f);
 }
@@ -324,23 +324,31 @@ int save_cache(const char *path, const char *cache_path, const uint8_t *buffer) 
     return 1;
   }
   const int iWidth = get_board()->GetDisplay()->size.first, iHeight = get_board()->GetDisplay()->size.second;
-  int rc;
-  rc = JPEGEncodeBegin(_jpeg, &jpe, iWidth , iHeight, JPEGE_PIXEL_RGB565, JPEGE_SUBSAMPLE_444, JPEGE_Q_BEST);
-  JPEGAddFrame(_jpeg, &jpe, const_cast<uint8_t *>(buffer) , iWidth*2);
-  JPEGEncodeEnd(_jpeg);
-  fclose(static_cast<FILE *>(_jpeg->JPEGFile.fHandle));
-
-  free(_jpeg);
-  if (rc == JPEGE_SUCCESS) {
-    struct stat f;
-    utimbuf new_times;
-    stat(path, &f);
-    new_times.actime = f.st_atime; /* keep atime unchanged */
-    new_times.modtime = f.st_mtime; /* set mtime to current time */
-    utime(cache_path, &new_times);
-    return 0;
+  if (JPEGEncodeBegin(_jpeg, &jpe, iWidth , iHeight, JPEGE_PIXEL_RGB565, JPEGE_SUBSAMPLE_444, JPEGE_Q_BEST) != JPEGE_SUCCESS) {
+    fclose(static_cast<FILE *>(_jpeg->JPEGFile.fHandle));
+    free(_jpeg);
+    return 1;
   }
-  return 1;
+  if (JPEGAddFrame(_jpeg, &jpe, const_cast<uint8_t *>(buffer) , iWidth*2) != JPEGE_SUCCESS) {
+    fclose(static_cast<FILE *>(_jpeg->JPEGFile.fHandle));
+    free(_jpeg);
+    return 1;
+  }
+  if (JPEGEncodeEnd(_jpeg) != JPEGE_SUCCESS) {
+    fclose(static_cast<FILE *>(_jpeg->JPEGFile.fHandle));
+    free(_jpeg);
+    return 1;
+  }
+  fclose(static_cast<FILE *>(_jpeg->JPEGFile.fHandle));
+  free(_jpeg);
+
+  struct stat f{};
+  utimbuf new_times{};
+  stat(path, &f);
+  new_times.actime = f.st_atime; /* keep atime unchanged */
+  new_times.modtime = f.st_mtime; /* set mtime to current time */
+  utime(cache_path, &new_times);
+  return 0;
 }
 
 static image::Image *openFile(const char *path, hal::display::Display *display) {
@@ -450,7 +458,7 @@ static void slideShowStop() {
 }
 
 void display_task(void *params) {
-  auto *board = (Boards::Board *) params;
+  auto *board = static_cast<Boards::Board *>(params);
 
   auto config = board->GetConfig();
 
