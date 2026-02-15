@@ -125,7 +125,12 @@ lv_obj_t *file_select(const char *top, const char *current) {
   lv_file_list_icon_style(cont_flex, &icon_style);
 
   auto *d = static_cast<file_data *>(malloc(sizeof(file_data)));
-  strcpy(d->current, current);
+  if (strlen(current) == 0) {
+    strcpy(d->current, top);
+  }
+  else {
+    strcpy(d->current, current);
+  }
   strcpy(d->top, top);
 
   lv_file_list_set_user_data(cont_flex, d);
