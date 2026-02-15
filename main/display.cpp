@@ -9,8 +9,6 @@
 #include "portable_time.h"
 #include "log.h"
 
-#include "ota.h"
-
 #include "display.h"
 #include <memory>
 #include <sys/stat.h>
@@ -27,7 +25,6 @@
 #include "dirname.h"
 #include "hash_path.h"
 #include "hw_init.h"
-#include "simplebmp.h"
 #include <utime.h>
 #include "JPEGENC.h"
 #include "jpegenc.inl"
