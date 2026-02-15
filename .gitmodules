@@ -34,3 +34,6 @@
 [submodule "external-deps/md5-c"]
 	path = external-deps/md5-c
 	url = https://github.com/MilchRatchet/md5-c.git
+[submodule "external-deps/JPEGENC"]
+	path = external-deps/JPEGENC
+	url = https://github.com/bitbank2/JPEGENC.git

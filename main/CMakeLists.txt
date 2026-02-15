@@ -24,7 +24,7 @@ if (ESP_PLATFORM)
     idf_component_get_property(freertos_lib freertos ORIG_INCLUDE_PATH)
     idf_component_register(SRCS
             ${SRC}
-            INCLUDE_DIRS "include" ${freertos_lib}
+            INCLUDE_DIRS "include" ${freertos_lib} "${CMAKE_SOURCE_DIR}/external-deps/JPEGENC/src"
             REQUIRES gifbadge_hal_esp32 lvgl esp_timer)
     target_compile_options(${COMPONENT_LIB} PRIVATE -D__LINUX__)
     target_link_libraries(${COMPONENT_TARGET} PRIVATE FileUtil FontRender FileBuffer EmbeddedImage gifbadge_hal)
