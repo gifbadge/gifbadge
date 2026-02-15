@@ -369,6 +369,7 @@ static image::Image *openFile(const char *path, hal::display::Display *display) 
       return new image::TooLargeImage(display->size, path);
     }
     if(size > display->size && in->resizable() == true) {
+      int64_t start = millis();
       auto *resizing = new image::ResizingImage(display->size);
       resizing->GetFrame(display->buffer, 0, 0, display->size.first);
       display->write(0, 0, display->size.first, display->size.second, display->buffer);
@@ -381,6 +382,7 @@ static image::Image *openFile(const char *path, hal::display::Display *display) 
       if (save_cache(path, cache_path, display->buffer) != 0) {
         return new image::ErrorImage(display->size, "Error Saving Resized Image\n%s", path);
       }
+      LOGI(TAG, "Resizing time %s", lltoa(millis()-start, 10));
 
       delete in;
       in = ImageFactory(get_board()->GetDisplay()->size, cache_path);
