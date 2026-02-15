@@ -27,6 +27,8 @@ class Config_NVS: public Config {
   void setBacklight(int) override;
   void reload() override;
   void save() override;
+  void getCard(cards, char *path) override;
+  void setCard(cards, const char *path) override;
 
 
  private:

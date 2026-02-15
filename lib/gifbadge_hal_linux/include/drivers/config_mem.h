@@ -11,6 +11,7 @@
 namespace hal::config::oslinux {
 class Config_Mem: public Config {
  public:
+
   Config_Mem();
   ~Config_Mem() override = default;
 
@@ -26,6 +27,8 @@ class Config_Mem: public Config {
   void setBacklight(int) override;
   void reload() override;
   void save() override;
+  void getCard(cards, char *path) override {};
+  void setCard(cards, const char *path) override {};
 
  private:
   bool _locked = false;
