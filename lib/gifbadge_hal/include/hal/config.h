@@ -10,6 +10,12 @@
 #include <mutex>
 
 namespace hal::config {
+
+enum cards {
+  UP,
+  DOWN
+};
+
 class Config {
  public:
   Config() = default;
@@ -27,6 +33,8 @@ class Config {
   virtual int getBacklight() = 0;
   virtual void setBacklight(int) = 0;
   virtual void reload() = 0;
+  virtual void getCard(cards, char *path) = 0;
+  virtual void setCard(cards, const char *path) = 0;
 
 };
 }

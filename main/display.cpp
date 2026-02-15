@@ -460,6 +460,7 @@ void display_task(void *params) {
   std::unique_ptr<image::Image> in = nullptr; //The image we are displaying
   char current_file[MAX_FILE_LEN + 1]; //The current file path that has been selected
   config->getPath(current_file);
+  char card_path[MAX_FILE_LEN + 1];
   while (true) {
     uint32_t option;
     xTaskNotifyWaitIndexed(0, 0, 0xffffffff, &option, delay);
@@ -511,16 +512,18 @@ void display_task(void *params) {
           break;
         case DISPLAY_SPECIAL_1:
           LOGI(TAG, "DISPLAY_SPECIAL_1");
-          if (is_file("/data/cards/up.png")) {
-            in.reset(openFile("/data/cards/up.png", display));
+          get_board()->GetConfig()->getCard(hal::config::cards::UP, card_path);
+          if (is_file(card_path)) {
+            in.reset(openFile(card_path, display));
             last_mode = static_cast<DISPLAY_OPTIONS>(option);
             slideShowStop();
           }
           break;
         case DISPLAY_SPECIAL_2:
           LOGI(TAG, "DISPLAY_SPECIAL_2");
-          if (is_file("/data/cards/down.png")) {
-            in.reset(openFile("/data/cards/down.png", display));
+          get_board()->GetConfig()->getCard(hal::config::cards::DOWN, card_path);
+          if (is_file(card_path)) {
+            in.reset(openFile(card_path, display));
             last_mode = static_cast<DISPLAY_OPTIONS>(option);
             slideShowStop();
           }
