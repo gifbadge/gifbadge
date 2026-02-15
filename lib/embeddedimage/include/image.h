@@ -27,7 +27,8 @@ class Image {
   screenResolution resolution;
 
  public:
-  explicit Image(screenResolution res) :resolution(res) {}
+  explicit Image(screenResolution res, const char *path);
+  explicit Image(screenResolution res): resolution(res) {};
 
   virtual ~Image() = default;
 
@@ -54,7 +55,7 @@ class Image {
    * @param buffer
    * @return
    */
-  virtual int Open(const char *path, void *buffer) { return 0; };
+  virtual int Open(void *buffer) { return 0; };
 
   /**
    * check if the image is Animated
@@ -67,6 +68,26 @@ class Image {
    * @return decoder error as null terminated string
    */
   virtual const char *GetLastError() = 0;
+
+  /**
+   * Check if image is resizable
+   * @return true if resizable
+   */
+  virtual bool resizable() { return false; };
+
+    /**
+     *
+     * @param outBuf
+     * @param x_start
+     * @param y_start
+     * @param x
+     * @param y
+     * @return
+     */
+    virtual int resize(uint8_t *outBuf, int16_t x_start, int16_t y_start, int16_t x, int16_t y) { return -1; };
+
+  protected:
+  char _path[255] = {};
 };
 }
 

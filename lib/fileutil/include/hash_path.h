@@ -5,11 +5,12 @@
  ******************************************************************************/
 
 #pragma once
+#include <stdint.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
+void hash_path(const char *path, uint8_t *result);
 
-void test_jpeg_480_open();
-void test_jpeg_480_redraw();
-void test_jpeg_480_progressive_open();
-void test_jpeg_240_on_480();
-void test_jpeg_437_on_480();
-void test_jpeg_480_on_240();
-void test_jpeg_720_on_240();
+#ifdef __cplusplus
+}
+#endif

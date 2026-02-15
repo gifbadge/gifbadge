@@ -16,8 +16,9 @@
 namespace image {
 
 class JPEG : public image::Image {
-public:
-    JPEG(screenResolution res): Image(res) {};
+  public:
+
+    JPEG(screenResolution res, const char *path): Image(res, path) {};
 
     ~JPEG() override;
 
@@ -25,17 +26,21 @@ public:
 
     std::pair<int16_t, int16_t> Size() override;
 
-    static Image* Create(screenResolution res);
+    static Image* Create(screenResolution res, const char *path);
 
-    int Open(const char *path, void *buffer) override;
+    int Open(void *buffer) override;
 
     const char * GetLastError() override;
+
+    bool resizable() override;
+
+    int resize(uint8_t *outBuf, int16_t x_start, int16_t y_start, int16_t x, int16_t y) override;
 
 private:
     JPEGDEC jpeg;
     bool decoded = false;
-    char _path[255];
     int _lastError = 0;
+    void *_buffer;
 };
 }
 

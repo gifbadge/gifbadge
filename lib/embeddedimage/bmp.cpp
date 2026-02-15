@@ -19,8 +19,8 @@ image::frameReturn image::bmpImage::GetFrame(uint8_t *outBuf, int16_t x, int16_t
 std::pair<int16_t, int16_t> image::bmpImage::Size() {
   return {_bmp.width, _bmp.height};
 }
-int image::bmpImage::Open(const char *path, void *buffer) {
-  fp = fopen(path, "rb");
+int image::bmpImage::Open(void *buffer) {
+  fp = fopen(_path, "rb");
   if (fp == nullptr) {
     return -1;
   }
@@ -44,6 +44,6 @@ const char * image::bmpImage::GetLastError() {
       return "Unknown error";
   }
 }
-image::Image *image::bmpImage::Create(screenResolution res) {
-  return new bmpImage(res);
+image::Image *image::bmpImage::Create(screenResolution res, const char *path) {
+  return new bmpImage(res, path);
 }

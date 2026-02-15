@@ -13,6 +13,8 @@
 
 #include "display.h"
 #include <memory>
+#include <sys/stat.h>
+
 #include "image.h"
 #include "png.h"
 #include "images/low_batt_png.h"
@@ -23,7 +25,10 @@
 #include "directory.h"
 #include "file.h"
 #include "dirname.h"
+#include "hash_path.h"
 #include "hw_init.h"
+#include "simplebmp.h"
+#include <utime.h>
 
 static const char *TAG = "DISPLAY";
 
@@ -108,7 +113,15 @@ class NoStorageImage : public ErrorImage {
     strcpy(_error, "No SDCARD");
   }
 };
+class ResizingImage: public image::ErrorImage {
+  public:
+  explicit ResizingImage(std::pair<int16_t, int16_t> size) : ErrorImage(size, nullptr) {
+    strcpy(_error, "Resizing");
+  }
+};
 }
+
+
 
 static image::PNGImage * display_image_batt() {
   LOGI(TAG, "Displaying Low Battery");
@@ -256,19 +269,111 @@ static int get_file(char *path) {
   return -1;
 }
 
+static void get_cache(const char *path, char *cache_path) {
+  strcpy(cache_path, get_board()->GetStoragePath());
+  strcat(cache_path, "/.cache/");
+  uint8_t result[16];
+  hash_path(path, result);
+  for(unsigned int i = 0; i < 16; ++i){
+    char v[3];
+    sprintf(v,"%02x", result[i]);
+    strcat(cache_path, v);
+  }
+  strcat(cache_path, ".bmp");
+}
+/**
+ * Checks if a cache file exists and is still current
+ * @param path
+ * @param cache_path
+ * @return true if cache file is valid, otherwise false
+ */
+bool check_cache(const char *path, const char *cache_path) {
+  if (is_file(cache_path)) {
+    struct stat original;
+    stat(path, &original);
+    struct stat cache;
+    stat(cache_path, &cache);
+    if (original.st_mtime != cache.st_mtime) {
+      return false;
+    }
+    return true;
+  }
+  return false;
+}
+
+int save_cache(const char *path, const char *cache_path, const uint8_t *buffer) {
+  BMP bmp;
+  bmp.width = get_board()->GetDisplay()->size.first;
+  bmp.height = get_board()->GetDisplay()->size.second;
+  bmp.planes = 1;
+  bmp.bits = 16;
+  bmp.compression = BMP_BITFIELDS;
+  bmp.colors = 0;
+  bmp.importantcolors = 0;
+  bmp.header_size = 124;
+  bmp.imagesize = bmp.width * bmp.height * 2;
+  bmp.red_mask = 0xF800;
+  bmp.green_mask = 0x07E0;
+  bmp.blue_mask = 0x001F;
+  FILE *fo = fopen(cache_path, "wb");
+  if (fo == nullptr) {
+    return -1;
+  }
+  bmp_write_header(&bmp, fo);
+  bmp_write(&bmp, buffer, fo);
+  fclose(fo);
+  struct stat f;
+  utimbuf new_times;
+  stat(path, &f);
+  new_times.actime = f.st_atime; /* keep atime unchanged */
+  new_times.modtime = f.st_mtime; /* set mtime to current time */
+  utime(cache_path, &new_times);
+  return 0;
+}
+
 static image::Image *openFile(const char *path, hal::display::Display *display) {
-  image::Image *in = ImageFactory(get_board()->GetDisplay()->size, path);
+  image::Image *in = nullptr;
+  char cache_path[128] = "";
+  get_cache(path, cache_path);
+  if (check_cache(path, cache_path)) {
+    in = ImageFactory(get_board()->GetDisplay()->size, cache_path);
+  }
+  else {
+    in = ImageFactory(get_board()->GetDisplay()->size, path);
+  }
   if (in) {
-    if (in->Open(path, get_board()->TurboBuffer()) != 0) {
+    if (in->Open(get_board()->TurboBuffer()) != 0) {
       const char *lastError = in->GetLastError();
       delete in;
       return new image::ErrorImage(display->size, "Error Displaying File\n%s\n%s", path, lastError);
     }
     printf("%s x: %i y: %i\n", path, in->Size().first, in->Size().second);
     auto size = in->Size();
-    if (size > display->size) {
+    if (size > display->size && in->resizable() == false) {
       delete in;
       return new image::TooLargeImage(display->size, path);
+    }
+    if(size > display->size && in->resizable() == true) {
+      auto *resizing = new image::ResizingImage(display->size);
+      resizing->GetFrame(display->buffer, 0, 0, display->size.first);
+      display->write(0, 0, display->size.first, display->size.second, display->buffer);
+      delete resizing;
+      memset(display->buffer, 0, display->size.first*display->size.second*2);
+      if (in->resize(display->buffer, 0, 0, display->size.first, display->size.second) != 0) {
+        delete in;
+        return new image::ErrorImage(display->size, "Error Resizing File\n%s", path);
+      }
+      if (save_cache(path, cache_path, display->buffer) != 0) {
+        return new image::ErrorImage(display->size, "Error Saving Resized Image\n%s", path);
+      }
+
+      delete in;
+      in = ImageFactory(get_board()->GetDisplay()->size, cache_path);
+      if (in->Open(get_board()->TurboBuffer()) != 0) {
+        const char *lastError = in->GetLastError();
+        delete in;
+        return new image::ErrorImage(display->size, "Error Displaying File\n%s\n%s", path, lastError);
+      }
     }
   } else {
     return new image::ErrorImage(display->size, "Unsupported File\n%s", path);

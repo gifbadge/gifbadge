@@ -167,6 +167,12 @@ class Board {
   virtual int StorageFormat() = 0;
 
   /**
+   *
+   *
+   */
+  virtual const char *GetStoragePath() = 0;
+
+  /**
    * Gets the pointer to a region of memory allocated for GIFDecoding
    * This should be allocated in internal/fast memory
    * Size should be (Screen x Resolution * Screen y Resolution)+0x6100

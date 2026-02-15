@@ -11,16 +11,16 @@
 namespace image {
 class bmpImage: public Image {
   public:
-    explicit bmpImage(screenResolution res): Image(res) {};
+    explicit bmpImage(screenResolution res, const char *path): Image(res, path) {};
     ~bmpImage() override;
 
     frameReturn GetFrame(uint8_t *outBuf, int16_t x, int16_t y, int16_t width) override;
     std::pair<int16_t, int16_t> Size() override;
-    int Open(const char *path, void *buffer) override;
+    int Open(void *buffer) override;
     bool Animated() override;
 
     const char * GetLastError() override;
-    static Image *Create(screenResolution res);
+    static Image *Create(screenResolution res, const char *path);
 
   private:
   FILE *fp = nullptr;

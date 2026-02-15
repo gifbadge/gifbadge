@@ -12,6 +12,7 @@
 #include "testdata/480x480.h"
 #include "testdata/240x240on480x480jpeg.h"
 #include "testdata/437x437on480x480.h"
+#include "testdata/480x480jpeg_resized_240x240.h"
 
 #include <filesystem>
 
@@ -20,10 +21,8 @@
 void test_jpeg_480_open() {
   auto *frame = static_cast<uint8_t *>(malloc(480*480*2));
   memset(frame, 0, 480*480*2);
-  auto img = new image::JPEG({480, 480});
-  // printf("%s\n", (file_path/std::filesystem::path("480x480.jpeg")).c_str());
-
-  TEST_ASSERT_EQUAL(0, img->Open((file_path/std::filesystem::path("480x480.jpeg")).c_str(), nullptr));
+  auto img = new image::JPEG( {480, 480}, (file_path/std::filesystem::path("480x480.jpeg")).c_str());
+  TEST_ASSERT_EQUAL(0, img->Open(nullptr));
   TEST_ASSERT_TRUE(image::screenResolution(480, 480) == img->Size());
   TEST_ASSERT_EQUAL(image::frameStatus::END, img->GetFrame(frame, 0, 0, 480).first);
   TEST_ASSERT_EQUAL(0, memcmp(png_480.pixel_data, frame, sizeof(480*480*2)));
@@ -34,9 +33,9 @@ void test_jpeg_480_open() {
 void test_jpeg_480_redraw() {
   auto *frame = static_cast<uint8_t *>(malloc(480*480*2));
   memset(frame, 0, 480*480*2);
-  auto img = new image::JPEG({480, 480});
+  auto img = new image::JPEG({480, 480}, (file_path/std::filesystem::path("480x480.jpeg")).c_str());
 
-  TEST_ASSERT_EQUAL(0, img->Open((file_path/std::filesystem::path("480x480.jpeg")).c_str(), nullptr));
+  TEST_ASSERT_EQUAL(0, img->Open(nullptr));
   TEST_ASSERT_EQUAL(image::frameStatus::END, img->GetFrame(frame, 0, 0, 480).first);
   TEST_ASSERT_EQUAL(0, memcmp(png_480.pixel_data, frame, sizeof(480*480*2)));
   memset(frame, 0, 480*480*2);
@@ -47,9 +46,8 @@ void test_jpeg_480_redraw() {
 }
 
 void test_jpeg_480_progressive_open() {
-  auto img = new image::JPEG({480, 480});
-  TEST_ASSERT_EQUAL(1, img->Open((file_path/std::filesystem::path("480x480_progressive.jpeg")).c_str(), nullptr));
-  printf("%s\n", img->GetLastError());
+  auto img = new image::JPEG({480, 480}, (file_path/std::filesystem::path("480x480_progressive.jpeg")).c_str());
+  TEST_ASSERT_EQUAL(1, img->Open(nullptr));
   TEST_ASSERT_EQUAL(0, strcmp("JPEG_PROGRESSIVE_NOT_SUPPORTED", img->GetLastError()));
   delete img;
 }
@@ -58,9 +56,9 @@ void test_jpeg_240_on_480() {
   //This test seems to need its own result to compare against due to aliasing or something in JPEGDEC
   auto *frame = static_cast<uint8_t *>(malloc(480*480*2));
   memset(frame, 0, 480*480*2);
-  auto img = new image::JPEG({480, 480});
+  auto img = new image::JPEG({480, 480}, (file_path/std::filesystem::path("240x240.jpeg")).c_str());
 
-  TEST_ASSERT_EQUAL(0, img->Open((file_path/std::filesystem::path("240x240.jpeg")).c_str(), nullptr));
+  TEST_ASSERT_EQUAL(0, img->Open(nullptr));
   TEST_ASSERT_EQUAL(image::frameStatus::END, img->GetFrame(frame, 0, 0, 480).first);
   TEST_ASSERT_EQUAL(0, memcmp(jpeg240on480.pixel_data, frame, sizeof(480*480*2)));
   free(frame);
@@ -70,11 +68,39 @@ void test_jpeg_240_on_480() {
 void test_jpeg_437_on_480() {
   auto *frame = static_cast<uint8_t *>(malloc(480*480*2));
   memset(frame, 0, 480*480*2);
-  auto img = new image::JPEG({480, 480});
+  auto img = new image::JPEG({480, 480}, (file_path/std::filesystem::path("437x437.jpeg")).c_str());
 
-  TEST_ASSERT_EQUAL(0, img->Open((file_path/std::filesystem::path("437x437.jpeg")).c_str(), nullptr));
+  TEST_ASSERT_EQUAL(0, img->Open(nullptr));
   TEST_ASSERT_EQUAL(image::frameStatus::END, img->GetFrame(frame, 0, 0, 480).first);
   TEST_ASSERT_EQUAL(0, memcmp(png437on480.pixel_data, frame, sizeof(480*480*2)));
+  free(frame);
+  delete img;
+}
+
+void test_jpeg_480_on_240() {
+  auto *frame = static_cast<uint8_t *>(malloc(240*240*2));
+  memset(frame, 0, 240*240*2);
+  auto img = new image::JPEG({240, 240}, (file_path/std::filesystem::path("480x480.jpeg")).c_str());
+
+  auto *buffer = static_cast<uint8_t *>(malloc(480 * 480 + 0x6100));
+  TEST_ASSERT_EQUAL(0, img->Open( buffer));
+  TEST_ASSERT_EQUAL(0, img->resize(frame, 0, 0, 240, 240));
+  TEST_ASSERT_EQUAL(0, memcmp(jpeg480x480resized240x240.pixel_data, frame, sizeof(240*240*2)));
+  free(buffer);
+  free(frame);
+  delete img;
+}
+
+void test_jpeg_720_on_240() {
+  auto *frame = static_cast<uint8_t *>(malloc(240*240*2));
+  memset(frame, 0, 240*240*2);
+  auto img = new image::JPEG({240, 240}, (file_path/std::filesystem::path("720x720.jpeg")).c_str());
+
+  auto *buffer = static_cast<uint8_t *>(malloc(480 * 480 + 0x6100));
+  TEST_ASSERT_EQUAL(0, img->Open( buffer));
+  TEST_ASSERT_EQUAL(0, img->resize(frame, 0, 0, 240, 240));
+  TEST_ASSERT_EQUAL(0, memcmp(jpeg480x480resized240x240.pixel_data, frame, sizeof(240*240*2)));
+  free(buffer);
   free(frame);
   delete img;
 }

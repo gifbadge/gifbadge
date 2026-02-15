@@ -6,6 +6,9 @@
 
 #include <cmath>
 #include "ui/storage.h"
+
+#include <dirent.h>
+
 #include "ui/menu.h"
 #include "ui/device_group.h"
 #include "ui/widgets/file_list/file_list.h"
@@ -147,6 +150,20 @@ static void StorageFormat(lv_event_t *e) {
 
 }
 
+static void clear_cache(lv_event_t *e) {
+  char cache_path[128];
+  dirent *de;
+  strcpy(cache_path, get_board()->GetStoragePath());
+  strcat(cache_path, "/.cache/");
+  DIR *dir = opendir(cache_path);
+  while (de = readdir(dir), de != nullptr) {
+    char path[128];
+    strcpy(path, cache_path);
+    strcat(path, de->d_name);
+    remove(path);
+  }
+}
+
 lv_obj_t *storage_menu() {
   if (lvgl_lock(-1)) {
     new_group();
@@ -188,8 +205,14 @@ lv_obj_t *storage_menu() {
     lv_obj_center(size_label);
 
     lv_obj_t *format_btn = lv_file_list_add(cont_flex, nullptr);
+    lv_obj_add_style(format_btn, &menu_font_style, LV_PART_MAIN);
     lv_obj_t *format_label = lv_label_create(format_btn);
     lv_label_set_text(format_label, "Format Storage");
+
+    lv_obj_t *clear_cache_btn = lv_file_list_add(cont_flex, nullptr);
+    lv_obj_add_style(clear_cache_btn, &menu_font_style, LV_PART_MAIN);
+    lv_obj_t *clear_cache_label = lv_label_create(clear_cache_btn);
+    lv_label_set_text(clear_cache_label, "Clear Image Cache");
 
     lv_obj_t *exit_button = lv_file_list_add(cont_flex, "\ue5c9");
     lv_obj_t *exit = lv_obj_create(exit_button);
@@ -197,6 +220,7 @@ lv_obj_t *storage_menu() {
     lv_group_remove_obj(exit);
 
     lv_obj_add_event_cb(format_btn, StorageFormat, LV_EVENT_CLICKED, cont_flex);
+    lv_obj_add_event_cb(clear_cache_btn, clear_cache, LV_EVENT_CLICKED, cont_flex);
     lv_obj_add_event_cb(exit, StorageExit, LV_EVENT_CLICKED, fields);
     lv_obj_add_event_cb(cont_flex, StorageRefresh, LV_EVENT_REFRESH, fields);
     lv_obj_send_event(cont_flex, LV_EVENT_REFRESH, nullptr);

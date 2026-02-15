@@ -64,10 +64,9 @@ static int32_t SeekFile(GIFFILE *pFile, int32_t iPosition) {
   return 0;
 }
 
-image::GIF::GIF(screenResolution res):Image(res) {};
+image::GIF::GIF(screenResolution res, const char *path):Image(res, path) {};
 
 image::GIF::~GIF() {
-  printf("GIF DELETED\n");
   if (_gif.pFrameBuffer != nullptr) {
     free(_gif.pFrameBuffer);
     _gif.pFrameBuffer = nullptr;
@@ -143,11 +142,11 @@ void image::GIF::GIFDraw(GIFDRAW *pDraw) {
   memcpy(d, pDraw->pPixels, pDraw->iWidth * 2);
 }
 
-image::Image *image::GIF::Create(screenResolution res) {
-  return new image::GIF(res);
+image::Image *image::GIF::Create(screenResolution res, const char *path) {
+  return new image::GIF(res, path);
 }
 
-int image::GIF::Open(const char *path, void *buffer) {
+int image::GIF::Open(void *buffer) {
   unsigned char ucPaletteType = LITTLE_ENDIAN_PIXELS;
 
 
@@ -165,7 +164,7 @@ int image::GIF::Open(const char *path, void *buffer) {
   _gif.pfnDraw = nullptr;
   _gif.pfnOpen = OpenFile;
   _gif.pfnClose = CloseFile;
-  _gif.GIFFile.fHandle = (*_gif.pfnOpen)(path, &_gif.GIFFile.iSize);
+  _gif.GIFFile.fHandle = (*_gif.pfnOpen)(_path, &_gif.GIFFile.iSize);
   if (_gif.GIFFile.fHandle == nullptr) {
     _gif.iError = GIF_FILE_NOT_OPEN;
     return -1;
