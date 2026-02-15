@@ -1,6 +1,6 @@
 [submodule "components/image/EmbeddedImage/AnimatedGIF"]
 	path = external-deps/AnimatedGIF
-	url = https://github.com/bitbank2/AnimatedGIF.git
+	url = https://github.com/gifbadge/AnimatedGIF.git
 [submodule "components/image/EmbeddedImage/PNGdec"]
 	path = external-deps/PNGdec
 	url = https://github.com/bitbank2/PNGdec.git
