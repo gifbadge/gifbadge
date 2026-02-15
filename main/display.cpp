@@ -154,8 +154,6 @@ static char* lltoa(long long val, int base){
 }
 
 
-#define FRAMETIME
-
 bool newImage = false;
 
 int64_t average_frame_delay = 0;
@@ -187,7 +185,6 @@ static image::frameReturn displayFile(std::unique_ptr<image::Image> &in, hal::di
   }
   int frameTime = static_cast<int>(millis() - start);
   int calc_delay = status.second - frameTime;
-#ifdef FRAMETIME
   // LOGI(TAG, "Frame Delay: %lu, calculated delay %i", status.second, calc_delay);
   frame_count += 1;
   average_frame_delay += calc_delay;
@@ -195,10 +192,8 @@ static image::frameReturn displayFile(std::unique_ptr<image::Image> &in, hal::di
   if (calc_delay < max_frame_delay) {
     max_frame_delay = calc_delay;
   }
-#endif
   lastSize = in->Size();
   if(in->Animated()) {
-#ifdef FRAMETIME
     if (status.first == image::frameStatus::END) {
       if (looped) {
         last_fps = 1000.00/(static_cast<float>(average_frame_time)/frame_count);
@@ -211,7 +206,6 @@ static image::frameReturn displayFile(std::unique_ptr<image::Image> &in, hal::di
       max_frame_delay = 0;
       looped = true;
     }
-#endif
     return {status.first, (calc_delay > 0 ? calc_delay : 0)/portTICK_PERIOD_MS};
   }
   else{
