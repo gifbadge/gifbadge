@@ -29,6 +29,8 @@
 #include "hw_init.h"
 #include "simplebmp.h"
 #include <utime.h>
+#include "JPEGENC.h"
+#include "jpegenc.inl"
 
 static const char *TAG = "DISPLAY";
 
@@ -154,8 +156,6 @@ static char* lltoa(long long val, int base){
 }
 
 
-#define FRAMETIME
-
 bool newImage = false;
 
 int64_t average_frame_delay = 0;
@@ -187,7 +187,6 @@ static image::frameReturn displayFile(std::unique_ptr<image::Image> &in, hal::di
   }
   int frameTime = static_cast<int>(millis() - start);
   int calc_delay = status.second - frameTime;
-#ifdef FRAMETIME
   // LOGI(TAG, "Frame Delay: %lu, calculated delay %i", status.second, calc_delay);
   frame_count += 1;
   average_frame_delay += calc_delay;
@@ -195,10 +194,8 @@ static image::frameReturn displayFile(std::unique_ptr<image::Image> &in, hal::di
   if (calc_delay < max_frame_delay) {
     max_frame_delay = calc_delay;
   }
-#endif
   lastSize = in->Size();
   if(in->Animated()) {
-#ifdef FRAMETIME
     if (status.first == image::frameStatus::END) {
       if (looped) {
         last_fps = 1000.00/(static_cast<float>(average_frame_time)/frame_count);
@@ -211,7 +208,6 @@ static image::frameReturn displayFile(std::unique_ptr<image::Image> &in, hal::di
       max_frame_delay = 0;
       looped = true;
     }
-#endif
     return {status.first, (calc_delay > 0 ? calc_delay : 0)/portTICK_PERIOD_MS};
   }
   else{
@@ -279,7 +275,7 @@ static void get_cache(const char *path, char *cache_path) {
     sprintf(v,"%02x", result[i]);
     strcat(cache_path, v);
   }
-  strcat(cache_path, ".bmp");
+  strcat(cache_path, ".jpeg");
 }
 /**
  * Checks if a cache file exists and is still current
@@ -301,34 +297,53 @@ bool check_cache(const char *path, const char *cache_path) {
   return false;
 }
 
+
+static int32_t jpeg_read(JPEGE_FILE *p, uint8_t *buffer, int32_t length) {
+  auto f = static_cast<FILE *>(p->fHandle);
+  return static_cast<int32_t>(fread(buffer, 1,length, f));
+}
+
+static int32_t jpeg_write(JPEGE_FILE *p, uint8_t *buffer, int32_t length) {
+  auto f = static_cast<FILE *>(p->fHandle);
+  return static_cast<int32_t>(fwrite(buffer, 1, length, f));
+}
+
+static int32_t jpeg_seek(JPEGE_FILE *p, int32_t position) {
+  auto f = static_cast<FILE *>(p->fHandle);
+  fseek(f, position, SEEK_SET);
+  return ftell(f);
+}
+
 int save_cache(const char *path, const char *cache_path, const uint8_t *buffer) {
-  BMP bmp;
-  bmp.width = get_board()->GetDisplay()->size.first;
-  bmp.height = get_board()->GetDisplay()->size.second;
-  bmp.planes = 1;
-  bmp.bits = 16;
-  bmp.compression = BMP_BITFIELDS;
-  bmp.colors = 0;
-  bmp.importantcolors = 0;
-  bmp.header_size = 124;
-  bmp.imagesize = bmp.width * bmp.height * 2;
-  bmp.red_mask = 0xF800;
-  bmp.green_mask = 0x07E0;
-  bmp.blue_mask = 0x001F;
-  FILE *fo = fopen(cache_path, "wb");
-  if (fo == nullptr) {
-    return -1;
+  auto *_jpeg = static_cast<JPEGE_IMAGE *>(heap_caps_malloc(sizeof (JPEGE_IMAGE), MALLOC_CAP_SPIRAM));
+  JPEGENCODE jpe;
+  memset(_jpeg, 0, sizeof(JPEGE_IMAGE));
+  _jpeg->pfnRead = jpeg_read;
+  _jpeg->pfnWrite = jpeg_write;
+  _jpeg->pfnSeek = jpeg_seek;
+  _jpeg->JPEGFile.fHandle = fopen(cache_path, "w");
+  _jpeg->pHighWater = &_jpeg->ucFileBuf[JPEGE_FILE_BUF_SIZE - 512];
+  if (_jpeg->JPEGFile.fHandle == nullptr) {
+    return 1;
   }
-  bmp_write_header(&bmp, fo);
-  bmp_write(&bmp, buffer, fo);
-  fclose(fo);
-  struct stat f;
-  utimbuf new_times;
-  stat(path, &f);
-  new_times.actime = f.st_atime; /* keep atime unchanged */
-  new_times.modtime = f.st_mtime; /* set mtime to current time */
-  utime(cache_path, &new_times);
-  return 0;
+  const int iWidth = get_board()->GetDisplay()->size.first, iHeight = get_board()->GetDisplay()->size.second;
+  int rc;
+  rc = JPEGEncodeBegin(_jpeg, &jpe, iWidth , iHeight, JPEGE_PIXEL_RGB565, JPEGE_SUBSAMPLE_444, JPEGE_Q_BEST);
+  JPEGAddFrame(_jpeg, &jpe, const_cast<uint8_t *>(buffer) , iWidth*2);
+  JPEGEncodeEnd(_jpeg);
+  fclose(static_cast<FILE *>(_jpeg->JPEGFile.fHandle));
+
+  free(_jpeg);
+  if (rc == JPEGE_SUCCESS) {
+    struct stat f;
+    utimbuf new_times;
+    stat(path, &f);
+    new_times.actime = f.st_atime; /* keep atime unchanged */
+    new_times.modtime = f.st_mtime; /* set mtime to current time */
+    utime(cache_path, &new_times);
+    return 0;
+  }
+  return 1;
 }
 
 static image::Image *openFile(const char *path, hal::display::Display *display) {
@@ -354,6 +369,7 @@ static image::Image *openFile(const char *path, hal::display::Display *display) 
       return new image::TooLargeImage(display->size, path);
     }
     if(size > display->size && in->resizable() == true) {
+      int64_t start = millis();
       auto *resizing = new image::ResizingImage(display->size);
       resizing->GetFrame(display->buffer, 0, 0, display->size.first);
       display->write(0, 0, display->size.first, display->size.second, display->buffer);
@@ -366,6 +382,7 @@ static image::Image *openFile(const char *path, hal::display::Display *display) 
       if (save_cache(path, cache_path, display->buffer) != 0) {
         return new image::ErrorImage(display->size, "Error Saving Resized Image\n%s", path);
       }
+      LOGI(TAG, "Resizing time %s", lltoa(millis()-start, 10));
 
       delete in;
       in = ImageFactory(get_board()->GetDisplay()->size, cache_path);
