@@ -252,7 +252,7 @@ void battery_symbol_update(lv_obj_t *cont) {
   auto battery = static_cast<hal::battery::Battery *>(lv_obj_get_user_data(cont));
   lv_obj_t *symbol = lv_obj_get_child(cont, 0);
   lv_obj_set_style_bg_opa(cont, LV_OPA_COVER, LV_PART_MAIN);
-  lv_obj_remove_state(cont, LV_OBJ_FLAG_HIDDEN);
+  lv_obj_remove_flag(cont, LV_OBJ_FLAG_HIDDEN);
   if (battery->BatteryStatus() == hal::battery::Battery::State::ERROR) {
     lv_image_set_src(symbol, LV_SYMBOL_DUMMY "\uf22f");
     lv_obj_set_style_text_color(symbol, lv_color_hex(0xeed202), LV_PART_MAIN); //Yellow
@@ -264,7 +264,7 @@ void battery_symbol_update(lv_obj_t *cont) {
     lv_obj_set_style_text_color(symbol, lv_color_hex(0x50C878), LV_PART_MAIN); //Green
   } else {
     lv_image_set_src(symbol, LV_SYMBOL_DUMMY);
-    lv_obj_add_state(cont, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_add_flag(cont, LV_OBJ_FLAG_HIDDEN);
     lv_obj_set_style_bg_opa(cont, LV_OPA_TRANSP, LV_PART_MAIN);
   }
 }

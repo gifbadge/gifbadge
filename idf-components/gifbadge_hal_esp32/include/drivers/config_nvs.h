@@ -7,7 +7,7 @@
 #pragma once
 #include <memory>
 #include <nvs_handle.hpp>
-#include "hal/config.h"
+#include "hal/config_storage.h"
 
 namespace hal::config::esp32s3 {
 class Config_NVS: public Config {

@@ -14,7 +14,7 @@
 #include "hal/backlight.h"
 #include "hal/storage.h"
 //#include "ota.h"
-#include "config.h"
+#include "config_storage.h"
 #ifdef ESP_PLATFORM
 #include "tinyusb_msc.h"
 #endif
