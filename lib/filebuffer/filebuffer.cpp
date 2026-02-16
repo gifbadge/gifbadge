@@ -218,12 +218,14 @@ void cbuffer_open(circular_buf_t *buffer, char *path) {
 void filebuffer_open(const char *path) {
   xSemaphoreTake(lockSemaphore, portMAX_DELAY);
   xQueueSend(FileQueue, path, 0);
+  // xSemaphoreGive(lockSemaphore);
 }
 
 void filebuffer_close() {
   constexpr char path[MAX_FILE_LEN+1] = "";
   xSemaphoreTake(lockSemaphore, portMAX_DELAY);
   xQueueSend(FileQueue, &path, 0);
+  // xSemaphoreGive(lockSemaphore);
 }
 
 int32_t filebuffer_read(uint8_t *pBuf, const int32_t iLen) {

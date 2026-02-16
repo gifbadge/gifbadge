@@ -208,6 +208,7 @@ static image::frameReturn displayFile(std::unique_ptr<image::Image> &in, hal::di
     return {status.first, (calc_delay > 0 ? calc_delay : 0)/portTICK_PERIOD_MS};
   }
   else{
+    LOGI("TAG", "Decode time %s", lltoa(millis()-start, 10));
     return {image::frameStatus::END, portMAX_DELAY};
   }
 }

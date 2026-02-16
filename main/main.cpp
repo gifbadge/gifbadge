@@ -95,6 +95,7 @@ static void usbCall(tinyusb_msc_storage_handle_t handle, tinyusb_msc_event_t *e,
 
 
 extern "C" [[noreturn]] void app_main(void) {
+  esp_log_level_set("sdmmc_init", ESP_LOG_VERBOSE);
   Boards::Board *board = get_board();
   switch(board->BootReason()){
 
@@ -130,6 +131,9 @@ extern "C" [[noreturn]] void app_main(void) {
   size_t buffer_size = 0;
   if (board->MemorySize() > 4*1024*1024) {
     buffer_size = 4*1024*1024;
+  }
+  else if (board->MemorySize() >= 32*1024*1024) {
+    buffer_size = 20*1024*1024;
   }
   else {
     buffer_size = 1*1024*1024;

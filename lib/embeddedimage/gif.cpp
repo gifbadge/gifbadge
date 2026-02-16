@@ -15,6 +15,7 @@
 #define PICO_BUILD
 #include <AnimatedGIF.h>
 // #define ALLOWS_UNALIGNED
+#include <bitbank2.h>
 #include <gif.inl>
 #include <filebuffer.h>
 
@@ -145,6 +146,9 @@ void image::GIF::GIFDraw(GIFDRAW *pDraw) {
 image::Image *image::GIF::Create(screenResolution res, const char *path) {
   return new image::GIF(res, path);
 }
+
+typedef int32_t (*readfile)(GIFFILE *pFile, uint8_t *pBuf, int32_t iLen);
+typedef int32_t (*seekfile)(GIFFILE *pFile, int32_t iPosition);
 
 int image::GIF::Open(void *buffer) {
   unsigned char ucPaletteType = LITTLE_ENDIAN_PIXELS;
