@@ -32,7 +32,7 @@ if (ESP_PLATFORM)
     #
 else ()
     add_executable(GifBadge ${SRC})
-    target_include_directories(GifBadge PRIVATE include)
+    target_include_directories(GifBadge PRIVATE include "${CMAKE_SOURCE_DIR}/external-deps/JPEGENC/src")
 endif ()
 
 set(font_symbols "0xe3f4,0xe897,0xe41b,0xe41b,0xe425,0xe161,0xe5c9,0xe3ab,0xe2c7,0xe2c8,0xe623,0xf80e,0xf568,0xe5d8,0xf182,0xf181")

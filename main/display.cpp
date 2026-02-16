@@ -312,7 +312,11 @@ static int32_t jpeg_seek(JPEGE_FILE *p, int32_t position) {
 }
 
 int save_cache(const char *path, const char *cache_path, const uint8_t *buffer) {
+#ifdef ESP_PLATFORM
   auto *_jpeg = static_cast<JPEGE_IMAGE *>(heap_caps_malloc(sizeof (JPEGE_IMAGE), MALLOC_CAP_SPIRAM));
+#else
+  auto *_jpeg = static_cast<JPEGE_IMAGE *>(malloc(sizeof (JPEGE_IMAGE)));
+#endif
   JPEGENCODE jpe;
   memset(_jpeg, 0, sizeof(JPEGE_IMAGE));
   _jpeg->pfnRead = jpeg_read;
