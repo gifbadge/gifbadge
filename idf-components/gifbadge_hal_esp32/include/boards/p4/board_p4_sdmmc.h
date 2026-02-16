@@ -1,0 +1,39 @@
+/*******************************************************************************
+ * Copyright (c) 2026 GifBadge
+ *
+ * SPDX-License-Identifier:   GPL-3.0-or-later
+ ******************************************************************************/
+
+#pragma once
+#include "driver/sdmmc_host.h"
+#include "boards_p4.h"
+
+namespace Boards::esp32::p4 {
+ class esp32p4_sdmmc : public esp32p4 {
+  public:
+   void PowerOff() override;
+
+   esp32p4_sdmmc() = default;
+  ~esp32p4_sdmmc() override = default;
+
+  bool UsbConnected() override;
+  StorageInfo GetStorageInfo() override;
+  int StorageFormat() override;
+  const char *GetStoragePath() override;
+  void Reset() override;
+  int UsbCallBack(tusb_msc_callback_t callback) override;
+
+ protected:
+  bool storageAvailable = false;
+  sdmmc_card_t *card = nullptr;
+  esp_err_t mount(gpio_num_t clk,
+                  gpio_num_t cmd,
+                  gpio_num_t d0,
+                  gpio_num_t d1,
+                  gpio_num_t d2,
+                  gpio_num_t d3,
+                  gpio_num_t cd,
+                  int width,
+                  gpio_num_t usb_sense);
+};
+}

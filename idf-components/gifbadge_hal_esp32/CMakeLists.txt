@@ -1,18 +1,28 @@
 if (ESP_PLATFORM)
+    if(CONFIG_IDF_TARGET_ESP32S3)
+        set(HW_SOURCES
+                "drivers/esp_io_expander_gpio.cpp"
+                "boards/board_data.c"
+                "boards/board_esp32s3.cpp"
+                "boards/board_esp32s3_sdmmc.cpp"
+                "boards/mini/v0.cpp"
+                "boards/full/v0_2_v0_4_common.cpp"
+                "boards/full/v0_6.cpp"
+                "boards/full/v0_2.cpp"
+                "boards/full/v0_4.cpp"
+                "boards/mini/v0_1.cpp"
+                "boards/mini/v0_3.cpp")
+    else()
+        set(HW_SOURCES
+                "boards/p4/board_p4.cpp"
+                "boards/p4/board_p4_sdmmc.cpp"
+                "boards/p4/olimex-p4-devkit.cpp")
+    endif()
     idf_component_register(SRCS
             "drivers/touch_ft5x06.cpp"
             "drivers/battery_analog.cpp"
             "drivers/battery_max17048.cpp"
-            "boards/board_data.c"
-            "boards/board_esp32s3.cpp"
-            "boards/board_esp32s3_sdmmc.cpp"
-            "boards/mini/v0.cpp"
-            "boards/full/v0_2_v0_4_common.cpp"
-            "boards/full/v0_6.cpp"
-            "boards/full/v0_2.cpp"
-            "boards/full/v0_4.cpp"
-            "boards/mini/v0_1.cpp"
-            "boards/mini/v0_3.cpp"
+            ${HW_SOURCES}
             "drivers/keys_gpio.cpp"
             "drivers/keys_esp_io_expander.cpp"
             "drivers/display_gc9a01.cpp"
@@ -20,9 +30,11 @@ if (ESP_PLATFORM)
             "drivers/backlight_ledc.cpp"
             "drivers/config_nvs.cpp"
             "drivers/keys_generic.cpp"
-            "drivers/esp_io_expander_gpio.cpp"
             "drivers/PmicNpm1300.cpp"
             "drivers/VbusGpio.cpp"
+            "drivers/battery_dummy.cpp"
+            "drivers/backlight_dummy.cpp"
+            "drivers/display_dummy.cpp"
             "esp_efuse_custom_table.c"
             "hw_init.cpp"
             INCLUDE_DIRS public_include

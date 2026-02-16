@@ -10,6 +10,8 @@ static const char *TAG = "HW_INIT";
 static Boards::Board *global_board;
 
 #include "esp_efuse_custom_table.h"
+#ifdef CONFIG_IDF_TARGET_ESP32S3
+
 #include "boards/boards.h"
 #include "boards/mini/v0.h"
 #include "boards/mini/v0_1.h"
@@ -17,10 +19,14 @@ static Boards::Board *global_board;
 #include "boards/full/v0_4.h"
 #include "boards/full/v0_6.h"
 #include "boards/mini/v0_3.h"
+#elif CONFIG_IDF_TARGET_ESP32P4
+#include "boards/p4/olimex-p4-devkit.h"
+#endif
 #include "log.h"
 
 Boards::Board *get_board() {
 //    return new board_v0();
+#ifdef CONFIG_IDF_TARGET_ESP32S3
   uint8_t board;
   esp_efuse_read_field_blob(ESP_EFUSE_USER_DATA_BOARD, &board, 8);
   if (!global_board) {
@@ -53,5 +59,10 @@ Boards::Board *get_board() {
     }
     LOGI(TAG, "Board %s", global_board->Name());
   }
+#elif CONFIG_IDF_TARGET_ESP32P4
+  if (!global_board) {
+    global_board = new Boards::esp32::p4::olimex_p4_devkit();
+  }
+#endif
     return global_board;
 }
