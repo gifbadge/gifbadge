@@ -234,7 +234,7 @@ void lvgl_init(Boards::Board *board) {
     lv_indev_set_type(lvgl_touch, LV_INDEV_TYPE_POINTER);
     lv_indev_set_read_cb(lvgl_touch, touch_read);
     lv_indev_set_driver_data(lvgl_touch, board->GetTouch());
-    lv_timer_set_period(lv_indev_get_read_timer(lvgl_touch), 150);
+    lv_timer_set_period(lv_indev_get_read_timer(lvgl_touch), 10);
   }
 
 }
