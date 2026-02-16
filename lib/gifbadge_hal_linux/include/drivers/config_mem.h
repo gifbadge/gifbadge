@@ -6,7 +6,7 @@
 
 #pragma once
 #include <memory>
-#include "hal/config.h"
+#include "hal/config_storage.h"
 
 namespace hal::config::oslinux {
 class Config_Mem: public Config {
