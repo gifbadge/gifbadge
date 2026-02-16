@@ -10,6 +10,7 @@
 #include <cstdio>
 
 #include "log.h"
+#include "mask.h"
 
 hal::display::oslinux::display_sdl *displaySdl = nullptr;
 
@@ -28,6 +29,15 @@ hal::display::oslinux::display_sdl::display_sdl() {
                          255, 255);
   SDL_RenderClear(renderer);
   pixels = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGB565, SDL_TEXTUREACCESS_STREAMING, 480, 480);
+  mask = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, 480, 480);
+  void *data;
+  int pitch;
+  SDL_LockTexture(mask, nullptr, &data, &pitch);
+
+  memcpy(data, circle_mask.pixel_data, 480 * 480 * 4);
+
+  SDL_UnlockTexture(mask);
+
 
 }
 hal::display::oslinux::display_sdl::~display_sdl() {
@@ -62,6 +72,7 @@ void hal::display::oslinux::display_sdl::update() {
 
     // copy to window
     SDL_RenderTexture(renderer, pixels, nullptr, nullptr);
+    SDL_RenderTexture(renderer, mask, nullptr, nullptr);
     SDL_RenderPresent(renderer);
     if (_callback) {
       _callback();

@@ -32,6 +32,7 @@ class display_sdl : public hal::display::Display {
   SDL_Surface *window_surface = nullptr;
   SDL_Texture* pixels = nullptr;
   SDL_GLContext context = nullptr;
+  SDL_Texture* mask = nullptr;
 
   sem_t mutex;
   flushCallback_t _callback = nullptr;
