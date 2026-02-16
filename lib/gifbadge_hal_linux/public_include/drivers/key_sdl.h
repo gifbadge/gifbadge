@@ -23,6 +23,8 @@ class keys_sdl : public hal::keys::Keys {
 
   void poll();
 
+  void update(SDL_Event event);
+
  private:
 
   zmk_debounce_state _debounce_states[KEY_MAX];

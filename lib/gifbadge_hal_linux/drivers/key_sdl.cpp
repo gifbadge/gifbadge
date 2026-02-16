@@ -41,12 +41,27 @@ void hal::keys::oslinux::keys_sdl::poll() {
       for (auto keycode : keys) {
         if (event.key.scancode == keycode.first) {
           LOGI("key_sdl", "key %i", keycode.first);
-          zmk_debounce_update(&_debounce_states[keycode.second],
-                              event.type == SDL_EVENT_KEY_DOWN,
-                              static_cast<int>(time - last),
-                              &_debounce_config);
+
         }
       }
+    }
+  }
+  last = time;
+}
+void hal::keys::oslinux::keys_sdl::update(SDL_Event event) {
+  std::array<std::pair<SDL_Scancode, hal::keys::EVENT_CODE>, 3> keys = {{
+    {SDL_SCANCODE_DOWN, hal::keys::KEY_DOWN},
+    {SDL_SCANCODE_UP, hal::keys::KEY_UP},
+    {SDL_SCANCODE_SPACE, hal::keys::KEY_ENTER},
+}};
+  auto time = millis();
+  for (auto keycode : keys) {
+    if (event.key.scancode == keycode.first) {
+      LOGI("key_sdl", "key %i", keycode.first);
+      zmk_debounce_update(&_debounce_states[keycode.second],
+                        event.type == SDL_EVENT_KEY_DOWN,
+                        static_cast<int>(time - last),
+                        &_debounce_config);
     }
   }
   last = time;

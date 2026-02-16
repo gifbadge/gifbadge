@@ -224,6 +224,7 @@ void vApplicationTickHook() {
 #include <thread>
 #include "drivers/display_sdl.h"
 #include "drivers/key_sdl.h"
+#include "drivers/touch_sdl.h"
 #include <unistd.h>
 #include <sys/stat.h>
 #include <csignal>
@@ -353,6 +354,7 @@ extern "C" int main(void) {
   signal( SIGTERM, handle_sigint );
   auto display = display_sdl_init();
   auto keys = keys_sdl_init();
+  auto touch = touch_sdl_init();
     xTaskCreate((void (*)(void*))app_main, "app_main", 10000, nullptr, 1, nullptr);
   std::thread schedular([](){
     vTaskStartScheduler();
@@ -361,7 +363,19 @@ extern "C" int main(void) {
   // handle_sigint(0);
   while (running) {
     display->update();
-    keys->poll();
+    SDL_Event event;
+    /* Poll for events. SDL_PollEvent() returns 0 when there are no  */
+    /* more events on the event queue, our while loop will exit when */
+    /* that occurs.                                                  */
+    while (SDL_PollEvent(&event)) {
+      /* We are only worried about SDL_KEYDOWN and SDL_KEYUP events */
+      if (event.type == SDL_EVENT_KEY_DOWN || event.type == SDL_EVENT_KEY_UP) {
+        keys->update(event);
+      }
+      else if (event.type ==SDL_EVENT_MOUSE_MOTION ||event.type == SDL_EVENT_MOUSE_BUTTON_DOWN ||event.type == SDL_EVENT_MOUSE_BUTTON_UP) {
+        touch->update(event);
+      }
+    }
     usleep(30*1000);
   }
   schedular.join();

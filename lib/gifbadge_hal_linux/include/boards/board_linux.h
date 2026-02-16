@@ -14,6 +14,8 @@
 #include "drivers/config_mem.h"
 #include "drivers/key_sdl.h"
 #include <hal/backlight.h>
+
+#include "drivers/touch_sdl.h"
 #include "hal/battery.h"
 #include "hal/display.h"
 #include "hal/keys.h"
@@ -64,6 +66,7 @@ class board_linux : public Boards::Board {
   hal::display::oslinux::display_sdl *_display;
   hal::config::oslinux::Config_Mem *_config;
   hal::keys::oslinux::keys_sdl *_keys;
+  hal::touch::oslinux::touch_sdl *_touch;
   void *_buffer = nullptr;
   char _storagePath[128];
 
