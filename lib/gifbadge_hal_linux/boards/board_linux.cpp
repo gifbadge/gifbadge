@@ -16,6 +16,7 @@
 #include "hal/touch.h"
 #include "drivers/backlight_dummy.h"
 #include "drivers/display_sdl.h"
+#include "drivers/touch_sdl.h"
 
 board_linux::board_linux() {
   _backlight = new hal::backlight::oslinux::backlight_dummy();
@@ -28,6 +29,8 @@ board_linux::board_linux() {
   assert(_config != nullptr);
   _keys = keysSdl;
   assert(_keys != nullptr);
+  _touch = touchSdl;
+  assert(_touch != nullptr);
 
   getcwd(_storagePath, 128);
 
@@ -38,7 +41,7 @@ hal::battery::Battery *board_linux::GetBattery() {
   return _battery;
 }
 hal::touch::Touch *board_linux::GetTouch() {
-  return nullptr;
+  return _touch;
 }
 hal::keys::Keys *board_linux::GetKeys() {
   return _keys;
