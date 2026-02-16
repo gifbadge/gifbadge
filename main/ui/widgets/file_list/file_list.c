@@ -22,6 +22,8 @@ static void init_style(lv_obj_t *obj);
 
 static void callback_dispatcher(lv_event_t *e);
 
+static void focus_callback_dispatcher(lv_event_t *e);
+
 /**********************
  *  STATIC VARIABLES
  **********************/
@@ -63,8 +65,10 @@ lv_obj_t *lv_file_list_add(lv_obj_t *obj, const char *icon) {
       lv_obj_add_style(img, file_list->icon_style, LV_PART_MAIN);
     }
   }
-
+  lv_obj_remove_flag(container, LV_OBJ_FLAG_CLICK_FOCUSABLE);
   lv_obj_add_event_cb(container, callback_dispatcher, LV_EVENT_CLICKED, container);
+  lv_obj_add_event_cb(container, focus_callback_dispatcher, LV_EVENT_FOCUSED, container);
+
 
   return container;
 }
@@ -110,15 +114,22 @@ void *lv_file_list_get_user_data(lv_obj_t *obj) {
  *   STATIC FUNCTIONS
  **********************/
 
+static void focus_callback_dispatcher(lv_event_t *e) {
+  lv_obj_scroll_to_view(lv_event_get_target(e), LV_ANIM_ON);
+}
+
+
 static void callback_dispatcher(lv_event_t *e) {
   LV_LOG_USER("Clicked");
   //Get the first child that isn't an image, as that's what we likely want to interact with
   lv_obj_t *obj = lv_obj_get_child(lv_event_get_current_target(e), 0);
+  if (obj == NULL) {
+    return;
+  }
   if (lv_obj_get_class(obj) == &lv_image_class && lv_obj_get_child_cnt(lv_event_get_current_target(e)) > 1) {
     obj = lv_obj_get_child(lv_event_get_current_target(e), 1);
   }
   if (lv_obj_get_state(obj) & LV_STATE_DISABLED) {
-    lv_obj_scroll_to_view(lv_event_get_target(e), LV_ANIM_ON);
     return;
   }
 
@@ -127,9 +138,6 @@ static void callback_dispatcher(lv_event_t *e) {
     return;
   }
 
-  if (obj == NULL) {
-    return;
-  }
   if (lv_obj_has_class(obj, &lv_switch_class)) {
     if (lv_obj_get_state(obj) & LV_STATE_CHECKED) {
       lv_obj_clear_state(obj, LV_STATE_CHECKED);
@@ -139,10 +147,7 @@ static void callback_dispatcher(lv_event_t *e) {
     lv_obj_send_event(obj, LV_EVENT_VALUE_CHANGED, NULL);
   } else if (lv_obj_has_class(obj, &lv_slider_class)) {
     lv_indev_set_group(lv_indev_get_act(), lv_obj_get_group(obj));
-//        lv_group_focus_next(lv_obj_get_group(obj));
-//        lv_group_focus_obj(obj);
     lv_group_set_editing(lv_obj_get_group(obj), true);
-//        lv_obj_send_event(obj, LV_EVENT_FOCUSED, NULL);
   } else {
     lv_obj_send_event(obj, LV_EVENT_CLICKED, NULL);
   }
@@ -174,32 +179,25 @@ static void scroll_event_cb(lv_event_t *e) {
     if (diff_y >= r) {
       x = r;
     } else {
-      /*Use Pythagoras theorem to get x from radius and y*/
-//            uint32_t x_sqr = r * r - diff_y * diff_y;
-//            lv_sqrt_res_t res;
-//            lv_sqrt(x_sqr, &res, 0x8000);   /*Use lvgl's built in sqrt root function*/
-//            x = (int32_t) (r - res.i);
       uint32_t x_sqr = r * r - diff_y * diff_y;
       int res = (int)sqrt(x_sqr);
-//            lv_sqrt(x_sqr, &res, 0x8000);   /*Use lvgl's built in sqrt root function*/
       x = (int32_t) (r - res);
     }
 
     /*Translate the item by the calculated X coordinate*/
     lv_obj_set_style_translate_x(child, x, 0);
 
-    /*Use some opacity with larger translations*/
     if (x == 0) {
       lv_obj_set_style_opa(child, LV_OPA_COVER, 0);
       for (int idx = 0; idx < lv_obj_get_child_cnt(child); idx++) {
-        lv_obj_clear_state(lv_obj_get_child(child, idx), LV_STATE_DISABLED);
+        lv_obj_remove_state(lv_obj_get_child(child, idx), LV_STATE_DISABLED);
+        lv_obj_add_flag(lv_obj_get_child(child, idx), LV_OBJ_FLAG_CLICK_FOCUSABLE);
       }
     } else {
-//            lv_opa_t opa = lv_map(x, 0, r, LV_OPA_TRANSP, LV_OPA_COVER);
-//            lv_obj_set_style_opa(child, (LV_OPA_COVER - 100) - opa, 0);
       lv_obj_set_style_opa(child, 100, 0);
       for (int idx = 0; idx < lv_obj_get_child_cnt(child); idx++) {
         lv_obj_add_state(lv_obj_get_child(child, idx), LV_STATE_DISABLED);
+        lv_obj_remove_flag(lv_obj_get_child(child, idx), LV_OBJ_FLAG_CLICK_FOCUSABLE);
       }
     }
   }
@@ -228,12 +226,10 @@ static void lv_file_list_constructor(const lv_obj_class_t *class_p, lv_obj_t *ob
   lv_obj_set_flex_grow(explorer->cont, 1);
   lv_obj_set_scroll_snap_y(explorer->cont, LV_SCROLL_SNAP_CENTER);
   lv_obj_set_scroll_dir(explorer->cont, LV_DIR_VER);
-  lv_obj_add_event_cb(explorer->cont, scroll_event_cb, LV_EVENT_SCROLL, NULL);
-  lv_obj_send_event(explorer->cont, LV_EVENT_SCROLL, NULL);
-
   lv_obj_set_scrollbar_mode(explorer->cont, LV_SCROLLBAR_MODE_OFF);
   lv_obj_add_flag(explorer->cont, LV_OBJ_FLAG_SCROLL_ONE);
-
+  lv_obj_add_event_cb(explorer->cont, scroll_event_cb, LV_EVENT_SCROLL, NULL);
+  lv_obj_send_event(explorer->cont, LV_EVENT_SCROLL, NULL);
 
   /*Initialize style*/
   init_style(obj);
@@ -254,7 +250,7 @@ static void init_style(lv_obj_t *obj) {
 
   /*main container style*/
   lv_obj_set_style_radius(explorer->cont, LV_RADIUS_CIRCLE, 0);
-//    lv_obj_set_style_clip_corner(explorer->cont, true, 0);
+  // lv_obj_set_style_clip_corner(explorer->cont, true, 0);
   lv_obj_set_style_pad_bottom(explorer->cont, 50, LV_PART_MAIN);
   lv_obj_set_style_pad_top(explorer->cont, 50, LV_PART_MAIN);
   lv_obj_set_style_border_side(explorer->cont, LV_BORDER_SIDE_NONE, LV_PART_MAIN);
