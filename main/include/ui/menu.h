@@ -17,7 +17,7 @@
 
 #include "log.h"
 #include <lvgl.h>
-#include "hal/config.h"
+#include "hal/config_storage.h"
 #include "hal/board.h"
 #include "display.h"
 

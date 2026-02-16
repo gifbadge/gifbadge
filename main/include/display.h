@@ -13,7 +13,6 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
-#include "hal/config.h"
 #include "hal/backlight.h"
 #include "hal/display.h"
 
