@@ -156,7 +156,7 @@ lv_obj_t *FileOptions() {
     char path[128];
     config->getPath(path);
     lv_label_set_text(file_label, path);
-    lv_label_set_long_mode(file_label, LV_LABEL_LONG_SCROLL_CIRCULAR);
+    lv_label_set_long_mode(file_label, LV_LABEL_LONG_WRAP);
     lv_obj_set_flex_grow(file_label, 1);
     lv_obj_add_style(file_label, &file_select_style, LV_PART_MAIN);
 
@@ -217,7 +217,7 @@ lv_obj_t *FileOptions() {
     lv_obj_add_style(card_up_label, &menu_font_style, LV_PART_MAIN);
     get_board()->GetConfig()->getCard(hal::config::cards::UP, path);
     lv_label_set_text(card_up_label, path);
-    lv_label_set_long_mode(card_up_label, LV_LABEL_LONG_SCROLL_CIRCULAR);
+    lv_label_set_long_mode(card_up_label, LV_LABEL_LONG_WRAP);
     lv_obj_set_flex_grow(card_up_label, 1);
     lv_obj_add_style(card_up_label, &file_select_style, LV_PART_MAIN);
 
@@ -228,7 +228,7 @@ lv_obj_t *FileOptions() {
     lv_obj_add_style(card_down_label, &menu_font_style, LV_PART_MAIN);
     get_board()->GetConfig()->getCard(hal::config::cards::DOWN, path);
     lv_label_set_text(card_down_label, path);
-    lv_label_set_long_mode(card_down_label, LV_LABEL_LONG_SCROLL_CIRCULAR);
+    lv_label_set_long_mode(card_down_label, LV_LABEL_LONG_WRAP);
     lv_obj_set_flex_grow(card_down_label, 1);
     lv_obj_add_style(card_down_label, &file_select_style, LV_PART_MAIN);
 
