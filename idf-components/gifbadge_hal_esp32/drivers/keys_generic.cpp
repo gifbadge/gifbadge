@@ -10,11 +10,6 @@
 
 static const char *TAG = "keys_generic";
 
-static void pollKeys(void *args) {
-  auto *keys = static_cast<hal::keys::esp32s3::KeysGeneric *>(args);
-  keys->poll();
-}
-
 hal::keys::EVENT_STATE *hal::keys::esp32s3::KeysGeneric::read() {
   for (int b = 0; b < hal::keys::KEY_MAX; b++) {
     if (_keys[b] != nullptr) {
@@ -44,17 +39,6 @@ hal::keys::esp32s3::KeysGeneric::KeysGeneric(hal::gpio::Gpio *up, hal::gpio::Gpi
   _debounce_states[hal::keys::KEY_ENTER] = zmk_debounce_state{false, false, 0};
 
   last = esp_timer_get_time() / 1000;
-
-  const esp_timer_create_args_t keyTimerArgs = {
-      .callback = &pollKeys,
-      .arg = this,
-      .dispatch_method = ESP_TIMER_TASK,
-      .name = "key_task",
-      .skip_unhandled_events = true
-  };
-
-  ESP_ERROR_CHECK(esp_timer_create(&keyTimerArgs, &keyTimer));
-  ESP_ERROR_CHECK(esp_timer_start_periodic(keyTimer, 5 * 1000));
 
 }
 void hal::keys::esp32s3::KeysGeneric::poll() {

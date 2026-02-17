@@ -27,6 +27,7 @@ class Keys {
   virtual ~Keys() = default;
   virtual EVENT_STATE * read() = 0;
   virtual int pollInterval() = 0;
+  virtual void poll() {}
 
  protected:
   EVENT_STATE last_state[KEY_MAX] = {};

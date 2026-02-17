@@ -10,11 +10,6 @@
 
 static const char *TAG = "keys_esp_io_expander";
 
-static void pollKeys(void *args) {
-  auto *keys = static_cast<hal::keys::esp32s3::keys_esp_io_expander *>(args);
-  keys->poll();
-}
-
 hal::keys::esp32s3::keys_esp_io_expander::keys_esp_io_expander(esp_io_expander_handle_t io_expander, int up, int down, int enter)
     : _io_expander(io_expander) {
 
@@ -26,16 +21,6 @@ hal::keys::esp32s3::keys_esp_io_expander::keys_esp_io_expander(esp_io_expander_h
   _debounce_states[KEY_DOWN] = zmk_debounce_state{false, false, 0};
   _debounce_states[KEY_ENTER] = zmk_debounce_state{false, false, 0};
 
-  const esp_timer_create_args_t keyTimerArgs = {
-      .callback = &pollKeys,
-      .arg = this,
-      .dispatch_method = ESP_TIMER_TASK,
-      .name = "key_task",
-      .skip_unhandled_events = true
-  };
-
-  ESP_ERROR_CHECK(esp_timer_create(&keyTimerArgs, &keyTimer));
-  ESP_ERROR_CHECK(esp_timer_start_periodic(keyTimer, 5 * 1000));
   last = esp_timer_get_time() / 1000;
 }
 

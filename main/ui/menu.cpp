@@ -12,6 +12,9 @@
 #include <lvgl.h>
 
 #include "ui/menu.h"
+
+#include <input.h>
+
 #include "hal/battery.h"
 #include "ui/main_menu.h"
 #include "ui/style.h"
@@ -89,6 +92,7 @@ void lvgl_unlock() {
 void lvgl_close() {
   LOGI(TAG, "Close");
   get_board()->GetDisplay()->onColorTransDone(nullptr);
+  startInputTimer();
 
   if (lvgl_lock(-1)) {
     destroy_screens();
@@ -156,6 +160,7 @@ void keyboard_read(lv_indev_t *indev, lv_indev_data_t *data) {
   bool editing = lv_group_get_editing(g);
   auto *device = static_cast<hal::keys::Keys *>(lv_indev_get_user_data(indev));
   if(device) {
+    device->poll();
     hal::keys::EVENT_STATE *keys = device->read();
     if (keys[hal::keys::KEY_UP] == hal::keys::STATE_PRESSED) {
       data->enc_diff += editing ? +1 : -1;
@@ -226,7 +231,7 @@ void lvgl_init(Boards::Board *board) {
   lv_indev_set_type(lvgl_encoder, LV_INDEV_TYPE_ENCODER);
   lv_indev_set_user_data(lvgl_encoder, board->GetKeys());
   lv_indev_set_read_cb(lvgl_encoder, keyboard_read);
-  lv_timer_set_period(lv_indev_get_read_timer(lvgl_encoder), 10);
+  lv_timer_set_period(lv_indev_get_read_timer(lvgl_encoder), 2);
 //
 //
   if (board->GetTouch()) {

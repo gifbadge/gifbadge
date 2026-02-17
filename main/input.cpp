@@ -12,12 +12,6 @@
 
 extern MAIN_STATES currentState;
 
-static void openMenu() {
-  if (!lvgl_menu_state() && currentState == MAIN_NORMAL) {
-    lvgl_menu_open();
-  }
-}
-
 static void powerOff() {
   get_board()->PowerOff();
 }
@@ -57,6 +51,8 @@ static void imageSpecial2() {
   }
 }
 
+static void openMenu();
+
 static const keyCommands keyOptions[hal::keys::KEY_MAX] = {
     keyCommands{imageNext, imageSpecial1, 300*1000},
     keyCommands{imagePrevious, imageSpecial2, 300*1000},
@@ -71,8 +67,20 @@ static long long lastKeyPress;
 #include <esp_timer.h>
 static esp_timer_handle_t inputTimer = nullptr;
 
+static void openMenu() {
+  if (!lvgl_menu_state() && currentState == MAIN_NORMAL) {
+    esp_timer_stop(inputTimer);
+    lvgl_menu_open();
+  }
+}
+
+void startInputTimer() {
+  ESP_ERROR_CHECK(esp_timer_start_periodic(inputTimer, 10 * 1000));
+}
+
 static void inputTimerHandler(void *args) {
   auto board = (Boards::Board *) args;
+  board->GetKeys()->poll();
   hal::keys::EVENT_STATE *key_state = board->GetKeys()->read();
 
   switch (inputState) {
@@ -103,25 +111,6 @@ static void inputTimerHandler(void *args) {
       }
       break;
   }
-//TODO: Fix touch
-//      if (board->getTouch()) {
-//        auto e = board->getTouch()->read();
-//        if (e.first > 0 && e.second > 0) {
-//          if (((esp_timer_get_time() / 1000) - (last_change / 1000)) > 1000) {
-//            last_change = esp_timer_get_time();
-//            if (e.second < 50) {
-//              openMenu();
-//            }
-//            if (e.first < 50) {
-//              imageNext();
-//            }
-//            if (e.first > 430) {
-//              imagePrevious();
-//            }
-//          }
-//          LOGI(TAG, "x: %d y: %d", e.first, e.second);
-//        }
-//      }
 }
 
 void initInputTimer(Boards::Board *board) {
@@ -134,11 +123,24 @@ void initInputTimer(Boards::Board *board) {
   };
 
   ESP_ERROR_CHECK(esp_timer_create(&inputTimerArgs, &inputTimer));
-  ESP_ERROR_CHECK(esp_timer_start_periodic(inputTimer, 50 * 1000));
+  ESP_ERROR_CHECK(esp_timer_start_periodic(inputTimer, 10 * 1000));
 }
 #else
 #include "portable_time.h"
 #include "timers.h"
+
+TimerHandle_t inputTimer;
+
+static void openMenu() {
+  if (!lvgl_menu_state() && currentState == MAIN_NORMAL) {
+    xTimerStop(inputTimer, portMAX_DELAY);
+    lvgl_menu_open();
+  }
+}
+
+void startInputTimer() {
+  xTimerStart(inputTimer,0);
+}
 
 static void inputTimerHandler(TimerHandle_t) {
   auto board = get_board();
@@ -198,6 +200,7 @@ static void inputTimerHandler(TimerHandle_t) {
 }
 
 void initInputTimer(Boards::Board *board) {
-  xTimerStart(xTimerCreate("input", 5/portTICK_PERIOD_MS, pdTRUE, nullptr, inputTimerHandler),0);
+  inputTimer = xTimerCreate("input", 5/portTICK_PERIOD_MS, pdTRUE, nullptr, inputTimerHandler);
+  xTimerStart(inputTimer,0);
 }
 #endif

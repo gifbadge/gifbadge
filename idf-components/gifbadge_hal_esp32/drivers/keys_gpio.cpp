@@ -13,11 +13,6 @@
 
 static const char *TAG = "keys_gpio.cpp";
 
-static void pollKeys(void *args) {
-  auto *keys = static_cast<hal::keys::esp32s3::keys_gpio *>(args);
-  keys->poll();
-}
-
 static esp_pm_lock_handle_t key_pm;
 static esp_timer_handle_t wakeTimer;
 
@@ -49,17 +44,6 @@ hal::keys::esp32s3::keys_gpio::keys_gpio(gpio_num_t up, gpio_num_t down, gpio_nu
   _debounce_states[KEY_UP] = zmk_debounce_state{false, false, 0};
   _debounce_states[KEY_DOWN] = zmk_debounce_state{false, false, 0};
   _debounce_states[KEY_ENTER] = zmk_debounce_state{false, false, 0};
-
-  const esp_timer_create_args_t keyTimerArgs = {
-      .callback = &pollKeys,
-      .arg = this,
-      .dispatch_method = ESP_TIMER_TASK,
-      .name = "key_task",
-      .skip_unhandled_events = true
-  };
-
-  ESP_ERROR_CHECK(esp_timer_create(&keyTimerArgs, &keyTimer));
-  ESP_ERROR_CHECK(esp_timer_start_periodic(keyTimer, 5 * 1000));
 
   const esp_timer_create_args_t wakeTimerArgs = {
       .callback = &wakeTimerHandler,
